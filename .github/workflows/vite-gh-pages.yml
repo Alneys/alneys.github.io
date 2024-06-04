@@ -1,11 +1,13 @@
 # https://vitejs.dev/guide/static-deploy.html#github-pages
 
 # Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy static content to GitHub Pages with cache
 
 on:
   # Runs on pushes targeting the default branch
   push:
+    branches: ['gh-pages']
+  pull_request:
     branches: ['gh-pages']
 
   # Allows you to run this workflow manually from the Actions tab
@@ -24,7 +26,7 @@ concurrency:
 
 jobs:
   # Single deploy job since we're just deploying
-  deploy:
+  cache-and-install:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -33,10 +35,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # https://github.com/marketplace/actions/setup-pnpm#just-install-pnpm
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      # https://github.com/marketplace/actions/setup-pnpm#use-cache-to-reduce-installation-time
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies with pnpm
         run: pnpm install
