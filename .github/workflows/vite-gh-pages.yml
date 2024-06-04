@@ -61,6 +61,9 @@ jobs:
       - name: Build with pnpm
         run: pnpm run build
 
+      - name: Workaround for vue-router HTML5 mode (serve from 404 page)
+        run: cp ./dist/index.html ./dist/404.html
+
       # - name: Set up Node
       #   uses: actions/setup-node@v4
       #   with:
