@@ -1,9 +1,7 @@
-<script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue';
-</script>
+<script setup lang="ts"></script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+  <h1>Alneys - Github Pages</h1>
+  <p>Under construction</p>
+  <a href="https://github.com/Alneys">https://github.com/Alneys</a>
 </template>
