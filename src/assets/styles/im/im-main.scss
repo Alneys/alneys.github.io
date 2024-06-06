@@ -1,0 +1,16 @@
+// based on 'node_modules/element-plus/theme-chalk/src/var.scss'
+@use 'sass:map';
+
+@use './im-colors.scss' as *;
+
+@use '../src/config';
+@use '../src/functions' as *;
+@use '../src/mixins' as *;
+
+:root {
+  // custom colors
+  // im-color-miya: #d7a96b;
+  @each $name in map.keys($colors) {
+    @include set-css-var-value('color-' + $name, map.get($colors, $name));
+  }
+}
