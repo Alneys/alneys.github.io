@@ -1,7 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import LayoutIndex from './layout/LayoutIndex.vue';
+</script>
 
 <template>
-  <h1>Alneys - Github Pages</h1>
-  <p>Under construction</p>
-  <a href="https://github.com/Alneys">https://github.com/Alneys</a>
+  <LayoutIndex></LayoutIndex>
 </template>
