@@ -1,0 +1,15 @@
+// based on 'node_modules/element-plus/theme-chalk/src/common/var.scss'
+@use 'sass:math';
+@use 'sass:map';
+
+@use '../src/functions' as *;
+
+$colors: () !default;
+$colors: map.merge(
+  (
+    'kotoha': #92cfbb,
+    'elena': #9bce92,
+    'miya': #d7a96b,
+  ),
+  $colors
+);

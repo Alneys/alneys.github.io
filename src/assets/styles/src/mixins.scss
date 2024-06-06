@@ -1,0 +1,10 @@
+// Based on 'node_modules/element-plus/theme-chalk/src/mixins/_var.scss'
+
+@use './config';
+@use './functions' as *;
+
+// @include set-css-var-value(('color', 'primary'), red);
+// --im-color-primary: red;
+@mixin set-css-var-value($name, $value, $namespace: config.$namespace) {
+  #{join-var-name($name, $namespace)}: #{$value};
+}
