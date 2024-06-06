@@ -6,10 +6,12 @@
   </footer>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #layout-footer {
   > .container {
+    margin: 0 auto;
     padding: 16px 32px;
+    max-width: 1864px;
   }
 }
 </style>

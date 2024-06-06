@@ -10,4 +10,4 @@ import LayoutFooter from './LayoutFooter.vue';
   <LayoutFooter></LayoutFooter>
 </template>
 
-<style lang="scss"></style>
+<style lang="scss" scoped></style>

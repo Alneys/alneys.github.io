@@ -1,14 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import LayoutIndex from '@/views/layout/LayoutIndex.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
-      children: [],
+      name: 'LayoutIndex',
+      component: LayoutIndex,
+      children: [
+        {
+          path: '',
+          name: 'home',
+          alias: 'home',
+          component: () => import('@/views/HomeView.vue'),
+        },
+        {
+          path: '/404',
+          name: 'NotFound',
+          component: () => import('@/views/NotFoundView.vue'),
+        },
+      ],
+    },
+    {
+      path: '/:pathMatch(.*)',
+      redirect: '/404',
     },
     // {
     //   path: '/about',

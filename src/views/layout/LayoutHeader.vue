@@ -8,13 +8,15 @@
   </header>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #layout-header {
   background-color: var(--im-color-miya);
   > .container {
     display: flex;
     justify-content: space-between;
+    margin: 0 auto;
     padding: 16px 32px;
+    max-width: 1864px;
 
     .title {
       color: white;
