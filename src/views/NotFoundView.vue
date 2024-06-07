@@ -2,7 +2,7 @@
 
 <template>
   <div id="view-404">
-    <h1>404 Not Found</h1>
+    <h1 class="view-title">404 Not Found</h1>
     <router-link to="/">Back to home</router-link>
   </div>
 </template>

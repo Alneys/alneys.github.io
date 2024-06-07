@@ -7,9 +7,9 @@ const formRef = ref<InstanceType<typeof ElForm> | null>();
 const form = reactive({
   scenario: 1,
   difficulty: 'PRO' as keyof typeof maxStatsDict,
-  vocal: 1000,
-  dance: 1000,
-  visual: 800,
+  vocal: 0,
+  dance: 0,
+  visual: 0,
   beforeFinalTest: true,
 });
 
@@ -169,7 +169,7 @@ function calculateFinalTestTarget(
 
 <template>
   <div id="view-gakuen-rank-calc">
-    <h1>学园偶像大师评级计算器</h1>
+    <h1 class="view-title">学园偶像大师评级计算器</h1>
     <div class="al-divider"></div>
     <el-form
       ref="formRef"

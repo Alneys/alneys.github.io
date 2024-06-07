@@ -2,8 +2,8 @@
 
 <template>
   <div id="view-home">
-    <div class="title">
-      <h1>Alneys - GitHub Pages</h1>
+    <div class="title-block">
+      <h1 class="view-title">Alneys - GitHub Pages</h1>
       <div class="al-divider"></div>
       <p>At last nothing exists, you see.</p>
     </div>
@@ -24,7 +24,7 @@
 
 <style lang="scss" scoped>
 #view-home {
-  > .title {
+  > .title-block {
     margin-bottom: 32px;
     text-align: center;
   }
@@ -34,14 +34,6 @@
     gap: 16px;
     a {
       text-decoration: none;
-    }
-  }
-}
-
-@media screen and (max-width: 767px) {
-  #view-home {
-    > .title > h1 {
-      margin-top: 0;
     }
   }
 }

@@ -19,6 +19,10 @@ import LayoutFooter from './LayoutFooter.vue';
   max-width: 1864px;
 }
 
+#layout > * h1.view-title {
+  margin-top: 0;
+}
+
 @media screen and (max-width: 767px) {
   #layout > * > .container {
     padding: 16px;
