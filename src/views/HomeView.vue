@@ -9,14 +9,14 @@
     </div>
 
     <div class="main">
-      <router-link to="/">
-        <el-card shadow="hover">Under construction</el-card>
+      <router-link to="/gakuen-imas/rank-calc">
+        <el-card shadow="hover">Gakuen imas rank calculator</el-card>
       </router-link>
       <router-link to="/">
         <el-card shadow="hover">Under construction</el-card>
       </router-link>
-      <router-link to="/">
-        <el-card shadow="hover">Under construction</el-card>
+      <router-link to="/404test">
+        <el-card shadow="hover">404 Page Test</el-card>
       </router-link>
     </div>
   </div>

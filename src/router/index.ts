@@ -10,6 +10,11 @@ const router = createRouter({
       component: LayoutIndex,
       children: [
         {
+          path: '/gakuen-imas/rank-calc',
+          name: 'gakuen-imas-rank-calc',
+          component: () => import('@/views/gakuen/GakuenRankCalc.vue'),
+        },
+        {
           path: '',
           name: 'home',
           alias: 'home',
