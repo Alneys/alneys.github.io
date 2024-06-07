@@ -25,8 +25,8 @@
 <style lang="scss" scoped>
 #view-home {
   > .title {
-    text-align: center;
     margin-bottom: 32px;
+    text-align: center;
   }
   > .main {
     display: grid;
@@ -34,6 +34,14 @@
     gap: 16px;
     a {
       text-decoration: none;
+    }
+  }
+}
+
+@media screen and (max-width: 767px) {
+  #view-home {
+    > .title > h1 {
+      margin-top: 0;
     }
   }
 }

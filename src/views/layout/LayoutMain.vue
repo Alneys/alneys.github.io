@@ -2,14 +2,10 @@
 
 <template>
   <main id="layout-main">
-    <router-view></router-view>
+    <div class="container">
+      <router-view></router-view>
+    </div>
   </main>
 </template>
 
-<style lang="scss" scoped>
-#layout-main {
-  margin: 0 auto;
-  padding: 16px;
-  max-width: 1864px;
-}
-</style>
+<style lang="scss" scoped></style>
