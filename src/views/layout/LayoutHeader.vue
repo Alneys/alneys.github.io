@@ -10,6 +10,8 @@
 
 <style lang="scss" scoped>
 #layout-header {
+  position: sticky;
+  top: 0;
   background-color: var(--im-color-miya);
   > .container {
     display: flex;
