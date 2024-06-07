@@ -5,9 +5,23 @@ import LayoutFooter from './LayoutFooter.vue';
 </script>
 
 <template>
-  <LayoutHeader></LayoutHeader>
-  <LayoutMain></LayoutMain>
-  <LayoutFooter></LayoutFooter>
+  <div id="layout">
+    <LayoutHeader></LayoutHeader>
+    <LayoutMain></LayoutMain>
+    <LayoutFooter></LayoutFooter>
+  </div>
 </template>
 
-<style lang="scss"></style>
+<style lang="scss">
+#layout > * > .container {
+  margin: 0 auto;
+  padding: 16px 32px;
+  max-width: 1864px;
+}
+
+@media screen and (max-width: 767px) {
+  #layout > * > .container {
+    padding: 16px;
+  }
+}
+</style>

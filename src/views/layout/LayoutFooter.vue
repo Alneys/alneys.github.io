@@ -6,10 +6,4 @@
   </footer>
 </template>
 
-<style lang="scss">
-#layout-footer {
-  > .container {
-    padding: 16px 32px;
-  }
-}
-</style>
+<style lang="scss" scoped></style>
