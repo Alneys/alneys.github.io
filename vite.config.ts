@@ -20,7 +20,11 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: 'sass',
+        }),
+      ],
     }),
   ],
   resolve: {
@@ -31,5 +35,12 @@ export default defineConfig({
   base: '/',
   server: {
     host: '0.0.0.0',
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/assets/styles/element-plus.scss" as *;`,
+      },
+    },
   },
 });
