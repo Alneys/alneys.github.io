@@ -20,12 +20,12 @@ import LayoutFooter from './LayoutFooter.vue';
 }
 
 #layout > * h1.view-title {
-  margin-top: 0;
+  margin-top: 0.25em;
 }
 
 @media screen and (max-width: 767px) {
   #layout > * > .container {
-    padding: 16px;
+    padding: 8px 16px;
   }
 }
 </style>
