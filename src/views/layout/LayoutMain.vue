@@ -9,7 +9,7 @@
 <style lang="scss" scoped>
 #layout-main {
   margin: 0 auto;
-  padding: 16px 32px;
+  padding: 16px;
   max-width: 1864px;
 }
 </style>

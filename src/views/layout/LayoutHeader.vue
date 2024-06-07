@@ -3,7 +3,7 @@
 <template>
   <header id="layout-header">
     <div class="container">
-      <a href="/" class="title"> Alneys.github.io </a>
+      <a href="/" class="title"><h1>Alneys.github.io</h1></a>
     </div>
   </header>
 </template>
@@ -15,14 +15,16 @@
     display: flex;
     justify-content: space-between;
     margin: 0 auto;
-    padding: 16px 32px;
+    padding: 16px;
     max-width: 1864px;
 
     .title {
       color: white;
-      font-weight: bold;
-      font-size: 1.5em;
       text-decoration: none;
+
+      h1 {
+        margin: 0;
+      }
     }
   }
 }
