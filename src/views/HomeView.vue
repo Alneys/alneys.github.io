@@ -9,16 +9,15 @@
     </div>
 
     <div class="main">
-      <!-- TODO: router-link -->
-      <a href="/">
+      <router-link to="/">
         <el-card shadow="hover">Under construction</el-card>
-      </a>
-      <a href="/">
+      </router-link>
+      <router-link to="/">
         <el-card shadow="hover">Under construction</el-card>
-      </a>
-      <a href="/">
+      </router-link>
+      <router-link to="/">
         <el-card shadow="hover">Under construction</el-card>
-      </a>
+      </router-link>
     </div>
   </div>
 </template>

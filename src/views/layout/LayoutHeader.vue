@@ -3,7 +3,7 @@
 <template>
   <header id="layout-header">
     <div class="container">
-      <a href="/" class="title"><h1>Alneys.github.io</h1></a>
+      <router-link to="/" class="title"><h1>Alneys.github.io</h1></router-link>
     </div>
   </header>
 </template>
@@ -21,7 +21,6 @@
     .title {
       color: white;
       text-decoration: none;
-
       h1 {
         margin: 0;
       }
