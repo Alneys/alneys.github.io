@@ -12,8 +12,5 @@
   )
 );
 
-// import all styles
-@use 'element-plus/theme-chalk/src/index.scss';
-
-/* Element Plus SCSS override */
-@use 'element-plus/theme-chalk/src/mixins/mixins.scss' as *;
+// Import all styles (disabled when importing on demand)
+// @use 'element-plus/theme-chalk/src/index.scss';

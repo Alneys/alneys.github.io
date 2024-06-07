@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
-import { ElForm } from 'element-plus';
+import type { FormInstance } from 'element-plus';
 
-const formRef = ref<InstanceType<typeof ElForm> | null>();
+const formRef = ref<FormInstance | null>();
 
 const form = reactive({
   scenario: 1,
