@@ -9,6 +9,14 @@
     'primary': (
       'base': map.get(imColors.$colors, 'miya'),
     ),
+  ),
+  $font-size: (
+    'extra-large': 24px,
+    'large': 20px,
+    'medium': 18px,
+    'base': 16px,
+    'small': 14px,
+    'extra-small': 12px,
   )
 );
 
