@@ -74,12 +74,15 @@ jobs:
       # - name: Build
       #   run: npm run build
       - name: Setup Pages
+        if: github.repository == 'alneys.github.io/main' || github.repository == 'alneys.github.io/gh-pages'
         uses: actions/configure-pages@v4
       - name: Upload artifact
+        if: github.repository == 'alneys.github.io/main' || github.repository == 'alneys.github.io/gh-pages'
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist folder
           path: './dist'
       - name: Deploy to GitHub Pages
+        if: github.repository == 'alneys.github.io/main' || github.repository == 'alneys.github.io/gh-pages'
         id: deployment
         uses: actions/deploy-pages@v4
