@@ -15,7 +15,7 @@ import LayoutFooter from './LayoutFooter.vue';
 <style lang="scss">
 #layout > * > .container {
   margin: 0 auto;
-  padding: 16px 32px;
+  padding: 8px 32px;
   max-width: 1864px;
 }
 

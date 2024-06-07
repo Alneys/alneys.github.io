@@ -10,7 +10,7 @@
 
     <div class="main">
       <router-link to="/gakuen-imas/rank-calc">
-        <el-card shadow="hover">Gakuen imas rank calculator</el-card>
+        <el-card shadow="hover">学园偶像大师评级计算器</el-card>
       </router-link>
       <router-link to="/">
         <el-card shadow="hover">Under construction</el-card>

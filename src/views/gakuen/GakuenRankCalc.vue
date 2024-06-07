@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, nextTick } from 'vue';
 import { ElForm } from 'element-plus';
 
 const formRef = ref<InstanceType<typeof ElForm> | null>();
@@ -23,20 +23,20 @@ const maxStatsDict = {
 
 const rankTargetList = [
   {
-    name: 'B',
-    target: 6000,
-  },
-  {
-    name: 'A',
-    target: 10000,
+    name: 'S',
+    target: 13000,
   },
   {
     name: 'A+',
     target: 11500,
   },
   {
-    name: 'S',
-    target: 13000,
+    name: 'A',
+    target: 10000,
+  },
+  {
+    name: 'B',
+    target: 6000,
   },
 ];
 
@@ -83,6 +83,10 @@ function handleClear() {
   form.beforeFinalTest = true;
 
   calculatedFlag.value = false;
+
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 }
 
 function handleSubmit() {
@@ -110,6 +114,10 @@ function handleSubmit() {
     });
   });
   calculatedFlag.value = true;
+
+  nextTick(() => {
+    document.getElementById('gakuen-rank-calc-result')?.scrollIntoView({ behavior: 'smooth' });
+  });
 }
 
 function calculateTotalStats(
@@ -136,7 +144,7 @@ function calculateFinalTestTarget(
   const rankPointsFromFirstInFinal = 1700;
   const rankPointsNeededFromFinal = targetRankPt - rankPointsFromStats - rankPointsFromFirstInFinal;
 
-  if(rankPointsNeededFromFinal <= 0) {
+  if (rankPointsNeededFromFinal <= 0) {
     return 0;
   }
 
@@ -171,72 +179,79 @@ function calculateFinalTestTarget(
   <div id="view-gakuen-rank-calc">
     <h1 class="view-title">学园偶像大师评级计算器</h1>
     <div class="al-divider"></div>
-    <el-form
-      ref="formRef"
-      :model="form"
-      label-width="auto"
-      label-position="top"
-      style="max-width: 1000px"
-    >
-      <el-form-item label="选择剧本">
-        <el-select v-model="form.scenario" disabled>
-          <el-option label="定期公演《初》" :value="1"></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="选择难度">
-        <el-select v-model="form.difficulty">
-          <el-option label="PRO" value="PRO"></el-option>
-          <el-option label="REGULAR" value="REGULAR"></el-option>
-        </el-select>
-      </el-form-item>
-      <el-row :gutter="16">
-        <el-col :span="8" :xs="24">
-          <el-form-item label="Vocal">
-            <el-input-number
-              v-model.number="form.vocal"
-              :controls="false"
-              class="is-normal-input"
-            ></el-input-number>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8" :xs="24">
-          <el-form-item label="Dance">
-            <el-input-number
-              v-model.number="form.dance"
-              :controls="false"
-              class="is-normal-input"
-            ></el-input-number>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8" :xs="24">
-          <el-form-item label="Visual">
-            <el-input-number
-              v-model.number="form.visual"
-              :controls="false"
-              class="is-normal-input"
-            ></el-input-number>
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-form-item label="包含最终测验能力值">
-        <el-radio-group v-model="form.beforeFinalTest">
-          <el-radio label="否" :value="true"> </el-radio>
-          <el-radio label="是" :value="false"> </el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label=" ">
-        <el-button type="primary" @click="handleSubmit">开始计算</el-button>
-        <el-button @click="handleClear">清空</el-button>
-      </el-form-item>
-    </el-form>
-    <div v-if="calculatedFlag" class="al-divider"></div>
-    <div v-if="calculatedFlag">
+    <div id="gakuen-rank-calc-form">
+      <el-form
+        ref="formRef"
+        :model="form"
+        label-width="auto"
+        label-position="top"
+        style="max-width: 1000px"
+      >
+        <el-form-item label="选择剧本">
+          <el-select v-model="form.scenario" disabled>
+            <el-option label="定期公演《初》" :value="1"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="选择难度">
+          <el-select v-model="form.difficulty">
+            <el-option label="PRO" value="PRO"></el-option>
+            <el-option label="REGULAR" value="REGULAR"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="8" :xs="24">
+            <el-form-item label="Vocal">
+              <el-input-number
+                v-model.number="form.vocal"
+                :controls="false"
+                class="is-normal-input"
+              ></el-input-number>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8" :xs="24">
+            <el-form-item label="Dance">
+              <el-input-number
+                v-model.number="form.dance"
+                :controls="false"
+                class="is-normal-input"
+              ></el-input-number>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8" :xs="24">
+            <el-form-item label="Visual">
+              <el-input-number
+                v-model.number="form.visual"
+                :controls="false"
+                class="is-normal-input"
+              ></el-input-number>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="包含最终测验能力值">
+          <el-radio-group v-model="form.beforeFinalTest">
+            <el-radio label="否" :value="true"> </el-radio>
+            <el-radio label="是" :value="false"> </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label=" ">
+          <el-button type="primary" @click="handleSubmit">开始计算</el-button>
+          <el-button @click="handleClear">清空</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="al-divider"></div>
+    <div id="gakuen-rank-calc-result" style="margin-bottom: 2em">
       <h2>结果</h2>
-      <p>最终测验后能力值：{{ totalStats }}</p>
-      <h4>最终测验拿到1位后：</h4>
-      <p v-for="each of calculatedResultList" :key="`gakuen-rank-calc-result-p-${each.name}`">
-        达到{{ each.name }}评级需要最终测验得分：{{ each.finalTestTarget }}
-      </p>
+      <div v-if="calculatedFlag">
+        <p>最终测验后能力值：{{ totalStats }}</p>
+        <h4>最终测验拿到1位后：</h4>
+        <p v-for="each of calculatedResultList" :key="`gakuen-rank-calc-result-p-${each.name}`">
+          达到{{ each.name }}评级需要最终测验得分：{{ each.finalTestTarget }}
+        </p>
+      </div>
+      <div v-else>
+        <p>等待上方输入</p>
+      </div>
     </div>
   </div>
 </template>
