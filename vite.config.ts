@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
-// Element Plus
+// Element Plus (import on demand)
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
@@ -39,6 +39,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
+        // Import on demand
         additionalData: `@use "@/assets/styles/element-plus.scss" as *;`,
       },
     },
