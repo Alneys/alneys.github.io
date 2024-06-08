@@ -7,9 +7,9 @@ const formRef = ref<FormInstance | null>();
 const form = reactive({
   scenario: 1,
   difficulty: 'PRO' as keyof typeof maxStatsDict,
-  vocal: 0,
-  dance: 0,
-  visual: 0,
+  vocal: '',
+  dance: '',
+  visual: '',
   beforeFinalTest: true,
 });
 
@@ -77,11 +77,6 @@ const calculatedResultList: { name: string; finalTestTarget: number | string }[]
 
 function handleClear() {
   formRef.value?.resetFields();
-  form.vocal = 0;
-  form.dance = 0;
-  form.visual = 0;
-  form.beforeFinalTest = true;
-
   calculatedFlag.value = false;
 
   nextTick(() => {
@@ -92,18 +87,22 @@ function handleClear() {
 function handleSubmit() {
   const maxSingleStat: number = maxStatsDict[form.difficulty] || maxStatsDict.PRO;
 
-  form.vocal = Math.floor(Number(form.vocal));
-  form.dance = Math.floor(Number(form.dance));
-  form.visual = Math.floor(Number(form.visual));
+  let vocal = Math.floor(Number(form.vocal));
+  let dance = Math.floor(Number(form.dance));
+  let visual = Math.floor(Number(form.visual));
 
-  form.vocal = Math.min(maxSingleStat, form.vocal);
-  form.dance = Math.min(maxSingleStat, form.dance);
-  form.visual = Math.min(maxSingleStat, form.visual);
+  vocal = Math.min(maxSingleStat, vocal);
+  dance = Math.min(maxSingleStat, dance);
+  visual = Math.min(maxSingleStat, visual);
+
+  form.vocal = String(vocal);
+  form.dance = String(dance);
+  form.visual = String(visual);
 
   totalStats.value = calculateTotalStats(form.difficulty, form.beforeFinalTest, [
-    form.vocal,
-    form.dance,
-    form.visual,
+    vocal,
+    dance,
+    visual,
   ]);
 
   calculatedResultList.length = 0;
@@ -185,14 +184,14 @@ function calculateFinalTestTarget(
         :model="form"
         label-width="auto"
         label-position="top"
-        style="max-width: 1000px"
+        style="max-width: 1200px"
       >
         <el-form-item label="选择剧本">
           <el-select v-model="form.scenario" disabled>
             <el-option label="定期公演《初》" :value="1"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="选择难度">
+        <el-form-item label="选择难度" prop="difficulty">
           <el-select v-model="form.difficulty">
             <el-option label="PRO" value="PRO"></el-option>
             <el-option label="REGULAR" value="REGULAR"></el-option>
@@ -200,34 +199,22 @@ function calculateFinalTestTarget(
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="8" :xs="24">
-            <el-form-item label="Vocal">
-              <el-input-number
-                v-model.number="form.vocal"
-                :controls="false"
-                class="is-normal-input"
-              ></el-input-number>
+            <el-form-item label="Vocal" prop="vocal">
+              <el-input v-model="form.vocal" type="number"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
-            <el-form-item label="Dance">
-              <el-input-number
-                v-model.number="form.dance"
-                :controls="false"
-                class="is-normal-input"
-              ></el-input-number>
+            <el-form-item label="Dance" prop="dance">
+              <el-input v-model="form.dance" type="number"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
-            <el-form-item label="Visual">
-              <el-input-number
-                v-model.number="form.visual"
-                :controls="false"
-                class="is-normal-input"
-              ></el-input-number>
+            <el-form-item label="Visual" prop="visual">
+              <el-input v-model="form.visual" type="number"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="包含最终测验能力值">
+        <el-form-item label="包含最终测验能力值" prop="beforeFinalTest">
           <el-radio-group v-model="form.beforeFinalTest">
             <el-radio label="否" :value="true"> </el-radio>
             <el-radio label="是" :value="false"> </el-radio>
@@ -256,4 +243,18 @@ function calculateFinalTestTarget(
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+:deep() {
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type='number'] {
+    appearance: textfield;
+  }
+}
+</style>

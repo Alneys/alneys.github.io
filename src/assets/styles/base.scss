@@ -48,7 +48,13 @@ h6 {
 }
 
 @media screen and (max-width: 767px) {
-  html {
-    font-size: 14px;
+  h1 {
+    font-size: 1.25rem;
+  }
+  h2 {
+    font-size: 1.125rem;
+  }
+  h3 {
+    font-size: 1.0625rem;
   }
 }
