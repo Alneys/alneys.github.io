@@ -16,7 +16,7 @@ import LayoutFooter from './LayoutFooter.vue';
 #layout > * > .container {
   margin: 0 auto;
   padding: 8px 32px;
-  max-width: 1864px;
+  max-width: 1664px;
 }
 
 #layout > * h1.view-title {
