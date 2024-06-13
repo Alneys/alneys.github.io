@@ -185,6 +185,7 @@ function calculateFinalTestTarget(
         label-width="auto"
         label-position="top"
         style="max-width: 1200px"
+        @keyup.enter="handleSubmit"
       >
         <el-form-item label="选择剧本">
           <el-select v-model="form.scenario" disabled>
