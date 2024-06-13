@@ -13,7 +13,7 @@ import LayoutFooter from './LayoutFooter.vue';
 </template>
 
 <style lang="scss">
-#layout > * > .container {
+#layout .layout-max-width-container {
   margin: 0 auto;
   padding: 8px 32px;
   max-width: 1664px;
@@ -24,7 +24,7 @@ import LayoutFooter from './LayoutFooter.vue';
 }
 
 @media screen and (max-width: 767px) {
-  #layout > * > .container {
+  #layout .layout-max-width-container {
     padding: 8px 16px;
   }
 }

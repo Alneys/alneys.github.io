@@ -2,7 +2,7 @@
 
 <template>
   <footer id="layout-footer">
-    <div class="container"></div>
+    <div class="layout-max-width-container"></div>
   </footer>
 </template>
 

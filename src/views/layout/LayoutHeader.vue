@@ -2,7 +2,7 @@
 
 <template>
   <header id="layout-header">
-    <div class="container">
+    <div class="layout-max-width-container">
       <router-link to="/" class="title"><h1>Alneys.github.io</h1></router-link>
     </div>
   </header>
@@ -14,7 +14,7 @@
   top: 0;
   z-index: 1000000;
   background-color: var(--im-color-miya);
-  > .container {
+  > div {
     display: flex;
     justify-content: space-between;
 
