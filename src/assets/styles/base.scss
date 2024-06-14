@@ -1,3 +1,4 @@
+// font-family
 :root {
   --al-font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft Yahei', -apple-system,
     BlinkMacSystemFont, sans-serif;
@@ -15,15 +16,16 @@ html,
 body {
   margin: 0;
   padding: 0;
-}
-
-:root {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: var(--al-font-family);
   text-rendering: optimizeLegibility;
 }
 
+* {
+  font-family: var(--al-font-family);
+}
+
+// font-size
 html {
   font-size: 16px;
 }
