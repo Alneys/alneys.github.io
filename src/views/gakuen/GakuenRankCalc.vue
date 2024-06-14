@@ -7,14 +7,16 @@ const formRef = ref<FormInstance | null>();
 const form = reactive({
   scenario: 1,
   difficulty: 'PRO' as keyof typeof maxStatsDict,
-  vocal: '',
-  dance: '',
-  visual: '',
+  vocal: undefined as number | undefined,
+  dance: undefined as number | undefined,
+  visual: undefined as number | undefined,
   beforeFinalTest: true,
 });
 
+const totalStatsBeforeFinalTest = ref(0);
 const totalStats = ref(0);
 const calculatedFlag = ref(false);
+const calculatedForm = ref(form);
 
 const maxStatsDict = {
   PRO: 1500,
@@ -87,22 +89,19 @@ function handleClear() {
 function handleSubmit() {
   const maxSingleStat: number = maxStatsDict[form.difficulty] || maxStatsDict.PRO;
 
-  let vocal = Math.floor(Number(form.vocal));
-  let dance = Math.floor(Number(form.dance));
-  let visual = Math.floor(Number(form.visual));
+  let vocal = Math.floor(Number(form.vocal)) || 0;
+  let dance = Math.floor(Number(form.dance)) || 0;
+  let visual = Math.floor(Number(form.visual)) || 0;
 
-  vocal = Math.min(maxSingleStat, vocal);
-  dance = Math.min(maxSingleStat, dance);
-  visual = Math.min(maxSingleStat, visual);
+  form.vocal = Math.min(maxSingleStat, vocal);
+  form.dance = Math.min(maxSingleStat, dance);
+  form.visual = Math.min(maxSingleStat, visual);
 
-  form.vocal = String(vocal);
-  form.dance = String(dance);
-  form.visual = String(visual);
-
+  totalStatsBeforeFinalTest.value = form.vocal + form.dance + form.visual;
   totalStats.value = calculateTotalStats(form.difficulty, form.beforeFinalTest, [
-    vocal,
-    dance,
-    visual,
+    form.vocal,
+    form.dance,
+    form.visual,
   ]);
 
   calculatedResultList.length = 0;
@@ -112,6 +111,7 @@ function handleSubmit() {
       finalTestTarget: calculateFinalTestTarget(totalStats.value, each.target),
     });
   });
+  calculatedForm.value = { ...form };
   calculatedFlag.value = true;
 
   nextTick(() => {
@@ -197,20 +197,20 @@ function calculateFinalTestTarget(
             <el-option label="REGULAR" value="REGULAR"></el-option>
           </el-select>
         </el-form-item>
-        <el-row :gutter="16">
+        <el-row :gutter="16" @keyup.enter="handleSubmit">
           <el-col :span="8" :xs="24">
             <el-form-item label="Vocal" prop="vocal">
-              <el-input v-model="form.vocal" type="number"></el-input>
+              <el-input v-model.number="form.vocal" type="number"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Dance" prop="dance">
-              <el-input v-model="form.dance" type="number"></el-input>
+              <el-input v-model.number="form.dance" type="number"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Visual" prop="visual">
-              <el-input v-model="form.visual" type="number"></el-input>
+              <el-input v-model.number="form.visual" type="number"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -230,7 +230,12 @@ function calculateFinalTestTarget(
     <div id="gakuen-rank-calc-result" style="margin-bottom: 2em">
       <h2>结果</h2>
       <div v-if="calculatedFlag">
-        <p>最终测验后能力值：{{ totalStats }}</p>
+        <p>
+          最终测验后能力值：{{ totalStats }}
+          <span v-if="calculatedForm.beforeFinalTest">
+            ({{ totalStatsBeforeFinalTest }}+{{ totalStats - totalStatsBeforeFinalTest }})
+          </span>
+        </p>
         <h4>最终测验拿到1位后：</h4>
         <p v-for="each of calculatedResultList" :key="`gakuen-rank-calc-result-p-${each.name}`">
           达到{{ each.name }}评级需要最终测验得分：{{ each.finalTestTarget }}
