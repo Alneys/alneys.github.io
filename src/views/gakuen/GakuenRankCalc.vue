@@ -86,7 +86,9 @@ function handleClear() {
   calculatedFlag.value = false;
 
   nextTick(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   });
 }
 
