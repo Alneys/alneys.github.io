@@ -37,6 +37,10 @@ const rankTargetList = [
     target: 10000,
   },
   {
+    name: 'B+',
+    target: 8000,
+  },
+  {
     name: 'B',
     target: 6000,
   },
