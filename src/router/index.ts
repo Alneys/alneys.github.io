@@ -10,15 +10,20 @@ const router = createRouter({
       component: LayoutIndex,
       children: [
         {
+          path: '',
+          name: 'home',
+          alias: 'home',
+          component: () => import('@/views/HomeView.vue'),
+        },
+        {
           path: '/gakuen-imas/rank-calc',
           name: 'gakuen-imas-rank-calc',
           component: () => import('@/views/gakuen/GakuenRankCalc.vue'),
         },
         {
-          path: '',
-          name: 'home',
-          alias: 'home',
-          component: () => import('@/views/HomeView.vue'),
+          path: '/about',
+          name: 'about',
+          component: () => import('@/views/about/AboutView.vue'),
         },
         {
           path: '/404',

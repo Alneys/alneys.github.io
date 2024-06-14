@@ -12,8 +12,8 @@
       <router-link to="/gakuen-imas/rank-calc">
         <el-card shadow="hover">学园偶像大师评级计算器</el-card>
       </router-link>
-      <router-link to="/">
-        <el-card shadow="hover">Under construction</el-card>
+      <router-link to="/about">
+        <el-card shadow="hover">关于</el-card>
       </router-link>
       <router-link to="/404test">
         <el-card shadow="hover">404 Page Test</el-card>
