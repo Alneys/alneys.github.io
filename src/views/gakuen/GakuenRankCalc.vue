@@ -185,7 +185,6 @@ function calculateFinalTestTarget(
         label-width="auto"
         label-position="top"
         style="max-width: 1200px"
-        @keyup.enter="handleSubmit"
       >
         <el-form-item label="选择剧本">
           <el-select v-model="form.scenario" disabled>
@@ -198,7 +197,7 @@ function calculateFinalTestTarget(
             <el-option label="REGULAR" value="REGULAR"></el-option>
           </el-select>
         </el-form-item>
-        <el-row :gutter="16">
+        <el-row :gutter="16" @keyup.enter="handleSubmit">
           <el-col :span="8" :xs="24">
             <el-form-item label="Vocal" prop="vocal">
               <el-input v-model="form.vocal" type="number"></el-input>
