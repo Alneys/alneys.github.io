@@ -13,9 +13,10 @@ const form = reactive({
   beforeFinalTest: true,
 });
 
+const totalStatsBeforeFinalTest = ref(0);
 const totalStats = ref(0);
-const addedStats = ref(0);
 const calculatedFlag = ref(false);
+const calculatedForm = ref(form);
 
 const maxStatsDict = {
   PRO: 1500,
@@ -96,12 +97,12 @@ function handleSubmit() {
   form.dance = Math.min(maxSingleStat, dance);
   form.visual = Math.min(maxSingleStat, visual);
 
+  totalStatsBeforeFinalTest.value = form.vocal + form.dance + form.visual;
   totalStats.value = calculateTotalStats(form.difficulty, form.beforeFinalTest, [
     form.vocal,
     form.dance,
     form.visual,
   ]);
-  addedStats.value = totalStats.value - form.vocal - form.dance - form.visual;
 
   calculatedResultList.length = 0;
   rankTargetList.forEach((each) => {
@@ -110,6 +111,7 @@ function handleSubmit() {
       finalTestTarget: calculateFinalTestTarget(totalStats.value, each.target),
     });
   });
+  calculatedForm.value = { ...form };
   calculatedFlag.value = true;
 
   nextTick(() => {
@@ -228,7 +230,12 @@ function calculateFinalTestTarget(
     <div id="gakuen-rank-calc-result" style="margin-bottom: 2em">
       <h2>结果</h2>
       <div v-if="calculatedFlag">
-        <p>最终测验后能力值：{{ totalStats }}</p>
+        <p>
+          最终测验后能力值：{{ totalStats }}
+          <span v-if="calculatedForm.beforeFinalTest">
+            ({{ totalStatsBeforeFinalTest }}+{{ totalStats - totalStatsBeforeFinalTest }})
+          </span>
+        </p>
         <h4>最终测验拿到1位后：</h4>
         <p v-for="each of calculatedResultList" :key="`gakuen-rank-calc-result-p-${each.name}`">
           达到{{ each.name }}评级需要最终测验得分：{{ each.finalTestTarget }}
