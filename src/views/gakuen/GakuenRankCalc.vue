@@ -7,13 +7,14 @@ const formRef = ref<FormInstance | null>();
 const form = reactive({
   scenario: 1,
   difficulty: 'PRO' as keyof typeof maxStatsDict,
-  vocal: '',
-  dance: '',
-  visual: '',
+  vocal: undefined as number | undefined,
+  dance: undefined as number | undefined,
+  visual: undefined as number | undefined,
   beforeFinalTest: true,
 });
 
 const totalStats = ref(0);
+const addedStats = ref(0);
 const calculatedFlag = ref(false);
 
 const maxStatsDict = {
@@ -87,23 +88,20 @@ function handleClear() {
 function handleSubmit() {
   const maxSingleStat: number = maxStatsDict[form.difficulty] || maxStatsDict.PRO;
 
-  let vocal = Math.floor(Number(form.vocal));
-  let dance = Math.floor(Number(form.dance));
-  let visual = Math.floor(Number(form.visual));
+  let vocal = Math.floor(Number(form.vocal)) || 0;
+  let dance = Math.floor(Number(form.dance)) || 0;
+  let visual = Math.floor(Number(form.visual)) || 0;
 
-  vocal = Math.min(maxSingleStat, vocal);
-  dance = Math.min(maxSingleStat, dance);
-  visual = Math.min(maxSingleStat, visual);
-
-  form.vocal = String(vocal);
-  form.dance = String(dance);
-  form.visual = String(visual);
+  form.vocal = Math.min(maxSingleStat, vocal);
+  form.dance = Math.min(maxSingleStat, dance);
+  form.visual = Math.min(maxSingleStat, visual);
 
   totalStats.value = calculateTotalStats(form.difficulty, form.beforeFinalTest, [
-    vocal,
-    dance,
-    visual,
+    form.vocal,
+    form.dance,
+    form.visual,
   ]);
+  addedStats.value = totalStats.value - form.vocal - form.dance - form.visual;
 
   calculatedResultList.length = 0;
   rankTargetList.forEach((each) => {
@@ -200,17 +198,17 @@ function calculateFinalTestTarget(
         <el-row :gutter="16" @keyup.enter="handleSubmit">
           <el-col :span="8" :xs="24">
             <el-form-item label="Vocal" prop="vocal">
-              <el-input v-model="form.vocal" type="number"></el-input>
+              <el-input v-model.number="form.vocal" type="number"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Dance" prop="dance">
-              <el-input v-model="form.dance" type="number"></el-input>
+              <el-input v-model.number="form.dance" type="number"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Visual" prop="visual">
-              <el-input v-model="form.visual" type="number"></el-input>
+              <el-input v-model.number="form.visual" type="number"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
