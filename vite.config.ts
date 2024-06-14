@@ -40,7 +40,7 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         // Import on demand
-        additionalData: `@use "@/assets/styles/element-plus.scss" as *;`,
+        additionalData: `@use "@/assets/styles/element-plus-var.scss" as *;`,
       },
     },
   },
