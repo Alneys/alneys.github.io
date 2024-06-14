@@ -22,6 +22,7 @@
       color: white;
       text-decoration: none;
       h1 {
+        line-height: 1.25;
         margin: 0;
       }
     }
