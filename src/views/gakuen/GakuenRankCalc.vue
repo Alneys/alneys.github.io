@@ -206,17 +206,17 @@ function calculateFinalTestTarget(
         <el-row :gutter="16" @keyup.enter="handleSubmit">
           <el-col :span="8" :xs="24">
             <el-form-item label="Vocal" prop="vocal">
-              <el-input v-model.number="form.vocal" type="number"></el-input>
+              <el-input v-model.number="form.vocal" type="number" inputmode="numeric"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Dance" prop="dance">
-              <el-input v-model.number="form.dance" type="number"></el-input>
+              <el-input v-model.number="form.dance" type="number" inputmode="numeric"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Visual" prop="visual">
-              <el-input v-model.number="form.visual" type="number"></el-input>
+              <el-input v-model.number="form.visual" type="number" inputmode="numeric"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
