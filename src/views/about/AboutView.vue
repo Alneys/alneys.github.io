@@ -112,6 +112,14 @@
     </div>
 
     <div class="al-divider"></div>
+    <h3>已知问题</h3>
+    <div class="list-p">
+      <li>
+        在input[type=number]输入框强行输入非数值时，点击清空按钮无法清空输入框：这是v-model.number与input[type=number]共同作用的结果。
+      </li>
+    </div>
+
+    <div class="al-divider"></div>
     <h3>可能的开发计划（？）</h3>
     <div class="list-p">
       <li>偶像大师百万现场 周年计算器</li>
