@@ -15,9 +15,9 @@
       <router-link to="/about">
         <el-card shadow="hover">关于</el-card>
       </router-link>
-      <router-link to="/404test">
+      <!-- <router-link to="/404test">
         <el-card shadow="hover">404 Page Test</el-card>
-      </router-link>
+      </router-link> -->
     </div>
   </div>
 </template>

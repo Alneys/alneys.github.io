@@ -9,12 +9,16 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 
+import inputmodeDirective from './utils/directives/inputmode';
+
 import '@/assets/styles/main.scss';
 
 const app = createApp(App);
 
 app.use(createPinia());
 app.use(router);
+
+app.directive('inputmode', inputmodeDirective);
 
 // Element Plus (disabled when importing on demand)
 // app.use(ElementPlus);
