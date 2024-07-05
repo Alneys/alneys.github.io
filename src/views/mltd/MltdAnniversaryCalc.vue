@@ -22,8 +22,8 @@ const form = reactive({
   stamina20Count: undefined as number | undefined,
   stamina10Count: undefined as number | undefined,
 
-  tokenGainTime: 7,
-  tokenBurnTime: 3,
+  gainTokenTime: 7,
+  burnTokenTime: 3,
   remainingTime: 0,
 });
 
@@ -59,8 +59,18 @@ const result = reactive({
   burnTokenPlays: computed(
     (): number =>
       Math.ceil(
-        ((form.token ?? 0) + (form.freeTokenCount ?? 0) * 4540 + result.tokenNeeded) / 450,
+        ((form.token ?? 0) +
+          (form.boostCount ?? 0) * 1071 * 2 * 10 +
+          (form.freeTokenCount ?? 0) * 4540 +
+          result.tokenNeeded) /
+          720,
       ) || 0,
+  ),
+  boostTimeSpend: computed((): number => result.boostPlays * form.gainTokenTime),
+  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.gainTokenTime),
+  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.burnTokenTime),
+  totalTimeSpend: computed(
+    (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
   ),
 });
 
@@ -69,10 +79,6 @@ const calculatedForm = ref(form);
 
 onMounted(() => {
   resetCurrentRemainingTime();
-  form.targetPt = 5000000;
-  form.pt = 1903752;
-  form.plv = 541;
-  form.token = 115548;
 });
 
 function resetCurrentRemainingTime() {
@@ -118,7 +124,7 @@ function handleSubmit() {
     <div class="al-divider"></div>
     <div id="mltd-anni-calc-form">
       <el-row :gutter="16">
-        <el-col :lg="12" :sm="24">
+        <el-col :lg="14" :sm="24">
           <el-form
             ref="formRef"
             :model="form"
@@ -290,7 +296,7 @@ function handleSubmit() {
               <el-col :span="8" :xs="24">
                 <el-form-item label="单轮攒道具时间" prop="tokenGainTime">
                   <el-input
-                    v-model.number="form.tokenGainTime"
+                    v-model.number="form.gainTokenTime"
                     :min="0"
                     :max="13"
                     type="number"
@@ -303,7 +309,7 @@ function handleSubmit() {
               <el-col :span="8" :xs="24">
                 <el-form-item label="单轮清道具时间" prop="tokenBurnTime">
                   <el-input
-                    v-model.number="form.tokenBurnTime"
+                    v-model.number="form.burnTokenTime"
                     :min="0"
                     :max="13"
                     type="number"
@@ -332,6 +338,16 @@ function handleSubmit() {
               <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
             </el-form-item>
+
+            <el-alert type="info">
+              <p>TODO：</p>
+              <ol>
+                <li>使用localstorage存储与读取输入值</li>
+                <li>详细说明</li>
+                <li>体力瓶，白送体力，自回体力功能</li>
+                <li>更加严格的检测输入</li>
+              </ol>
+            </el-alert>
           </el-form>
         </el-col>
         <el-col :span="0.1" class="hidden-sm-and-down">
@@ -340,7 +356,7 @@ function handleSubmit() {
         <el-col :lg="0" :sm="24">
           <div class="al-divider"></div>
         </el-col>
-        <el-col :lg="11" :sm="24">
+        <el-col :lg="9" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
             <table class="mltd-anni-result-table">
@@ -351,6 +367,7 @@ function handleSubmit() {
                 <tr>
                   <th scope="col">项目</th>
                   <th scope="col">结果</th>
+                  <th scope="col">时间（分钟）</th>
                 </tr>
               </thead>
               <tbody>
@@ -363,14 +380,37 @@ function handleSubmit() {
                 <tr>
                   <td>火攒道具次数</td>
                   <td>{{ result.boostPlays ?? '?' }}</td>
+                  <td style="font-family: monospace; text-align: right">
+                    {{ result.boostTimeSpend ?? '?' }}分钟
+                  </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
                   <td>{{ result.gainTokenPlays ?? '?' }}</td>
+                  <td style="font-family: monospace; text-align: right">
+                    {{ result.gainTokenTimeSpend ?? '?' }}分钟
+                  </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
                   <td>{{ result.burnTokenPlays ?? '?' }}</td>
+                  <td style="font-family: monospace; text-align: right">
+                    {{ result.burnTokenTimeSpend ?? '?' }}分钟
+                  </td>
+                </tr>
+                <tr>
+                  <td>所有项目总时间</td>
+                  <td colspan="2" style="text-align: center">
+                    {{ result.totalTimeSpend }}分钟 /
+                    {{ (result.totalTimeSpend / 60).toFixed(2) }}小时
+                  </td>
+                </tr>
+                <tr>
+                  <td>平均每日所需时间</td>
+                  <td colspan="2" style="text-align: center">
+                    {{ (result.totalTimeSpend / form.remainingTime).toFixed(2) }}分钟 /
+                    {{ (result.totalTimeSpend / form.remainingTime / 60).toFixed(2) }}小时
+                  </td>
                 </tr>
               </tbody>
             </table>
