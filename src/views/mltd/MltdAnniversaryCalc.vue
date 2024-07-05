@@ -380,21 +380,21 @@ function handleSubmit() {
                 <tr>
                   <td>火攒道具次数</td>
                   <td>{{ result.boostPlays ?? '?' }}</td>
-                  <td style="font-family: monospace; text-align: right">
+                  <td style="text-align: right" class="font-mono">
                     {{ result.boostTimeSpend ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
                   <td>{{ result.gainTokenPlays ?? '?' }}</td>
-                  <td style="font-family: monospace; text-align: right">
+                  <td style="text-align: right" class="font-mono">
                     {{ result.gainTokenTimeSpend ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
                   <td>{{ result.burnTokenPlays ?? '?' }}</td>
-                  <td style="font-family: monospace; text-align: right">
+                  <td style="text-align: right" class="font-mono">
                     {{ result.burnTokenTimeSpend ?? '?' }}分钟
                   </td>
                 </tr>
@@ -543,7 +543,7 @@ function handleSubmit() {
   }
 
   td:nth-of-type(2) {
-    font-family: monospace;
+    font-family: var(--al-font-family-mono);
     text-align: right;
   }
 
