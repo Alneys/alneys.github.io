@@ -22,8 +22,8 @@ const form = reactive({
   stamina20Count: undefined as number | undefined,
   stamina10Count: undefined as number | undefined,
 
-  gainTokenTime: 7,
-  burnTokenTime: 3,
+  gainTokenTime: 7.1,
+  burnTokenTime: 2.9,
   remainingTime: 0,
 });
 
@@ -86,7 +86,7 @@ function resetCurrentRemainingTime() {
     (
       (new Date('2024-07-12 23:59:59+0900').getTime() - new Date().getTime()) /
       (1000 * 3600 * 24)
-    ).toFixed(2),
+    ).toFixed(3),
   );
   form.remainingTime = remainingTime > 0 ? remainingTime : 0;
   if (remainingTime > 0) {
@@ -298,7 +298,8 @@ function handleSubmit() {
                   <el-input
                     v-model.number="form.gainTokenTime"
                     :min="0"
-                    :max="13"
+                    :max="30"
+                    :step="0.1"
                     type="number"
                     inputmode="decimal"
                   >
@@ -311,7 +312,8 @@ function handleSubmit() {
                   <el-input
                     v-model.number="form.burnTokenTime"
                     :min="0"
-                    :max="13"
+                    :max="30"
+                    :step="0.1"
                     type="number"
                     inputmode="decimal"
                   >
@@ -325,6 +327,7 @@ function handleSubmit() {
                     v-model.number="form.remainingTime"
                     :min="0"
                     :max="13"
+                    :step="0.1"
                     type="number"
                     inputmode="decimal"
                   >
@@ -383,27 +386,27 @@ function handleSubmit() {
                   <td>火攒道具次数</td>
                   <td>{{ result.boostPlays ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.boostTimeSpend ?? '?' }}分钟
+                    {{ result.boostTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
                   <td>{{ result.gainTokenPlays ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.gainTokenTimeSpend ?? '?' }}分钟
+                    {{ result.gainTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
                   <td>{{ result.burnTokenPlays ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.burnTokenTimeSpend ?? '?' }}分钟
+                    {{ result.burnTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>所有项目总时间</td>
                   <td colspan="2" style="text-align: center">
-                    {{ result.totalTimeSpend }}分钟 /
+                    {{ result.totalTimeSpend.toFixed(2) }}分钟 /
                     {{ (result.totalTimeSpend / 60).toFixed(2) }}小时
                   </td>
                 </tr>
