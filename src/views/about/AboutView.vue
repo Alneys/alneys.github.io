@@ -97,17 +97,20 @@
     </p>
     <div class="shields-io-collections">
       <img
-        src="https://img.shields.io/github/last-commit/Alneys/alneys.github.io/main?style=flat-square"
-        alt="Last commit"
+        src="https://img.shields.io/github/actions/workflow/status/Alneys/alneys.github.io/vite-gh-pages.yml?style=flat-square"
+        alt="Workflow Status"
+      />
+      <img
+        src="https://img.shields.io/github/last-commit/Alneys/alneys.github.io/main?style=flat-square&label=last commit on main"
+        alt="Last commit on main"
+      />
+      <img
+        src="https://img.shields.io/github/last-commit/Alneys/alneys.github.io/dev?style=flat-square&label=last commit on dev"
+        alt="Last commit on dev"
       />
       <img
         src="https://img.shields.io/github/commits-difference/Alneys/alneys.github.io?base=main&head=dev"
         alt="GitHub commits difference between two branches/tags/commits"
-      />
-
-      <img
-        src="https://img.shields.io/github/actions/workflow/status/Alneys/alneys.github.io/vite-gh-pages.yml?style=flat-square"
-        alt="Workflow Status"
       />
     </div>
 
