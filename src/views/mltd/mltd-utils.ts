@@ -1,7 +1,7 @@
 import { levelToMaxStaminaTable } from './mltd-data';
 
 export function levelToMaxStamina(level: number): number {
-  return levelToMaxStaminaTable[level] ?? levelToMaxStaminaTable[levelToMaxStaminaTable.length - 1];
+  return levelToMaxStaminaTable[level] ?? levelToMaxStaminaTable[0];
 
   // if (level >= 700) {
   //   return 240;

@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, reactive, nextTick, onMounted } from 'vue';
+import { ref, reactive, nextTick, onMounted, computed } from 'vue';
 import type { FormInstance } from 'element-plus';
+
+import * as mltd from './mltd-utils';
 
 const formRef = ref<FormInstance | null>();
 
 const form = reactive({
   targetPt: undefined as number | undefined,
 
-  level: undefined as number | undefined,
+  plv: undefined as number | undefined,
   maxStamina: undefined as number | undefined,
   pt: undefined as number | undefined,
   token: undefined as number | undefined,
@@ -25,15 +27,52 @@ const form = reactive({
   remainingTime: 0,
 });
 
+const result = reactive({
+  ptFromBoost: computed(
+    () => Math.round(form.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
+  ),
+  ptFromFreeToken: computed(() => Math.round(form.freeTokenCount! * ((4540 * 2148) / 720)) || 0),
+  ptFromRemainingToken: computed(() => Math.floor(form.token! * (2148 / 720)) || 0),
+
+  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.plv!) || 0),
+  staminaForBoost: computed(() => form.boostCount! * 4500 || 0),
+
+  ptNeeded: computed((): number => {
+    const needed =
+      (form.targetPt || 0) -
+      (form.pt || 0) -
+      (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
+    return needed && needed > 0 ? needed : 0;
+  }),
+  staminaNeeded: computed((): number => {
+    return Math.ceil(result.ptNeeded * (450 / (1071 + (1071 / 720) * 2148)));
+  }),
+  tokenNeeded: computed((): number => {
+    return Math.floor((result.staminaNeeded / 450) * 1071);
+  }),
+
+  jewelNeeded: computed((): number =>
+    Math.ceil(((result.staminaNeeded + result.staminaForBoost) / result.currentMaxStamina) * 50),
+  ),
+  boostPlays: computed((): number => form.boostCount! * 10 || 0),
+  gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
+  burnTokenPlays: computed(
+    (): number =>
+      Math.ceil(
+        ((form.token ?? 0) + (form.freeTokenCount ?? 0) * 4540 + result.tokenNeeded) / 450,
+      ) || 0,
+  ),
+});
+
 const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
 
 onMounted(() => {
-  const remainingTime = resetCurrentRemainingTime();
-  if (remainingTime > 0) {
-    form.boostCount = Math.floor(remainingTime);
-    form.freeTokenCount = form.boostCount;
-  }
+  resetCurrentRemainingTime();
+  form.targetPt = 5000000;
+  form.pt = 1903752;
+  form.plv = 541;
+  form.token = 115548;
 });
 
 function resetCurrentRemainingTime() {
@@ -44,6 +83,10 @@ function resetCurrentRemainingTime() {
     ).toFixed(2),
   );
   form.remainingTime = remainingTime > 0 ? remainingTime : 0;
+  if (remainingTime > 0) {
+    form.boostCount = Math.floor(remainingTime);
+    form.freeTokenCount = form.boostCount;
+  }
   return form.remainingTime;
 }
 
@@ -86,7 +129,7 @@ function handleSubmit() {
             <h2>活动目标</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="目标pt" prop="targetPt" required>
+                <el-form-item label="目标pt" prop="targetPt">
                   <el-input
                     v-model.number="form.targetPt"
                     :min="0"
@@ -103,9 +146,9 @@ function handleSubmit() {
             <h2>当前活动状况</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="当前等级" prop="level" required>
+                <el-form-item label="当前等级" prop="level">
                   <el-input
-                    v-model.number="form.level"
+                    v-model.number="form.plv"
                     :min="1"
                     :max="999"
                     type="number"
@@ -116,7 +159,7 @@ function handleSubmit() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="当前pt" prop="pt" required>
+                <el-form-item label="当前pt" prop="pt">
                   <el-input
                     v-model.number="form.pt"
                     :min="0"
@@ -129,7 +172,7 @@ function handleSubmit() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="当前道具数" prop="token" required>
+                <el-form-item label="当前道具数" prop="token">
                   <el-input
                     v-model.number="form.token"
                     :min="0"
@@ -286,7 +329,7 @@ function handleSubmit() {
             </el-row>
 
             <el-form-item label=" ">
-              <el-button type="primary" @click="handleSubmit">开始计算</el-button>
+              <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
             </el-form-item>
           </el-form>
@@ -300,10 +343,115 @@ function handleSubmit() {
         <el-col :lg="11" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
-            <div v-if="calculatedFlag"></div>
-            <div v-else>
-              <p>等待输入</p>
-            </div>
+            <table class="mltd-anni-result-table">
+              <caption>
+                关键信息
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">项目</th>
+                  <th scope="col">结果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="color: red">
+                  <td>需要钻石数量</td>
+                  <td style="font-weight: 700">
+                    {{ result.jewelNeeded ?? '?' }}
+                  </td>
+                </tr>
+                <tr>
+                  <td>火攒道具次数</td>
+                  <td>{{ result.boostPlays ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>普通攒道具次数</td>
+                  <td>{{ result.gainTokenPlays ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>清道具次数</td>
+                  <td>{{ result.burnTokenPlays ?? '?' }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="mltd-anni-result-table">
+              <caption>
+                当前pt情况
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">项目</th>
+                  <th scope="col">结果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>来自于火🔥的pt<br />（攒道具+清道具）</td>
+                  <td>{{ result.ptFromBoost }}</td>
+                </tr>
+                <tr>
+                  <td>来自于白给道具的pt</td>
+                  <td>{{ result.ptFromFreeToken }}</td>
+                </tr>
+                <tr>
+                  <td>来自于剩余道具的pt</td>
+                  <td>{{ result.ptFromRemainingToken }}</td>
+                </tr>
+                <tr style="color: red">
+                  <td>还需要获得pt</td>
+                  <td>{{ result.ptNeeded }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="mltd-anni-result-table">
+              <caption>
+                还需要获得pt情况
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">项目</th>
+                  <th scope="col">结果</th>
+                  <th scope="col">备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="color: red">
+                  <td>还需要额外pt</td>
+                  <td>{{ result.ptNeeded }}</td>
+                </tr>
+                <tr>
+                  <td>还需要体力</td>
+                  <td>{{ result.staminaNeeded }}</td>
+                  <td>不包含火消耗的体力</td>
+                </tr>
+                <tr>
+                  <td>还需要获取道具</td>
+                  <td>{{ result.tokenNeeded }}</td>
+                  <td>上面体力转化的道具</td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="mltd-anni-result-table">
+              <caption>
+                体力情况
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">项目</th>
+                  <th scope="col">结果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>最大体力</td>
+                  <td>{{ result.currentMaxStamina ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>火攒道具消耗体力</td>
+                  <td>{{ result.staminaForBoost ?? '?' }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </el-col>
       </el-row>
@@ -312,6 +460,8 @@ function handleSubmit() {
 </template>
 
 <style lang="scss" scoped>
+@use 'sass:map';
+@use '@/assets/styles/im/im-colors.scss' as im;
 // :deep() {
 //   /* Chrome, Safari, Edge, Opera */
 //   input::-webkit-outer-spin-button,
@@ -325,4 +475,48 @@ function handleSubmit() {
 //     appearance: textfield;
 //   }
 // }
+.mltd-anni-result-table {
+  & {
+    border: 2px solid rgb(128 128 128);
+    border-collapse: collapse;
+  }
+
+  caption {
+    padding: 8px;
+    font-weight: bold;
+  }
+
+  thead,
+  tfoot {
+    background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+  }
+
+  th,
+  td {
+    border: 1px solid rgb(128 128 128);
+    padding: 8px 10px;
+    min-width: 80px;
+  }
+
+  td:first-of-type {
+    text-align: center;
+  }
+
+  td:nth-of-type(2) {
+    font-family: monospace;
+    text-align: right;
+  }
+
+  tbody > tr:nth-of-type(even) {
+    background-color: rgb(237 238 242);
+  }
+
+  tfoot th {
+    text-align: right;
+  }
+
+  tfoot td {
+    font-weight: bold;
+  }
+}
 </style>
