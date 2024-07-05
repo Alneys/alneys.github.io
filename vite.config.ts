@@ -34,13 +34,15 @@ export default defineConfig({
   },
   base: '/',
   server: {
+    port: 2563,
     host: '0.0.0.0',
   },
   css: {
     preprocessorOptions: {
       scss: {
         // Import on demand
-        additionalData: `@use "@/assets/styles/element-plus-var.scss" as *;`,
+        additionalData: `@use "@/assets/styles/element-plus-var.scss" as *;
+          @use 'element-plus/theme-chalk/display.css';`,
       },
     },
   },
