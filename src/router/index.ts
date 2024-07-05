@@ -21,6 +21,16 @@ const router = createRouter({
           component: () => import('@/views/gakuen/GakuenRankCalc.vue'),
         },
         {
+          path: '/mltd',
+          children: [
+            {
+              path: 'anniversary-calc',
+              name: 'mltd-anniversary-calc',
+              component: () => import('@/views/mltd/MltdAnniversaryCalc.vue'),
+            },
+          ],
+        },
+        {
           path: '/about',
           name: 'about',
           component: () => import('@/views/about/AboutView.vue'),
