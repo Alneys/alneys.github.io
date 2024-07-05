@@ -3,6 +3,12 @@
 
 // simple divider
 .al-divider {
-  border-bottom: 2px solid var(--im-color-miya);
   margin: 1em 0;
+  border-bottom: 2px solid var(--im-color-miya);
+}
+
+.al-divider-vertical {
+  margin: 0px 1em;
+  border-left: 2px solid var(--im-color-miya);
+  height: 100%;
 }
