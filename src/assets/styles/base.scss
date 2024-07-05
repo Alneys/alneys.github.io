@@ -4,19 +4,38 @@
 :root {
   --al-font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft Yahei', -apple-system,
     BlinkMacSystemFont, sans-serif;
-  --al-font-family-mono: 'Consolas', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft Yahei',
-    -apple-system, BlinkMacSystemFont, sans-serif;
+  --al-font-family-mono: 'Consolas', monospace, 'Noto Sans SC', 'Source Han Sans SC',
+    'Microsoft Yahei', -apple-system, BlinkMacSystemFont, sans-serif;
   --al-font-family-jp: 'Noto Sans JP', 'Yu Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .font-normal {
-  font-family: var(--al-font-family);
-}
-.font-jp {
-  font-family: var(--al-font-family-jp);
+  font-family:
+    'Noto Sans SC',
+    'Source Han Sans SC',
+    'Microsoft Yahei',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 .font-mono {
-  font-family: var(--al-font-family-mono);
+  font-family:
+    'Consolas',
+    monospace,
+    'Noto Sans SC',
+    'Source Han Sans SC',
+    'Microsoft Yahei',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif !important;
+}
+.font-jp {
+  font-family:
+    'Noto Sans JP',
+    'Yu Gothic',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 html {
@@ -70,4 +89,20 @@ h6 {
   h3 {
     font-size: 1.0625rem;
   }
+}
+
+pre,
+code,
+kbd,
+samp {
+  font-family:
+    'Consolas',
+    monospace,
+    'Noto Sans SC',
+    'Source Han Sans SC',
+    'Microsoft Yahei',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 1em;
 }

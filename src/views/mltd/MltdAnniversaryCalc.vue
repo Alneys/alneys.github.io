@@ -341,9 +341,10 @@ function handleSubmit() {
 
             <el-alert type="info">
               <p>TODO：</p>
-              <ol>
+              <ol style="line-height: 2">
                 <li>使用localstorage存储与读取输入值</li>
                 <li>详细说明</li>
+                <li>千位分隔符（显示与输入）</li>
                 <li>体力瓶，白送体力，自回体力功能</li>
                 <li>更加严格的检测输入</li>
               </ol>
@@ -376,6 +377,7 @@ function handleSubmit() {
                   <td style="font-weight: 700">
                     {{ result.jewelNeeded ?? '?' }}
                   </td>
+                  <td style="color: black; text-align: center">/</td>
                 </tr>
                 <tr>
                   <td>火攒道具次数</td>
@@ -543,7 +545,7 @@ function handleSubmit() {
   }
 
   td:nth-of-type(2) {
-    font-family: var(--al-font-family-mono);
+    font-family: var(--al-font-family-mono) !important;
     text-align: right;
   }
 
