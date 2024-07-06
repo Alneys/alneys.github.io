@@ -17,10 +17,10 @@ const form = ref({
   boostCount: 0 as number | undefined,
   freeTokenCount: 0 as number | undefined,
 
-  staminaMaxCount: undefined as number | undefined,
-  stamina30Count: undefined as number | undefined,
-  stamina20Count: undefined as number | undefined,
-  stamina10Count: undefined as number | undefined,
+  staminaMaxCount: 0,
+  stamina30Count: 0,
+  stamina20Count: 0,
+  stamina10Count: 0,
 
   gainTokenTime: 7.1,
   burnTokenTime: 2.9,
@@ -38,6 +38,17 @@ const result = reactive({
 
   currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
   staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
+  staminaRecover: computed(() => Math.floor(form.value.remainingTime * 24 * 12) || 0),
+  staminaFromBottles: computed(
+    (): number =>
+      (form.value.staminaMaxCount || 0) * result.currentMaxStamina +
+      (form.value.stamina30Count || 0) * 30 +
+      (form.value.stamina20Count || 0) * 20 +
+      (form.value.stamina10Count || 0) * 10,
+  ),
+  staminaFromDaily: computed(
+    (): number => (2 * result.currentMaxStamina + 10 * 30) * (form.value.freeTokenCount || 0),
+  ),
 
   ptNeeded: computed((): number => {
     const needed =
@@ -53,9 +64,18 @@ const result = reactive({
     return Math.floor((result.staminaNeeded / 450) * 1071);
   }),
 
-  jewelNeeded: computed((): number =>
-    Math.ceil(((result.staminaNeeded + result.staminaForBoost) / result.currentMaxStamina) * 50),
-  ),
+  jewelNeeded: computed((): number => {
+    const res = Math.ceil(
+      ((result.staminaNeeded +
+        result.staminaForBoost -
+        result.staminaRecover -
+        result.staminaFromBottles -
+        result.staminaFromDaily) /
+        result.currentMaxStamina) *
+        50,
+    );
+    return res > 0 ? res : 0;
+  }),
   boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
   gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
   burnTokenPlays: computed(
@@ -81,6 +101,7 @@ const result = reactive({
 
 onMounted(() => {
   resetCurrentRemainingTime();
+  setBoostFromRemainingTime();
 });
 
 function resetCurrentRemainingTime() {
@@ -91,11 +112,14 @@ function resetCurrentRemainingTime() {
     ).toFixed(3),
   );
   form.value.remainingTime = remainingTime > 0 ? remainingTime : 0;
-  if (remainingTime > 0) {
-    form.value.boostCount = Math.floor(remainingTime);
+  return form.value.remainingTime;
+}
+
+function setBoostFromRemainingTime() {
+  if (form.value.remainingTime > 0) {
+    form.value.boostCount = Math.floor(form.value.remainingTime);
     form.value.freeTokenCount = form.value.boostCount;
   }
-  return form.value.remainingTime;
 }
 
 function handleClear() {
@@ -179,6 +203,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
+                    placeholder="3,900,000"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -196,6 +221,7 @@ function clearLocalStorage() {
                     :max="999"
                     type="number"
                     inputmode="numeric"
+                    placeholder="1-999"
                   >
                     <template #prepend>PLv</template>
                   </el-input>
@@ -210,6 +236,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
+                    placeholder="1,300,000"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -224,6 +251,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
+                    placeholder="0-999,999"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -242,6 +270,7 @@ function clearLocalStorage() {
                     :max="13"
                     type="number"
                     inputmode="numeric"
+                    placeholder="0-13"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -255,6 +284,7 @@ function clearLocalStorage() {
                     :max="13"
                     type="number"
                     inputmode="numeric"
+                    placeholder="0-13"
                   >
                     <template #append>次</template>
                   </el-input>
@@ -268,8 +298,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -283,8 +312,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -298,8 +326,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -313,8 +340,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -341,6 +367,7 @@ function clearLocalStorage() {
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
+                    placeholder="可以输入小数"
                   >
                     <template #append>分钟</template>
                   </el-input>
@@ -355,6 +382,7 @@ function clearLocalStorage() {
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
+                    placeholder="可以输入小数"
                   >
                     <template #append>分钟</template>
                   </el-input>
@@ -369,6 +397,7 @@ function clearLocalStorage() {
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
+                    placeholder="可以自动获取"
                   >
                     <template #append>天</template>
                   </el-input>
@@ -379,6 +408,9 @@ function clearLocalStorage() {
             <el-form-item label=" ">
               <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
+              <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
+            </el-form-item>
+            <el-form-item label=" ">
               <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
               <el-button @click="loadFromLocalStorage">读取缓存</el-button>
               <el-button @click="clearLocalStorage">清除缓存</el-button>
@@ -388,8 +420,6 @@ function clearLocalStorage() {
               <p>TODO：</p>
               <ol style="line-height: 1.5">
                 <li>详细说明</li>
-                <li>千位分隔符（显示与输入）</li>
-                <li>体力瓶，白送体力，自回体力功能</li>
                 <li>更加严格的检测输入</li>
               </ol>
             </el-alert>
@@ -419,27 +449,27 @@ function clearLocalStorage() {
                 <tr style="color: red">
                   <td>需要钻石数量</td>
                   <td style="font-weight: 700">
-                    {{ result.jewelNeeded ?? '?' }}
+                    {{ result.jewelNeeded.toLocaleString('en-US') ?? '?' }}
                   </td>
                   <td style="color: black; text-align: center">/</td>
                 </tr>
                 <tr>
                   <td>火攒道具次数</td>
-                  <td>{{ result.boostPlays ?? '?' }}</td>
+                  <td>{{ result.boostPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
                     {{ result.boostTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
-                  <td>{{ result.gainTokenPlays ?? '?' }}</td>
+                  <td>{{ result.gainTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
                     {{ result.gainTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
-                  <td>{{ result.burnTokenPlays ?? '?' }}</td>
+                  <td>{{ result.burnTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
                     {{ result.burnTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
@@ -473,19 +503,19 @@ function clearLocalStorage() {
               <tbody>
                 <tr>
                   <td>来自于火🔥的pt<br />（攒道具+清道具）</td>
-                  <td>{{ result.ptFromBoost }}</td>
+                  <td>{{ result.ptFromBoost.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>来自于白给道具的pt</td>
-                  <td>{{ result.ptFromFreeToken }}</td>
+                  <td>{{ result.ptFromFreeToken.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>来自于剩余道具的pt</td>
-                  <td>{{ result.ptFromRemainingToken }}</td>
+                  <td>{{ result.ptFromRemainingToken.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr style="color: red">
                   <td>还需要获得pt</td>
-                  <td>{{ result.ptNeeded }}</td>
+                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -503,16 +533,16 @@ function clearLocalStorage() {
               <tbody>
                 <tr style="color: red">
                   <td>还需要额外pt</td>
-                  <td>{{ result.ptNeeded }}</td>
+                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>还需要体力</td>
-                  <td>{{ result.staminaNeeded }}</td>
+                  <td>{{ result.staminaNeeded.toLocaleString('en-US') }}</td>
                   <td>不包含火消耗的体力</td>
                 </tr>
                 <tr>
                   <td>还需要获取道具</td>
-                  <td>{{ result.tokenNeeded }}</td>
+                  <td>{{ result.tokenNeeded.toLocaleString('en-US') }}</td>
                   <td>上面体力转化的道具</td>
                 </tr>
               </tbody>
@@ -530,11 +560,23 @@ function clearLocalStorage() {
               <tbody>
                 <tr>
                   <td>最大体力</td>
-                  <td>{{ result.currentMaxStamina ?? '?' }}</td>
+                  <td>{{ result.currentMaxStamina.toLocaleString('en-US') ?? '?' }}</td>
                 </tr>
                 <tr>
                   <td>火攒道具消耗体力</td>
-                  <td>{{ result.staminaForBoost ?? '?' }}</td>
+                  <td>{{ result.staminaForBoost.toLocaleString('en-US') ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>自然回复体力</td>
+                  <td>{{ result.staminaRecover.toLocaleString('en-US') ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>每日任务回复体力</td>
+                  <td>{{ result.staminaFromDaily.toLocaleString('en-US') ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>体力瓶回复体力</td>
+                  <td>{{ result.staminaFromBottles.toLocaleString('en-US') ?? '?' }}</td>
                 </tr>
               </tbody>
             </table>
