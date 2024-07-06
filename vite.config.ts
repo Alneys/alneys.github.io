@@ -17,7 +17,11 @@ export default defineConfig({
     vueJsx(),
     VueDevTools(),
     AutoImport({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: 'sass',
+        }),
+      ],
     }),
     Components({
       resolvers: [
@@ -41,8 +45,7 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         // Import on demand
-        additionalData: `@use "@/assets/styles/element-plus-var.scss" as *;
-          @use 'element-plus/theme-chalk/display.css';`,
+        additionalData: `@use "@/assets/styles/element-plus-var.scss" as *;`,
       },
     },
   },
