@@ -17,10 +17,10 @@ const form = ref({
   boostCount: 0 as number | undefined,
   freeTokenCount: 0 as number | undefined,
 
-  staminaMaxCount: undefined as number | undefined,
-  stamina30Count: undefined as number | undefined,
-  stamina20Count: undefined as number | undefined,
-  stamina10Count: undefined as number | undefined,
+  staminaMaxCount: 0,
+  stamina30Count: 0,
+  stamina20Count: 0,
+  stamina10Count: 0,
 
   gainTokenTime: 7.1,
   burnTokenTime: 2.9,
@@ -38,6 +38,17 @@ const result = reactive({
 
   currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
   staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
+  staminaRecover: computed(() => Math.floor(form.value.remainingTime * 24 * 12) || 0),
+  staminaFromBottles: computed(
+    (): number =>
+      (form.value.staminaMaxCount || 0) * result.currentMaxStamina +
+      (form.value.stamina30Count || 0) * 30 +
+      (form.value.stamina20Count || 0) * 20 +
+      (form.value.stamina10Count || 0) * 10,
+  ),
+  staminaFromDaily: computed(
+    (): number => (2 * result.currentMaxStamina + 10 * 30) * (form.value.freeTokenCount || 0),
+  ),
 
   ptNeeded: computed((): number => {
     const needed =
@@ -53,9 +64,18 @@ const result = reactive({
     return Math.floor((result.staminaNeeded / 450) * 1071);
   }),
 
-  jewelNeeded: computed((): number =>
-    Math.ceil(((result.staminaNeeded + result.staminaForBoost) / result.currentMaxStamina) * 50),
-  ),
+  jewelNeeded: computed((): number => {
+    const res = Math.ceil(
+      ((result.staminaNeeded +
+        result.staminaForBoost -
+        result.staminaRecover -
+        result.staminaFromBottles -
+        result.staminaFromDaily) /
+        result.currentMaxStamina) *
+        50,
+    );
+    return res > 0 ? res : 0;
+  }),
   boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
   gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
   burnTokenPlays: computed(
@@ -278,8 +298,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -293,8 +312,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -308,8 +326,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -323,8 +340,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    disabled
-                    placeholder="开发中"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -404,7 +420,6 @@ function clearLocalStorage() {
               <p>TODO：</p>
               <ol style="line-height: 1.5">
                 <li>详细说明</li>
-                <li>体力瓶，白送体力，自回体力功能</li>
                 <li>更加严格的检测输入</li>
               </ol>
             </el-alert>
@@ -545,11 +560,23 @@ function clearLocalStorage() {
               <tbody>
                 <tr>
                   <td>最大体力</td>
-                  <td>{{ result.currentMaxStamina ?? '?' }}</td>
+                  <td>{{ result.currentMaxStamina.toLocaleString('en-US') ?? '?' }}</td>
                 </tr>
                 <tr>
                   <td>火攒道具消耗体力</td>
-                  <td>{{ result.staminaForBoost ?? '?' }}</td>
+                  <td>{{ result.staminaForBoost.toLocaleString('en-US') ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>自然回复体力</td>
+                  <td>{{ result.staminaRecover.toLocaleString('en-US') ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>每日任务回复体力</td>
+                  <td>{{ result.staminaFromDaily.toLocaleString('en-US') ?? '?' }}</td>
+                </tr>
+                <tr>
+                  <td>体力瓶回复体力</td>
+                  <td>{{ result.staminaFromBottles.toLocaleString('en-US') ?? '?' }}</td>
                 </tr>
               </tbody>
             </table>
