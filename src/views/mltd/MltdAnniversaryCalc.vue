@@ -435,27 +435,27 @@ function clearLocalStorage() {
                 <tr style="color: red">
                   <td>需要钻石数量</td>
                   <td style="font-weight: 700">
-                    {{ result.jewelNeeded ?? '?' }}
+                    {{ result.jewelNeeded.toLocaleString('en-US') ?? '?' }}
                   </td>
                   <td style="color: black; text-align: center">/</td>
                 </tr>
                 <tr>
                   <td>火攒道具次数</td>
-                  <td>{{ result.boostPlays ?? '?' }}</td>
+                  <td>{{ result.boostPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
                     {{ result.boostTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
-                  <td>{{ result.gainTokenPlays ?? '?' }}</td>
+                  <td>{{ result.gainTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
                     {{ result.gainTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
-                  <td>{{ result.burnTokenPlays ?? '?' }}</td>
+                  <td>{{ result.burnTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
                     {{ result.burnTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
@@ -489,19 +489,19 @@ function clearLocalStorage() {
               <tbody>
                 <tr>
                   <td>来自于火🔥的pt<br />（攒道具+清道具）</td>
-                  <td>{{ result.ptFromBoost }}</td>
+                  <td>{{ result.ptFromBoost.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>来自于白给道具的pt</td>
-                  <td>{{ result.ptFromFreeToken }}</td>
+                  <td>{{ result.ptFromFreeToken.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>来自于剩余道具的pt</td>
-                  <td>{{ result.ptFromRemainingToken }}</td>
+                  <td>{{ result.ptFromRemainingToken.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr style="color: red">
                   <td>还需要获得pt</td>
-                  <td>{{ result.ptNeeded }}</td>
+                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -519,16 +519,16 @@ function clearLocalStorage() {
               <tbody>
                 <tr style="color: red">
                   <td>还需要额外pt</td>
-                  <td>{{ result.ptNeeded }}</td>
+                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>还需要体力</td>
-                  <td>{{ result.staminaNeeded }}</td>
+                  <td>{{ result.staminaNeeded.toLocaleString('en-US') }}</td>
                   <td>不包含火消耗的体力</td>
                 </tr>
                 <tr>
                   <td>还需要获取道具</td>
-                  <td>{{ result.tokenNeeded }}</td>
+                  <td>{{ result.tokenNeeded.toLocaleString('en-US') }}</td>
                   <td>上面体力转化的道具</td>
                 </tr>
               </tbody>
