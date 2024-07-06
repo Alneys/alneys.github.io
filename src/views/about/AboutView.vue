@@ -125,7 +125,8 @@
     <div class="al-divider"></div>
     <h3>可能的开发计划（？）</h3>
     <div class="list-p">
-      <li>偶像大师百万现场现场 周年活动计算器</li>
+      <li><del>偶像大师百万现场现场 周年活动计算器</del></li>
+      <li>国际化 / i18n</li>
       <li>偶像大师百万现场现场 活动控分计算器</li>
       <li>自行开发的tampermonkey脚本列表</li>
       <li>常用网站列表</li>

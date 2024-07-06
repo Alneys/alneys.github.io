@@ -6,7 +6,7 @@ import * as mltd from './mltd-utils';
 
 const formRef = ref<FormInstance | null>();
 
-const form = reactive({
+const form = ref({
   targetPt: undefined as number | undefined,
 
   plv: undefined as number | undefined,
@@ -22,25 +22,27 @@ const form = reactive({
   stamina20Count: undefined as number | undefined,
   stamina10Count: undefined as number | undefined,
 
-  gainTokenTime: 7,
-  burnTokenTime: 3,
+  gainTokenTime: 7.1,
+  burnTokenTime: 2.9,
   remainingTime: 0,
 });
 
 const result = reactive({
   ptFromBoost: computed(
-    () => Math.round(form.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
+    () => Math.round(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
   ),
-  ptFromFreeToken: computed(() => Math.round(form.freeTokenCount! * ((4540 * 2148) / 720)) || 0),
-  ptFromRemainingToken: computed(() => Math.floor(form.token! * (2148 / 720)) || 0),
+  ptFromFreeToken: computed(
+    () => Math.round(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
+  ),
+  ptFromRemainingToken: computed(() => Math.floor(form.value.token! * (2148 / 720)) || 0),
 
-  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.plv!) || 0),
-  staminaForBoost: computed(() => form.boostCount! * 4500 || 0),
+  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
+  staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
 
   ptNeeded: computed((): number => {
     const needed =
-      (form.targetPt || 0) -
-      (form.pt || 0) -
+      (form.value.targetPt || 0) -
+      (form.value.pt || 0) -
       (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
     return needed && needed > 0 ? needed : 0;
   }),
@@ -54,28 +56,28 @@ const result = reactive({
   jewelNeeded: computed((): number =>
     Math.ceil(((result.staminaNeeded + result.staminaForBoost) / result.currentMaxStamina) * 50),
   ),
-  boostPlays: computed((): number => form.boostCount! * 10 || 0),
+  boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
   gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
   burnTokenPlays: computed(
     (): number =>
       Math.ceil(
-        ((form.token ?? 0) +
-          (form.boostCount ?? 0) * 1071 * 2 * 10 +
-          (form.freeTokenCount ?? 0) * 4540 +
+        ((form.value.token ?? 0) +
+          (form.value.boostCount ?? 0) * 1071 * 2 * 10 +
+          (form.value.freeTokenCount ?? 0) * 4540 +
           result.tokenNeeded) /
           720,
       ) || 0,
   ),
-  boostTimeSpend: computed((): number => result.boostPlays * form.gainTokenTime),
-  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.gainTokenTime),
-  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.burnTokenTime),
+  boostTimeSpend: computed((): number => result.boostPlays * form.value.gainTokenTime),
+  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.value.gainTokenTime),
+  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.value.burnTokenTime),
   totalTimeSpend: computed(
     (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
   ),
 });
 
-const calculatedFlag = ref(false);
-const calculatedForm = ref(form);
+// const calculatedFlag = ref(false);
+// const calculatedForm = ref(form);
 
 onMounted(() => {
   resetCurrentRemainingTime();
@@ -86,20 +88,19 @@ function resetCurrentRemainingTime() {
     (
       (new Date('2024-07-12 23:59:59+0900').getTime() - new Date().getTime()) /
       (1000 * 3600 * 24)
-    ).toFixed(2),
+    ).toFixed(3),
   );
-  form.remainingTime = remainingTime > 0 ? remainingTime : 0;
+  form.value.remainingTime = remainingTime > 0 ? remainingTime : 0;
   if (remainingTime > 0) {
-    form.boostCount = Math.floor(remainingTime);
-    form.freeTokenCount = form.boostCount;
+    form.value.boostCount = Math.floor(remainingTime);
+    form.value.freeTokenCount = form.value.boostCount;
   }
-  return form.remainingTime;
+  return form.value.remainingTime;
 }
 
 function handleClear() {
   formRef.value?.resetFields();
   resetCurrentRemainingTime();
-  calculatedFlag.value = false;
 
   nextTick(() => {
     setTimeout(() => {
@@ -108,14 +109,49 @@ function handleClear() {
   });
 }
 
-function handleSubmit() {
-  calculatedForm.value = { ...form };
-  calculatedFlag.value = true;
-
-  nextTick(() => {
-    document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
-  });
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('mltd-anni', JSON.stringify(form.value));
+    ElMessage.success('保存成功');
+  } catch (error) {
+    ElMessage.error('保存失败');
+    throw error;
+  }
 }
+
+function loadFromLocalStorage() {
+  try {
+    const formFromLocal = localStorage.getItem('mltd-anni');
+    if (!formFromLocal) {
+      ElMessage.error('读取失败：没有数据');
+      return;
+    }
+    form.value = JSON.parse(formFromLocal || '{}');
+    ElMessage.success('读取成功');
+  } catch (error) {
+    ElMessage.error('读取失败');
+    throw error;
+  }
+}
+
+function clearLocalStorage() {
+  try {
+    localStorage.removeItem('mltd-anni');
+    ElMessage.success('清除成功');
+  } catch (error) {
+    ElMessage.error('清除失败');
+    throw error;
+  }
+}
+
+// function handleSubmit() {
+//   calculatedform.value.value = { ...form };
+//   calculatedFlag.value = true;
+
+//   nextTick(() => {
+//     document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
+//   });
+// }
 </script>
 
 <template>
@@ -140,7 +176,8 @@ function handleSubmit() {
                     v-model.number="form.targetPt"
                     :min="0"
                     :max="99999999"
-                    type="number"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
                   >
                     <template #append>pt</template>
@@ -170,7 +207,8 @@ function handleSubmit() {
                     v-model.number="form.pt"
                     :min="0"
                     :max="99999999"
-                    type="number"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
                   >
                     <template #append>pt</template>
@@ -183,7 +221,8 @@ function handleSubmit() {
                     v-model.number="form.token"
                     :min="0"
                     :max="999999"
-                    type="number"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
                   >
                     <template #append>个</template>
@@ -298,7 +337,8 @@ function handleSubmit() {
                   <el-input
                     v-model.number="form.gainTokenTime"
                     :min="0"
-                    :max="13"
+                    :max="30"
+                    :step="0.1"
                     type="number"
                     inputmode="decimal"
                   >
@@ -311,7 +351,8 @@ function handleSubmit() {
                   <el-input
                     v-model.number="form.burnTokenTime"
                     :min="0"
-                    :max="13"
+                    :max="30"
+                    :step="0.1"
                     type="number"
                     inputmode="decimal"
                   >
@@ -325,6 +366,7 @@ function handleSubmit() {
                     v-model.number="form.remainingTime"
                     :min="0"
                     :max="13"
+                    :step="0.1"
                     type="number"
                     inputmode="decimal"
                   >
@@ -337,13 +379,16 @@ function handleSubmit() {
             <el-form-item label=" ">
               <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
+              <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
+              <el-button @click="loadFromLocalStorage">读取缓存</el-button>
+              <el-button @click="clearLocalStorage">清除缓存</el-button>
             </el-form-item>
 
             <el-alert type="info">
               <p>TODO：</p>
-              <ol>
-                <li>使用localstorage存储与读取输入值</li>
+              <ol style="line-height: 1.5">
                 <li>详细说明</li>
+                <li>千位分隔符（显示与输入）</li>
                 <li>体力瓶，白送体力，自回体力功能</li>
                 <li>更加严格的检测输入</li>
               </ol>
@@ -376,32 +421,33 @@ function handleSubmit() {
                   <td style="font-weight: 700">
                     {{ result.jewelNeeded ?? '?' }}
                   </td>
+                  <td style="color: black; text-align: center">/</td>
                 </tr>
                 <tr>
                   <td>火攒道具次数</td>
                   <td>{{ result.boostPlays ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.boostTimeSpend ?? '?' }}分钟
+                    {{ result.boostTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
                   <td>{{ result.gainTokenPlays ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.gainTokenTimeSpend ?? '?' }}分钟
+                    {{ result.gainTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
                   <td>{{ result.burnTokenPlays ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.burnTokenTimeSpend ?? '?' }}分钟
+                    {{ result.burnTokenTimeSpend.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>所有项目总时间</td>
                   <td colspan="2" style="text-align: center">
-                    {{ result.totalTimeSpend }}分钟 /
+                    {{ result.totalTimeSpend.toFixed(2) }}分钟 /
                     {{ (result.totalTimeSpend / 60).toFixed(2) }}小时
                   </td>
                 </tr>
@@ -543,7 +589,7 @@ function handleSubmit() {
   }
 
   td:nth-of-type(2) {
-    font-family: var(--al-font-family-mono);
+    font-family: var(--al-font-family-mono) !important;
     text-align: right;
   }
 
