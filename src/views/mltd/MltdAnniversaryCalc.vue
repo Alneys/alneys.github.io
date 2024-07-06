@@ -404,7 +404,6 @@ function clearLocalStorage() {
               <p>TODO：</p>
               <ol style="line-height: 1.5">
                 <li>详细说明</li>
-                <li>千位分隔符（显示与输入）</li>
                 <li>体力瓶，白送体力，自回体力功能</li>
                 <li>更加严格的检测输入</li>
               </ol>
