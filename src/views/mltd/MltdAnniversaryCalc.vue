@@ -379,8 +379,7 @@ function clearLocalStorage() {
 
             <el-alert type="info">
               <p>TODO：</p>
-              <ol style="line-height: 2">
-                <li>使用localstorage存储与读取输入值</li>
+              <ol style="line-height: 1.5">
                 <li>详细说明</li>
                 <li>千位分隔符（显示与输入）</li>
                 <li>体力瓶，白送体力，自回体力功能</li>
