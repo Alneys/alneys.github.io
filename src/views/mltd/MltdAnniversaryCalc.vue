@@ -6,7 +6,7 @@ import * as mltd from './mltd-utils';
 
 const formRef = ref<FormInstance | null>();
 
-const form = reactive({
+const form = ref({
   targetPt: undefined as number | undefined,
 
   plv: undefined as number | undefined,
@@ -29,18 +29,20 @@ const form = reactive({
 
 const result = reactive({
   ptFromBoost: computed(
-    () => Math.round(form.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
+    () => Math.round(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
   ),
-  ptFromFreeToken: computed(() => Math.round(form.freeTokenCount! * ((4540 * 2148) / 720)) || 0),
-  ptFromRemainingToken: computed(() => Math.floor(form.token! * (2148 / 720)) || 0),
+  ptFromFreeToken: computed(
+    () => Math.round(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
+  ),
+  ptFromRemainingToken: computed(() => Math.floor(form.value.token! * (2148 / 720)) || 0),
 
-  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.plv!) || 0),
-  staminaForBoost: computed(() => form.boostCount! * 4500 || 0),
+  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
+  staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
 
   ptNeeded: computed((): number => {
     const needed =
-      (form.targetPt || 0) -
-      (form.pt || 0) -
+      (form.value.targetPt || 0) -
+      (form.value.pt || 0) -
       (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
     return needed && needed > 0 ? needed : 0;
   }),
@@ -54,28 +56,28 @@ const result = reactive({
   jewelNeeded: computed((): number =>
     Math.ceil(((result.staminaNeeded + result.staminaForBoost) / result.currentMaxStamina) * 50),
   ),
-  boostPlays: computed((): number => form.boostCount! * 10 || 0),
+  boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
   gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
   burnTokenPlays: computed(
     (): number =>
       Math.ceil(
-        ((form.token ?? 0) +
-          (form.boostCount ?? 0) * 1071 * 2 * 10 +
-          (form.freeTokenCount ?? 0) * 4540 +
+        ((form.value.token ?? 0) +
+          (form.value.boostCount ?? 0) * 1071 * 2 * 10 +
+          (form.value.freeTokenCount ?? 0) * 4540 +
           result.tokenNeeded) /
           720,
       ) || 0,
   ),
-  boostTimeSpend: computed((): number => result.boostPlays * form.gainTokenTime),
-  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.gainTokenTime),
-  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.burnTokenTime),
+  boostTimeSpend: computed((): number => result.boostPlays * form.value.gainTokenTime),
+  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.value.gainTokenTime),
+  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.value.burnTokenTime),
   totalTimeSpend: computed(
     (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
   ),
 });
 
-const calculatedFlag = ref(false);
-const calculatedForm = ref(form);
+// const calculatedFlag = ref(false);
+// const calculatedForm = ref(form);
 
 onMounted(() => {
   resetCurrentRemainingTime();
@@ -88,18 +90,18 @@ function resetCurrentRemainingTime() {
       (1000 * 3600 * 24)
     ).toFixed(3),
   );
-  form.remainingTime = remainingTime > 0 ? remainingTime : 0;
+  form.value.remainingTime = remainingTime > 0 ? remainingTime : 0;
   if (remainingTime > 0) {
-    form.boostCount = Math.floor(remainingTime);
-    form.freeTokenCount = form.boostCount;
+    form.value.boostCount = Math.floor(remainingTime);
+    form.value.freeTokenCount = form.value.boostCount;
   }
-  return form.remainingTime;
+  return form.value.remainingTime;
 }
 
 function handleClear() {
   formRef.value?.resetFields();
   resetCurrentRemainingTime();
-  calculatedFlag.value = false;
+  clearLocalStorage();
 
   nextTick(() => {
     setTimeout(() => {
@@ -108,14 +110,42 @@ function handleClear() {
   });
 }
 
-function handleSubmit() {
-  calculatedForm.value = { ...form };
-  calculatedFlag.value = true;
-
-  nextTick(() => {
-    document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
-  });
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('mltd-anni', JSON.stringify(form.value));
+    ElMessage.success('保存成功');
+  } catch (error) {
+    ElMessage.error('保存失败');
+    throw error;
+  }
 }
+
+function loadFromLocalStorage() {
+  try {
+    const formFromLocal = localStorage.getItem('mltd-anni');
+    if (!formFromLocal) {
+      ElMessage.error('读取失败：没有数据');
+    }
+    form.value = JSON.parse(formFromLocal || '{}');
+    ElMessage.success('读取成功');
+  } catch (error) {
+    ElMessage.error('读取失败');
+    throw error;
+  }
+}
+
+function clearLocalStorage() {
+  localStorage.removeItem('mltd-anni');
+}
+
+// function handleSubmit() {
+//   calculatedform.value.value = { ...form };
+//   calculatedFlag.value = true;
+
+//   nextTick(() => {
+//     document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
+//   });
+// }
 </script>
 
 <template>
@@ -340,6 +370,8 @@ function handleSubmit() {
             <el-form-item label=" ">
               <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
+              <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
+              <el-button @click="loadFromLocalStorage">读取输入</el-button>
             </el-form-item>
 
             <el-alert type="info">
