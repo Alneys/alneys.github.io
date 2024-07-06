@@ -81,6 +81,7 @@ const result = reactive({
 
 onMounted(() => {
   resetCurrentRemainingTime();
+  setBoostFromRemainingTime();
 });
 
 function resetCurrentRemainingTime() {
@@ -91,11 +92,14 @@ function resetCurrentRemainingTime() {
     ).toFixed(3),
   );
   form.value.remainingTime = remainingTime > 0 ? remainingTime : 0;
-  if (remainingTime > 0) {
-    form.value.boostCount = Math.floor(remainingTime);
+  return form.value.remainingTime;
+}
+
+function setBoostFromRemainingTime() {
+  if (form.value.remainingTime > 0) {
+    form.value.boostCount = Math.floor(form.value.remainingTime);
     form.value.freeTokenCount = form.value.boostCount;
   }
-  return form.value.remainingTime;
 }
 
 function handleClear() {
@@ -379,6 +383,9 @@ function clearLocalStorage() {
             <el-form-item label=" ">
               <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
+              <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
+            </el-form-item>
+            <el-form-item label=" ">
               <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
               <el-button @click="loadFromLocalStorage">读取缓存</el-button>
               <el-button @click="clearLocalStorage">清除缓存</el-button>
