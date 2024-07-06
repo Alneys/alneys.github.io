@@ -183,6 +183,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
+                    placeholder="3,900,000"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -200,6 +201,7 @@ function clearLocalStorage() {
                     :max="999"
                     type="number"
                     inputmode="numeric"
+                    placeholder="1-999"
                   >
                     <template #prepend>PLv</template>
                   </el-input>
@@ -214,6 +216,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
+                    placeholder="1,300,000"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -228,6 +231,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
+                    placeholder="0-999,999"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -246,6 +250,7 @@ function clearLocalStorage() {
                     :max="13"
                     type="number"
                     inputmode="numeric"
+                    placeholder="0-13"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -259,6 +264,7 @@ function clearLocalStorage() {
                     :max="13"
                     type="number"
                     inputmode="numeric"
+                    placeholder="0-13"
                   >
                     <template #append>次</template>
                   </el-input>
@@ -345,6 +351,7 @@ function clearLocalStorage() {
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
+                    placeholder="可以输入小数"
                   >
                     <template #append>分钟</template>
                   </el-input>
@@ -359,6 +366,7 @@ function clearLocalStorage() {
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
+                    placeholder="可以输入小数"
                   >
                     <template #append>分钟</template>
                   </el-input>
@@ -373,6 +381,7 @@ function clearLocalStorage() {
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
+                    placeholder="可以自动获取"
                   >
                     <template #append>天</template>
                   </el-input>
