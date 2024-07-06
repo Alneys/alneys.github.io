@@ -101,7 +101,6 @@ function resetCurrentRemainingTime() {
 function handleClear() {
   formRef.value?.resetFields();
   resetCurrentRemainingTime();
-  clearLocalStorage();
 
   nextTick(() => {
     setTimeout(() => {
@@ -125,6 +124,7 @@ function loadFromLocalStorage() {
     const formFromLocal = localStorage.getItem('mltd-anni');
     if (!formFromLocal) {
       ElMessage.error('读取失败：没有数据');
+      return;
     }
     form.value = JSON.parse(formFromLocal || '{}');
     ElMessage.success('读取成功');
@@ -135,7 +135,13 @@ function loadFromLocalStorage() {
 }
 
 function clearLocalStorage() {
-  localStorage.removeItem('mltd-anni');
+  try {
+    localStorage.removeItem('mltd-anni');
+    ElMessage.success('清除成功');
+  } catch (error) {
+    ElMessage.error('清除失败');
+    throw error;
+  }
 }
 
 // function handleSubmit() {
@@ -374,7 +380,8 @@ function clearLocalStorage() {
               <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
               <el-button @click="handleClear">清空</el-button>
               <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
-              <el-button @click="loadFromLocalStorage">读取输入</el-button>
+              <el-button @click="loadFromLocalStorage">读取缓存</el-button>
+              <el-button @click="clearLocalStorage">清除缓存</el-button>
             </el-form-item>
 
             <el-alert type="info">
