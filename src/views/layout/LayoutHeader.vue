@@ -12,7 +12,7 @@
 #layout-header {
   position: sticky;
   top: 0;
-  z-index: 1000000;
+  z-index: 39;
   background-color: var(--im-color-miya);
   > div {
     display: flex;
