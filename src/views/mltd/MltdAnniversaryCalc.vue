@@ -170,7 +170,8 @@ function clearLocalStorage() {
                     v-model.number="form.targetPt"
                     :min="0"
                     :max="99999999"
-                    type="number"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
                   >
                     <template #append>pt</template>
@@ -200,7 +201,8 @@ function clearLocalStorage() {
                     v-model.number="form.pt"
                     :min="0"
                     :max="99999999"
-                    type="number"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
                   >
                     <template #append>pt</template>
@@ -213,7 +215,8 @@ function clearLocalStorage() {
                     v-model.number="form.token"
                     :min="0"
                     :max="999999"
-                    type="number"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
                   >
                     <template #append>个</template>
