@@ -412,7 +412,7 @@ function clearLocalStorage() {
             </el-form-item>
             <el-form-item label=" ">
               <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
-              <el-button @click="loadFromLocalStorage">读取缓存</el-button>
+              <el-button @click="loadFromLocalStorage">读取缓存（需要手动重新获取剩余时间）</el-button>
               <el-button @click="clearLocalStorage">清除缓存</el-button>
             </el-form-item>
 
@@ -420,7 +420,7 @@ function clearLocalStorage() {
               <p>TODO：</p>
               <ol style="line-height: 1.5">
                 <li>详细说明</li>
-                <li>更加严格的检测输入</li>
+                <li>更加严格地检测输入</li>
               </ol>
             </el-alert>
           </el-form>
