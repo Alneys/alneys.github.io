@@ -4,11 +4,20 @@ import type { FormInstance } from 'element-plus';
 
 const formRef = ref<FormInstance | null>();
 
-const form = reactive({
-  eventType: 3 as number | undefined,
-  targetPt: undefined as number | undefined,
-  pt: undefined as number | undefined,
-  token: undefined as number | undefined,
+interface formCheckedInterface {
+  eventType: number;
+  targetPt: number;
+  pt: number;
+  token: number;
+}
+
+type formType = { [P in keyof formCheckedInterface]: formCheckedInterface[P] | undefined };
+
+const form = reactive<formType>({
+  eventType: 3,
+  targetPt: undefined,
+  pt: undefined,
+  token: undefined,
 });
 
 const calculatedFlag = ref(false);
@@ -26,13 +35,26 @@ function handleClear() {
 }
 
 function handleSubmit() {
+  preprocessingForm();
   calculatedForm.value = { ...form };
+  if (form.eventType === 3) {
+    calcParkingTheater(form as formCheckedInterface);
+  }
   calculatedFlag.value = true;
 
   nextTick(() => {
     document.getElementById('mltd-event-parking-result')?.scrollIntoView({ behavior: 'smooth' });
   });
 }
+
+function preprocessingForm() {
+  Object.keys(form).forEach((each) => {
+    const key = each as keyof typeof form;
+    form[key] = Number(form[key]) || 0;
+  });
+}
+
+function calcParkingTheater(form: { targetPt: number; pt: number; token: number }) {}
 </script>
 
 <template>
