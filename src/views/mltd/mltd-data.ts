@@ -10,7 +10,7 @@ export const eventTheaterStaminaToTokenList = [
     token: 64,
   },
   {
-    name: '2M+ (solo)通常曲，1倍体力',
+    name: '2M+（solo）通常曲，1倍体力',
     pt: 62,
     token: 62,
   },

@@ -28,7 +28,11 @@ const form = reactive<formType>({
 
 const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
-const parkingResult = ref('');
+const parkingResult = ref<{
+  flag: boolean;
+  message?: string;
+  result?: Record<string, number>;
+}>();
 
 function handleClear() {
   formRef.value?.resetFields();
@@ -45,12 +49,7 @@ function handleSubmit() {
   preprocessingForm();
   calculatedForm.value = { ...form };
   if (form.eventType === 3) {
-    const res = calcParkingTheater(form as formCheckedInterface);
-    if (res.flag) {
-      parkingResult.value = JSON.stringify(res.result);
-    } else {
-      parkingResult.value = res.message || '';
-    }
+    parkingResult.value = calcParkingTheater(form as formCheckedInterface);
   }
   calculatedFlag.value = true;
 
@@ -74,8 +73,8 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
   if (form.pt >= form.targetPt) {
     return { flag: false, message: '当前pt已超过目标pt' };
   }
-  if (form.pt - form.targetPt > 6000) {
-    return { flag: false, message: 'pt差距大于6000，请缩小后重试' };
+  if (form.targetPt - form.pt > 10000) {
+    return { flag: false, message: 'pt差距大于10000，请缩小后重试' };
   }
   const result: Record<string, number> = {};
   let flag = false;
@@ -232,7 +231,12 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     <div id="mltd-event-parking-result" style="margin-bottom: 2em">
       <h2>结果</h2>
       <div v-if="calculatedFlag">
-        {{ parkingResult }}
+        <p v-if="parkingResult?.flag === false">控分失败：{{ parkingResult.message }}</p>
+        <div v-else>
+          <template v-for="(value, key) in parkingResult.result" :key="key">
+            <p v-if="value > 0">{{ key }}：{{ value }}次</p>
+          </template>
+        </div>
       </div>
       <div v-else>
         <p>等待上方输入</p>
