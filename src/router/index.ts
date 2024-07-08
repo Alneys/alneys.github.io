@@ -28,6 +28,11 @@ const router = createRouter({
               name: 'mltd-anniversary-calc',
               component: () => import('@/views/mltd/MltdAnniversaryCalc.vue'),
             },
+            {
+              path: 'event-parking',
+              name: 'mltd-event-parking',
+              component: () => import('@/views/mltd/MltdEventParking.vue'),
+            },
           ],
         },
         {

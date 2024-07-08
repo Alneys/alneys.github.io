@@ -59,7 +59,7 @@ jobs:
         run: pnpm install
 
       - name: Build with pnpm
-        run: pnpm run build
+        run: pnpm run build-only
 
       - name: Workaround for vue-router HTML5 mode (serve from 404 page)
         run: cp ./dist/index.html ./dist/404.html
