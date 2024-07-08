@@ -31,7 +31,7 @@ const router = createRouter({
             {
               path: 'event-parking',
               name: 'mltd-event-parking',
-              component: () => import('@/views/mltd/MltdParking.vue'),
+              component: () => import('@/views/mltd/MltdEventParking.vue'),
             },
           ],
         },

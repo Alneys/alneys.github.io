@@ -1,3 +1,60 @@
+export const eventTheaterStaminaToTokenList = [
+  {
+    name: 'MM / OM通常曲，1倍体力',
+    pt: 85,
+    token: 85,
+  },
+  {
+    name: '6M通常曲，1倍体力',
+    pt: 64,
+    token: 64,
+  },
+  {
+    name: '2M+ (solo)通常曲，1倍体力',
+    pt: 62,
+    token: 62,
+  },
+  {
+    name: '4M通常曲，1倍体力',
+    pt: 49,
+    token: 49,
+  },
+  {
+    name: '2M通常曲，1倍体力',
+    pt: 65,
+    token: 65,
+  },
+];
+
+export const eventTheaterTicketToTokenList = [
+  {
+    name: 'MM / OM通常曲，300打工票',
+    pt: 595,
+    token: 595,
+  },
+];
+
+export const eventTheaterTokenToPtList = [
+  {
+    name: '活动曲，4倍',
+    pt: 2148,
+    token: -720,
+  },
+  {
+    name: '活动曲，1倍',
+    pt: 537,
+    token: -180,
+  },
+];
+
+export const eventAnniversaryTicketToTokenList = [
+  {
+    name: 'MM / OM每日推荐曲，450打工票',
+    pt: 1071,
+    token: 1071,
+  },
+];
+
 export const levelToMaxStaminaTable = [
   60, 60, 61, 61, 62, 62, 63, 63, 64, 64, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71,
   72, 72, 73, 73, 74, 74, 75, 75, 76, 76, 77, 77, 78, 78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83,

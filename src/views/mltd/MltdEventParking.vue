@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
+import {
+  eventTheaterStaminaToTokenList,
+  eventAnniversaryTicketToTokenList,
+  eventTheaterTokenToPtList,
+  eventTheaterTicketToTokenList,
+} from './mltd-data';
+import { isFocusable } from 'element-plus/es/utils/index.mjs';
 
 const formRef = ref<FormInstance | null>();
 
@@ -54,7 +61,71 @@ function preprocessingForm() {
   });
 }
 
-function calcParkingTheater(form: { targetPt: number; pt: number; token: number }) {}
+function calcParkingTheater(form: { targetPt: number; pt: number; token: number }) {
+  if (form.pt >= form.targetPt) {
+    throw Error('当前pt已超过目标pt');
+  }
+  if (form.pt - form.targetPt > 6000) {
+    throw Error('pt差距大于6000，请缩小后重试');
+  }
+  const result: Record<string, number | undefined> = {};
+  let flag = false;
+
+  /**
+   *
+   * @param pt: pt behind target, less than 0
+   * @param token: remaining token
+   */
+  function dfs(pt: number, token: number) {
+    // result already found
+    if (flag) {
+      return;
+    }
+    // result found now
+    if (pt === 0) {
+      flag = true;
+      return;
+    }
+    // invalid state
+    if (pt > 0 || token < 0) {
+      return;
+    }
+    // DFS start
+    // Order: token to pt, ticket to token, stamina to token
+    [
+      ...eventTheaterTokenToPtList,
+      ...eventTheaterTicketToTokenList,
+      ...eventTheaterStaminaToTokenList,
+    ].forEach((each) => {
+      // result already found
+      if(flag) {
+        return;
+      }
+      // enough token
+      if (token >= -each.token) {
+        // record try
+        result[each.name] = (result[each.name] ?? 0) + 1;
+        dfs(pt + each.pt, token + each.token);
+        // tries failed, recover result
+        if (!flag) {
+          result[each.name]! -= 1;
+        }
+      }
+    });
+    // failed
+    return;
+  }
+  
+  dfs(form.pt - form.targetPt, form.token);
+  if(flag) {
+    console.log(result);
+    return result;
+  }
+  else {
+    throw '控分失败：不存在控分方案'
+  }
+
+}
 </script>
 
 <template>
