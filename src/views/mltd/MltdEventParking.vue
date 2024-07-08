@@ -3,11 +3,10 @@ import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
 import {
   eventTheaterStaminaToTokenList,
-  eventAnniversaryTicketToTokenList,
   eventTheaterTokenToPtList,
   eventTheaterTicketToTokenList,
+  eventAnniversaryTicketToTokenList,
 } from './mltd-data';
-import { isFocusable } from 'element-plus/es/utils/index.mjs';
 
 const formRef = ref<FormInstance | null>();
 
@@ -29,6 +28,7 @@ const form = reactive<formType>({
 
 const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
+const parkingResult = ref('');
 
 function handleClear() {
   formRef.value?.resetFields();
@@ -45,7 +45,12 @@ function handleSubmit() {
   preprocessingForm();
   calculatedForm.value = { ...form };
   if (form.eventType === 3) {
-    calcParkingTheater(form as formCheckedInterface);
+    const res = calcParkingTheater(form as formCheckedInterface);
+    if (res.flag) {
+      parkingResult.value = JSON.stringify(res.result);
+    } else {
+      parkingResult.value = res.message || '';
+    }
   }
   calculatedFlag.value = true;
 
@@ -61,14 +66,18 @@ function preprocessingForm() {
   });
 }
 
-function calcParkingTheater(form: { targetPt: number; pt: number; token: number }) {
+function calcParkingTheater(form: { targetPt: number; pt: number; token: number }): {
+  flag: boolean;
+  message?: string;
+  result?: Record<string, number>;
+} {
   if (form.pt >= form.targetPt) {
-    throw Error('当前pt已超过目标pt');
+    return { flag: false, message: '当前pt已超过目标pt' };
   }
   if (form.pt - form.targetPt > 6000) {
-    throw Error('pt差距大于6000，请缩小后重试');
+    return { flag: false, message: 'pt差距大于6000，请缩小后重试' };
   }
-  const result: Record<string, number | undefined> = {};
+  const result: Record<string, number> = {};
   let flag = false;
 
   /**
@@ -81,13 +90,13 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     if (flag) {
       return;
     }
+    // invalid state
+    if (pt > 0 || token < 0) {
+      return;
+    }
     // result found now
     if (pt === 0) {
       flag = true;
-      return;
-    }
-    // invalid state
-    if (pt > 0 || token < 0) {
       return;
     }
     // DFS start
@@ -98,15 +107,16 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
       ...eventTheaterStaminaToTokenList,
     ].forEach((each) => {
       // result already found
-      if(flag) {
+      if (flag) {
         return;
       }
       // enough token
       if (token >= -each.token) {
-        // record try
+        // record in result
         result[each.name] = (result[each.name] ?? 0) + 1;
+        // DFS
         dfs(pt + each.pt, token + each.token);
-        // tries failed, recover result
+        // if failed, recover result
         if (!flag) {
           result[each.name]! -= 1;
         }
@@ -115,16 +125,13 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     // failed
     return;
   }
-  
-  dfs(form.pt - form.targetPt, form.token);
-  if(flag) {
-    console.log(result);
-    return result;
-  }
-  else {
-    throw '控分失败：不存在控分方案'
-  }
 
+  dfs(form.pt - form.targetPt, form.token);
+  if (flag) {
+    return { flag, result };
+  } else {
+    return { flag, message: '不存在控分方案' };
+  }
 }
 </script>
 
@@ -224,7 +231,9 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     <div class="al-divider"></div>
     <div id="mltd-event-parking-result" style="margin-bottom: 2em">
       <h2>结果</h2>
-      <div v-if="calculatedFlag"></div>
+      <div v-if="calculatedFlag">
+        {{ parkingResult }}
+      </div>
       <div v-else>
         <p>等待上方输入</p>
       </div>
