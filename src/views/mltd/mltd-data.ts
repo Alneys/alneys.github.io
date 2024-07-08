@@ -1,4 +1,4 @@
-export const eventTheaterStaminaToTokenList = [
+export const eventTheaterStaminaToTokenChoices = [
   {
     name: 'MM / OM通常曲，1倍体力',
     pt: 85,
@@ -26,7 +26,7 @@ export const eventTheaterStaminaToTokenList = [
   },
 ];
 
-export const eventTheaterTicketToTokenList = [
+export const eventTheaterTicketToTokenChoices = [
   {
     name: 'MM / OM通常曲，300打工票',
     pt: 595,
@@ -34,7 +34,7 @@ export const eventTheaterTicketToTokenList = [
   },
 ];
 
-export const eventTheaterTokenToPtList = [
+export const eventTheaterTokenToPtChoices = [
   {
     name: '活动曲，4倍',
     pt: 2148,
@@ -47,7 +47,7 @@ export const eventTheaterTokenToPtList = [
   },
 ];
 
-export const eventAnniversaryTicketToTokenList = [
+export const eventAnniversaryTicketToTokenChoices = [
   {
     name: 'MM / OM每日推荐曲，450打工票',
     pt: 1071,

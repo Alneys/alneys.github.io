@@ -2,10 +2,10 @@
 import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
 import {
-  eventTheaterStaminaToTokenList,
-  eventTheaterTokenToPtList,
-  eventTheaterTicketToTokenList,
-  eventAnniversaryTicketToTokenList,
+  eventTheaterStaminaToTokenChoices,
+  eventTheaterTokenToPtChoices,
+  eventTheaterTicketToTokenChoices,
+  eventAnniversaryTicketToTokenChoices,
 } from './mltd-data';
 
 const formRef = ref<FormInstance | null>();
@@ -28,6 +28,7 @@ const form = reactive<formType>({
 
 const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
+
 const parkingResult = ref<{
   flag: boolean;
   message?: string;
@@ -71,7 +72,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
   result?: Record<string, number>;
 } {
   if (form.pt >= form.targetPt) {
-    return { flag: false, message: '当前pt已超过目标pt' };
+    return { flag: false, message: '当前pt已达到或超过目标pt' };
   }
   if (form.targetPt - form.pt > 10000) {
     return { flag: false, message: 'pt差距大于10000，请缩小后重试' };
@@ -101,9 +102,9 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     // DFS start
     // Order: token to pt, ticket to token, stamina to token
     [
-      ...eventTheaterTokenToPtList,
-      ...eventTheaterTicketToTokenList,
-      ...eventTheaterStaminaToTokenList,
+      ...eventTheaterTokenToPtChoices,
+      ...eventTheaterTicketToTokenChoices,
+      ...eventTheaterStaminaToTokenChoices,
     ].forEach((each) => {
       // result already found
       if (flag) {
