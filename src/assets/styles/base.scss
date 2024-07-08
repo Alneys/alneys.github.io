@@ -4,8 +4,8 @@
 :root {
   --al-font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft Yahei', -apple-system,
     BlinkMacSystemFont, sans-serif;
-  --al-font-family-mono: 'Inconsolata Medium', 'Consolas', monospace, 'Noto Sans SC',
-    'Source Han Sans SC', 'Microsoft Yahei', -apple-system, BlinkMacSystemFont, sans-serif;
+  --al-font-family-mono: 'Inconsolata Medium', 'Consolas', 'Noto Sans SC', 'Source Han Sans SC',
+    'Microsoft Yahei', -apple-system, BlinkMacSystemFont, sans-serif;
   --al-font-family-jp: 'Noto Sans JP', 'Yu Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -22,7 +22,6 @@
   font-family:
     'Inconsolata Medium',
     'Consolas',
-    monospace,
     'Noto Sans SC',
     'Source Han Sans SC',
     'Microsoft Yahei',
