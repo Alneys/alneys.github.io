@@ -1,11 +1,11 @@
 export const eventTheaterStaminaToTokenChoices = [
   {
-    name: 'MM / OM通常曲，1倍体力',
+    name: 'MM / OM 通常曲，1倍体力',
     pt: 85,
     token: 85,
   },
   {
-    name: '6M通常曲，1倍体力',
+    name: '6M 通常曲，1倍体力',
     pt: 64,
     token: 64,
   },
@@ -15,14 +15,14 @@ export const eventTheaterStaminaToTokenChoices = [
     token: 62,
   },
   {
-    name: '4M通常曲，1倍体力',
+    name: '4M 通常曲，1倍体力',
     pt: 49,
     token: 49,
   },
   {
-    name: '2M通常曲，1倍体力',
-    pt: 65,
-    token: 65,
+    name: '2M 通常曲，1倍体力',
+    pt: 35,
+    token: 35,
   },
 ];
 
@@ -47,11 +47,25 @@ export const eventTheaterTokenToPtChoices = [
   },
 ];
 
+export const eventAnniversaryStaminaToTokenChoices = [
+  {
+    name: 'MM 每日推荐曲，1倍体力',
+    pt: 102,
+    token: 102,
+  },
+];
+
+
 export const eventAnniversaryTicketToTokenChoices = [
   {
-    name: 'MM / OM每日推荐曲，450打工票',
+    name: 'MM 每日推荐曲，450打工票',
     pt: 1071,
     token: 1071,
+  },
+  {
+    name: 'MM / OM 普通曲，450打工票',
+    pt: 893,
+    token: 893,
   },
 ];
 
