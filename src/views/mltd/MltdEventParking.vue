@@ -5,7 +5,6 @@ import {
   eventTheaterStaminaToTokenChoices,
   eventTheaterTokenToPtChoices,
   eventTheaterTicketToTokenChoices,
-  eventAnniversaryTicketToTokenChoices,
 } from './mltd-data';
 
 const formRef = ref<FormInstance | null>();
