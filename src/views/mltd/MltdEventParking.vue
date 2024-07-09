@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
-import {
-  eventTheaterStaminaToTokenChoices,
-  eventTheaterTokenToPtChoices,
-  eventTheaterTicketToTokenChoices,
-} from './mltd-data';
+import { eventTheaterChoices } from './mltd-data';
 
 const formRef = ref<FormInstance | null>();
 
@@ -28,10 +24,16 @@ const form = reactive<formType>({
 const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
 
+interface resultItemInterface {
+  name: string;
+  multiplier: string;
+  value: number;
+}
+
 const parkingResult = ref<{
   flag: boolean;
   message?: string;
-  result?: Record<string, number>;
+  result?: Array<resultItemInterface>;
 }>();
 
 function handleClear() {
@@ -68,7 +70,7 @@ function preprocessingForm() {
 function calcParkingTheater(form: { targetPt: number; pt: number; token: number }): {
   flag: boolean;
   message?: string;
-  result?: Record<string, number>;
+  result?: Array<resultItemInterface>;
 } {
   if (form.pt >= form.targetPt) {
     return { flag: false, message: '当前pt已达到或超过目标pt' };
@@ -76,7 +78,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
   if (form.targetPt - form.pt > 10000) {
     return { flag: false, message: 'pt差距大于10000，请缩小后重试' };
   }
-  const result: Record<string, number> = {};
+  const record: Record<string, number> = {};
   let flag = false;
 
   /**
@@ -100,11 +102,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     }
     // DFS start
     // Order: token to pt, ticket to token, stamina to token
-    [
-      ...eventTheaterTokenToPtChoices,
-      ...eventTheaterTicketToTokenChoices,
-      ...eventTheaterStaminaToTokenChoices,
-    ].forEach((each) => {
+    eventTheaterChoices.forEach((each, index) => {
       // result already found
       if (flag) {
         return;
@@ -112,12 +110,12 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
       // enough token
       if (token >= -each.token) {
         // record in result
-        result[each.name] = (result[each.name] ?? 0) + 1;
+        record[index] = (record[index] ?? 0) + 1;
         // DFS
         dfs(pt + each.pt, token + each.token);
         // if failed, recover result
         if (!flag) {
-          result[each.name]! -= 1;
+          record[index]! -= 1;
         }
       }
     });
@@ -127,6 +125,17 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
 
   dfs(form.pt - form.targetPt, form.token);
   if (flag) {
+    const result: Array<resultItemInterface> = [];
+    Object.entries(record).forEach(([key, value]) => {
+      if (value > 0) {
+        result.push({
+          name: eventTheaterChoices[Number(key)].name,
+          multiplier: eventTheaterChoices[Number(key)].multiplier,
+          value,
+        });
+      }
+    });
+
     return { flag, result };
   } else {
     return { flag, message: '不存在控分方案' };
@@ -229,7 +238,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
             </el-form-item>
             <el-alert v-show="form.eventType === 3" type="warning" :closable="false" show-icon>
               <p style="font-size: var(--el-font-size-base)">
-                注意：周年活动目前没有考虑每日推荐曲1.2倍加成，<b>请不要打推荐曲。</b>
+                注意：周年活动有每日推荐曲和普通曲的区别
               </p>
             </el-alert>
           </el-form>
@@ -246,8 +255,10 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
             <div v-if="calculatedFlag">
               <p v-if="parkingResult?.flag === false">控分失败：{{ parkingResult.message }}</p>
               <div v-else>
-                <template v-for="(value, key) in parkingResult.result" :key="key">
-                  <p v-if="value > 0">{{ key }}：{{ value }}次</p>
+                <template v-for="each of parkingResult.result" :key="each.name">
+                  <p v-if="each.value > 0">
+                    {{ each.name }} {{ each.multiplier }} ：{{ each.value }}次
+                  </p>
                 </template>
               </div>
             </div>
