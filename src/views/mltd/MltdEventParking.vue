@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
-import {
-  eventTheaterStaminaToTokenChoices,
-  eventTheaterTokenToPtChoices,
-  eventTheaterTicketToTokenChoices,
-  eventAnniversaryTicketToTokenChoices,
-} from './mltd-data';
+import { eventTheaterChoices } from './mltd-data';
 
 const formRef = ref<FormInstance | null>();
 
@@ -29,10 +24,16 @@ const form = reactive<formType>({
 const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
 
+interface resultItemInterface {
+  name: string;
+  multiplier: string;
+  value: number;
+}
+
 const parkingResult = ref<{
   flag: boolean;
   message?: string;
-  result?: Record<string, number>;
+  result?: Array<resultItemInterface>;
 }>();
 
 function handleClear() {
@@ -49,8 +50,8 @@ function handleClear() {
 function handleSubmit() {
   preprocessingForm();
   calculatedForm.value = { ...form };
-  if (form.eventType === 3) {
-    parkingResult.value = calcParkingTheater(form as formCheckedInterface);
+  if (form.eventType === 3 || form.eventType === 5) {
+    parkingResult.value = calcParkingTheater(form as formCheckedInterface, form.eventType === 5);
   }
   calculatedFlag.value = true;
 
@@ -66,10 +67,13 @@ function preprocessingForm() {
   });
 }
 
-function calcParkingTheater(form: { targetPt: number; pt: number; token: number }): {
+function calcParkingTheater(
+  form: { targetPt: number; pt: number; token: number },
+  isAnniversary = false,
+): {
   flag: boolean;
   message?: string;
-  result?: Record<string, number>;
+  result?: Array<resultItemInterface>;
 } {
   if (form.pt >= form.targetPt) {
     return { flag: false, message: '当前pt已达到或超过目标pt' };
@@ -77,7 +81,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
   if (form.targetPt - form.pt > 10000) {
     return { flag: false, message: 'pt差距大于10000，请缩小后重试' };
   }
-  const result: Record<string, number> = {};
+  const record: Record<string, number> = {};
   let flag = false;
 
   /**
@@ -101,33 +105,45 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     }
     // DFS start
     // Order: token to pt, ticket to token, stamina to token
-    [
-      ...eventTheaterTokenToPtChoices,
-      ...eventTheaterTicketToTokenChoices,
-      ...eventTheaterStaminaToTokenChoices,
-    ].forEach((each) => {
+    for (let i = 0; i < eventTheaterChoices.length; i++) {
+      const each = eventTheaterChoices[i];
       // result already found
       if (flag) {
         return;
       }
+      // Check anniversary only choice
+      if (!isAnniversary && each.anniversaryOnly === true) {
+        continue;
+      }
       // enough token
       if (token >= -each.token) {
         // record in result
-        result[each.name] = (result[each.name] ?? 0) + 1;
+        record[i] = (record[i] ?? 0) + 1;
         // DFS
         dfs(pt + each.pt, token + each.token);
         // if failed, recover result
         if (!flag) {
-          result[each.name]! -= 1;
+          record[i]! -= 1;
         }
       }
-    });
+    }
     // failed
     return;
   }
 
   dfs(form.pt - form.targetPt, form.token);
   if (flag) {
+    const result: Array<resultItemInterface> = [];
+    Object.entries(record).forEach(([key, value]) => {
+      if (value > 0) {
+        result.push({
+          name: eventTheaterChoices[Number(key)].name,
+          multiplier: eventTheaterChoices[Number(key)].multiplier,
+          value,
+        });
+      }
+    });
+
     return { flag, result };
   } else {
     return { flag, message: '不存在控分方案' };
@@ -140,114 +156,134 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     <h1 class="view-title">偶像大师百万现场 活动控分计算器</h1>
     <div class="al-divider"></div>
     <div style="margin-bottom: 1em">
-      <el-alert v-show="form.eventType === 3" type="error" :closable="false" show-icon>
+      <el-alert type="error" :closable="false" show-icon>
         <h2>警告：本页面正在开发中，无法保证结果的准确性！</h2>
       </el-alert>
     </div>
     <div id="mltd-event-parking-form">
-      <el-form
-        ref="formRef"
-        :model="form"
-        label-width="auto"
-        label-position="top"
-        style="max-width: 800px"
-      >
-        <el-form-item label="选择活动类型">
-          <el-select v-model="form.eventType">
-            <el-option label="Theater / Trust / Anniversary" :value="3"></el-option>
-            <el-option label="[开发中] Tour / Tour Bingo" :value="4" disabled></el-option>
-            <el-option label="其他活动开发中" :value="0" disabled></el-option>
-            <!-- 1: Showtime -->
-            <!-- 2: Millicolle! -->
-            <!-- 3: Theater / Trust -->
-            <!-- 4: Tour / Tour Bingo -->
-            <!-- 5: Anniversary -->
-            <!-- 6: Working -->
-            <!-- 7: April Fool -->
-            <!-- 8: Game Corner -->
-            <!-- 9: Millicolle! (Box Gasha) -->
-            <!-- 10: Twin Stage (High Score by Song) -->
-            <!-- 11: Tune -->
-            <!-- 12: Twin Stage (Total High Score) -->
-            <!-- 13: Tale / Time / Team -->
-            <!-- 14: Talk Party -->
-            <!-- 16: Treasure -->
-          </el-select>
-        </el-form-item>
-        <el-row :gutter="16" @keyup.enter="handleSubmit">
-          <el-col :span="8" :xs="24">
-            <el-form-item label="目标pt" prop="targetPt">
-              <template #label><b>目标pt</b></template>
-              <el-input
-                v-model.number="form.targetPt"
-                :min="0"
-                :max="99999999"
-                :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
-                inputmode="numeric"
-                placeholder="100,000"
-              >
-                <template #append>pt</template>
-              </el-input>
+      <el-row :gutter="16">
+        <el-col :lg="13" :sm="24">
+          <el-form
+            ref="formRef"
+            :model="form"
+            label-width="auto"
+            label-position="top"
+            style="max-width: 800px"
+          >
+            <el-form-item label="选择活动类型">
+              <el-select v-model="form.eventType">
+                <el-option label="Theater / Trust" :value="3"></el-option>
+                <el-option label="Anniversary" :value="5"></el-option>
+                <el-option label="[开发中] Tour / Tour Bingo" :value="4" disabled></el-option>
+                <el-option label="其他活动开发中" :value="0" disabled></el-option>
+                <!-- 1: Showtime -->
+                <!-- 2: Millicolle! -->
+                <!-- 3: Theater / Trust -->
+                <!-- 4: Tour / Tour Bingo -->
+                <!-- 5: Anniversary -->
+                <!-- 6: Working -->
+                <!-- 7: April Fool -->
+                <!-- 8: Game Corner -->
+                <!-- 9: Millicolle! (Box Gasha) -->
+                <!-- 10: Twin Stage (High Score by Song) -->
+                <!-- 11: Tune -->
+                <!-- 12: Twin Stage (Total High Score) -->
+                <!-- 13: Tale / Time / Team -->
+                <!-- 14: Talk Party -->
+                <!-- 16: Treasure -->
+              </el-select>
             </el-form-item>
-          </el-col>
-          <el-col :span="8" :xs="24">
-            <el-form-item label="当前pt" prop="pt">
-              <el-input
-                v-model.number="form.pt"
-                :min="0"
-                :max="99999999"
-                :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
-                inputmode="numeric"
-                placeholder="99,039"
-              >
-                <template #append>pt</template>
-              </el-input>
+            <el-row :gutter="16" @keyup.enter="handleSubmit">
+              <el-col :span="8" :xs="24">
+                <el-form-item label="目标pt" prop="targetPt">
+                  <template #label><b>目标pt</b></template>
+                  <el-input
+                    v-model.number="form.targetPt"
+                    :min="0"
+                    :max="99999999"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    inputmode="numeric"
+                    placeholder="100,000"
+                  >
+                    <template #append>pt</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="24">
+                <el-form-item label="当前pt" prop="pt">
+                  <el-input
+                    v-model.number="form.pt"
+                    :min="0"
+                    :max="99999999"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    inputmode="numeric"
+                    placeholder="99,039"
+                  >
+                    <template #append>pt</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="24">
+                <el-form-item label="道具数" prop="token">
+                  <el-input
+                    v-model.number="form.token"
+                    :min="0"
+                    :max="999999"
+                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    inputmode="numeric"
+                    placeholder="1,300"
+                  >
+                    <template #append>个</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label=" ">
+              <el-button type="primary" @click="handleSubmit">开始计算</el-button>
+              <el-button @click="handleClear">清空</el-button>
             </el-form-item>
-          </el-col>
-          <el-col :span="8" :xs="24">
-            <el-form-item label="道具数" prop="token">
-              <el-input
-                v-model.number="form.token"
-                :min="0"
-                :max="999999"
-                :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
-                inputmode="numeric"
-                placeholder="1,300"
-              >
-                <template #append>个</template>
-              </el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label=" ">
-          <el-button type="primary" @click="handleSubmit">开始计算</el-button>
-          <el-button @click="handleClear">清空</el-button>
-        </el-form-item>
-        <el-alert v-show="form.eventType === 3" type="warning" :closable="false" show-icon>
-          <p style="font-size: var(--el-font-size-base)">
-            注意：周年活动目前没有考虑每日推荐曲1.2倍加成，<b>请不要打推荐曲。</b>
-          </p>
-        </el-alert>
-      </el-form>
+          </el-form>
+          <el-alert v-show="form.eventType === 5" type="warning" :closable="false" show-icon>
+            <p style="font-size: var(--el-font-size-base)">
+              注意：周年活动有每日推荐曲和普通曲的区别
+            </p>
+          </el-alert>
+        </el-col>
+        <el-col :span="0.1" class="hidden-sm-and-down">
+          <div class="al-divider-vertical" style="margin: 0 0.5%"></div>
+        </el-col>
+        <el-col :lg="0" :sm="24">
+          <div class="al-divider"></div>
+        </el-col>
+        <el-col :lg="10" :sm="24">
+          <div id="mltd-event-parking-result" style="margin-bottom: 2em">
+            <h2>结果</h2>
+            <div v-if="calculatedFlag">
+              <p v-if="parkingResult?.flag === false">控分失败：{{ parkingResult.message }}</p>
+              <div v-else>
+                <h4>当前状态</h4>
+                <p>pt差距：{{ (form.targetPt! - form.pt!).toLocaleString('en-US') }}</p>
+                <p>道具数：{{ form.token!.toLocaleString('en-US') }}</p>
+
+                <h4>控分方案</h4>
+                <template v-for="each of parkingResult.result" :key="each.name">
+                  <p v-if="each.value > 0">
+                    {{ each.name }} {{ each.multiplier }} ：{{ each.value }}次
+                  </p>
+                </template>
+              </div>
+            </div>
+            <div v-else>
+              <p>等待输入</p>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
     </div>
-    <div class="al-divider"></div>
-    <div id="mltd-event-parking-result" style="margin-bottom: 2em">
-      <h2>结果</h2>
-      <div v-if="calculatedFlag">
-        <p v-if="parkingResult?.flag === false">控分失败：{{ parkingResult.message }}</p>
-        <div v-else>
-          <template v-for="(value, key) in parkingResult.result" :key="key">
-            <p v-if="value > 0">{{ key }}：{{ value }}次</p>
-          </template>
-        </div>
-      </div>
-      <div v-else>
-        <p>等待上方输入</p>
-      </div>
-    </div>
+    <!-- <div class="al-divider"></div> -->
   </div>
 </template>
 

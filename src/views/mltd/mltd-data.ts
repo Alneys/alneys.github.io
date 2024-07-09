@@ -1,57 +1,66 @@
-export const eventTheaterStaminaToTokenChoices = [
+export const eventTheaterChoices = [
   {
-    name: 'MM / OM通常曲，1倍体力',
+    name: '活动曲',
+    multiplier: '1倍',
+    pt: 537,
+    token: -180,
+  },
+  {
+    name: 'MM 每日推荐曲',
+    multiplier: '450打工票',
+    pt: 1071,
+    token: 1071,
+    anniversaryOnly: true,
+  },
+  {
+    name: 'MM / OM 普通曲',
+    multiplier: '450打工票',
+    pt: 893,
+    token: 893,
+    anniversaryOnly: true,
+  },
+  {
+    name: 'MM / OM通常曲',
+    multiplier: '300打工票',
+    pt: 595,
+    token: 595,
+  },
+  {
+    name: 'MM 每日推荐曲',
+    multiplier: '1倍体力',
+    pt: 102,
+    token: 102,
+    anniversaryOnly: true,
+  },
+  {
+    name: 'MM / OM 通常曲',
+    multiplier: '1倍体力',
     pt: 85,
     token: 85,
   },
   {
-    name: '6M通常曲，1倍体力',
+    name: '6M 通常曲',
+    multiplier: '1倍体力',
     pt: 64,
     token: 64,
   },
   {
-    name: '2M+（solo）通常曲，1倍体力',
+    name: '2M+ 通常曲',
+    multiplier: '1倍体力',
     pt: 62,
     token: 62,
   },
   {
-    name: '4M通常曲，1倍体力',
+    name: '4M 通常曲',
+    multiplier: '1倍体力',
     pt: 49,
     token: 49,
   },
   {
-    name: '2M通常曲，1倍体力',
-    pt: 65,
-    token: 65,
-  },
-];
-
-export const eventTheaterTicketToTokenChoices = [
-  {
-    name: 'MM / OM通常曲，300打工票',
-    pt: 595,
-    token: 595,
-  },
-];
-
-export const eventTheaterTokenToPtChoices = [
-  {
-    name: '活动曲，4倍',
-    pt: 2148,
-    token: -720,
-  },
-  {
-    name: '活动曲，1倍',
-    pt: 537,
-    token: -180,
-  },
-];
-
-export const eventAnniversaryTicketToTokenChoices = [
-  {
-    name: 'MM / OM每日推荐曲，450打工票',
-    pt: 1071,
-    token: 1071,
+    name: '2M 通常曲',
+    multiplier: '1倍体力',
+    pt: 35,
+    token: 35,
   },
 ];
 
