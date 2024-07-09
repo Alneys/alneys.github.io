@@ -50,8 +50,8 @@ function handleClear() {
 function handleSubmit() {
   preprocessingForm();
   calculatedForm.value = { ...form };
-  if (form.eventType === 3) {
-    parkingResult.value = calcParkingTheater(form as formCheckedInterface);
+  if (form.eventType === 3 || form.eventType === 5) {
+    parkingResult.value = calcParkingTheater(form as formCheckedInterface, form.eventType === 5);
   }
   calculatedFlag.value = true;
 
@@ -67,7 +67,10 @@ function preprocessingForm() {
   });
 }
 
-function calcParkingTheater(form: { targetPt: number; pt: number; token: number }): {
+function calcParkingTheater(
+  form: { targetPt: number; pt: number; token: number },
+  isAnniversary = false,
+): {
   flag: boolean;
   message?: string;
   result?: Array<resultItemInterface>;
@@ -102,23 +105,28 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     }
     // DFS start
     // Order: token to pt, ticket to token, stamina to token
-    eventTheaterChoices.forEach((each, index) => {
+    for (let i = 0; i < eventTheaterChoices.length; i++) {
+      const each = eventTheaterChoices[i];
       // result already found
       if (flag) {
         return;
       }
+      // Check anniversary only choice
+      if (!isAnniversary && each.anniversaryOnly === true) {
+        continue;
+      }
       // enough token
       if (token >= -each.token) {
         // record in result
-        record[index] = (record[index] ?? 0) + 1;
+        record[i] = (record[i] ?? 0) + 1;
         // DFS
         dfs(pt + each.pt, token + each.token);
         // if failed, recover result
         if (!flag) {
-          record[index]! -= 1;
+          record[i]! -= 1;
         }
       }
-    });
+    }
     // failed
     return;
   }
@@ -148,7 +156,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
     <h1 class="view-title">偶像大师百万现场 活动控分计算器</h1>
     <div class="al-divider"></div>
     <div style="margin-bottom: 1em">
-      <el-alert v-show="form.eventType === 3" type="error" :closable="false" show-icon>
+      <el-alert type="error" :closable="false" show-icon>
         <h2>警告：本页面正在开发中，无法保证结果的准确性！</h2>
       </el-alert>
     </div>
@@ -164,7 +172,8 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
           >
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
-                <el-option label="Theater / Trust / Anniversary" :value="3"></el-option>
+                <el-option label="Theater / Trust" :value="3"></el-option>
+                <el-option label="Anniversary" :value="5"></el-option>
                 <el-option label="[开发中] Tour / Tour Bingo" :value="4" disabled></el-option>
                 <el-option label="其他活动开发中" :value="0" disabled></el-option>
                 <!-- 1: Showtime -->
@@ -236,12 +245,12 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
               <el-button type="primary" @click="handleSubmit">开始计算</el-button>
               <el-button @click="handleClear">清空</el-button>
             </el-form-item>
-            <el-alert v-show="form.eventType === 3" type="warning" :closable="false" show-icon>
-              <p style="font-size: var(--el-font-size-base)">
-                注意：周年活动有每日推荐曲和普通曲的区别
-              </p>
-            </el-alert>
           </el-form>
+          <el-alert v-show="form.eventType === 5" type="warning" :closable="false" show-icon>
+            <p style="font-size: var(--el-font-size-base)">
+              注意：周年活动有每日推荐曲和普通曲的区别
+            </p>
+          </el-alert>
         </el-col>
         <el-col :span="0.1" class="hidden-sm-and-down">
           <div class="al-divider-vertical" style="margin: 0 0.5%"></div>
@@ -255,6 +264,11 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
             <div v-if="calculatedFlag">
               <p v-if="parkingResult?.flag === false">控分失败：{{ parkingResult.message }}</p>
               <div v-else>
+                <h4>当前状态</h4>
+                <p>pt差距：{{ (form.targetPt! - form.pt!).toLocaleString('en-US') }}</p>
+                <p>道具数：{{ form.token!.toLocaleString('en-US') }}</p>
+
+                <h4>控分方案</h4>
                 <template v-for="each of parkingResult.result" :key="each.name">
                   <p v-if="each.value > 0">
                     {{ each.name }} {{ each.multiplier }} ：{{ each.value }}次
@@ -269,7 +283,7 @@ function calcParkingTheater(form: { targetPt: number; pt: number; token: number 
         </el-col>
       </el-row>
     </div>
-    <div class="al-divider"></div>
+    <!-- <div class="al-divider"></div> -->
   </div>
 </template>
 
