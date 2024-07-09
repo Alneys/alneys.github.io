@@ -22,17 +22,17 @@ const form = ref({
   stamina20Count: 0,
   stamina10Count: 0,
 
-  gainTokenTime: 7.1,
-  burnTokenTime: 2.9,
+  gainTokenTime: 6.8,
+  burnTokenTime: 3.2,
   remainingTime: 0,
 });
 
 const result = reactive({
   ptFromBoost: computed(
-    () => Math.round(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
+    () => Math.floor(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
   ),
   ptFromFreeToken: computed(
-    () => Math.round(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
+    () => Math.floor(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
   ),
   ptFromRemainingToken: computed(() => Math.floor(form.value.token! * (2148 / 720)) || 0),
 
@@ -61,7 +61,7 @@ const result = reactive({
     return Math.ceil(result.ptNeeded * (450 / (1071 + (1071 / 720) * 2148)));
   }),
   tokenNeeded: computed((): number => {
-    return Math.floor((result.staminaNeeded / 450) * 1071);
+    return Math.ceil((result.staminaNeeded / 450) * 1071);
   }),
 
   jewelNeeded: computed((): number => {
