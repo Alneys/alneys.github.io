@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const env = import.meta.env;
+</script>
 
 <template>
   <div id="view-home">
@@ -12,9 +14,9 @@
       <router-link to="/mltd/anniversary-calc">
         <el-card shadow="hover">偶像大师百万现场 周年活动计算器</el-card>
       </router-link>
-      <!-- <router-link to="/mltd/event-parking">
+      <router-link v-if="env.DEV" to="/mltd/event-parking">
         <el-card shadow="hover">偶像大师百万现场 活动控分计算器</el-card>
-      </router-link> -->
+      </router-link>
       <router-link to="/gakuen-imas/rank-calc">
         <el-card shadow="hover">学园偶像大师 评级计算器</el-card>
       </router-link>
