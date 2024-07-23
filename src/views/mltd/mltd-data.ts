@@ -1,3 +1,69 @@
+export const eventTheaterChoices = [
+  {
+    name: '活动曲',
+    multiplier: '1倍',
+    pt: 537,
+    token: -180,
+  },
+  {
+    name: 'MM 每日推荐曲',
+    multiplier: '450打工票',
+    pt: 1071,
+    token: 1071,
+    anniversaryOnly: true,
+  },
+  {
+    name: 'MM / OM 普通曲',
+    multiplier: '450打工票',
+    pt: 893,
+    token: 893,
+    anniversaryOnly: true,
+  },
+  {
+    name: 'MM / OM通常曲',
+    multiplier: '300打工票',
+    pt: 595,
+    token: 595,
+  },
+  {
+    name: 'MM 每日推荐曲',
+    multiplier: '1倍体力',
+    pt: 102,
+    token: 102,
+    anniversaryOnly: true,
+  },
+  {
+    name: 'MM / OM 通常曲',
+    multiplier: '1倍体力',
+    pt: 85,
+    token: 85,
+  },
+  {
+    name: '6M 通常曲',
+    multiplier: '1倍体力',
+    pt: 64,
+    token: 64,
+  },
+  {
+    name: '2M+ 通常曲',
+    multiplier: '1倍体力',
+    pt: 62,
+    token: 62,
+  },
+  {
+    name: '4M 通常曲',
+    multiplier: '1倍体力',
+    pt: 49,
+    token: 49,
+  },
+  {
+    name: '2M 通常曲',
+    multiplier: '1倍体力',
+    pt: 35,
+    token: 35,
+  },
+];
+
 export const levelToMaxStaminaTable = [
   60, 60, 61, 61, 62, 62, 63, 63, 64, 64, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71,
   72, 72, 73, 73, 74, 74, 75, 75, 76, 76, 77, 77, 78, 78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83,
