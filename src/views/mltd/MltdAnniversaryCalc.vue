@@ -7,6 +7,7 @@ import * as mltd from './mltd-utils';
 const formRef = ref<FormInstance | null>();
 
 const form = ref({
+  eventEndTime: new Date('2024-07-13 00:00:00+0900'),
   targetPt: undefined as number | undefined,
 
   plv: undefined as number | undefined,
@@ -106,12 +107,11 @@ onMounted(() => {
 
 function resetCurrentRemainingTime() {
   const remainingTime = Number(
-    (
-      (new Date('2024-07-12 23:59:59+0900').getTime() - new Date().getTime()) /
-      (1000 * 3600 * 24)
-    ).toFixed(3),
+    ((form.value.eventEndTime.getTime() - new Date().getTime()) / (1000 * 3600 * 24)).toFixed(3),
   );
-  form.value.remainingTime = remainingTime > 0 ? remainingTime : 0;
+  form.value.remainingTime = remainingTime;
+  form.value.remainingTime = form.value.remainingTime > 0 ? form.value.remainingTime : 0;
+  form.value.remainingTime = form.value.remainingTime > 13 ? 13 : form.value.remainingTime;
   return form.value.remainingTime;
 }
 
@@ -208,6 +208,36 @@ function clearLocalStorage() {
                     <template #append>pt</template>
                   </el-input>
                 </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="24">
+                <el-form-item label="活动结束时间" prop="eventEndTime">
+                  <el-date-picker
+                    v-model="form.eventEndTime"
+                    type="datetime"
+                    format="YYYY/MM/DD[T]HH:mm:ssZ"
+                    date-format="YYYY/MM/DD"
+                    time-format="HH:mm:ssZ"
+                    :clearable="false"
+                    style="width: 100%"
+                    @change="resetCurrentRemainingTime"
+                  />
+                </el-form-item>
+                <span>
+                  {{
+                    new Intl.DateTimeFormat('ja-JP', {
+                      // dateStyle: 'short',
+                      // timeStyle: 'long',
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      timeZoneName: 'short',
+                      timeZone: 'Japan',
+                    }).format(form.eventEndTime)
+                  }}
+                </span>
               </el-col>
             </el-row>
 
