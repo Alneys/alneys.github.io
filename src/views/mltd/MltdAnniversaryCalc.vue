@@ -203,7 +203,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
-                    placeholder="0 - 99,999,999"
+                    placeholder="0"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -221,7 +221,7 @@ function clearLocalStorage() {
                     :max="999"
                     type="number"
                     inputmode="numeric"
-                    placeholder="520"
+                    placeholder="1"
                   >
                     <template #prepend>PLv</template>
                   </el-input>
@@ -236,7 +236,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
-                    placeholder="0 - 99,999,999"
+                    placeholder="0"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -251,7 +251,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
-                    placeholder="130,000"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
