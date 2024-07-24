@@ -7,6 +7,7 @@ import * as mltd from './mltd-utils';
 const formRef = ref<FormInstance | null>();
 
 const form = ref({
+  eventEndTime: new Date('2024-07-13 00:00:00+0900'),
   targetPt: undefined as number | undefined,
 
   plv: undefined as number | undefined,
@@ -22,7 +23,7 @@ const form = ref({
   stamina20Count: 0,
   stamina10Count: 0,
 
-  gainTokenTime: 6.8,
+  gainTokenTime: 6.5,
   burnTokenTime: 3.2,
   remainingTime: 0,
 });
@@ -106,12 +107,11 @@ onMounted(() => {
 
 function resetCurrentRemainingTime() {
   const remainingTime = Number(
-    (
-      (new Date('2024-07-12 23:59:59+0900').getTime() - new Date().getTime()) /
-      (1000 * 3600 * 24)
-    ).toFixed(3),
+    ((form.value.eventEndTime.getTime() - new Date().getTime()) / (1000 * 3600 * 24)).toFixed(3),
   );
-  form.value.remainingTime = remainingTime > 0 ? remainingTime : 0;
+  form.value.remainingTime = remainingTime;
+  form.value.remainingTime = form.value.remainingTime > 0 ? form.value.remainingTime : 0;
+  form.value.remainingTime = form.value.remainingTime > 13 ? 13 : form.value.remainingTime;
   return form.value.remainingTime;
 }
 
@@ -169,7 +169,7 @@ function clearLocalStorage() {
 }
 
 // function handleSubmit() {
-//   calculatedform.value.value = { ...form };
+//   calculatedForm.value.value = { ...form };
 //   calculatedFlag.value = true;
 
 //   nextTick(() => {
@@ -203,25 +203,55 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
-                    placeholder="3,900,000"
+                    placeholder="0"
                   >
                     <template #append>pt</template>
                   </el-input>
                 </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="24">
+                <el-form-item label="活动结束时间" prop="eventEndTime">
+                  <el-date-picker
+                    v-model="form.eventEndTime"
+                    type="datetime"
+                    format="YYYY/MM/DD[T]HH:mm:ssZ"
+                    date-format="YYYY/MM/DD"
+                    time-format="HH:mm:ssZ"
+                    :clearable="false"
+                    style="width: 100%"
+                    @change="resetCurrentRemainingTime"
+                  />
+                </el-form-item>
+                <span>
+                  {{
+                    new Intl.DateTimeFormat('ja-JP', {
+                      // dateStyle: 'short',
+                      // timeStyle: 'long',
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      timeZoneName: 'short',
+                      timeZone: 'Japan',
+                    }).format(form.eventEndTime)
+                  }}
+                </span>
               </el-col>
             </el-row>
 
             <h2>当前活动状况</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="当前等级" prop="level">
+                <el-form-item label="当前等级" prop="plv">
                   <el-input
                     v-model.number="form.plv"
                     :min="1"
                     :max="999"
                     type="number"
                     inputmode="numeric"
-                    placeholder="520"
+                    placeholder="1"
                   >
                     <template #prepend>PLv</template>
                   </el-input>
@@ -236,7 +266,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
-                    placeholder="1,300,000"
+                    placeholder="0"
                   >
                     <template #append>pt</template>
                   </el-input>
@@ -251,7 +281,7 @@ function clearLocalStorage() {
                     :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
                     inputmode="numeric"
-                    placeholder="130,000"
+                    placeholder="0"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -270,7 +300,7 @@ function clearLocalStorage() {
                     :max="13"
                     type="number"
                     inputmode="numeric"
-                    placeholder="0-13"
+                    placeholder="0 - 13"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -284,7 +314,7 @@ function clearLocalStorage() {
                     :max="13"
                     type="number"
                     inputmode="numeric"
-                    placeholder="0-13"
+                    placeholder="0 - 13"
                   >
                     <template #append>次</template>
                   </el-input>
@@ -298,7 +328,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    placeholder="0"
+                    placeholder="0 - 9999"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -312,7 +342,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    placeholder="0"
+                    placeholder="0 - 9999"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -326,7 +356,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    placeholder="0"
+                    placeholder="0 - 9999"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -340,7 +370,7 @@ function clearLocalStorage() {
                     :max="9999"
                     type="number"
                     inputmode="numeric"
-                    placeholder="0"
+                    placeholder="0 - 9999"
                   >
                     <template #append>个</template>
                   </el-input>
@@ -359,7 +389,7 @@ function clearLocalStorage() {
             <h2>时间设置</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮攒道具时间" prop="tokenGainTime">
+                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenGainTime">
                   <el-input
                     v-model.number="form.gainTokenTime"
                     :min="0"
@@ -412,10 +442,11 @@ function clearLocalStorage() {
             </el-form-item>
             <el-form-item label=" ">
               <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
-              <el-button @click="loadFromLocalStorage">读取缓存（需要手动重新获取剩余时间）</el-button>
+              <el-button @click="loadFromLocalStorage"
+                >读取缓存（需要手动重新获取剩余时间）</el-button
+              >
               <el-button @click="clearLocalStorage">清除缓存</el-button>
             </el-form-item>
-
             <el-alert type="info">
               <p>TODO：</p>
               <ol style="line-height: 1.5">
@@ -484,8 +515,11 @@ function clearLocalStorage() {
                 <tr>
                   <td>平均每日所需时间</td>
                   <td colspan="2" style="text-align: center">
-                    {{ (result.totalTimeSpend / form.remainingTime).toFixed(2) }}分钟 /
-                    {{ (result.totalTimeSpend / form.remainingTime / 60).toFixed(2) }}小时
+                    <template v-if="form.remainingTime >= 1">
+                      {{ (result.totalTimeSpend / form.remainingTime).toFixed(2) }}分钟 /
+                      {{ (result.totalTimeSpend / form.remainingTime / 60).toFixed(2) }}小时
+                    </template>
+                    <template v-else>-</template>
                   </td>
                 </tr>
               </tbody>
