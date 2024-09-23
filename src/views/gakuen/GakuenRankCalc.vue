@@ -6,7 +6,7 @@ const formRef = ref<FormInstance | null>();
 
 const form = reactive({
   scenario: 1,
-  difficulty: 'PRO' as keyof typeof maxStatsDict,
+  difficulty: 'MASTER' as keyof typeof maxStatsDict,
   vocal: undefined as number | undefined,
   dance: undefined as number | undefined,
   visual: undefined as number | undefined,
@@ -19,11 +19,20 @@ const calculatedFlag = ref(false);
 const calculatedForm = ref(form);
 
 const maxStatsDict = {
+  MASTER: 1800,
   PRO: 1500,
   REGULAR: 1000,
 };
 
 const rankTargetList = [
+  {
+    name: 'SS',
+    target: 16000,
+  },
+  {
+    name: 'S+',
+    target: 14500,
+  },
   {
     name: 'S',
     target: 13000,
@@ -199,8 +208,12 @@ function calculateFinalTestTarget(
         </el-form-item>
         <el-form-item label="选择难度" prop="difficulty">
           <el-select v-model="form.difficulty">
-            <el-option label="PRO" value="PRO"></el-option>
-            <el-option label="REGULAR" value="REGULAR"></el-option>
+            <el-option
+              v-for="(value, key) in maxStatsDict"
+              :key="`f-difficulty-${key}`"
+              :label="key"
+              :value="key"
+            ></el-option>
           </el-select>
         </el-form-item>
         <el-row :gutter="16" @keyup.enter="handleSubmit">
