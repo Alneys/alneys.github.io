@@ -44,6 +44,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
+        api: 'modern-compiler', // or "modern", "legacy"
         // Import on demand
         additionalData: `@use "@/assets/styles/element-plus-var.scss" as *;`,
       },
