@@ -206,16 +206,22 @@ function calculateFinalTestTarget(
             <el-option label="定期公演《初》" :value="1"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="选择难度" prop="difficulty">
-          <el-select v-model="form.difficulty">
-            <el-option
-              v-for="(value, key) in maxStatsDict"
-              :key="`f-difficulty-${key}`"
-              :label="key"
-              :value="key"
-            ></el-option>
-          </el-select>
-        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="8" :xs="24">
+            <el-form-item label="选择难度" prop="difficulty">
+              <el-segmented
+                v-model="form.difficulty"
+                :options="Object.keys(maxStatsDict)"
+                size="default"
+              ></el-segmented>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8" :xs="24">
+            <el-form-item label="当前难度属性最大值">
+              {{ maxStatsDict[form.difficulty] }}
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-row :gutter="16" @keyup.enter="handleSubmit">
           <el-col :span="8" :xs="24">
             <el-form-item label="Vocal" prop="vocal">
@@ -240,8 +246,10 @@ function calculateFinalTestTarget(
           </el-radio-group>
         </el-form-item>
         <el-form-item label=" ">
-          <el-button type="primary" @click="handleSubmit">开始计算</el-button>
-          <el-button @click="handleClear">清空</el-button>
+          <el-space wrap>
+            <el-button type="primary" @click="handleSubmit">开始计算</el-button>
+            <el-button @click="handleClear">清空</el-button>
+          </el-space>
         </el-form-item>
       </el-form>
     </div>

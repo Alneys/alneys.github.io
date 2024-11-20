@@ -436,16 +436,20 @@ function clearLocalStorage() {
             </el-row>
 
             <el-form-item label=" ">
-              <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
-              <el-button @click="handleClear">清空</el-button>
-              <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
+              <el-space wrap>
+                <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
+                <el-button @click="handleClear">清空</el-button>
+                <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
+              </el-space>
             </el-form-item>
             <el-form-item label=" ">
-              <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
-              <el-button @click="loadFromLocalStorage"
-                >读取缓存（需要手动重新获取剩余时间）</el-button
-              >
-              <el-button @click="clearLocalStorage">清除缓存</el-button>
+              <el-space wrap>
+                <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
+                <el-button @click="loadFromLocalStorage"
+                  >读取缓存（需要手动重新获取剩余时间）</el-button
+                >
+                <el-button @click="clearLocalStorage">清除缓存</el-button>
+              </el-space>
             </el-form-item>
             <el-alert type="info">
               <p>TODO：</p>
