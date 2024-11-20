@@ -246,8 +246,10 @@ function calculateFinalTestTarget(
           </el-radio-group>
         </el-form-item>
         <el-form-item label=" ">
-          <el-button type="primary" @click="handleSubmit">开始计算</el-button>
-          <el-button @click="handleClear">清空</el-button>
+          <el-space wrap>
+            <el-button type="primary" @click="handleSubmit">开始计算</el-button>
+            <el-button @click="handleClear">清空</el-button>
+          </el-space>
         </el-form-item>
       </el-form>
     </div>
