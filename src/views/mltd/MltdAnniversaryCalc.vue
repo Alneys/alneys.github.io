@@ -209,7 +209,7 @@ function clearLocalStorage() {
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="24">
+              <el-col :span="16" :xs="24">
                 <el-form-item label="活动结束时间" prop="eventEndTime">
                   <el-date-picker
                     v-model="form.eventEndTime"
@@ -222,22 +222,25 @@ function clearLocalStorage() {
                     @change="resetCurrentRemainingTime"
                   />
                 </el-form-item>
-                <span>
-                  {{
-                    new Intl.DateTimeFormat('ja-JP', {
-                      // dateStyle: 'short',
-                      // timeStyle: 'long',
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      timeZoneName: 'short',
-                      timeZone: 'Japan',
-                    }).format(form.eventEndTime)
-                  }}
-                </span>
+                <div style="margin-left: 12px">
+                  <span style="display: inline-block; width: 24px">→</span>
+                  <span>
+                    {{
+                      new Intl.DateTimeFormat('ja-JP', {
+                        // dateStyle: 'short',
+                        // timeStyle: 'long',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        timeZoneName: 'short',
+                        timeZone: 'Japan',
+                      }).format(form.eventEndTime)
+                    }}</span
+                  >
+                </div>
               </el-col>
             </el-row>
 
