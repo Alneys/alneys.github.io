@@ -151,6 +151,7 @@ function loadFromLocalStorage() {
       return;
     }
     form.value = JSON.parse(formFromLocal || '{}');
+    form.value.eventEndTime = new Date(form.value.eventEndTime);
     ElMessage.success('读取成功');
   } catch (error) {
     ElMessage.error('读取失败');
@@ -484,7 +485,7 @@ function clearLocalStorage() {
                 </tr>
               </thead>
               <tbody>
-                <tr style="color: red">
+                <tr style="color: red; font-size: var(--el-font-size-lar1e)">
                   <td>需要钻石数量</td>
                   <td style="font-weight: 700">
                     {{ result.jewelNeeded.toLocaleString('en-US') ?? '?' }}
