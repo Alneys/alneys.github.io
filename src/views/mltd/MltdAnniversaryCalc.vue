@@ -7,7 +7,7 @@ import * as mltd from './mltd-utils';
 const formRef = ref<FormInstance | null>();
 
 const form = ref({
-  eventEndTime: new Date('2024-07-13 00:00:00+0900'),
+  eventEndTime: new Date('2025-07-13 00:00:00+0900'),
   targetPt: undefined as number | undefined,
 
   plv: undefined as number | undefined,
