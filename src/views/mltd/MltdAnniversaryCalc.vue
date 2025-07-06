@@ -24,7 +24,7 @@ const form = ref({
   stamina10Count: 0,
 
   gainTokenTime: 6.5,
-  burnTokenTime: 3.2,
+  burnTokenTime: 3,
   remainingTime: 0,
 });
 
@@ -485,7 +485,7 @@ function clearLocalStorage() {
                 </tr>
               </thead>
               <tbody>
-                <tr style="color: red; font-size: var(--el-font-size-lar1e)">
+                <tr style="color: red; font-size: var(--el-font-size-large)">
                   <td>需要钻石数量</td>
                   <td style="font-weight: 700">
                     {{ result.jewelNeeded.toLocaleString('en-US') ?? '?' }}
