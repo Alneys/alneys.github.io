@@ -18,7 +18,7 @@ const env = import.meta.env;
         <el-card shadow="hover">偶像大师百万现场 活动控分计算器</el-card>
       </router-link>
       <router-link to="/gakuen-imas/rank-calc">
-        <el-card shadow="hover">学园偶像大师 评级计算器</el-card>
+        <el-card shadow="hover">（已过时）学园偶像大师 评级计算器</el-card>
       </router-link>
       <router-link to="/about">
         <el-card shadow="hover">关于</el-card>

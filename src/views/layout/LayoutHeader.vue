@@ -7,7 +7,7 @@ import CgssCountdownHeader from '@/components/CgssCountdownHeader.vue';
     <div class="layout-max-width-container">
       <router-link to="/" class="title"><h1>Alneys.github.io</h1></router-link>
     </div>
-    <CgssCountdownHeader></CgssCountdownHeader>
+    <!-- <CgssCountdownHeader></CgssCountdownHeader> -->
   </header>
 </template>
 
