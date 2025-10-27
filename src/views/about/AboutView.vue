@@ -124,12 +124,21 @@
 
     <div class="al-divider"></div>
     <h3>可能的开发计划（？）</h3>
-    <div class="list-p">
-      <li><del>偶像大师百万现场现场 周年活动计算器</del></li>
-      <li>国际化 / i18n</li>
-      <li>偶像大师百万现场现场 活动控分计算器</li>
-      <li>自行开发的tampermonkey脚本列表</li>
-      <li>常用网站列表</li>
+    <div class="list-p">已进入长期不更新状态，以下内容更新日期未知</div>
+    <div class="al-collapse">
+      <el-collapse>
+        <el-collapse-item title="点击查看" name="1">
+          <div class="list-p">
+            <ul>
+              <li><del>偶像大师百万现场现场 周年活动计算器</del></li>
+              <li>国际化 / i18n</li>
+              <li>偶像大师百万现场现场 活动控分计算器</li>
+              <li>自行开发的网页脚本列表</li>
+              <li>常用网站列表</li>
+            </ul>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
     </div>
   </div>
 </template>
@@ -150,7 +159,15 @@ img[src^="https://img.shields.io"]
 }
 .list-p {
   li {
-    margin-block: 1em;
+    margin-block: 0.5em;
+  }
+}
+
+.al-collapse {
+  margin-top: 1em;
+  .el-collapse {
+    --el-collapse-header-font-size: var(--el-font-size-base);
+    --el-collapse-content-font-size: var(--el-font-size-base);
   }
 }
 </style>
