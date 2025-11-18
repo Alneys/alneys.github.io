@@ -15,10 +15,13 @@ const env = import.meta.env;
         <el-card shadow="hover">偶像大师百万现场 周年活动计算器</el-card>
       </router-link>
       <router-link v-if="env.DEV" to="/mltd/event-parking">
-        <el-card shadow="hover">偶像大师百万现场 活动控分计算器</el-card>
+        <el-card shadow="hover">（开发中）偶像大师百万现场 活动控分计算器</el-card>
       </router-link>
       <router-link to="/gakuen-imas/rank-calc">
         <el-card shadow="hover">（已过时）学园偶像大师 评级计算器</el-card>
+      </router-link>
+      <router-link to="/tools/password-generator">
+        <el-card shadow="hover">[小工具] 密码生成器</el-card>
       </router-link>
       <router-link to="/about">
         <el-card shadow="hover">关于</el-card>
