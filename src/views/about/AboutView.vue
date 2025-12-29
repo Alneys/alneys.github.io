@@ -1,4 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import svgCG from '@/assets/svg/imas-cinderella-girls.svg?raw';
+import svgML from '@/assets/svg/imas-million-live.svg?raw';
+import svgSC from '@/assets/svg/imas-shiny-colors.svg?raw';
+import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
+</script>
 
 <template>
   <div>
@@ -37,27 +42,24 @@
         />
       </a>
     </div>
-    <div v-if="false">
-      <p>
-        <el-link type="default" href="https://github.com/Alneys" target="_blank">
-          GitHub @Alneys
-        </el-link>
-      </p>
-      <p>
-        <el-link type="default" href="https://twitter.com/Alneys_Al" target="_blank">
-          X / Twitter @Alneys_Al
-        </el-link>
-      </p>
-      <p>
-        <el-link type="default" href="https://space.bilibili.com/13775737" target="_blank">
-          BiliBili @Alneys
-        </el-link>
-      </p>
-      <p>
-        <el-link type="default" href="https://weibo.com/u/2794029901" target="_blank">
-          Weibo @Alneys_Al
-        </el-link>
-      </p>
+    <div class="al-divider"></div>
+    <div class="game-ids">
+      <div class="game-id">
+        <div v-html="svgCG" class="game-icon"></div>
+        <span>468992182</span>
+      </div>
+      <div class="game-id">
+        <div v-html="svgML" class="game-icon"></div>
+        <span>UR8HH9JU</span>
+      </div>
+      <div class="game-id">
+        <div v-html="svgSC" class="game-icon"></div>
+        <span>PYGK9YBFH</span>
+      </div>
+      <div class="game-id">
+        <div v-html="svgGK" class="game-icon"></div>
+        <span>2FKGLHGR</span>
+      </div>
     </div>
 
     <div class="al-divider"></div>
@@ -95,6 +97,7 @@
         https://github.com/Alneys/alneys.github.io
       </el-link>
     </p>
+
     <div class="shields-io-collections">
       <img
         src="https://img.shields.io/github/actions/workflow/status/Alneys/alneys.github.io/vite-gh-pages.yml?style=flat-square"
@@ -114,13 +117,13 @@
       />
     </div>
 
-    <div class="al-divider"></div>
+    <!-- <div class="al-divider"></div>
     <h3>已知问题</h3>
     <div class="list-p">
       <li>
         在input[type=number]输入框强行输入非数值时，点击清空按钮无法清空输入框：这是v-model.number与input[type=number]共同作用的结果。
       </li>
-    </div>
+    </div> -->
 
     <div class="al-divider"></div>
     <h3>可能的开发计划（？）</h3>
@@ -144,6 +147,27 @@
 </template>
 
 <style lang="scss" scoped>
+.game-ids {
+  margin-top: 1em;
+
+  .game-id {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    // margin: 0.25em 0;
+
+    .game-icon {
+      width: 32px;
+      height: auto;
+    }
+
+    span {
+      font-family: Consolas, monospace;
+      font-size: 16px;
+    }
+  }
+}
+
 .el-link {
   vertical-align: inherit;
 }
@@ -152,6 +176,7 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
 img[src^="https://img.shields.io"]
 {
   height: 24px;
