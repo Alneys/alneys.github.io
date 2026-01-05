@@ -3,13 +3,20 @@
     <h1 class="view-title">Title</h1>
     <div class="al-divider"></div>
     <div class="main-container">
-      <el-table :data="tableData" style="width: 100%" border>
-        <el-table-column :width="64">
+      <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
+        <!-- 第一列：specialize 值 -->
+        <el-table-column :width="80" label="type">
           <template #default="scope">
-            {{ tableDataRowHeader[scope.$index] }}
+            {{ tableDataRowHeaderSpecialize[scope.$index] }}
           </template>
         </el-table-column>
-
+        <!-- 第二列：tw 值 -->
+        <el-table-column :width="64" label="time">
+          <template #default="scope">
+            {{ tableDataRowHeaderTw[scope.$index] }}
+          </template>
+        </el-table-column>
+        <!-- 后续列：结果 -->
         <el-table-column
           v-for="colIndex in 5"
           :key="colIndex"
@@ -70,7 +77,18 @@ interface CgssCardSkillTableItem {
   };
 }
 
-const tableDataRowHeader = ['7', '9', '11'];
+const tableDataRowHeaderSpecialize = [
+  'vocal',
+  'vocal',
+  'vocal',
+  'dance',
+  'dance',
+  'dance',
+  'visual',
+  'visual',
+  'visual',
+];
+const tableDataRowHeaderTw = ['7', '9', '11', '7', '9', '11', '7', '9', '11'];
 const tableDataColumnHeader = ['motif', 'synergy', 'symphony', 'spike', 'refrain'];
 
 interface ImageItem {
@@ -84,21 +102,74 @@ interface TableRow {
   [key: string]: ImageItem[];
 }
 
+const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+  if (columnIndex === 0) {
+    if (rowIndex % 3 === 0) {
+      return [3, 1];
+    } else {
+    }
+    return [0, 0];
+  }
+};
+
 // 初始化数据时添加 isGrayscale 字段
 const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
   // 创建一个空的表格数据结构，使用 tableDataColumnHeader 作为键名
   const result: TableRow[] = [
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // 7
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // 9
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // 11
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // vocal 7
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // vocal 9
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // vocal 11
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // visual 7
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // visual 9
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // visual 11
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // dance 7
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // dance 9
+    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // dance 11
   ];
 
-  // 遍历技能表数据，根据skill.type和skill.m_dur分配到对应的单元格
+  // 遍历技能表数据，根据specialize和skill.tw分配到对应的单元格
   data.forEach((item: CgssCardSkillTableItem) => {
     // 检查稀有度，如果不是SSR则直接返回，不执行后续操作
     if (item.rarity !== 'ssr') {
       return;
     }
+
+    // 根据specialize确定行的前半部分索引
+    let rowBaseIndex = -1;
+    switch (item.specialize) {
+      case 'vocal':
+        rowBaseIndex = 0; // vocal行组从索引0开始
+        break;
+      case 'dance':
+        rowBaseIndex = 3; // dance行组从索引3开始
+        break;
+      case 'visual':
+        rowBaseIndex = 6; // visual行组从索引6开始
+        break;
+      default:
+        // 如果specialize不在预定义范围内，跳过该数据
+        return;
+    }
+
+    // 根据skill.tw确定行索引
+    let rowOffset = -1;
+    switch (item.skill.params.tw) {
+      case 7:
+        rowOffset = 0;
+        break;
+      case 9:
+        rowOffset = 1;
+        break;
+      case 11:
+        rowOffset = 2;
+        break;
+      default:
+        // 如果tw不在预定义范围内，跳过该数据
+        return;
+    }
+
+    // 计算实际行索引
+    const rowIndex = rowBaseIndex + rowOffset;
 
     // 根据skill.type确定列名
     let colName = '';
@@ -121,23 +192,6 @@ const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
         break;
       default:
         // 如果type不在预定义范围内，跳过该数据
-        return;
-    }
-
-    // 根据skill.m_dur确定行索引
-    let rowIndex = -1;
-    switch (item.skill.params.tw) {
-      case 7:
-        rowIndex = 0;
-        break;
-      case 9:
-        rowIndex = 1;
-        break;
-      case 11:
-        rowIndex = 2;
-        break;
-      default:
-        // 如果m_dur不在预定义范围内，跳过该数据
         return;
     }
 
