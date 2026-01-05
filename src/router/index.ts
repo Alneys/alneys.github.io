@@ -21,6 +21,16 @@ const router = createRouter({
           component: () => import('@/views/gakuen/GakuenRankCalc.vue'),
         },
         {
+          path: '/cgss',
+          children: [
+            {
+              path: 'team-viewer',
+              name: 'mltd-team-viewer',
+              component: () => import('@/views/cgss/cgssTeamViewer.vue'),
+            },
+          ],
+        },
+        {
           path: '/mltd',
           children: [
             {
