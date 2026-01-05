@@ -1,6 +1,4 @@
-@media only screen and (-webkit-min-device-pixel-ratio: 1.3),
-    only screen and (-o-min-device-pixel-ratio: 13/10),
-    only screen and (min-resolution: 120dpi) {
+
 .icon.icon_100001 { background:url("https://hidamarirhodonite.kirara.ca/icons2/icons_0@2x.jpg?78297a") -0px -0px/384px 384px; }
 .icon.icon_100002 { background:url("https://hidamarirhodonite.kirara.ca/icons2/icons_0@2x.jpg?78297a") -48px -0px/384px 384px; }
 .icon.icon_100003 { background:url("https://hidamarirhodonite.kirara.ca/icons2/icons_0@2x.jpg?78297a") -96px -0px/384px 384px; }
@@ -4143,4 +4141,3 @@
 .icon.icon_301382 { background:url("https://hidamarirhodonite.kirara.ca/icons2/icons_64@2x.jpg?055f23") -144px -240px/384px 384px; }
 .icon.icon_301383 { background:url("https://hidamarirhodonite.kirara.ca/icons2/icons_64@2x.jpg?055f23") -192px -240px/384px 384px; }
 .icon.icon_301384 { background:url("https://hidamarirhodonite.kirara.ca/icons2/icons_64@2x.jpg?055f23") -240px -240px/384px 384px; }
-}
