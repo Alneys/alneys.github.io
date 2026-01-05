@@ -5,7 +5,7 @@
     <div class="main-container">
       <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
         <!-- 第一列：specialize 值 -->
-        <el-table-column :width="80" label="属性">
+        <el-table-column :width="72" label="属性" fixed>
           <template #default="scope">
             {{
               tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]
@@ -13,7 +13,7 @@
           </template>
         </el-table-column>
         <!-- 第二列：tw 值 -->
-        <el-table-column :width="64" label="间隔">
+        <el-table-column :width="64" label="间隔" fixed>
           <template #default="scope">
             {{ tableDataRowHeaderTw[scope.$index % tableDataRowHeaderTw.length] }}s
           </template>
@@ -29,7 +29,7 @@
               <div
                 v-for="(img, imgIndex) in scope.row[tableDataColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
-                :title="img.alt ?? ''"
+                :title="img.title ?? ''"
                 :class="{
                   icon: true,
                   [`icon_${img.cid}`]: true,
@@ -87,17 +87,17 @@ interface CgssCardSkillTableItem {
 const tableDataRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableDataRowHeaderTw = ['7', '9', '11'];
 const tableDataColumnHeader = [
-  { value: 'motif', label: '共鸣 レゾナンス モチーフ' },
-  { value: 'synergy', label: '大偏 トリコロール・シナジー' },
-  { value: 'symphony', label: '交响 トリコロール・シナジー' },
-  { value: 'spike', label: '尖峰 トリコロール・スパイク' },
-  { value: 'refrain', label: '复读 リフレイン' },
-];
+  { value: 'motif', label: '共鸣 motif' },
+  { value: 'synergy', label: '大偏 synergy' },
+  { value: 'symphony', label: '交响 symphony' },
+  { value: 'spike', label: '尖峰 spike' },
+  { value: 'refrain', label: '复读  refrain' },
+];1
 
 interface ImageItem {
   cid: string;
   name: string;
-  alt?: string;
+  title?: string;
   src?: string;
   isGrayscale?: boolean; // 新增字段，标识是否为黑白
 }
@@ -168,7 +168,7 @@ const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
     result[rowIndex][colName].push({
       cid: item.cid,
       name: item.name,
-      alt: `${item.title} ${item.name}`,
+      title: `${item.title} ${item.name}`,
       // src: '/src/assets/images/test-image-1.jpeg',
       isGrayscale: false,
     });
@@ -184,14 +184,14 @@ const tableData = ref<TableRow[]>(
 // 切换图片黑白状态
 const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
   const image = row[colKey][index];
-  const targetName = image.name;
+  const targetName = image.title;
   const newState = !image.isGrayscale;
 
   // 更新所有名称相同的图片的黑白状态
   tableData.value.forEach((dataRow) => {
     Object.keys(dataRow).forEach((colKey) => {
       dataRow[colKey].forEach((img) => {
-        if (img.name === targetName) {
+        if (img.title === targetName) {
           img.isGrayscale = newState;
         }
       });
@@ -214,7 +214,6 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  min-height: 64px;
 }
 
 .table-image {
@@ -240,9 +239,19 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
 }
 
 .icon {
+  --target-width: 48px;
+
   display: inline-block;
   width: 48px;
   height: 48px;
   border-radius: 4px;
+  cursor: pointer; // 添加光标效果提示可点击
+
+  scale: calc(var(--target-width) / 48px);
+  margin: calc((var(--target-width) - 48px) / 2);
+}
+
+.icon.grayscale {
+  filter: grayscale(100%);
 }
 </style>
