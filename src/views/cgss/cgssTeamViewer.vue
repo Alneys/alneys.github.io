@@ -4,7 +4,7 @@
     <div class="al-divider"></div>
     <div class="main-container">
       <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
-        <!-- 第一列：specialize 值 -->
+        <!-- 第一列：属性 -->
         <el-table-column :width="72" label="属性" fixed>
           <template #default="scope">
             {{
@@ -12,7 +12,7 @@
             }}
           </template>
         </el-table-column>
-        <!-- 第二列：tw 值 -->
+        <!-- 第二列：间隔值 -->
         <el-table-column :width="64" label="间隔" fixed>
           <template #default="scope">
             {{ tableDataRowHeaderTw[scope.$index % tableDataRowHeaderTw.length] }}s
@@ -20,7 +20,7 @@
         </el-table-column>
         <!-- 后续列：结果 -->
         <el-table-column
-          v-for="colIndex in 5"
+          v-for="colIndex in tableDataColumnHeader.length"
           :key="colIndex"
           :label="`${tableDataColumnHeader[colIndex - 1].label}`"
         >
@@ -78,8 +78,11 @@ interface CgssCardSkillTableItem {
   leaderSkill: {
     name: string;
     description: string;
-    params: {
-      pup: number;
+    params?: {
+      target_attribute: string;
+      target_param: string;
+      target_attribute_2: string;
+      target_param_2: string;
     };
   };
 }
@@ -91,8 +94,9 @@ const tableDataColumnHeader = [
   { value: 'synergy', label: '大偏 synergy' },
   { value: 'symphony', label: '交响 symphony' },
   { value: 'spike', label: '尖峰 spike' },
-  { value: 'refrain', label: '复读  refrain' },
-];1
+  { value: 'refrain', label: '复读 refrain' },
+];
+1;
 
 interface ImageItem {
   cid: string;
@@ -201,12 +205,15 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
 </script>
 
 <style lang="scss" scoped>
+// @import '@/assets/styles/im/346lab/icons.css';
+@import '@/assets/styles/im/346lab/icons@2x.css';
+
 .el-table {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
 
 .main-container {
-  padding: 20px;
+  padding: 16px;
 }
 
 .image-container {
@@ -214,28 +221,6 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-}
-
-.table-image {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  margin: 2px;
-  cursor: pointer; // 添加光标效果提示可点击
-}
-
-.table-image.grayscale {
-  filter: grayscale(100%);
-}
-</style>
-
-<style lang="scss" scoped>
-@import '@/assets/styles/im/346lab/icons.css';
-@import '@/assets/styles/im/346lab/icons@2x.css';
-
-.icon.icon_100002 {
-  background-image: url('https://hidamarirhodonite.kirara.ca/icons2/icons_0.png?78297a');
-  background-position: -48px -0px;
 }
 
 .icon {
