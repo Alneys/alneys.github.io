@@ -33,10 +33,10 @@
                 :class="{
                   icon: true,
                   [`icon_${img.cid}`]: true,
-                  grayscale: img.isGrayscale,
+                  dark: !img.isBrightness,
                 }"
                 @click="
-                  toggleGrayscale(scope.row, tableDataColumnHeader[colIndex - 1].value, imgIndex)
+                  toggleBrightness(scope.row, tableDataColumnHeader[colIndex - 1].value, imgIndex)
                 "
               ></div>
             </div>
@@ -103,7 +103,7 @@ interface ImageItem {
   name: string;
   title?: string;
   src?: string;
-  isGrayscale?: boolean; // 新增字段，标识是否为黑白
+  isBrightness?: boolean;
 }
 
 interface TableRow {
@@ -120,7 +120,7 @@ const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
   }
 };
 
-// 初始化数据时添加 isGrayscale 字段
+// 初始化数据时添加 isBrightness 字段
 const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
   // 动态创建表格数据结构
   const result: TableRow[] = Array.from(
@@ -174,7 +174,7 @@ const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
       name: item.name,
       title: `${item.title} ${item.name}`,
       // src: '/src/assets/images/test-image-1.jpeg',
-      isGrayscale: false,
+      isBrightness: true,
     });
   });
 
@@ -185,18 +185,18 @@ const tableData = ref<TableRow[]>(
   initializeImageData(cgssCardSkillTable as CgssCardSkillTableItem[]),
 );
 
-// 切换图片黑白状态
-const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
+// 切换图片状态
+const toggleBrightness = (row: TableRow, colKey: string, index: number) => {
   const image = row[colKey][index];
   const targetName = image.title;
-  const newState = !image.isGrayscale;
+  const newState = !image.isBrightness;
 
-  // 更新所有名称相同的图片的黑白状态
+  // 更新所有名称相同的图片的状态
   tableData.value.forEach((dataRow) => {
     Object.keys(dataRow).forEach((colKey) => {
       dataRow[colKey].forEach((img) => {
         if (img.title === targetName) {
-          img.isGrayscale = newState;
+          img.isBrightness = newState;
         }
       });
     });
@@ -236,7 +236,11 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
   margin: calc((var(--target-width) - 48px) / 2);
 }
 
-.icon.grayscale {
-  filter: grayscale(100%);
+.icon.dark {
+  filter: brightness(0.4);
+}
+
+html.dark .icon.dark {
+  filter: brightness(0.25);
 }
 </style>
