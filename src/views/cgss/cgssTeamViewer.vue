@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, shallowRef } from 'vue';
-import cgssCardSkillTable from './cgss_extracted_card_skill_table.json';
+import cgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
 
 interface CgssCardSkillTableItem {
   cid: string;
