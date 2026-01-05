@@ -5,33 +5,40 @@
     <div class="main-container">
       <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
         <!-- 第一列：specialize 值 -->
-        <el-table-column :width="80" label="type">
+        <el-table-column :width="80" label="属性">
           <template #default="scope">
-            {{ tableDataRowHeaderSpecialize[scope.$index] }}
+            {{
+              tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]
+            }}
           </template>
         </el-table-column>
         <!-- 第二列：tw 值 -->
-        <el-table-column :width="64" label="time">
+        <el-table-column :width="64" label="间隔">
           <template #default="scope">
-            {{ tableDataRowHeaderTw[scope.$index] }}
+            {{ tableDataRowHeaderTw[scope.$index % tableDataRowHeaderTw.length] }}s
           </template>
         </el-table-column>
         <!-- 后续列：结果 -->
         <el-table-column
           v-for="colIndex in 5"
           :key="colIndex"
-          :label="`${tableDataColumnHeader[colIndex - 1]}`"
+          :label="`${tableDataColumnHeader[colIndex - 1].label}`"
         >
           <template #default="scope">
             <div class="image-container">
-              <img
-                v-for="(img, imgIndex) in scope.row[tableDataColumnHeader[colIndex - 1]]"
+              <div
+                v-for="(img, imgIndex) in scope.row[tableDataColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
-                :src="img.src"
-                :alt="img.alt ?? ''"
-                :class="{ 'table-image': true, grayscale: img.isGrayscale }"
-                @click="toggleGrayscale(scope.row, tableDataColumnHeader[colIndex - 1], imgIndex)"
-              />
+                :title="img.alt ?? ''"
+                :class="{
+                  icon: true,
+                  [`icon_${img.cid}`]: true,
+                  grayscale: img.isGrayscale,
+                }"
+                @click="
+                  toggleGrayscale(scope.row, tableDataColumnHeader[colIndex - 1].value, imgIndex)
+                "
+              ></div>
             </div>
           </template>
         </el-table-column>
@@ -77,21 +84,18 @@ interface CgssCardSkillTableItem {
   };
 }
 
-const tableDataRowHeaderSpecialize = [
-  'vocal',
-  'vocal',
-  'vocal',
-  'dance',
-  'dance',
-  'dance',
-  'visual',
-  'visual',
-  'visual',
+const tableDataRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
+const tableDataRowHeaderTw = ['7', '9', '11'];
+const tableDataColumnHeader = [
+  { value: 'motif', label: '共鸣 レゾナンス モチーフ' },
+  { value: 'synergy', label: '大偏 トリコロール・シナジー' },
+  { value: 'symphony', label: '交响 トリコロール・シナジー' },
+  { value: 'spike', label: '尖峰 トリコロール・スパイク' },
+  { value: 'refrain', label: '复读 リフレイン' },
 ];
-const tableDataRowHeaderTw = ['7', '9', '11', '7', '9', '11', '7', '9', '11'];
-const tableDataColumnHeader = ['motif', 'synergy', 'symphony', 'spike', 'refrain'];
 
 interface ImageItem {
+  cid: string;
   name: string;
   alt?: string;
   src?: string;
@@ -104,8 +108,8 @@ interface TableRow {
 
 const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
   if (columnIndex === 0) {
-    if (rowIndex % 3 === 0) {
-      return [3, 1];
+    if (rowIndex % tableDataRowHeaderTw.length === 0) {
+      return [tableDataRowHeaderTw.length, 1];
     } else {
     }
     return [0, 0];
@@ -114,18 +118,17 @@ const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
 
 // 初始化数据时添加 isGrayscale 字段
 const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
-  // 创建一个空的表格数据结构，使用 tableDataColumnHeader 作为键名
-  const result: TableRow[] = [
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // vocal 7
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // vocal 9
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // vocal 11
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // visual 7
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // visual 9
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // visual 11
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // dance 7
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // dance 9
-    { motif: [], synergy: [], symphony: [], spike: [], refrain: [] }, // dance 11
-  ];
+  // 动态创建表格数据结构
+  const result: TableRow[] = Array.from(
+    { length: tableDataRowHeaderTw.length * tableDataRowHeaderSpecialize.length },
+    () => ({
+      motif: [],
+      synergy: [],
+      symphony: [],
+      spike: [],
+      refrain: [],
+    }),
+  );
 
   // 遍历技能表数据，根据specialize和skill.tw分配到对应的单元格
   data.forEach((item: CgssCardSkillTableItem) => {
@@ -135,68 +138,35 @@ const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
     }
 
     // 根据specialize确定行的前半部分索引
-    let rowBaseIndex = -1;
-    switch (item.specialize) {
-      case 'vocal':
-        rowBaseIndex = 0; // vocal行组从索引0开始
-        break;
-      case 'dance':
-        rowBaseIndex = 3; // dance行组从索引3开始
-        break;
-      case 'visual':
-        rowBaseIndex = 6; // visual行组从索引6开始
-        break;
-      default:
-        // 如果specialize不在预定义范围内，跳过该数据
-        return;
+    const specializeIndex = tableDataRowHeaderSpecialize.indexOf(item.specialize);
+    if (specializeIndex === -1) {
+      // 如果specialize不在预定义范围内，跳过该数据
+      return;
     }
+    let rowBaseIndex = specializeIndex * tableDataRowHeaderTw.length; // 每个specialize的行数
 
     // 根据skill.tw确定行索引
-    let rowOffset = -1;
-    switch (item.skill.params.tw) {
-      case 7:
-        rowOffset = 0;
-        break;
-      case 9:
-        rowOffset = 1;
-        break;
-      case 11:
-        rowOffset = 2;
-        break;
-      default:
-        // 如果tw不在预定义范围内，跳过该数据
-        return;
+    const twIndex = tableDataRowHeaderTw.indexOf(String(item.skill.params.tw));
+    if (twIndex === -1) {
+      // 如果tw不在预定义范围内，跳过该数据
+      return;
     }
+    let rowOffset = twIndex;
 
     // 计算实际行索引
     const rowIndex = rowBaseIndex + rowOffset;
 
     // 根据skill.type确定列名
-    let colName = '';
-    console.log(item.skill.type);
-    switch (item.skill.type) {
-      case 'motif':
-        colName = 'motif';
-        break;
-      case 'synergy':
-        colName = 'synergy';
-        break;
-      case 'symphony':
-        colName = 'symphony';
-        break;
-      case 'spike':
-        colName = 'spike';
-        break;
-      case 'refrain':
-        colName = 'refrain';
-        break;
-      default:
-        // 如果type不在预定义范围内，跳过该数据
-        return;
+    const columnInfo = tableDataColumnHeader.find((col) => col.value === item.skill.type);
+    if (!columnInfo) {
+      // 如果type不在预定义范围内，跳过该数据
+      return;
     }
+    let colName = columnInfo.value;
 
     // 将数据添加到对应单元格
     result[rowIndex][colName].push({
+      cid: item.cid,
       name: item.name,
       alt: `${item.title} ${item.name}`,
       // src: '/src/assets/images/test-image-1.jpeg',
@@ -210,8 +180,6 @@ const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
 const tableData = ref<TableRow[]>(
   initializeImageData(cgssCardSkillTable as CgssCardSkillTableItem[]),
 );
-
-console.log(cgssCardSkillTable);
 
 // 切换图片黑白状态
 const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
@@ -233,6 +201,10 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
 </script>
 
 <style lang="scss" scoped>
+.el-table {
+  --el-table-header-text-color: var(--el-text-color-regular);
+}
+
 .main-container {
   padding: 20px;
 }
@@ -255,5 +227,22 @@ const toggleGrayscale = (row: TableRow, colKey: string, index: number) => {
 
 .table-image.grayscale {
   filter: grayscale(100%);
+}
+</style>
+
+<style lang="scss" scoped>
+@import '@/assets/styles/im/346lab/icons.css';
+@import '@/assets/styles/im/346lab/icons@2x.css';
+
+.icon.icon_100002 {
+  background-image: url('https://hidamarirhodonite.kirara.ca/icons2/icons_0.png?78297a');
+  background-position: -48px -0px;
+}
+
+.icon {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
 }
 </style>
