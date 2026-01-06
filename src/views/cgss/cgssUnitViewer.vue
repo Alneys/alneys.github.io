@@ -1,6 +1,6 @@
 <template>
   <div class="unit-viewer">
-    <h1 class="view-title">Title</h1>
+    <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
     <div class="al-divider"></div>
     <div class="unit-mode-switch">
       <el-switch v-model="modeSwitch" active-text="切换图片状态" inactive-text="查看卡片信息" />
@@ -68,7 +68,7 @@
     </div>
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant">Dominant</div>
-    <div class="unit-table">
+    <div v-if="env.DEV" class="unit-table">
       <el-table :data="tableDataDominant" border style="width: 100%">
         <!-- 第一列：target_attribute_2 -->
         <el-table-column prop="target_attribute_2" label="属性2" :width="96">
@@ -92,12 +92,31 @@
         </el-table-column>
       </el-table>
     </div>
+    <div v-else>
+      <p>开发中……</p>
+    </div>
+    <div class="al-divider"></div>
+    <div class="unit-information">
+      <p>
+        特别感谢：<el-link href="https://starlight.346lab.org" target="_blank"
+          >https://starlight.346lab.org</el-link
+        >
+      </p>
+      <p>
+        Special Thanks to:
+        <el-link href="https://starlight.kirara.ca" target="_blank"
+          >https://starlight.kirara.ca</el-link
+        >
+      </p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, shallowRef } from 'vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
+
+const env = import.meta.env;
 
 interface CgssCardSkillTableItem {
   cid: string;
@@ -347,6 +366,10 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
 
 .el-table {
   --el-table-header-text-color: var(--el-text-color-regular);
+}
+
+.el-link {
+  vertical-align: inherit;
 }
 
 .unit-mode-switch {
