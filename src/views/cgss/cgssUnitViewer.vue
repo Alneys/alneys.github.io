@@ -102,7 +102,7 @@
     </div>
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant">Dominant</div>
-    <div v-if="env.DEV" class="unit-table">
+    <div class="unit-table">
       <el-table :data="filteredTableDataDominant" border style="width: 100%">
         <!-- 第一列：target_attribute_2 -->
         <el-table-column
@@ -237,8 +237,8 @@
         </el-table-column>
       </el-table>
     </div>
-    <div v-else>
-      <p>开发中……</p>
+    <div>
+      <p>更多组队信息开发中……</p>
     </div>
     <div class="al-divider"></div>
     <div class="unit-information">
