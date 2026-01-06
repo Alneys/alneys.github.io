@@ -1,8 +1,9 @@
 <template>
-  <div class="password-generator">
+  <div class="unit-viewer">
     <h1 class="view-title">Title</h1>
     <div class="al-divider"></div>
-    <div class="main-container">
+    <div class="unit-title">Resonance</div>
+    <div class="unit-main-container">
       <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
         <!-- 第一列：属性 -->
         <el-table-column :width="80" label="属性" fixed>
@@ -107,7 +108,7 @@ const tableDataColumnHeader = [
 ];
 1;
 
-interface ImageItem {
+interface CellItem {
   cid: string;
   name: string;
   title?: string;
@@ -116,7 +117,7 @@ interface ImageItem {
 }
 
 interface TableRow {
-  [key: string]: ImageItem[];
+  [key: string]: CellItem[];
 }
 
 const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
@@ -129,9 +130,9 @@ const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
   }
 };
 
-// 初始化数据时添加 isBrightness 字段
-const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
-  // 动态创建表格数据结构
+// 初始化数据
+const initializeData = (data: CgssCardSkillTableItem[]): TableRow[] => {
+  // 创建表格数据结构
   const result: TableRow[] = Array.from(
     { length: tableDataRowHeaderTw.length * tableDataRowHeaderSpecialize.length },
     () => ({
@@ -190,9 +191,7 @@ const initializeImageData = (data: CgssCardSkillTableItem[]): TableRow[] => {
   return result;
 };
 
-const tableData = ref<TableRow[]>(
-  initializeImageData(cgssCardSkillTable as CgssCardSkillTableItem[]),
-);
+const tableData = ref<TableRow[]>(initializeData(cgssCardSkillTable as CgssCardSkillTableItem[]));
 
 // 切换图片状态
 const toggleBrightness = (row: TableRow, colKey: string, index: number) => {

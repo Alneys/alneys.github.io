@@ -24,9 +24,9 @@ const router = createRouter({
           path: '/cgss',
           children: [
             {
-              path: 'team-viewer',
-              name: 'mltd-team-viewer',
-              component: () => import('@/views/cgss/cgssTeamViewer.vue'),
+              path: 'unit-viewer',
+              name: 'cgss-unit-viewer',
+              component: () => import('@/views/cgss/cgssUnitViewer.vue'),
             },
           ],
         },
