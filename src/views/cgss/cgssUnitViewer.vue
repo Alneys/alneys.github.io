@@ -25,12 +25,7 @@
           :sort-method="sortResonanceSpecialize"
         >
           <template #default="scope">
-            <span
-              :style="{
-                fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.specialize})`,
-              }"
-            >
+            <span :class="`table-row-info color-cg-${scope.row.specialize}`">
               {{ scope.row.specialize }}
             </span>
           </template>
@@ -51,7 +46,7 @@
           :label="`${tableResonanceColumnHeader[colIndex - 1].label}`"
         >
           <template #default="scope">
-            <div class="icons-container">
+            <div class="table-icons-container">
               <div
                 v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
@@ -88,13 +83,9 @@
           :sort-method="sortDominantAttribute2"
         >
           <template #default="scope">
-            <span
-              :style="{
-                fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_attribute_2}`,
-              }"
-              >{{ scope.row.target_attribute_2 || '' }}</span
-            >
+            <span :class="`table-row-info color-cg-${scope.row.target_attribute_2}`">{{
+              scope.row.target_attribute_2 || ''
+            }}</span>
           </template>
         </el-table-column>
 
@@ -108,13 +99,9 @@
           :sort-method="sortDominantAttribute"
         >
           <template #default="scope">
-            <span
-              :style="{
-                fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_attribute}`,
-              }"
-              >{{ scope.row.target_attribute || '' }}</span
-            >
+            <span :class="`table-row-info color-cg-${scope.row.target_attribute}`">{{
+              scope.row.target_attribute || ''
+            }}</span>
           </template>
         </el-table-column>
 
@@ -128,13 +115,9 @@
           :sort-method="sortDominantParam2"
         >
           <template #default="scope">
-            <span
-              :style="{
-                fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_param_2}`,
-              }"
-              >{{ scope.row.target_param_2 || '' }}</span
-            >
+            <span :class="`table-row-info color-cg-${scope.row.target_param_2}`">{{
+              scope.row.target_param_2 || ''
+            }}</span>
           </template>
         </el-table-column>
 
@@ -148,13 +131,9 @@
           :sort-method="sortDominantParam"
         >
           <template #default="scope">
-            <span
-              :style="{
-                fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_param}`,
-              }"
-              >{{ scope.row.target_param || '' }}</span
-            >
+            <span :class="`table-row-info color-cg-${scope.row.target_param}`">{{
+              scope.row.target_param || ''
+            }}</span>
           </template>
         </el-table-column>
 
@@ -173,7 +152,7 @@
           :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
         >
           <template #default="scope">
-            <div class="icons-container">
+            <div class="table-icons-container">
               <div
                 v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
@@ -832,6 +811,25 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
 // @import '@/assets/styles/im/346lab/icons.css';
 @import '@/assets/styles/im/346lab/icons@2x.css';
 
+.color-cg-cute {
+  color: var(--im-color-cg-cute);
+}
+.color-cg-cool {
+  color: var(--im-color-cg-cool);
+}
+.color-cg-passion {
+  color: var(--im-color-cg-passion);
+}
+.color-cg-vocal {
+  color: var(--im-color-cg-vocal);
+}
+.color-cg-dance {
+  color: var(--im-color-cg-dance);
+}
+.color-cg-visual {
+  color: var(--im-color-cg-visual);
+}
+
 .el-table {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
@@ -840,39 +838,45 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
   vertical-align: inherit;
 }
 
+.el-table {
+  .table-row-info {
+    font-weight: bold;
+  }
+
+  .table-icons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .icon {
+    --target-width: 48px;
+
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    cursor: pointer; // 添加光标效果提示可点击
+
+    scale: calc(var(--target-width) / 48px);
+    margin: calc((var(--target-width) - 48px) / 2);
+  }
+
+  .icon.dark {
+    filter: brightness(0.4);
+  }
+
+  html.dark .icon.dark {
+    filter: brightness(0.25);
+  }
+}
+
 .unit-mode-switch {
   margin-bottom: 1em;
 }
 
 .unit-table {
   padding: 1em 0;
-}
-
-.icons-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-}
-
-.icon {
-  --target-width: 48px;
-
-  display: inline-block;
-  width: 48px;
-  height: 48px;
-  border-radius: 4px;
-  cursor: pointer; // 添加光标效果提示可点击
-
-  scale: calc(var(--target-width) / 48px);
-  margin: calc((var(--target-width) - 48px) / 2);
-}
-
-.icon.dark {
-  filter: brightness(0.4);
-}
-
-html.dark .icon.dark {
-  filter: brightness(0.25);
 }
 </style>
