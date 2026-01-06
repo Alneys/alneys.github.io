@@ -11,7 +11,7 @@ const env = import.meta.env;
     </div>
 
     <div class="main">
-      <router-link v-if="env.DEV" to="/cgss/team-viewer">
+      <router-link v-if="env.DEV" to="/cgss/unit-viewer">
         <el-card shadow="hover">（开发中）偶像大师灰姑娘女孩星光舞台 组队参考</el-card>
       </router-link>
       <router-link to="/mltd/anniversary-calc">
