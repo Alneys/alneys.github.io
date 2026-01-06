@@ -62,7 +62,7 @@
                   handleImageClick(
                     scope.row,
                     tableResonanceColumnHeader[colIndex - 1].value,
-                    imgIndex,
+                    Number(imgIndex),
                   )
                 "
               ></div>
@@ -74,9 +74,9 @@
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant">Dominant</div>
     <div v-if="env.DEV" class="unit-table">
-      <el-table :data="tableDataDominant" border style="width: 100%">
+      <el-table :data="filteredTableDataDominant" border style="width: 100%">
         <!-- 第一列：target_attribute_2 -->
-        <el-table-column prop="target_attribute_2" label="歌曲属性" :width="96">
+        <el-table-column prop="target_attribute_2" label="属性2" :width="96">
           <template #default="scope">
             <span
               :style="{
@@ -89,7 +89,7 @@
         </el-table-column>
 
         <!-- 第二列：target_attribute -->
-        <el-table-column prop="target_attribute" label="原属性" :width="96">
+        <el-table-column prop="target_attribute" label="属性1" :width="96">
           <template #default="scope">
             <span
               :style="{
@@ -101,7 +101,33 @@
           </template>
         </el-table-column>
 
-        <!-- 第三列：tw -->
+        <!-- 第三列：target_param_2 -->
+        <el-table-column prop="target_param_2" label="参数2" :width="96">
+          <template #default="scope">
+            <span
+              :style="{
+                fontWeight: 'bold',
+                color: `var(--im-color-cg-${scope.row.target_param_2})`,
+              }"
+              >{{ scope.row.target_param_2 || '' }}</span
+            >
+          </template>
+        </el-table-column>
+
+        <!-- 第四列：target_param -->
+        <el-table-column prop="target_param" label="参数1" :width="96">
+          <template #default="scope">
+            <span
+              :style="{
+                fontWeight: 'bold',
+                color: `var(--im-color-cg-${scope.row.target_param})`,
+              }"
+              >{{ scope.row.target_param || '' }}</span
+            >
+          </template>
+        </el-table-column>
+
+        <!-- 第五列：tw -->
         <el-table-column prop="tw" label="间隔" :width="64">
           <template #default="scope">
             <span>{{ scope.row.tw || '' }}</span>
@@ -130,7 +156,7 @@
                   handleImageClick(
                     scope.row,
                     tableDominantColumnHeader[colIndex - 1].value,
-                    imgIndex,
+                    Number(imgIndex),
                   )
                 "
               ></div>
@@ -248,18 +274,20 @@ interface CellItem {
   cid: string;
   name: string;
   title?: string;
-  src?: string;
   isBrightness?: boolean;
   link?: string;
 }
 
 // Resonance table
 interface TableResonanceRow {
-  specialize: string;
   tw: string;
-  [key: string]: CellItem[] | string;
+  specialize?: string;
+  target_attribute_2?: string;
+  target_attribute?: string;
+  target_param_2?: string;
+  target_param?: string;
+  [key: string]: CellItem[] | string | undefined;
 }
-
 // 点击图片模式切换
 const modeSwitch = ref(true);
 
@@ -359,23 +387,37 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
 
 // 初始化Dominant表格数据
 const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
-  // 创建表格数据结构，包含24种情况
+  // 创建表格数据结构，包含144种情况 (3*2*3*2*4 = 144)
   const result: TableResonanceRow[] = [];
 
   // 遍历所有可能的组合
   tableDominantRowHeaderAttribute.forEach((attr2) => {
-    // 找到与attr2不同的attr
+    // target_attribute_2: 3个
     tableDominantRowHeaderAttribute.forEach((attr) => {
+      // target_attribute: 3个
       if (attr !== attr2) {
-        // 遍历所有tw值
-        tableDominantRowHeaderTw.forEach((tw) => {
-          // 为每种组合创建一行数据
-          result.push({
-            specialize: attr, // 第一列: target_attribute
-            tw: tw + 's', // 第二列: tw
-            target_attribute: attr, // 第三列: target_attribute
-            target_attribute_2: attr2, // 第四列: target_attribute_2
-            dominant: [], // 新增第四列
+        // 确保attr !== attr2 (3*2 = 6种组合)
+        tableDominantRowHeaderSpecialize.forEach((param2) => {
+          // target_param_2: 3个
+          tableDominantRowHeaderSpecialize.forEach((param) => {
+            // target_param: 3个
+            if (param !== param2) {
+              // 确保param !== param2 (3*2 = 6种组合)
+              tableDominantRowHeaderTw.forEach((tw) => {
+                // tw: 4个
+                // 为每种组合创建一行数据
+                result.push({
+                  target_attribute_2: attr2, // 第一列: target_attribute_2
+                  target_attribute: attr, // 第二列: target_attribute
+                  target_param_2: param2, // 第三列: target_param_2
+                  target_param: param, // 第四列: target_param
+                  tw: tw + 's', // 第五列: tw
+                  dominant: [], // 主要效果列
+                  alternate: [], // 变换效果列
+                  mutual: [], // 交互效果列
+                });
+              });
+            }
           });
         });
       }
@@ -397,22 +439,31 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     // 获取leaderSkill参数
     const targetAttr = item.leaderSkill.params.target_attribute;
     const targetAttr2 = item.leaderSkill.params.target_attribute_2;
+    const targetParam = item.leaderSkill.params.target_param;
+    const targetParam2 = item.leaderSkill.params.target_param_2;
 
     // 检查参数是否存在
-    if (!targetAttr || !targetAttr2) {
+    if (!targetAttr || !targetAttr2 || !targetParam || !targetParam2) {
       return;
     }
 
-    // 根据target_attribute和target_attribute_2确定行的前半部分索引
+    // 根据target_attribute和target_attribute_2确定行的索引
     const attrIndex = tableDominantRowHeaderAttribute.indexOf(targetAttr.toLowerCase());
     const attr2Index = tableDominantRowHeaderAttribute.indexOf(targetAttr2.toLowerCase());
+    const paramIndex = tableDominantRowHeaderSpecialize.indexOf(targetParam.toLowerCase());
+    const param2Index = tableDominantRowHeaderSpecialize.indexOf(targetParam2.toLowerCase());
 
-    if (attrIndex === -1 || attr2Index === -1 || attrIndex === attr2Index) {
-      // 如果不在预定义范围内或两个属性相同，跳过该数据
+    if (attrIndex === -1 || attr2Index === -1 || paramIndex === -1 || param2Index === -1) {
+      // 如果不在预定义范围内，跳过该数据
       return;
     }
 
-    // 根据skill.tw确定行索引
+    if (attrIndex === attr2Index || paramIndex === param2Index) {
+      // 如果两个属性相同或两个参数相同，跳过该数据
+      return;
+    }
+
+    // 根据skill.tw确定tw索引
     const twIndex = tableDominantRowHeaderTw.indexOf(String(item.skill.params.tw));
     if (twIndex === -1) {
       // 如果tw不在预定义范围内，跳过该数据
@@ -420,22 +471,51 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     }
 
     // 计算行索引
-    const attrCount = tableDominantRowHeaderAttribute.length;
-    const twCount = tableDominantRowHeaderTw.length;
-    const rowIndex =
-      (attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) *
-        twCount +
-      twIndex;
+    // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 6 +
+    //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))) * 4 + twIndex
+    const attrCount = tableDominantRowHeaderAttribute.length; // 3
+    const validAttrCombos = attrCount * (attrCount - 1); // 3 * 2 = 6
+    const paramCount = tableDominantRowHeaderSpecialize.length; // 3
+    const validParamCombos = paramCount * (paramCount - 1); // 3 * 2 = 6
+    const twCount = tableDominantRowHeaderTw.length; // 4
+
+    const attrComboIndex =
+      attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex);
+    const paramComboIndex =
+      param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
+    const rowIndex = (attrComboIndex * validParamCombos + paramComboIndex) * twCount + twIndex;
+
+    // 根据技能类型确定插入到哪个列
+    let targetColumn = '';
+    if (item.leaderSkill.description.includes('dominant')) {
+      targetColumn = 'dominant';
+    } else if (item.leaderSkill.description.includes('alternate')) {
+      targetColumn = 'alternate';
+    } else if (item.leaderSkill.description.includes('mutual')) {
+      targetColumn = 'mutual';
+    } else {
+      // 默认插入到dominant列
+      targetColumn = 'dominant';
+    }
 
     // 将数据添加到对应单元格
-    if (result[rowIndex] && Array.isArray(result[rowIndex].dominant)) {
-      result[rowIndex].dominant.push({
+    if (
+      result[rowIndex] &&
+      result[rowIndex][targetColumn] &&
+      Array.isArray(result[rowIndex][targetColumn])
+    ) {
+      // typescript bug
+      (result[rowIndex][targetColumn] as CellItem[]).push({
         cid: item.cid,
         name: item.name,
         title: `${item.title} ${item.name}`,
         link: item.link,
         isBrightness: true,
       });
+    } else {
+      console.warn(
+        `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
+      );
     }
   });
 
@@ -451,6 +531,16 @@ const tableDataResonance = ref<TableResonanceRow[]>(
 const tableDataDominant = ref<TableResonanceRow[]>(
   initializeDataDominant(CgssCardSkillTable as CgssCardSkillTableItem[]),
 );
+
+// 使用计算属性过滤dominant表中dominant列为空的行
+import { computed } from 'vue';
+
+// 修改dominant表的数据源，使用计算属性过滤空行
+const filteredTableDataDominant = computed(() => {
+  return tableDataDominant.value.filter(row => 
+    Array.isArray(row.dominant) && row.dominant.length > 0
+  );
+});
 
 // 处理图片点击事件
 const handleImageClick = (row: TableResonanceRow, colKey: string, index: number) => {
