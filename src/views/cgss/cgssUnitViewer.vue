@@ -15,7 +15,12 @@
         :span-method="tableResonanceSpanMethod"
       >
         <!-- 第一列：属性 -->
-        <el-table-column prop="specialize" label="属性" width="80" fixed>
+        <el-table-column
+          prop="specialize"
+          label="属性"
+          :width="80"
+          :fixed="!isMobile ? 'left' : undefined"
+        >
           <template #default="scope">
             <span
               :style="{
@@ -28,7 +33,7 @@
           </template>
         </el-table-column>
         <!-- 第二列：间隔值 -->
-        <el-table-column prop="tw" label="间隔" :width="64" fixed>
+        <el-table-column prop="tw" label="间隔" :width="64" :fixed="!isMobile ? 'left' : undefined">
           <template #default="scope">
             <span style="font-weight: bold">
               {{ scope.row.tw }}
@@ -113,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, shallowRef } from 'vue';
+import { ref, reactive, onMounted, watch, onUnmounted } from 'vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
 
 const env = import.meta.env;
@@ -180,6 +185,7 @@ const tableDataDominantCount = Array.from(
   () => 0,
 );
 
+// Cell item
 interface CellItem {
   cid: string;
   name: string;
@@ -189,11 +195,31 @@ interface CellItem {
   link?: string;
 }
 
+// Resonance table
 interface TableResonanceRow {
-  specialize: string; // 新增：属性
-  tw: string; // 新增：间隔
+  specialize: string;
+  tw: string;
   [key: string]: CellItem[] | string;
 }
+
+// 点击图片模式切换
+const modeSwitch = ref(true);
+
+// 响应式属性用于判断是否为移动端
+const isMobile = ref(window.innerWidth < 768);
+
+// 监听窗口大小变化
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 // 合并单元格
 const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
@@ -206,7 +232,7 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
   }
 };
 
-// 初始化数据
+// 初始化Resonance表格数据
 const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
   // 创建表格数据结构
   const result: TableResonanceRow[] = [];
@@ -273,6 +299,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
   return result;
 };
 
+// 初始化Dominant表格数据
 const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
   // 创建表格数据结构，包含24种情况
   const result: TableResonanceRow[] = [];
@@ -301,7 +328,6 @@ const tableDataDominant = ref<TableResonanceRow[]>(
   initializeDataDominant(CgssCardSkillTable as CgssCardSkillTableItem[]),
 );
 
-const modeSwitch = ref(true);
 // 处理图片点击事件
 const handleImageClick = (row: TableResonanceRow, colKey: string, index: number) => {
   // 验证输入参数
