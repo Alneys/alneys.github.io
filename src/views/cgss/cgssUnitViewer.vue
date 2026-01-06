@@ -40,7 +40,7 @@
             </span>
           </template>
         </el-table-column>
-        <!-- 后续列：结果 -->
+        <!-- 后续列：根据tableResonanceColumnHeader动态生成 -->
         <el-table-column
           v-for="colIndex in tableResonanceColumnHeader.length"
           :key="colIndex"
@@ -76,16 +76,28 @@
     <div v-if="env.DEV" class="unit-table">
       <el-table :data="tableDataDominant" border style="width: 100%">
         <!-- 第一列：target_attribute_2 -->
-        <el-table-column prop="target_attribute_2" label="属性2" :width="96">
+        <el-table-column prop="target_attribute_2" label="歌曲属性" :width="96">
           <template #default="scope">
-            <span>{{ scope.row.target_attribute_2 || '' }}</span>
+            <span
+              :style="{
+                fontWeight: 'bold',
+                color: `var(--im-color-cg-${scope.row.target_attribute_2})`,
+              }"
+              >{{ scope.row.target_attribute_2 || '' }}</span
+            >
           </template>
         </el-table-column>
 
         <!-- 第二列：target_attribute -->
-        <el-table-column prop="target_attribute" label="属性" :width="96">
+        <el-table-column prop="target_attribute" label="原属性" :width="96">
           <template #default="scope">
-            <span>{{ scope.row.target_attribute || '' }}</span>
+            <span
+              :style="{
+                fontWeight: 'bold',
+                color: `var(--im-color-cg-${scope.row.target_attribute})`,
+              }"
+              >{{ scope.row.target_attribute || '' }}</span
+            >
           </template>
         </el-table-column>
 
@@ -93,6 +105,36 @@
         <el-table-column prop="tw" label="间隔" :width="64">
           <template #default="scope">
             <span>{{ scope.row.tw || '' }}</span>
+          </template>
+        </el-table-column>
+
+        <!-- 后续列：根据tableDominantColumnHeader动态生成 -->
+        <el-table-column
+          v-for="colIndex in 1"
+          :key="colIndex"
+          :prop="tableDominantColumnHeader[colIndex - 1].value"
+          :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
+        >
+          <template #default="scope">
+            <div class="icons-container">
+              <div
+                v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].value]"
+                :key="imgIndex"
+                :title="img.title ?? ''"
+                :class="{
+                  icon: true,
+                  [`icon_${img.cid}`]: true,
+                  dark: !img.isBrightness,
+                }"
+                @click="
+                  handleImageClick(
+                    scope.row,
+                    tableDominantColumnHeader[colIndex - 1].value,
+                    imgIndex,
+                  )
+                "
+              ></div>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -163,7 +205,7 @@ interface CgssCardSkillTableItem {
 const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
-  { value: 'motif', label: '共鸣 motif' },
+  { value: 'motif', label: '共鸣 resonance motif' },
   { value: 'synergy', label: '大偏 synergy' },
   { value: 'symphony', label: '交响 symphony' },
   { value: 'spike', label: '尖峰 spike' },
@@ -174,6 +216,22 @@ const tableResonanceColumnHeader = [
 const tableDominantRowHeaderAttribute = ['cute', 'cool', 'passion'];
 const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
+
+const tableDominantColumnHeader = [
+  { value: 'dominant', label: '双色 dominant' },
+  {
+    value: 'alternate',
+    label: '变换 alternate',
+    attribute: 'target_attribute',
+    param: 'target_param',
+  },
+  {
+    value: 'mutual',
+    label: '交互 mutual',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+  },
+];
 
 const tableDataDominantCount = Array.from(
   {
@@ -312,18 +370,84 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
         // 遍历所有tw值
         tableDominantRowHeaderTw.forEach((tw) => {
           // 为每种组合创建一行数据
+          result.push({
+            specialize: attr, // 第一列: target_attribute
+            tw: tw + 's', // 第二列: tw
+            target_attribute: attr, // 第三列: target_attribute
+            target_attribute_2: attr2, // 第四列: target_attribute_2
+            dominant: [], // 新增第四列
+          });
         });
       }
     });
   });
 
+  // 遍历技能表数据，根据leaderSkill.params和skill.params分配到对应的单元格
+  data.forEach((item: CgssCardSkillTableItem) => {
+    // 检查稀有度，如果不是SSR则直接返回，不执行后续操作
+    if (item.rarity !== 'ssr') {
+      return;
+    }
+
+    // 检查是否有leaderSkill.params
+    if (!item.leaderSkill.params) {
+      return;
+    }
+
+    // 获取leaderSkill参数
+    const targetAttr = item.leaderSkill.params.target_attribute;
+    const targetAttr2 = item.leaderSkill.params.target_attribute_2;
+
+    // 检查参数是否存在
+    if (!targetAttr || !targetAttr2) {
+      return;
+    }
+
+    // 根据target_attribute和target_attribute_2确定行的前半部分索引
+    const attrIndex = tableDominantRowHeaderAttribute.indexOf(targetAttr.toLowerCase());
+    const attr2Index = tableDominantRowHeaderAttribute.indexOf(targetAttr2.toLowerCase());
+
+    if (attrIndex === -1 || attr2Index === -1 || attrIndex === attr2Index) {
+      // 如果不在预定义范围内或两个属性相同，跳过该数据
+      return;
+    }
+
+    // 根据skill.tw确定行索引
+    const twIndex = tableDominantRowHeaderTw.indexOf(String(item.skill.params.tw));
+    if (twIndex === -1) {
+      // 如果tw不在预定义范围内，跳过该数据
+      return;
+    }
+
+    // 计算行索引
+    const attrCount = tableDominantRowHeaderAttribute.length;
+    const twCount = tableDominantRowHeaderTw.length;
+    const rowIndex =
+      (attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) *
+        twCount +
+      twIndex;
+
+    // 将数据添加到对应单元格
+    if (result[rowIndex] && Array.isArray(result[rowIndex].dominant)) {
+      result[rowIndex].dominant.push({
+        cid: item.cid,
+        name: item.name,
+        title: `${item.title} ${item.name}`,
+        link: item.link,
+        isBrightness: true,
+      });
+    }
+  });
+
   return result;
 };
 
+// Resonance表格数据
 const tableDataResonance = ref<TableResonanceRow[]>(
   initializeDataResonance(CgssCardSkillTable as CgssCardSkillTableItem[]),
 );
 
+// Dominant表格数据
 const tableDataDominant = ref<TableResonanceRow[]>(
   initializeDataDominant(CgssCardSkillTable as CgssCardSkillTableItem[]),
 );
@@ -367,8 +491,24 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
     const targetName = image.title;
     const newState = !image.isBrightness;
 
-    // 更新所有名称相同的图片的状态
+    // 更新所有名称相同的图片的状态 - resonance表
     tableDataResonance.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        // 验证列值是否为数组
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            // 验证图片对象是否有效
+            if (img && img.title === targetName) {
+              img.isBrightness = newState;
+            }
+          });
+        }
+      });
+    });
+
+    // 更新所有名称相同的图片的状态 - dominant表
+    tableDataDominant.value.forEach((dataRow) => {
       Object.keys(dataRow).forEach((colKey) => {
         const colValue = dataRow[colKey];
         // 验证列值是否为数组
