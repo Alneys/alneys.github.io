@@ -20,6 +20,9 @@
           label="属性"
           :width="80"
           :fixed="!isMobile ? 'left' : undefined"
+          sortable
+          :sort-orders="['descending', 'ascending']"
+          :sort-method="sortResonanceSpecialize"
         >
           <template #default="scope">
             <span
@@ -76,12 +79,19 @@
     <div v-if="env.DEV" class="unit-table">
       <el-table :data="filteredTableDataDominant" border style="width: 100%">
         <!-- 第一列：target_attribute_2 -->
-        <el-table-column prop="target_attribute_2" label="属性2" :width="96">
+        <el-table-column
+          prop="target_attribute_2"
+          label="属性2"
+          :width="96"
+          sortable
+          :sort-orders="['descending', 'ascending']"
+          :sort-method="sortDominantAttribute"
+        >
           <template #default="scope">
             <span
               :style="{
                 fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_attribute_2})`,
+                color: `var(--im-color-cg-${scope.row.target_attribute_2}`,
               }"
               >{{ scope.row.target_attribute_2 || '' }}</span
             >
@@ -89,12 +99,19 @@
         </el-table-column>
 
         <!-- 第二列：target_attribute -->
-        <el-table-column prop="target_attribute" label="属性1" :width="96">
+        <el-table-column
+          prop="target_attribute"
+          label="属性1"
+          :width="96"
+          sortable
+          :sort-orders="['descending', 'ascending']"
+          :sort-method="sortDominantAttribute"
+        >
           <template #default="scope">
             <span
               :style="{
                 fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_attribute})`,
+                color: `var(--im-color-cg-${scope.row.target_attribute}`,
               }"
               >{{ scope.row.target_attribute || '' }}</span
             >
@@ -102,12 +119,19 @@
         </el-table-column>
 
         <!-- 第三列：target_param_2 -->
-        <el-table-column prop="target_param_2" label="参数2" :width="96">
+        <el-table-column
+          prop="target_param_2"
+          label="参数2"
+          :width="96"
+          sortable
+          :sort-orders="['descending', 'ascending']"
+          :sort-method="sortDominantParam"
+        >
           <template #default="scope">
             <span
               :style="{
                 fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_param_2})`,
+                color: `var(--im-color-cg-${scope.row.target_param_2}`,
               }"
               >{{ scope.row.target_param_2 || '' }}</span
             >
@@ -115,12 +139,19 @@
         </el-table-column>
 
         <!-- 第四列：target_param -->
-        <el-table-column prop="target_param" label="参数1" :width="96">
+        <el-table-column
+          prop="target_param"
+          label="参数1"
+          :width="96"
+          sortable
+          :sort-orders="['descending', 'ascending']"
+          :sort-method="sortDominantParam"
+        >
           <template #default="scope">
             <span
               :style="{
                 fontWeight: 'bold',
-                color: `var(--im-color-cg-${scope.row.target_param})`,
+                color: `var(--im-color-cg-${scope.row.target_param}`,
               }"
               >{{ scope.row.target_param || '' }}</span
             >
@@ -316,6 +347,83 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
     }
     return [0, 0];
   }
+};
+
+// 添加排序方法
+const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => {
+  const order = tableResonanceRowHeaderSpecialize;
+  const indexA = order.indexOf(a.specialize || '');
+  const indexB = order.indexOf(b.specialize || '');
+
+  // 如果specialize值在预定义顺序中，则按预定义顺序排序
+  if (indexA !== -1 && indexB !== -1) {
+    return indexA - indexB;
+  }
+
+  // 如果其中一个specialize值不在预定义顺序中，则将预定义顺序中的值排在前面
+  if (indexA !== -1) {
+    return -1;
+  }
+  if (indexB !== -1) {
+    return 1;
+  }
+
+  // 如果都不在预定义顺序中，则按字母顺序排序
+  if (a.specialize && b.specialize) {
+    return a.specialize.localeCompare(b.specialize);
+  }
+  return 0;
+};
+
+// 添加Dominant表排序方法
+const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
+  const order = tableDominantRowHeaderAttribute;
+  const indexA = order.indexOf(a.target_attribute || '');
+  const indexB = order.indexOf(b.target_attribute || '');
+
+  // 如果值在预定义顺序中，则按预定义顺序排序
+  if (indexA !== -1 && indexB !== -1) {
+    return indexA - indexB;
+  }
+
+  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+  if (indexA !== -1) {
+    return -1;
+  }
+  if (indexB !== -1) {
+    return 1;
+  }
+
+  // 如果都不在预定义顺序中，则按字母顺序排序
+  if (a.target_attribute && b.target_attribute) {
+    return a.target_attribute.localeCompare(b.target_attribute);
+  }
+  return 0;
+};
+
+const sortDominantParam = (a: TableResonanceRow, b: TableResonanceRow) => {
+  const order = tableDominantRowHeaderSpecialize;
+  const indexA = order.indexOf(a.target_param || '');
+  const indexB = order.indexOf(b.target_param || '');
+
+  // 如果值在预定义顺序中，则按预定义顺序排序
+  if (indexA !== -1 && indexB !== -1) {
+    return indexA - indexB;
+  }
+
+  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+  if (indexA !== -1) {
+    return -1;
+  }
+  if (indexB !== -1) {
+    return 1;
+  }
+
+  // 如果都不在预定义顺序中，则按字母顺序排序
+  if (a.target_param && b.target_param) {
+    return a.target_param.localeCompare(b.target_param);
+  }
+  return 0;
 };
 
 // 初始化Resonance表格数据
@@ -537,8 +645,8 @@ import { computed } from 'vue';
 
 // 修改dominant表的数据源，使用计算属性过滤空行
 const filteredTableDataDominant = computed(() => {
-  return tableDataDominant.value.filter(row => 
-    Array.isArray(row.dominant) && row.dominant.length > 0
+  return tableDataDominant.value.filter(
+    (row) => Array.isArray(row.dominant) && row.dominant.length > 0,
   );
 });
 
