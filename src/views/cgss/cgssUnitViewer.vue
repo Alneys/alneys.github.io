@@ -146,7 +146,7 @@
 
         <!-- 后续列：根据tableDominantColumnHeader动态生成 -->
         <el-table-column
-          v-for="colIndex in 1"
+          v-for="colIndex in tableDominantColumnHeader.length"
           :key="colIndex"
           :prop="tableDominantColumnHeader[colIndex - 1].value"
           :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
@@ -612,91 +612,127 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
       return;
     }
 
-    // 检查是否有leaderSkill.params
-    if (!item.leaderSkill.params) {
-      return;
-    }
+    // 处理 alternate 和 mutual 类型的技能
+    if (item.skill.type === 'alternate' || item.skill.type === 'mutual') {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // 处理 alternate 类型：匹配 skill.type 是 alternate，attribute 与当前行 target_attribute 相同，
+        // row.target_param 的值大于5000，且skill.tw与当前行tw相同
+        if (
+          item.skill.type === 'alternate' &&
+          item.attribute.toLowerCase() === row.target_attribute &&
+          row.target_param &&
+          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000 &&
+          String(item.skill.params.tw) + 's' === row.tw
+        ) {
+          (result[rowIndex].alternate as CellItem[]).push({
+            cid: item.cid,
+            name: item.name,
+            title: `${item.title} ${item.name}`,
+            link: item.link,
+            isBrightness: true,
+          });
+        }
 
-    // 获取leaderSkill参数
-    const targetAttr = item.leaderSkill.params.target_attribute;
-    const targetAttr2 = item.leaderSkill.params.target_attribute_2;
-    const targetParam = item.leaderSkill.params.target_param;
-    const targetParam2 = item.leaderSkill.params.target_param_2;
-
-    // 检查参数是否存在
-    if (!targetAttr || !targetAttr2 || !targetParam || !targetParam2) {
-      return;
-    }
-
-    // 根据target_attribute和target_attribute_2确定行的索引
-    const attrIndex = tableDominantRowHeaderAttribute.indexOf(targetAttr.toLowerCase());
-    const attr2Index = tableDominantRowHeaderAttribute.indexOf(targetAttr2.toLowerCase());
-    const paramIndex = tableDominantRowHeaderSpecialize.indexOf(targetParam.toLowerCase());
-    const param2Index = tableDominantRowHeaderSpecialize.indexOf(targetParam2.toLowerCase());
-
-    if (attrIndex === -1 || attr2Index === -1 || paramIndex === -1 || param2Index === -1) {
-      // 如果不在预定义范围内，跳过该数据
-      return;
-    }
-
-    if (attrIndex === attr2Index || paramIndex === param2Index) {
-      // 如果两个属性相同或两个参数相同，跳过该数据
-      return;
-    }
-
-    // 根据skill.tw确定tw索引
-    const twIndex = tableDominantRowHeaderTw.indexOf(String(item.skill.params.tw));
-    if (twIndex === -1) {
-      // 如果tw不在预定义范围内，跳过该数据
-      return;
-    }
-
-    // 计算行索引
-    // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 4 + twIndex) * 6 +
-    //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))
-    const attrCount = tableDominantRowHeaderAttribute.length; // 3
-    const validAttrCombos = attrCount * (attrCount - 1); // 3 * 2 = 6
-    const paramCount = tableDominantRowHeaderSpecialize.length; // 3
-    const validParamCombos = paramCount * (paramCount - 1); // 3 * 2 = 6
-    const twCount = tableDominantRowHeaderTw.length; // 4
-
-    const attrComboIndex =
-      attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex);
-    const paramComboIndex =
-      param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
-    const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
-
-    // 根据技能类型确定插入到哪个列
-    let targetColumn = '';
-    if (item.leaderSkill.description.includes('dominant')) {
-      targetColumn = 'dominant';
-    } else if (item.leaderSkill.description.includes('alternate')) {
-      targetColumn = 'alternate';
-    } else if (item.leaderSkill.description.includes('mutual')) {
-      targetColumn = 'mutual';
-    } else {
-      // 默认插入到dominant列
-      targetColumn = 'dominant';
-    }
-
-    // 将数据添加到对应单元格
-    if (
-      result[rowIndex] &&
-      result[rowIndex][targetColumn] &&
-      Array.isArray(result[rowIndex][targetColumn])
-    ) {
-      // typescript bug
-      (result[rowIndex][targetColumn] as CellItem[]).push({
-        cid: item.cid,
-        name: item.name,
-        title: `${item.title} ${item.name}`,
-        link: item.link,
-        isBrightness: true,
+        // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
+        // row.target_param_2 的值大于5000，且skill.tw与当前行tw相同
+        if (
+          item.skill.type === 'mutual' &&
+          item.attribute.toLowerCase() === row.target_attribute_2 &&
+          row.target_param_2 &&
+          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000 &&
+          String(item.skill.params.tw) + 's' === row.tw
+        ) {
+          (result[rowIndex].mutual as CellItem[]).push({
+            cid: item.cid,
+            name: item.name,
+            title: `${item.title} ${item.name}`,
+            link: item.link,
+            isBrightness: true,
+          });
+        }
       });
-    } else {
-      console.warn(
-        `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
-      );
+    }
+
+    // 处理 leader skill（保持原有的 dominant 逻辑）
+    if (item.leaderSkill.params) {
+      // 获取leaderSkill参数
+      const targetAttr = item.leaderSkill.params.target_attribute;
+      const targetAttr2 = item.leaderSkill.params.target_attribute_2;
+      const targetParam = item.leaderSkill.params.target_param;
+      const targetParam2 = item.leaderSkill.params.target_param_2;
+
+      // 检查参数是否存在
+      if (!targetAttr || !targetAttr2 || !targetParam || !targetParam2) {
+        return;
+      }
+
+      // 根据target_attribute和target_attribute_2确定行的索引
+      const attrIndex = tableDominantRowHeaderAttribute.indexOf(targetAttr.toLowerCase());
+      const attr2Index = tableDominantRowHeaderAttribute.indexOf(targetAttr2.toLowerCase());
+      const paramIndex = tableDominantRowHeaderSpecialize.indexOf(targetParam.toLowerCase());
+      const param2Index = tableDominantRowHeaderSpecialize.indexOf(targetParam2.toLowerCase());
+
+      if (attrIndex === -1 || attr2Index === -1 || paramIndex === -1 || param2Index === -1) {
+        // 如果不在预定义范围内，跳过该数据
+        return;
+      }
+
+      if (attrIndex === attr2Index || paramIndex === param2Index) {
+        // 如果两个属性相同或两个参数相同，跳过该数据
+        return;
+      }
+
+      // 根据skill.tw确定tw索引
+      const twIndex = tableDominantRowHeaderTw.indexOf(String(item.skill.params.tw));
+      if (twIndex === -1) {
+        // 如果tw不在预定义范围内，跳过该数据
+        return;
+      }
+
+      // 计算行索引
+      // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 4 + twIndex) * 6 +
+      //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))
+      const attrCount = tableDominantRowHeaderAttribute.length; // 3
+      const validAttrCombos = attrCount * (attrCount - 1); // 3 * 2 = 6
+      const paramCount = tableDominantRowHeaderSpecialize.length; // 3
+      const validParamCombos = paramCount * (paramCount - 1); // 3 * 2 = 6
+      const twCount = tableDominantRowHeaderTw.length; // 4
+
+      const attrComboIndex =
+        attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex);
+      const paramComboIndex =
+        param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
+      const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
+
+      // 根据技能类型确定插入到哪个列
+      let targetColumn = '';
+      if (item.leaderSkill.description.includes('dominant')) {
+        targetColumn = 'dominant';
+      } else {
+        // 默认插入到dominant列，以保持原有功能
+        targetColumn = 'dominant';
+      }
+
+      // 将数据添加到对应单元格
+      if (
+        result[rowIndex] &&
+        result[rowIndex][targetColumn] &&
+        Array.isArray(result[rowIndex][targetColumn])
+      ) {
+        // typescript bug
+        (result[rowIndex][targetColumn] as CellItem[]).push({
+          cid: item.cid,
+          name: item.name,
+          title: `${item.title} ${item.name}`,
+          link: item.link,
+          isBrightness: true,
+        });
+      } else {
+        console.warn(
+          `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
+        );
+      }
     }
   });
 
