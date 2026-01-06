@@ -2,20 +2,27 @@
   <div class="unit-viewer">
     <h1 class="view-title">Title</h1>
     <div class="al-divider"></div>
-    <div class="unit-title">Resonance</div>
-    <div class="unit-main-container">
-      <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
+    <div class="unit-title" id="unit-resonance">Resonance</div>
+    <div class="unit-table">
+      <el-table
+        :data="tableDataResonance"
+        style="width: 100%"
+        border
+        :span-method="tableResonanceSpanMethod"
+      >
         <!-- 第一列：属性 -->
         <el-table-column :width="80" label="属性" fixed>
           <template #default="scope">
             <span
               :style="{
                 fontWeight: 'bold',
-                color: `var(--im-color-cg-${tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]})`,
+                color: `var(--im-color-cg-${tableResonanceRowHeaderSpecialize[Math.round(scope.$index / tableResonanceRowHeaderTw.length)]})`,
               }"
             >
               {{
-                tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]
+                tableResonanceRowHeaderSpecialize[
+                  Math.round(scope.$index / tableResonanceRowHeaderTw.length)
+                ]
               }}
             </span>
           </template>
@@ -24,20 +31,20 @@
         <el-table-column :width="64" label="间隔" fixed>
           <template #default="scope">
             <span style="font-weight: bold">
-              {{ tableDataRowHeaderTw[scope.$index % tableDataRowHeaderTw.length] }}s
+              {{ tableResonanceRowHeaderTw[scope.$index % tableResonanceRowHeaderTw.length] }}s
             </span>
           </template>
         </el-table-column>
         <!-- 后续列：结果 -->
         <el-table-column
-          v-for="colIndex in tableDataColumnHeader.length"
+          v-for="colIndex in tableResonanceColumnHeader.length"
           :key="colIndex"
-          :label="`${tableDataColumnHeader[colIndex - 1].label}`"
+          :label="`${tableResonanceColumnHeader[colIndex - 1].label}`"
         >
           <template #default="scope">
-            <div class="image-container">
+            <div class="icons-container">
               <div
-                v-for="(img, imgIndex) in scope.row[tableDataColumnHeader[colIndex - 1].value]"
+                v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
                 :title="img.title ?? ''"
                 :class="{
@@ -46,12 +53,25 @@
                   dark: !img.isBrightness,
                 }"
                 @click="
-                  toggleBrightness(scope.row, tableDataColumnHeader[colIndex - 1].value, imgIndex)
+                  toggleBrightness(
+                    scope.row,
+                    tableResonanceColumnHeader[colIndex - 1].value,
+                    imgIndex,
+                  )
                 "
               ></div>
             </div>
           </template>
         </el-table-column>
+      </el-table>
+    </div>
+    <div class="al-divider"></div>
+    <div class="unit-title" id="unit-dominant">Dominant</div>
+    <div class="unit-table">
+      <el-table :data="tableDataDominant" border style="width: 100%">
+        <!-- 第一列：属性2 -->
+        <!-- 第二列：属性 -->
+        <!-- 第三列：间隔 -->
       </el-table>
     </div>
   </div>
@@ -97,16 +117,26 @@ interface CgssCardSkillTableItem {
   };
 }
 
-const tableDataRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
-const tableDataRowHeaderTw = ['7', '9', '11'];
-const tableDataColumnHeader = [
+// Resonance table
+const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
+const tableResonanceRowHeaderTw = ['7', '9', '11'];
+const tableResonanceColumnHeader = [
   { value: 'motif', label: '共鸣 motif' },
   { value: 'synergy', label: '大偏 synergy' },
   { value: 'symphony', label: '交响 symphony' },
   { value: 'spike', label: '尖峰 spike' },
   { value: 'refrain', label: '复读 refrain' },
 ];
-1;
+
+// Dominant table
+const tableDominantRowHeaderAttribute = ['cute', 'cool', 'passion'];
+const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
+const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
+
+const tableDataDominantCount = Array.from(
+  { length: tableDominantRowHeaderAttribute.length ** 2 * tableDominantRowHeaderTw.length },
+  () => 0,
+);
 
 interface CellItem {
   cid: string;
@@ -120,10 +150,11 @@ interface TableRow {
   [key: string]: CellItem[];
 }
 
-const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+// 合并单元格
+const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
   if (columnIndex === 0) {
-    if (rowIndex % tableDataRowHeaderTw.length === 0) {
-      return [tableDataRowHeaderTw.length, 1];
+    if (rowIndex % tableResonanceRowHeaderTw.length === 0) {
+      return [tableResonanceRowHeaderTw.length, 1];
     } else {
     }
     return [0, 0];
@@ -131,10 +162,10 @@ const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
 };
 
 // 初始化数据
-const initializeData = (data: CgssCardSkillTableItem[]): TableRow[] => {
+const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableRow[] => {
   // 创建表格数据结构
   const result: TableRow[] = Array.from(
-    { length: tableDataRowHeaderTw.length * tableDataRowHeaderSpecialize.length },
+    { length: tableResonanceRowHeaderTw.length * tableResonanceRowHeaderSpecialize.length },
     () => ({
       motif: [],
       synergy: [],
@@ -152,15 +183,15 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableRow[] => {
     }
 
     // 根据specialize确定行的前半部分索引
-    const specializeIndex = tableDataRowHeaderSpecialize.indexOf(item.specialize);
+    const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(item.specialize);
     if (specializeIndex === -1) {
       // 如果specialize不在预定义范围内，跳过该数据
       return;
     }
-    let rowBaseIndex = specializeIndex * tableDataRowHeaderTw.length; // 每个specialize的行数
+    let rowBaseIndex = specializeIndex * tableResonanceRowHeaderTw.length; // 每个specialize的行数
 
     // 根据skill.tw确定行索引
-    const twIndex = tableDataRowHeaderTw.indexOf(String(item.skill.params.tw));
+    const twIndex = tableResonanceRowHeaderTw.indexOf(String(item.skill.params.tw));
     if (twIndex === -1) {
       // 如果tw不在预定义范围内，跳过该数据
       return;
@@ -171,7 +202,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableRow[] => {
     const rowIndex = rowBaseIndex + rowOffset;
 
     // 根据skill.type确定列名
-    const columnInfo = tableDataColumnHeader.find((col) => col.value === item.skill.type);
+    const columnInfo = tableResonanceColumnHeader.find((col) => col.value === item.skill.type);
     if (!columnInfo) {
       // 如果type不在预定义范围内，跳过该数据
       return;
@@ -191,7 +222,11 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableRow[] => {
   return result;
 };
 
-const tableData = ref<TableRow[]>(initializeData(cgssCardSkillTable as CgssCardSkillTableItem[]));
+const tableDataResonance = ref<TableRow[]>(
+  initializeDataResonance(cgssCardSkillTable as CgssCardSkillTableItem[]),
+);
+
+const tableDataDominant = ref<TableRow[]>();
 
 // 切换图片状态
 const toggleBrightness = (row: TableRow, colKey: string, index: number) => {
@@ -200,7 +235,7 @@ const toggleBrightness = (row: TableRow, colKey: string, index: number) => {
   const newState = !image.isBrightness;
 
   // 更新所有名称相同的图片的状态
-  tableData.value.forEach((dataRow) => {
+  tableDataResonance.value.forEach((dataRow) => {
     Object.keys(dataRow).forEach((colKey) => {
       dataRow[colKey].forEach((img) => {
         if (img.title === targetName) {
@@ -220,11 +255,11 @@ const toggleBrightness = (row: TableRow, colKey: string, index: number) => {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
 
-.main-container {
-  padding: 16px;
+.unit-table {
+  padding: 16px 0;
 }
 
-.image-container {
+.icons-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
