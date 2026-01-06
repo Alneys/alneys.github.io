@@ -11,6 +11,9 @@ const env = import.meta.env;
     </div>
 
     <div class="main">
+      <router-link to="/cgss/unit-viewer">
+        <el-card shadow="hover">偶像大师灰姑娘女孩星光舞台 组队信息</el-card>
+      </router-link>
       <router-link to="/mltd/anniversary-calc">
         <el-card shadow="hover">偶像大师百万现场 周年活动计算器</el-card>
       </router-link>
