@@ -736,6 +736,47 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     }
   });
 
+  // 对alternate和mutual列的数据按照目标param的数值从大到小排序
+  result.forEach((row) => {
+    // 对alternate列进行排序：根据对应行的target_param数值
+    if (Array.isArray(row.alternate) && row.alternate.length > 0) {
+      row.alternate.sort((a, b) => {
+        // 找到a卡片的数值
+        const cardA = data.find(item => item.cid === a.cid);
+        // 找到b卡片的数值
+        const cardB = data.find(item => item.cid === b.cid);
+        
+        if (!cardA || !cardB) return 0;
+        
+        // 根据target_param获取对应数值，例如如果target_param是'vocal'，则获取cardA.stats.vocal
+        const aValue = cardA.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
+        const bValue = cardB.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
+        
+        // 从大到小排序
+        return bValue - aValue;
+      });
+    }
+
+    // 对mutual列进行排序：根据对应行的target_param_2数值
+    if (Array.isArray(row.mutual) && row.mutual.length > 0) {
+      row.mutual.sort((a, b) => {
+        // 找到a卡片的数值
+        const cardA = data.find(item => item.cid === a.cid);
+        // 找到b卡片的数值
+        const cardB = data.find(item => item.cid === b.cid);
+        
+        if (!cardA || !cardB) return 0;
+        
+        // 根据target_param_2获取对应数值，例如如果target_param_2是'dance'，则获取cardA.stats.dance
+        const aValue = cardA.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
+        const bValue = cardB.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
+        
+        // 从大到小排序
+        return bValue - aValue;
+      });
+    }
+  });
+
   return result;
 };
 
