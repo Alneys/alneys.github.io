@@ -85,7 +85,7 @@
           :width="96"
           sortable
           :sort-orders="['descending', 'ascending']"
-          :sort-method="sortDominantAttribute"
+          :sort-method="sortDominantAttribute2"
         >
           <template #default="scope">
             <span
@@ -104,7 +104,7 @@
           label="属性1"
           :width="96"
           sortable
-          :sort-orders="['descending', 'ascending']"
+          :sort-orders="['ascending', 'descending']"
           :sort-method="sortDominantAttribute"
         >
           <template #default="scope">
@@ -124,8 +124,8 @@
           label="参数2"
           :width="96"
           sortable
-          :sort-orders="['descending', 'ascending']"
-          :sort-method="sortDominantParam"
+          :sort-orders="['ascending', 'descending']"
+          :sort-method="sortDominantParam2"
         >
           <template #default="scope">
             <span
@@ -144,7 +144,7 @@
           label="参数1"
           :width="96"
           sortable
-          :sort-orders="['descending', 'ascending']"
+          :sort-orders="['ascending', 'descending']"
           :sort-method="sortDominantParam"
         >
           <template #default="scope">
@@ -161,7 +161,7 @@
         <!-- 第五列：tw -->
         <el-table-column prop="tw" label="间隔" :width="64">
           <template #default="scope">
-            <span>{{ scope.row.tw || '' }}</span>
+            <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
           </template>
         </el-table-column>
 
@@ -317,8 +317,10 @@ interface TableResonanceRow {
   target_attribute?: string;
   target_param_2?: string;
   target_param?: string;
-  [key: string]: CellItem[] | string | undefined;
+  row: number;
+  [key: string]: CellItem[] | string | number | undefined;
 }
+
 // 点击图片模式切换
 const modeSwitch = ref(true);
 
@@ -357,7 +359,11 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
 
   // 如果specialize值在预定义顺序中，则按预定义顺序排序
   if (indexA !== -1 && indexB !== -1) {
-    return indexA - indexB;
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+    // 如果specialize相同，按行号排序
+    return a.row - b.row;
   }
 
   // 如果其中一个specialize值不在预定义顺序中，则将预定义顺序中的值排在前面
@@ -370,9 +376,15 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
 
   // 如果都不在预定义顺序中，则按字母顺序排序
   if (a.specialize && b.specialize) {
-    return a.specialize.localeCompare(b.specialize);
+    const compareResult = a.specialize.localeCompare(b.specialize);
+    if (compareResult !== 0) {
+      return compareResult;
+    }
+    // 如果specialize相同，按行号排序
+    return a.row - b.row;
   }
-  return 0;
+  // 如果specialize都为空，按行号排序
+  return a.row - b.row;
 };
 
 // 添加Dominant表排序方法
@@ -383,7 +395,11 @@ const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
 
   // 如果值在预定义顺序中，则按预定义顺序排序
   if (indexA !== -1 && indexB !== -1) {
-    return indexA - indexB;
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+    // 如果target_attribute相同，按行号排序
+    return a.row - b.row;
   }
 
   // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
@@ -396,9 +412,50 @@ const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
 
   // 如果都不在预定义顺序中，则按字母顺序排序
   if (a.target_attribute && b.target_attribute) {
-    return a.target_attribute.localeCompare(b.target_attribute);
+    const compareResult = a.target_attribute.localeCompare(b.target_attribute);
+    if (compareResult !== 0) {
+      return compareResult;
+    }
+    // 如果target_attribute相同，按行号排序
+    return a.row - b.row;
   }
-  return 0;
+  // 如果target_attribute都为空，按行号排序
+  return a.row - b.row;
+};
+
+const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
+  const order = tableDominantRowHeaderAttribute;
+  const indexA = order.indexOf(a.target_attribute_2 || '');
+  const indexB = order.indexOf(b.target_attribute_2 || '');
+
+  // 如果值在预定义顺序中，则按预定义顺序排序
+  if (indexA !== -1 && indexB !== -1) {
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+    // 如果target_attribute_2相同，按行号排序
+    return a.row - b.row;
+  }
+
+  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+  if (indexA !== -1) {
+    return -1;
+  }
+  if (indexB !== -1) {
+    return 1;
+  }
+
+  // 如果都不在预定义顺序中，则按字母顺序排序
+  if (a.target_attribute_2 && b.target_attribute_2) {
+    const compareResult = a.target_attribute_2.localeCompare(b.target_attribute_2);
+    if (compareResult !== 0) {
+      return compareResult;
+    }
+    // 如果target_attribute_2相同，按行号排序
+    return a.row - b.row;
+  }
+  // 如果target_attribute_2都为空，按行号排序
+  return a.row - b.row;
 };
 
 const sortDominantParam = (a: TableResonanceRow, b: TableResonanceRow) => {
@@ -408,7 +465,11 @@ const sortDominantParam = (a: TableResonanceRow, b: TableResonanceRow) => {
 
   // 如果值在预定义顺序中，则按预定义顺序排序
   if (indexA !== -1 && indexB !== -1) {
-    return indexA - indexB;
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+    // 如果target_param相同，按行号排序
+    return a.row - b.row;
   }
 
   // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
@@ -421,9 +482,50 @@ const sortDominantParam = (a: TableResonanceRow, b: TableResonanceRow) => {
 
   // 如果都不在预定义顺序中，则按字母顺序排序
   if (a.target_param && b.target_param) {
-    return a.target_param.localeCompare(b.target_param);
+    const compareResult = a.target_param.localeCompare(b.target_param);
+    if (compareResult !== 0) {
+      return compareResult;
+    }
+    // 如果target_param相同，按行号排序
+    return a.row - b.row;
   }
-  return 0;
+  // 如果target_param都为空，按行号排序
+  return a.row - b.row;
+};
+
+const sortDominantParam2 = (a: TableResonanceRow, b: TableResonanceRow) => {
+  const order = tableDominantRowHeaderSpecialize;
+  const indexA = order.indexOf(a.target_param_2 || '');
+  const indexB = order.indexOf(b.target_param_2 || '');
+
+  // 如果值在预定义顺序中，则按预定义顺序排序
+  if (indexA !== -1 && indexB !== -1) {
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+    // 如果target_param_2相同，按行号排序
+    return a.row - b.row;
+  }
+
+  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+  if (indexA !== -1) {
+    return -1;
+  }
+  if (indexB !== -1) {
+    return 1;
+  }
+
+  // 如果都不在预定义顺序中，则按字母顺序排序
+  if (a.target_param_2 && b.target_param_2) {
+    const compareResult = a.target_param_2.localeCompare(b.target_param_2);
+    if (compareResult !== 0) {
+      return compareResult;
+    }
+    // 如果target_param_2相同，按行号排序
+    return a.row - b.row;
+  }
+  // 如果target_param_2都为空，按行号排序
+  return a.row - b.row;
 };
 
 // 初始化Resonance表格数据
@@ -437,6 +539,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
       result.push({
         specialize: specialize, // 添加属性信息
         tw: tw + 's', // 添加间隔信息
+        row: result.length, // 添加行号
         motif: [],
         synergy: [],
         symphony: [],
@@ -505,27 +608,28 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
       // target_attribute: 3个
       if (attr !== attr2) {
         // 确保attr !== attr2 (3*2 = 6种组合)
-        tableDominantRowHeaderSpecialize.forEach((param2) => {
-          // target_param_2: 3个
-          tableDominantRowHeaderSpecialize.forEach((param) => {
-            // target_param: 3个
-            if (param !== param2) {
-              // 确保param !== param2 (3*2 = 6种组合)
-              tableDominantRowHeaderTw.forEach((tw) => {
-                // tw: 4个
+        tableDominantRowHeaderTw.forEach((tw) => {
+          // tw: 4个 (现在在第3个位置插入)
+          tableDominantRowHeaderSpecialize.forEach((param2) => {
+            // target_param_2: 3个
+            tableDominantRowHeaderSpecialize.forEach((param) => {
+              // target_param: 3个
+              if (param !== param2) {
+                // 确保param !== param2 (3*2 = 6种组合)
                 // 为每种组合创建一行数据
                 result.push({
                   target_attribute_2: attr2, // 第一列: target_attribute_2
                   target_attribute: attr, // 第二列: target_attribute
-                  target_param_2: param2, // 第三列: target_param_2
-                  target_param: param, // 第四列: target_param
-                  tw: tw + 's', // 第五列: tw
+                  tw: tw + 's', // 第三列: tw
+                  target_param_2: param2, // 第四列: target_param_2
+                  target_param: param, // 第五列: target_param
+                  row: result.length, // 添加行号
                   dominant: [], // 主要效果列
                   alternate: [], // 变换效果列
                   mutual: [], // 交互效果列
                 });
-              });
-            }
+              }
+            });
           });
         });
       }
@@ -579,8 +683,8 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     }
 
     // 计算行索引
-    // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 6 +
-    //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))) * 4 + twIndex
+    // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 4 + twIndex) * 6 +
+    //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))
     const attrCount = tableDominantRowHeaderAttribute.length; // 3
     const validAttrCombos = attrCount * (attrCount - 1); // 3 * 2 = 6
     const paramCount = tableDominantRowHeaderSpecialize.length; // 3
@@ -591,7 +695,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
       attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex);
     const paramComboIndex =
       param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
-    const rowIndex = (attrComboIndex * validParamCombos + paramComboIndex) * twCount + twIndex;
+    const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
 
     // 根据技能类型确定插入到哪个列
     let targetColumn = '';
