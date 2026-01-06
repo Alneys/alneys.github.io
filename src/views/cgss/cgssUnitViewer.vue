@@ -47,23 +47,54 @@
         >
           <template #default="scope">
             <div class="table-icons-container">
-              <div
+              <el-tooltip
                 v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
-                :title="img.title ?? ''"
-                :class="{
-                  icon: true,
-                  [`icon_${img.cid}`]: true,
-                  dark: !img.isBrightness,
-                }"
-                @click="
-                  handleImageClick(
-                    scope.row,
-                    tableResonanceColumnHeader[colIndex - 1].value,
-                    Number(imgIndex),
-                  )
-                "
-              ></div>
+                placement="top"
+                :show-after="500"
+              >
+                <template #content>
+                  <div style="font-size: 14px">
+                    <span v-if="img.title">{{ img.title }}</span>
+                    &nbsp;|&nbsp;
+                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()}`">
+                      {{ img.attribute }}</span
+                    >
+                    &nbsp;|&nbsp;
+                    <span
+                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold' : ''}`"
+                    >
+                      {{ img.vocal || 0 }}</span
+                    >
+                    &nbsp;
+                    <span
+                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold' : ''}`"
+                    >
+                      {{ img.dance || 0 }}</span
+                    >
+                    &nbsp;
+                    <span
+                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold' : ''}`"
+                    >
+                      {{ img.visual || 0 }}</span
+                    >
+                  </div>
+                </template>
+                <div
+                  :class="{
+                    icon: true,
+                    [`icon_${img.cid}`]: true,
+                    dark: !img.isBrightness,
+                  }"
+                  @click="
+                    handleImageClick(
+                      scope.row,
+                      tableResonanceColumnHeader[colIndex - 1].value,
+                      Number(imgIndex),
+                    )
+                  "
+                ></div>
+              </el-tooltip>
             </div>
           </template>
         </el-table-column>
@@ -153,23 +184,54 @@
         >
           <template #default="scope">
             <div class="table-icons-container">
-              <div
+              <el-tooltip
                 v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].value]"
                 :key="imgIndex"
-                :title="img.title ?? ''"
-                :class="{
-                  icon: true,
-                  [`icon_${img.cid}`]: true,
-                  dark: !img.isBrightness,
-                }"
-                @click="
-                  handleImageClick(
-                    scope.row,
-                    tableDominantColumnHeader[colIndex - 1].value,
-                    Number(imgIndex),
-                  )
-                "
-              ></div>
+                placement="top"
+                :show-after="500"
+              >
+                <template #content>
+                  <div style="font-size: 14px">
+                    <span v-if="img.title">{{ img.title }}</span>
+                    &nbsp;|&nbsp;
+                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()}`">
+                      {{ img.attribute }}</span
+                    >
+                    &nbsp;|&nbsp;
+                    <span
+                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold' : ''}`"
+                    >
+                      {{ img.vocal || 0 }}</span
+                    >
+                    &nbsp;
+                    <span
+                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold' : ''}`"
+                    >
+                      {{ img.dance || 0 }}</span
+                    >
+                    &nbsp;
+                    <span
+                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold' : ''}`"
+                    >
+                      {{ img.visual || 0 }}</span
+                    >
+                  </div>
+                </template>
+                <div
+                  :class="{
+                    icon: true,
+                    [`icon_${img.cid}`]: true,
+                    dark: !img.isBrightness,
+                  }"
+                  @click="
+                    handleImageClick(
+                      scope.row,
+                      tableDominantColumnHeader[colIndex - 1].value,
+                      Number(imgIndex),
+                    )
+                  "
+                ></div>
+              </el-tooltip>
             </div>
           </template>
         </el-table-column>
@@ -274,6 +336,10 @@ interface CellItem {
   cid: string;
   name: string;
   title?: string;
+  attribute?: string;
+  vocal?: number;
+  dance?: number;
+  visual?: number;
   isBrightness?: boolean;
   link?: string;
 }
@@ -555,9 +621,13 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
       result[rowIndex][colName].push({
         cid: item.cid,
         name: item.name,
-        title: `${item.title} ${item.name}`,
+        title: `[${item.title}] ${item.name}`,
         link: item.link,
         isBrightness: true,
+        attribute: item.attribute,
+        vocal: item.stats.vocal,
+        visual: item.stats.visual,
+        dance: item.stats.dance,
       });
     }
   });
@@ -612,6 +682,94 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
       return;
     }
 
+    // 处理 dominant 类型的技能
+    if (item.skill.type === 'dominant') {
+      // 处理 leader skill（保持原有的 dominant 逻辑）
+      if (item.leaderSkill.params) {
+        // 获取leaderSkill参数
+        const targetAttr = item.leaderSkill.params.target_attribute;
+        const targetAttr2 = item.leaderSkill.params.target_attribute_2;
+        const targetParam = item.leaderSkill.params.target_param;
+        const targetParam2 = item.leaderSkill.params.target_param_2;
+
+        // 检查参数是否存在
+        if (!targetAttr || !targetAttr2 || !targetParam || !targetParam2) {
+          return;
+        }
+
+        // 根据target_attribute和target_attribute_2确定行的索引
+        const attrIndex = tableDominantRowHeaderAttribute.indexOf(targetAttr.toLowerCase());
+        const attr2Index = tableDominantRowHeaderAttribute.indexOf(targetAttr2.toLowerCase());
+        const paramIndex = tableDominantRowHeaderSpecialize.indexOf(targetParam.toLowerCase());
+        const param2Index = tableDominantRowHeaderSpecialize.indexOf(targetParam2.toLowerCase());
+
+        if (attrIndex === -1 || attr2Index === -1 || paramIndex === -1 || param2Index === -1) {
+          // 如果不在预定义范围内，跳过该数据
+          return;
+        }
+
+        if (attrIndex === attr2Index || paramIndex === param2Index) {
+          // 如果两个属性相同或两个参数相同，跳过该数据
+          return;
+        }
+
+        // 根据skill.tw确定tw索引
+        const twIndex = tableDominantRowHeaderTw.indexOf(String(item.skill.params.tw));
+        if (twIndex === -1) {
+          // 如果tw不在预定义范围内，跳过该数据
+          return;
+        }
+
+        // 计算行索引
+        // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 4 + twIndex) * 6 +
+        //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))
+        const attrCount = tableDominantRowHeaderAttribute.length; // 3
+        const validAttrCombos = attrCount * (attrCount - 1); // 3 * 2 = 6
+        const paramCount = tableDominantRowHeaderSpecialize.length; // 3
+        const validParamCombos = paramCount * (paramCount - 1); // 3 * 2 = 6
+        const twCount = tableDominantRowHeaderTw.length; // 4
+
+        const attrComboIndex =
+          attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex);
+        const paramComboIndex =
+          param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
+        const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
+
+        // 根据技能类型确定插入到哪个列
+        let targetColumn = '';
+        if (item.leaderSkill.description.includes('dominant')) {
+          targetColumn = 'dominant';
+        } else {
+          // 默认插入到dominant列，以保持原有功能
+          targetColumn = 'dominant';
+        }
+
+        // 将数据添加到对应单元格
+        if (
+          result[rowIndex] &&
+          result[rowIndex][targetColumn] &&
+          Array.isArray(result[rowIndex][targetColumn])
+        ) {
+          // typescript bug
+          (result[rowIndex][targetColumn] as CellItem[]).push({
+            cid: item.cid,
+            name: item.name,
+            title: `[${item.title}] ${item.name}`,
+            link: item.link,
+            isBrightness: true,
+            attribute: item.attribute,
+            vocal: item.stats.vocal,
+            visual: item.stats.visual,
+            dance: item.stats.dance,
+          });
+        } else {
+          console.warn(
+            `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
+          );
+        }
+      }
+    }
+
     // 处理 alternate 和 mutual 类型的技能
     if (item.skill.type === 'alternate' || item.skill.type === 'mutual') {
       // 遍历结果数组，找到所有符合条件的行
@@ -628,9 +786,13 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           (result[rowIndex].alternate as CellItem[]).push({
             cid: item.cid,
             name: item.name,
-            title: `${item.title} ${item.name}`,
+            title: `[${item.title}] ${item.name}`,
             link: item.link,
             isBrightness: true,
+            attribute: item.attribute,
+            vocal: item.stats.vocal,
+            visual: item.stats.visual,
+            dance: item.stats.dance,
           });
         }
 
@@ -646,93 +808,16 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           (result[rowIndex].mutual as CellItem[]).push({
             cid: item.cid,
             name: item.name,
-            title: `${item.title} ${item.name}`,
+            title: `[${item.title}] ${item.name}`,
             link: item.link,
             isBrightness: true,
+            attribute: item.attribute,
+            vocal: item.stats.vocal,
+            visual: item.stats.visual,
+            dance: item.stats.dance,
           });
         }
       });
-    }
-
-    // 处理 leader skill（保持原有的 dominant 逻辑）
-    if (item.leaderSkill.params) {
-      // 获取leaderSkill参数
-      const targetAttr = item.leaderSkill.params.target_attribute;
-      const targetAttr2 = item.leaderSkill.params.target_attribute_2;
-      const targetParam = item.leaderSkill.params.target_param;
-      const targetParam2 = item.leaderSkill.params.target_param_2;
-
-      // 检查参数是否存在
-      if (!targetAttr || !targetAttr2 || !targetParam || !targetParam2) {
-        return;
-      }
-
-      // 根据target_attribute和target_attribute_2确定行的索引
-      const attrIndex = tableDominantRowHeaderAttribute.indexOf(targetAttr.toLowerCase());
-      const attr2Index = tableDominantRowHeaderAttribute.indexOf(targetAttr2.toLowerCase());
-      const paramIndex = tableDominantRowHeaderSpecialize.indexOf(targetParam.toLowerCase());
-      const param2Index = tableDominantRowHeaderSpecialize.indexOf(targetParam2.toLowerCase());
-
-      if (attrIndex === -1 || attr2Index === -1 || paramIndex === -1 || param2Index === -1) {
-        // 如果不在预定义范围内，跳过该数据
-        return;
-      }
-
-      if (attrIndex === attr2Index || paramIndex === param2Index) {
-        // 如果两个属性相同或两个参数相同，跳过该数据
-        return;
-      }
-
-      // 根据skill.tw确定tw索引
-      const twIndex = tableDominantRowHeaderTw.indexOf(String(item.skill.params.tw));
-      if (twIndex === -1) {
-        // 如果tw不在预定义范围内，跳过该数据
-        return;
-      }
-
-      // 计算行索引
-      // 索引计算: ((attr2Index * 2 + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex)) * 4 + twIndex) * 6 +
-      //           (param2Index * 2 + (paramIndex > param2Index ? paramIndex - 1 : paramIndex))
-      const attrCount = tableDominantRowHeaderAttribute.length; // 3
-      const validAttrCombos = attrCount * (attrCount - 1); // 3 * 2 = 6
-      const paramCount = tableDominantRowHeaderSpecialize.length; // 3
-      const validParamCombos = paramCount * (paramCount - 1); // 3 * 2 = 6
-      const twCount = tableDominantRowHeaderTw.length; // 4
-
-      const attrComboIndex =
-        attr2Index * (attrCount - 1) + (attrIndex > attr2Index ? attrIndex - 1 : attrIndex);
-      const paramComboIndex =
-        param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
-      const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
-
-      // 根据技能类型确定插入到哪个列
-      let targetColumn = '';
-      if (item.leaderSkill.description.includes('dominant')) {
-        targetColumn = 'dominant';
-      } else {
-        // 默认插入到dominant列，以保持原有功能
-        targetColumn = 'dominant';
-      }
-
-      // 将数据添加到对应单元格
-      if (
-        result[rowIndex] &&
-        result[rowIndex][targetColumn] &&
-        Array.isArray(result[rowIndex][targetColumn])
-      ) {
-        // typescript bug
-        (result[rowIndex][targetColumn] as CellItem[]).push({
-          cid: item.cid,
-          name: item.name,
-          title: `${item.title} ${item.name}`,
-          link: item.link,
-          isBrightness: true,
-        });
-      } else {
-        console.warn(
-          `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
-        );
-      }
     }
   });
 
@@ -742,16 +827,16 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (Array.isArray(row.alternate) && row.alternate.length > 0) {
       row.alternate.sort((a, b) => {
         // 找到a卡片的数值
-        const cardA = data.find(item => item.cid === a.cid);
+        const cardA = data.find((item) => item.cid === a.cid);
         // 找到b卡片的数值
-        const cardB = data.find(item => item.cid === b.cid);
-        
+        const cardB = data.find((item) => item.cid === b.cid);
+
         if (!cardA || !cardB) return 0;
-        
+
         // 根据target_param获取对应数值，例如如果target_param是'vocal'，则获取cardA.stats.vocal
         const aValue = cardA.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
         const bValue = cardB.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
-        
+
         // 从大到小排序
         return bValue - aValue;
       });
@@ -761,16 +846,18 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (Array.isArray(row.mutual) && row.mutual.length > 0) {
       row.mutual.sort((a, b) => {
         // 找到a卡片的数值
-        const cardA = data.find(item => item.cid === a.cid);
+        const cardA = data.find((item) => item.cid === a.cid);
         // 找到b卡片的数值
-        const cardB = data.find(item => item.cid === b.cid);
-        
+        const cardB = data.find((item) => item.cid === b.cid);
+
         if (!cardA || !cardB) return 0;
-        
+
         // 根据target_param_2获取对应数值，例如如果target_param_2是'dance'，则获取cardA.stats.dance
-        const aValue = cardA.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
-        const bValue = cardB.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
-        
+        const aValue =
+          cardA.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
+        const bValue =
+          cardB.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
+
         // 从大到小排序
         return bValue - aValue;
       });
@@ -872,11 +959,37 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
     });
   }
 };
+
+// 添加一个函数来判断参数是否需要加粗
+const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) => {
+  const columnHeader = tableDominantColumnHeader[colIndex];
+
+  // 如果是dominant列，需要检查target_param或target_param_2
+  if (columnHeader.value === 'dominant') {
+    return row.target_param === param || row.target_param_2 === param;
+  }
+
+  // 如果是alternate列，需要检查target_param
+  if (columnHeader.value === 'alternate') {
+    return row.target_param === param;
+  }
+
+  // 如果是mutual列，需要检查target_param_2
+  if (columnHeader.value === 'mutual') {
+    return row.target_param_2 === param;
+  }
+
+  return false;
+};
 </script>
 
 <style lang="scss" scoped>
 // @import '@/assets/styles/im/346lab/icons.css';
 @import '@/assets/styles/im/346lab/icons@2x.css';
+
+.is-bold {
+  font-weight: bold;
+}
 
 .color-cg-cute {
   color: var(--im-color-cg-cute);
