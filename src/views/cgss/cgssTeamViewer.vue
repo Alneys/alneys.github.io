@@ -5,17 +5,26 @@
     <div class="main-container">
       <el-table :data="tableData" style="width: 100%" border :span-method="objectSpanMethod">
         <!-- 第一列：属性 -->
-        <el-table-column :width="72" label="属性" fixed>
+        <el-table-column :width="80" label="属性" fixed>
           <template #default="scope">
-            {{
-              tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]
-            }}
+            <span
+              :style="{
+                fontWeight: 'bold',
+                color: `var(--im-color-cg-${tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]})`,
+              }"
+            >
+              {{
+                tableDataRowHeaderSpecialize[Math.round(scope.$index / tableDataRowHeaderTw.length)]
+              }}
+            </span>
           </template>
         </el-table-column>
         <!-- 第二列：间隔值 -->
         <el-table-column :width="64" label="间隔" fixed>
           <template #default="scope">
-            {{ tableDataRowHeaderTw[scope.$index % tableDataRowHeaderTw.length] }}s
+            <span style="font-weight: bold">
+              {{ tableDataRowHeaderTw[scope.$index % tableDataRowHeaderTw.length] }}s
+            </span>
           </template>
         </el-table-column>
         <!-- 后续列：结果 -->
