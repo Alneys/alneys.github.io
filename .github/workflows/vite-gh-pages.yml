@@ -8,7 +8,6 @@ on:
   push:
     branches: ['gh-pages', 'main']
   pull_request:
-    branches: ['gh-pages', 'main']
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -70,12 +69,14 @@ jobs:
       - name: Setup Pages
         if: github.ref_name == 'main' || github.ref_name == 'gh-pages'
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         if: github.ref_name == 'main' || github.ref_name == 'gh-pages'
         uses: actions/upload-pages-artifact@v4
         with:
           # Upload dist folder
           path: './dist'
+
       - name: Deploy to GitHub Pages
         if: github.ref_name == 'main' || github.ref_name == 'gh-pages'
         id: deployment
