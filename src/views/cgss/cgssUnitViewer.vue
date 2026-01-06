@@ -269,16 +269,6 @@ const tableDominantColumnHeader = [
   },
 ];
 
-const tableDataDominantCount = Array.from(
-  {
-    length:
-      tableDominantRowHeaderAttribute.length *
-      (tableDominantRowHeaderAttribute.length - 1) *
-      tableDominantRowHeaderTw.length,
-  },
-  () => 0,
-);
-
 // Cell item
 interface CellItem {
   cid: string;
