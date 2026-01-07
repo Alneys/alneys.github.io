@@ -725,20 +725,22 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
   const result: TableResonanceRow[] = [];
 
   // 为每个specialize和tw的组合创建数据行
+  // 使用tableResonanceColumnHeader的prop来动态生成初始数据
   tableResonanceRowHeaderSpecialize.forEach((specialize) => {
     tableResonanceRowHeaderTw.forEach((tw) => {
-      result.push({
+      // 动态创建列数据，使用tableResonanceColumnHeader的prop
+      const row: TableResonanceRow = {
         specialize: specialize, // 添加属性信息
         tw: tw + 's', // 添加间隔信息
         row: result.length, // 添加行号
-        motif: [],
-        synergy: [],
-        symphony: [],
-        spike: [],
-        refrain: [],
-        coordinate: [],
-        magic: [],
+      };
+
+      // 遍历tableResonanceColumnHeader，为每个prop创建空数组
+      tableResonanceColumnHeader.forEach((column) => {
+        row[column.prop] = [];
       });
+
+      result.push(row);
     });
   });
 
@@ -808,26 +810,22 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
               // target_param: 3个
               if (param !== param2) {
                 // 确保param !== param2 (3*2 = 6种组合)
-                // 为每种组合创建一行数据
-                result.push({
+                // 动态创建列数据，使用tableDominantColumnHeader的prop
+                const row: TableResonanceRow = {
                   target_attribute_2: attr2, // 第一列: target_attribute_2
                   target_attribute: attr, // 第二列: target_attribute
                   tw: tw + 's', // 第三列: tw
                   target_param_2: param2, // 第四列: target_param_2
                   target_param: param, // 第五列: target_param
                   row: result.length, // 添加行号
-                  dominant: [], // 主要效果列
-                  alternate: [], // 变换效果列
-                  mutual: [], // 交互效果列
-                  overload_4: [], // 过载效果列
-                  overload_6: [], // 过载效果列
-                  overload_7: [], // 过载效果列
-                  overload_9: [], // 过载效果列
-                  overdrive_4: [], // 超载效果列
-                  overdrive_6: [], // 超载效果列
-                  overdrive_7: [], // 超载效果列
-                  overdrive_9: [], // 超载效果列
+                };
+
+                // 遍历tableDominantColumnHeader，为每个prop创建空数组
+                tableDominantColumnHeader.forEach((column) => {
+                  row[column.prop] = [];
                 });
+
+                result.push(row);
               }
             });
           });
