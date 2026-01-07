@@ -104,72 +104,55 @@
     <div class="unit-title" id="unit-dominant">Dominant</div>
     <div class="unit-table">
       <el-table :data="filteredTableDataDominant" border style="width: 100%">
-        <!-- 第一列：target_attribute_2 -->
+        <!-- 第一列：target_attribute_2 target_param_2 -->
         <el-table-column
           prop="target_attribute_2"
           label="属性2"
           :width="96"
           sortable
-          :sort-orders="['descending', 'ascending']"
+          :sort-orders="['ascending', 'descending', null]"
           :sort-method="sortDominantAttribute2"
         >
           <template #default="scope">
             <span :class="`table-row-info color-cg-${scope.row.target_attribute_2}`">{{
               scope.row.target_attribute_2 || ''
             }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 第二列：target_attribute -->
-        <el-table-column
-          prop="target_attribute"
-          label="属性1"
-          :width="96"
-          sortable
-          :sort-orders="['ascending', 'descending']"
-          :sort-method="sortDominantAttribute"
-        >
-          <template #default="scope">
-            <span :class="`table-row-info color-cg-${scope.row.target_attribute}`">{{
-              scope.row.target_attribute || ''
-            }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 第三列：target_param_2 -->
-        <el-table-column
-          prop="target_param_2"
-          label="参数2"
-          :width="96"
-          sortable
-          :sort-orders="['ascending', 'descending']"
-          :sort-method="sortDominantParam2"
-        >
-          <template #default="scope">
+            <br />
             <span :class="`table-row-info color-cg-${scope.row.target_param_2}`">{{
               scope.row.target_param_2 || ''
             }}</span>
           </template>
         </el-table-column>
 
-        <!-- 第四列：target_param -->
+        <!-- 第二列：target_attribute target_param -->
         <el-table-column
-          prop="target_param"
-          label="参数1"
+          prop="target_attribute"
+          label="属性1"
           :width="96"
           sortable
-          :sort-orders="['ascending', 'descending']"
-          :sort-method="sortDominantParam"
+          :sort-orders="['ascending', 'descending', null]"
+          :sort-method="sortDominantAttribute"
         >
           <template #default="scope">
+            <span :class="`table-row-info color-cg-${scope.row.target_attribute}`">{{
+              scope.row.target_attribute || ''
+            }}</span>
+            <br />
             <span :class="`table-row-info color-cg-${scope.row.target_param}`">{{
               scope.row.target_param || ''
             }}</span>
           </template>
         </el-table-column>
 
-        <!-- 第五列：tw -->
-        <el-table-column prop="tw" label="间隔" :width="64">
+        <!-- 第三列：tw -->
+        <el-table-column
+          prop="tw"
+          label="间隔"
+          :width="64"
+          sortable
+          :sort-orders="['ascending', 'descending', null]"
+          :sort-method="sortDominantTw"
+        >
           <template #default="scope">
             <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
           </template>
@@ -488,6 +471,7 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
 
 // 添加Dominant表排序方法
 const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 首先按 target_attribute 排序（使用预定义顺序）
   const order = tableDominantRowHeaderAttribute;
   const indexA = order.indexOf(a.target_attribute || '');
   const indexB = order.indexOf(b.target_attribute || '');
@@ -497,32 +481,56 @@ const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
     if (indexA !== indexB) {
       return indexA - indexB;
     }
-    // 如果target_attribute相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_attribute && b.target_attribute) {
-    const compareResult = a.target_attribute.localeCompare(b.target_attribute);
-    if (compareResult !== 0) {
-      return compareResult;
+  } else {
+    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+    if (indexA !== -1) {
+      return -1;
     }
-    // 如果target_attribute相同，按行号排序
-    return a.row - b.row;
+    if (indexB !== -1) {
+      return 1;
+    }
+    // 如果都不在预定义顺序中，则按字母顺序排序
+    if (a.target_attribute && b.target_attribute) {
+      const compareResult = a.target_attribute.localeCompare(b.target_attribute);
+      if (compareResult !== 0) {
+        return compareResult;
+      }
+    }
   }
-  // 如果target_attribute都为空，按行号排序
+
+  // 如果 target_attribute 相同或都为空，按 target_param 排序
+  const paramOrder = tableDominantRowHeaderSpecialize;
+  const paramIndexA = paramOrder.indexOf(a.target_param || '');
+  const paramIndexB = paramOrder.indexOf(b.target_param || '');
+
+  // 如果值在预定义顺序中，则按预定义顺序排序
+  if (paramIndexA !== -1 && paramIndexB !== -1) {
+    if (paramIndexA !== paramIndexB) {
+      return paramIndexA - paramIndexB;
+    }
+  } else {
+    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+    if (paramIndexA !== -1) {
+      return -1;
+    }
+    if (paramIndexB !== -1) {
+      return 1;
+    }
+    // 如果都不在预定义顺序中，则按字母顺序排序
+    if (a.target_param && b.target_param) {
+      const compareResult = a.target_param.localeCompare(b.target_param);
+      if (compareResult !== 0) {
+        return compareResult;
+      }
+    }
+  }
+
+  // 如果 target_attribute 和 target_param 都相同或都为空，按行号排序
   return a.row - b.row;
 };
 
 const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 首先按 target_attribute_2 排序（使用预定义顺序）
   const order = tableDominantRowHeaderAttribute;
   const indexA = order.indexOf(a.target_attribute_2 || '');
   const indexB = order.indexOf(b.target_attribute_2 || '');
@@ -532,28 +540,51 @@ const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
     if (indexA !== indexB) {
       return indexA - indexB;
     }
-    // 如果target_attribute_2相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_attribute_2 && b.target_attribute_2) {
-    const compareResult = a.target_attribute_2.localeCompare(b.target_attribute_2);
-    if (compareResult !== 0) {
-      return compareResult;
+  } else {
+    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+    if (indexA !== -1) {
+      return -1;
     }
-    // 如果target_attribute_2相同，按行号排序
-    return a.row - b.row;
+    if (indexB !== -1) {
+      return 1;
+    }
+    // 如果都不在预定义顺序中，则按字母顺序排序
+    if (a.target_attribute_2 && b.target_attribute_2) {
+      const compareResult = a.target_attribute_2.localeCompare(b.target_attribute_2);
+      if (compareResult !== 0) {
+        return compareResult;
+      }
+    }
   }
-  // 如果target_attribute_2都为空，按行号排序
+
+  // 如果 target_attribute_2 相同或都为空，按 target_param_2 排序
+  const paramOrder = tableDominantRowHeaderSpecialize;
+  const paramIndexA = paramOrder.indexOf(a.target_param_2 || '');
+  const paramIndexB = paramOrder.indexOf(b.target_param_2 || '');
+
+  // 如果值在预定义顺序中，则按预定义顺序排序
+  if (paramIndexA !== -1 && paramIndexB !== -1) {
+    if (paramIndexA !== paramIndexB) {
+      return paramIndexA - paramIndexB;
+    }
+  } else {
+    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+    if (paramIndexA !== -1) {
+      return -1;
+    }
+    if (paramIndexB !== -1) {
+      return 1;
+    }
+    // 如果都不在预定义顺序中，则按字母顺序排序
+    if (a.target_param_2 && b.target_param_2) {
+      const compareResult = a.target_param_2.localeCompare(b.target_param_2);
+      if (compareResult !== 0) {
+        return compareResult;
+      }
+    }
+  }
+
+  // 如果 target_attribute_2 和 target_param_2 都相同或都为空，按行号排序
   return a.row - b.row;
 };
 
@@ -624,6 +655,19 @@ const sortDominantParam2 = (a: TableResonanceRow, b: TableResonanceRow) => {
     return a.row - b.row;
   }
   // 如果target_param_2都为空，按行号排序
+  return a.row - b.row;
+};
+
+const sortDominantTw = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 提取数值部分进行比较，去掉 's' 后缀
+  const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
+  const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
+
+  // 按数值大小排序
+  if (numA !== numB) {
+    return numA - numB;
+  }
+  // 如果tw相同，按行号排序
   return a.row - b.row;
 };
 
