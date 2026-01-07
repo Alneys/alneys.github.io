@@ -26,10 +26,24 @@
           </el-button>
         </div>
         <div>
-          <el-button @click="exportCids" type="success" size="default"> 导出当前状态 </el-button>
+          <el-button @click="exportCidsToClipboard" type="success" size="default">
+            导出当前状态到剪切板
+          </el-button>
         </div>
         <div>
-          <el-button @click="importCids" type="warning" size="default"> 导入当前状态 </el-button>
+          <el-button @click="importCidsFromToClipboard" type="warning" size="default">
+            从剪切板导入
+          </el-button>
+        </div>
+        <div>
+          <el-button @click="exportCidsToLocalStorage" type="primary" size="default">
+            导出当前状态到浏览器
+          </el-button>
+        </div>
+        <div>
+          <el-button @click="importCidsFromLocalStorage" type="success" size="default">
+            从浏览器导入
+          </el-button>
         </div>
       </div>
       <div>
@@ -307,7 +321,7 @@
         >
       </p>
       <p>
-        Special Thanks to:
+        Special Thanks:
         <el-link href="https://starlight.kirara.ca" target="_blank"
           >https://starlight.kirara.ca</el-link
         >
@@ -1273,131 +1287,192 @@ const toggleAllImagesBrightness = () => {
   });
 };
 
-// 导出卡片
-const exportCids = async () => {
-  try {
-    // 收集所有未点亮的卡片CID
-    const darkCids: string[] = [];
+const exportCidsToString = () => {
+  // 收集所有未点亮的卡片CID
+  const darkCids: string[] = [];
 
-    // 遍历Resonance表
-    tableDataResonance.value.forEach((dataRow) => {
-      Object.keys(dataRow).forEach((colKey) => {
-        const colValue = dataRow[colKey];
-        if (Array.isArray(colValue)) {
-          colValue.forEach((img) => {
-            if (img && !img.isBrightness) {
-              darkCids.push(img.cid);
-            }
-          });
-        }
-      });
+  // 遍历Resonance表
+  tableDataResonance.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          if (img && !img.isBrightness) {
+            darkCids.push(img.cid);
+          }
+        });
+      }
     });
+  });
 
-    // 遍历Dominant表
-    tableDataDominant.value.forEach((dataRow) => {
-      Object.keys(dataRow).forEach((colKey) => {
-        const colValue = dataRow[colKey];
-        if (Array.isArray(colValue)) {
-          colValue.forEach((img) => {
-            if (img && !img.isBrightness) {
-              darkCids.push(img.cid);
-            }
-          });
-        }
-      });
+  // 遍历Dominant表
+  tableDataDominant.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          if (img && !img.isBrightness) {
+            darkCids.push(img.cid);
+          }
+        });
+      }
     });
+  });
 
-    // 去重
-    const uniqueCids = [...new Set(darkCids)];
+  // 去重
+  const uniqueCids = [...new Set(darkCids)];
 
-    // 创建包含disabled数组的对象
-    const exportData = { disabled: uniqueCids };
+  // 创建包含disabled数组的对象
+  const exportData = { disabled: uniqueCids };
 
-    // 转换为JSON字符串
-    const jsonStr = JSON.stringify(exportData);
-
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(jsonStr);
-
-    // 显示成功提示
-    ElMessage.success('已导出到剪贴板！');
-  } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出失败，请重试');
-  }
+  return exportData;
 };
 
-// 导入卡片
-const importCids = async () => {
+// 从字符串导入CIDs
+const importCidsFromString = (jsonString: string) => {
   try {
-    // 从剪贴板读取数据
-    const clipboardText = await navigator.clipboard.readText();
-
     // 解析JSON
     let importedData: { disabled: string[] };
     try {
-      importedData = JSON.parse(clipboardText);
+      importedData = JSON.parse(jsonString);
 
       // 验证数据结构
       if (
         !Array.isArray(importedData.disabled) ||
         !importedData.disabled.every((item) => typeof item === 'string')
       ) {
-        throw new Error('剪贴板内容不是有效的 {disabled: []} 格式');
+        throw new Error('内容不是有效的 {disabled: []} 格式');
       }
     } catch (error) {
-      ElMessage.error('剪贴板内容不是有效的 {disabled: []} 格式JSON');
-      return;
+      throw new Error('内容不是有效的 {disabled: []} 格式JSON');
     }
 
     // 获取disabled数组
     const disabledCids = importedData.disabled;
 
     // 更新所有表格中的卡片状态
-    tableDataResonance.value.forEach((dataRow) => {
-      Object.keys(dataRow).forEach((colKey) => {
-        const colValue = dataRow[colKey];
-        if (Array.isArray(colValue)) {
-          colValue.forEach((img) => {
-            if (img && disabledCids.includes(img.cid)) {
-              img.isBrightness = false; // 在disabled列表中的卡片设为暗
-            } else {
-              img.isBrightness = true; // 不在disabled列表中的卡片设为亮
-            }
-          });
-        }
-      });
-    });
-
-    tableDataDominant.value.forEach((dataRow) => {
-      Object.keys(dataRow).forEach((colKey) => {
-        const colValue = dataRow[colKey];
-        if (Array.isArray(colValue)) {
-          colValue.forEach((img) => {
-            if (img && disabledCids.includes(img.cid)) {
-              img.isBrightness = false; // 在disabled列表中的卡片设为暗
-            } else {
-              img.isBrightness = true; // 不在disabled列表中的卡片设为亮
-            }
-          });
-        }
-      });
-    });
+    updateCardBrightnessByCids(disabledCids);
 
     // 更新allImagesBright状态
     allImagesBright.value = disabledCids.length === 0;
 
-    ElMessage.success('导入成功！');
+    return true;
+  } catch (error) {
+    console.error('导入失败:', error);
+    throw error;
+  }
+};
+
+// 导出当前状态到剪切板
+const exportCidsToClipboard = async () => {
+  try {
+    // 获取当前状态
+    const jsonStr = JSON.stringify(exportCidsToString());
+
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(jsonStr);
+
+    // 显示成功提示
+    ElMessage.success('已导出到剪切板！');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败，请重试');
+  }
+};
+
+// 从剪切板导入
+const importCidsFromToClipboard = async () => {
+  try {
+    // 从剪贴板读取数据
+    const clipboardText = await navigator.clipboard.readText();
+
+    importCidsFromString(clipboardText);
+
+    ElMessage.success('从剪切板导入成功！');
   } catch (error) {
     console.error('导入失败:', error);
     ElMessage.error('导入失败，请确保剪贴板中有有效的 {disabled: []} 格式JSON');
   }
 };
+
+// 导出当前状态到浏览器本地存储
+const exportCidsToLocalStorage = () => {
+  try {
+    // 获取当前状态
+    const jsonStr = JSON.stringify(exportCidsToString());
+
+    // 存储到localStorage
+    localStorage.setItem('cgss-unit-viewer-status', jsonStr);
+
+    // 显示成功提示
+    ElMessage.success('已导出到浏览器存储！');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出到浏览器存储失败');
+  }
+};
+
+// 从浏览器本地存储导入
+const importCidsFromLocalStorage = () => {
+  try {
+    // 从localStorage读取数据
+    const storedDataStr = localStorage.getItem('cgss-unit-viewer-status');
+
+    if (!storedDataStr) {
+      ElMessage.warning('没有找到存储的卡片状态数据');
+      return;
+    }
+
+    importCidsFromString(storedDataStr);
+
+    ElMessage.success('从浏览器存储导入成功！');
+  } catch (error) {
+    console.error('导入失败:', error);
+    ElMessage.error('导入失败，存储的卡片状态数据格式不正确');
+  }
+};
+
+// 根据CID列表更新卡片亮度状态的辅助函数
+const updateCardBrightnessByCids = (disabledCids: string[]) => {
+  // 更新所有表格中的卡片状态
+  tableDataResonance.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          if (img) {
+            if (disabledCids.includes(img.cid)) {
+              img.isBrightness = false; // 在disabled列表中的卡片设为暗
+            } else {
+              img.isBrightness = true; // 不在disabled列表中的卡片设为亮
+            }
+          }
+        });
+      }
+    });
+  });
+
+  tableDataDominant.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          if (img) {
+            if (disabledCids.includes(img.cid)) {
+              img.isBrightness = false; // 在disabled列表中的卡片设为暗
+            } else {
+              img.isBrightness = true; // 不在disabled列表中的卡片设为亮
+            }
+          }
+        });
+      }
+    });
+  });
+};
 </script>
 
 <style lang="scss" scoped>
-// @import '@/assets/styles/im/346lab/icons.css';
-@import '@/assets/styles/im/346lab/icons@2x.css';
+@import '@/assets/styles/im/im-cgss-icons.css';
 
 .is-bold {
   font-weight: bold;
