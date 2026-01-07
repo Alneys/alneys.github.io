@@ -36,12 +36,12 @@
           </el-button>
         </div>
         <div>
-          <el-button @click="exportCidsToLocalStorage" type="primary" size="default">
+          <el-button @click="exportCidsToLocalStorage" type="success" size="default">
             导出当前状态到浏览器
           </el-button>
         </div>
         <div>
-          <el-button @click="importCidsFromLocalStorage" type="success" size="default">
+          <el-button @click="importCidsFromLocalStorage" type="warning" size="default">
             从浏览器导入
           </el-button>
         </div>
@@ -59,7 +59,7 @@
       <el-table
         :data="tableDataResonance"
         style="width: 100%"
-        :max-height="isMobile ? 640 : undefined"
+        :max-height="isMobile ? 560 : 9999"
         border
         :span-method="tableResonanceSpanMethod"
       >
@@ -125,10 +125,11 @@
                     :class="{
                       'cgss-icon': true,
                       [`id_${img.cid}`]: true,
-                      dark: !img.isBrightness && switchToggleCardStatus,
-                      'icon-small':
-                        tableResonanceColumnHeader[colIndex - 1].extraColumn && !switchNameFilter,
-                      'icon-not-match': !isNameMatched(img.title, inputNameFilter),
+                      dark: switchToggleCardStatus && !img.isBrightness,
+                      'icon-small': tableResonanceColumnHeader[colIndex - 1].extraColumn,
+                      'icon-not-match':
+                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
                     }"
                     @click="
                       handleIconClick(
@@ -154,7 +155,7 @@
       <el-table
         :data="filteredTableDataDominant"
         style="width: 100%"
-        :max-height="isMobile ? 720 : undefined"
+        :max-height="isMobile ? 560 : 9999"
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
       >
@@ -245,7 +246,10 @@
                       'cgss-icon': true,
                       [`id_${img.cid}`]: true,
                       dark: !img.isBrightness && switchToggleCardStatus,
-                      'icon-not-match': !isNameMatched(img.title, inputNameFilter),
+                      'icon-small': tableDominantColumnHeader[colIndex - 1].extraColumn,
+                      'icon-not-match':
+                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
                     }"
                     @click="
                       handleIconClick(
@@ -390,7 +394,9 @@ const tableDominantColumnHeader = [
     skill: 'alternate',
     attribute: 'target_attribute',
     param: 'target_param',
-    minWidthSmallScreen: 100,
+    width: 108,
+    minWidth: 108,
+    minWidthSmallScreen: 108,
   },
   {
     prop: 'mutual',
@@ -475,6 +481,25 @@ const tableDominantColumnHeader = [
     param: 'target_param_2',
     tw: '9',
   },
+  {
+    prop: 'act',
+    labelCn: '演技',
+    labelEn: 'act',
+    skill: 'psb_',
+    param: 'target_param',
+    minWidth: 116,
+    minWidthSmallScreen: 116,
+    extraColumn: true,
+  },
+  {
+    prop: 'combo',
+    labelCn: '连击',
+    labelEn: 'combo',
+    skill: 'cboost',
+    minWidth: 80,
+    param: 'target_param_2',
+    extraColumn: true,
+  },
 ];
 
 // Cell item
@@ -506,7 +531,7 @@ interface TableResonanceRow {
 const switchToggleCardStatus = ref(true);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
-const switchShowSimpleLabels = ref(false);
+const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraColumns = ref(false);
 const inputNameFilter = ref(
   `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
@@ -971,6 +996,36 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
         });
       });
     }
+
+    // 处理 act 类型的技能 (演技技能，如 psb_ 开头的技能)
+    if (item.skill.type.startsWith('psb_')) {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // act: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于5000
+        if (
+          item.attribute.toLowerCase() === row.target_attribute &&
+          row.target_param &&
+          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
+        ) {
+          (result[rowIndex].act as CellItem[]).push(createCardDataItem(item));
+        }
+      });
+    }
+
+    // 处理 combo 类型的技能 (连击技能，如 cboost 开头的技能)
+    if (item.skill.type.startsWith('cboost')) {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // combo: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
+        if (
+          item.attribute.toLowerCase() === row.target_attribute_2 &&
+          row.target_param_2 &&
+          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
+        ) {
+          (result[rowIndex].combo as CellItem[]).push(createCardDataItem(item));
+        }
+      });
+    }
   });
 
   // 定义排序函数
@@ -1045,6 +1100,16 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
 
     if (Array.isArray(row.overdrive_9) && row.overdrive_9.length > 0) {
       row.overdrive_9 = sortCardsByParam(row.overdrive_9, row.target_param_2, data);
+    }
+
+    // 对act列进行排序：根据对应行的target_param数值
+    if (Array.isArray(row.act) && row.act.length > 0) {
+      row.act = sortCardsByParam(row.act, row.target_param, data);
+    }
+
+    // 对combo列进行排序：根据对应行的target_param_2数值
+    if (Array.isArray(row.combo) && row.combo.length > 0) {
+      row.combo = sortCardsByParam(row.combo, row.target_param_2, data);
     }
   });
 
@@ -1161,12 +1226,20 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   }
 
   // 如果是alternate或者overload列，需要检查target_param
-  if (columnHeader.skill === 'alternate' || columnHeader.skill === 'overload') {
+  if (
+    columnHeader.skill === 'alternate' ||
+    columnHeader.skill === 'overload' ||
+    columnHeader.skill.startsWith('psb_')
+  ) {
     return row.target_param === param;
   }
 
   // 如果是mutual或者overdrive列，需要检查target_param_2
-  if (columnHeader.skill === 'mutual' || columnHeader.skill === 'overdrive') {
+  if (
+    columnHeader.skill === 'mutual' ||
+    columnHeader.skill === 'overdrive' ||
+    columnHeader.skill.startsWith('cboost')
+  ) {
     return row.target_param_2 === param;
   }
 
@@ -1420,7 +1493,9 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   .skill-refrain,
   .skill-dominant,
   .skill-mutual,
-  .skill-overdrive {
+  .skill-overdrive,
+  .skill-magic,
+  .skill-cboost {
     background-color: hsl(0, 0%, 95%);
   }
 
@@ -1484,14 +1559,29 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     height: 48px;
   }
 
-  .icon-small {
-    scale: 0.75;
-    margin: -6px;
-  }
-
   .icon-not-match {
     scale: 0.375;
     margin: 0;
+  }
+
+  .icon-match {
+    scale: 1;
+    margin: 0;
+  }
+
+  .icon-small {
+    scale: 0.75;
+    margin: -6px;
+
+    &.icon-match {
+      scale: 1;
+      margin: 0;
+    }
+
+    &.icon-not-match {
+      scale: 0.375;
+      margin: -12px;
+    }
   }
 
   .cgss-icon.dark {
