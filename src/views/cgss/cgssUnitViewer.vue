@@ -136,6 +136,9 @@
                   "
                 ></div>
               </el-tooltip>
+              <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].value].length === 0">
+                x
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -271,6 +274,9 @@
                   "
                 ></div>
               </el-tooltip>
+              <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].value].length === 0">
+                x
+              </div>
             </div>
           </template>
         </el-table-column>
