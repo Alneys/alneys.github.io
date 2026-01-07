@@ -1,15 +1,8 @@
 <template>
-  <div class="unit-viewer">
+  <div class="cgss-unit-viewer">
     <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
     <div class="al-divider"></div>
     <div class="unit-viewer-config">
-      <div>
-        <el-switch
-          v-model="switchClickIcon"
-          active-text="切换卡片状态"
-          inactive-text="查看卡片信息"
-        />
-      </div>
       <div>
         <el-switch v-model="switchNameFilter" active-text="筛选名字" />
       </div>
@@ -18,18 +11,31 @@
           v-model="inputNameFilter"
           placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
           type="textarea"
-          :rows="8"
+          :rows="5"
           clearable
         ></el-input>
       </div>
       <div>
-        <el-button @click="toggleAllImagesBrightness" type="primary" size="default">
-          切换所有状态
-        </el-button>
-        <el-button @click="exportCids" type="success" size="default"> 导出当前状态 </el-button>
-        <el-button @click="importCids" type="warning" size="default"> 导入当前状态 </el-button>
+        <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
+      </div>
+      <div v-if="switchToggleCardStatus">
+        <div>
+          <el-button @click="toggleAllImagesBrightness" type="primary" size="default">
+            切换所有状态
+          </el-button>
+        </div>
+        <div>
+          <el-button @click="exportCids" type="success" size="default"> 导出当前状态 </el-button>
+        </div>
+        <div>
+          <el-button @click="importCids" type="warning" size="default"> 导入当前状态 </el-button>
+        </div>
+      </div>
+      <div>
+        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
       </div>
     </div>
+
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
     <div class="unit-table">
@@ -44,7 +50,7 @@
           prop="specialize"
           label="属性"
           :width="80"
-          :fixed="!isMobile ? 'left' : undefined"
+          :fixed="!isSmallScreen ? 'left' : undefined"
           sortable
           :sort-orders="['descending', 'ascending']"
           :sort-method="sortResonanceSpecialize"
@@ -56,7 +62,12 @@
           </template>
         </el-table-column>
         <!-- 第二列：间隔值 -->
-        <el-table-column prop="tw" label="间隔" :width="64" :fixed="!isMobile ? 'left' : undefined">
+        <el-table-column
+          prop="tw"
+          label="间隔"
+          :width="60"
+          :fixed="!isSmallScreen ? 'left' : undefined"
+        >
           <template #default="scope">
             <span style="font-weight: bold">
               {{ scope.row.tw }}
@@ -69,6 +80,7 @@
           :key="colIndex"
           :prop="tableResonanceColumnHeader[colIndex - 1].value"
           :label="`${tableResonanceColumnHeader[colIndex - 1].label}`"
+          class-name="icons"
         >
           <template #default="scope">
             <div class="table-icons-container">
@@ -112,7 +124,7 @@
                   :class="{
                     icon: true,
                     [`icon_${img.cid}`]: true,
-                    dark: !img.isBrightness,
+                    dark: !img.isBrightness && switchToggleCardStatus,
                     'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
                   @click="
@@ -132,7 +144,12 @@
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
     <div class="unit-table">
-      <el-table :data="filteredTableDataDominant" border style="width: 100%">
+      <el-table
+        :data="filteredTableDataDominant"
+        border
+        style="width: 100%"
+        :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
+      >
         <!-- 第一列：target_attribute_2 target_param_2 -->
         <el-table-column
           prop="target_attribute_2"
@@ -177,7 +194,7 @@
         <el-table-column
           prop="tw"
           label="间隔"
-          :width="64"
+          :width="60"
           sortable
           :sort-orders="['ascending', 'descending', null]"
           :sort-method="sortDominantTw"
@@ -193,6 +210,12 @@
           :key="colIndex"
           :prop="tableDominantColumnHeader[colIndex - 1].value"
           :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
+          class-name="icons"
+          :min-width="
+            isSmallScreen
+              ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
+              : tableDominantColumnHeader[colIndex - 1].minWidth
+          "
         >
           <template #default="scope">
             <div class="table-icons-container">
@@ -236,7 +259,7 @@
                   :class="{
                     icon: true,
                     [`icon_${img.cid}`]: true,
-                    dark: !img.isBrightness,
+                    dark: !img.isBrightness && switchToggleCardStatus,
                     'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
                   @click="
@@ -332,18 +355,22 @@ const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
 const tableDominantColumnHeader = [
-  { value: 'dominant', label: '双色 dominant' },
+  { value: 'dominant', label: '双色 dominant', minWidth: 64 },
   {
     value: 'alternate',
     label: '变换 alternate',
     attribute: 'target_attribute',
     param: 'target_param',
+    minWidth: 108,
+    minWidthSmallScreen: 108,
   },
   {
     value: 'mutual',
     label: '交互 mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
+    minWidth: 160,
+    minWidthSmallScreen: 108,
   },
   {
     value: 'overload_4',
@@ -437,7 +464,8 @@ interface TableResonanceRow {
 }
 
 // 模式切换
-const switchClickIcon = ref(true);
+const switchToggleCardStatus = ref(true);
+const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
 const inputNameFilter =
   ref(`水本ゆかり、椎名法子、間中美里、五十嵐響子、柳瀬美由紀、長富蓮実、横山千佳、太田優、前川みく、宮本フレデリカ、井村雪菜、工藤忍、佐久間まゆ、乙倉悠貴、原田美世、池袋晶葉
@@ -447,12 +475,25 @@ const inputNameFilter =
 高森藍子、並木芽衣子、赤城みりあ、真鍋いつき、大槻唯、海老原菜帆、衛藤美紗希、浜川愛結奈、諸星きらり、喜多日菜子、三好紗南、土屋亜子、南条光、イヴ・サンタクロース、夢見りあむ、久川凪`);
 const allImagesBright = ref(true);
 
-// 响应式属性用于判断是否为移动端
-const isMobile = ref(window.innerWidth < 768);
+// 添加监听器实现互斥逻辑
+watch(switchToggleCardStatus, (newValue) => {
+  if (newValue && switchViewCardInfo.value) {
+    switchViewCardInfo.value = false;
+  }
+});
+
+watch(switchViewCardInfo, (newValue) => {
+  if (newValue && switchToggleCardStatus.value) {
+    switchToggleCardStatus.value = false;
+  }
+});
+
+// 响应式属性用于判断屏幕宽度是否足够
+const isSmallScreen = ref(window.innerWidth < 1512);
 
 // 监听窗口大小变化
 const handleResize = () => {
-  isMobile.value = window.innerWidth < 768;
+  isSmallScreen.value = window.innerWidth < 1512;
 };
 
 onMounted(() => {
@@ -474,7 +515,104 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
   }
 };
 
-// 添加排序方法
+// 创建一个用于处理单个参数排序的通用函数
+const sortAttributeHelper = (
+  getter: (item: TableResonanceRow) => string | undefined,
+  order: string[],
+) => {
+  return (a: TableResonanceRow, b: TableResonanceRow) => {
+    const indexA = order.indexOf(getter(a) || '');
+    const indexB = order.indexOf(getter(b) || '');
+
+    // 如果值在预定义顺序中，则按预定义顺序排序
+    if (indexA !== -1 && indexB !== -1) {
+      if (indexA !== indexB) {
+        return indexA - indexB;
+      }
+    } else {
+      // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+      if (indexA !== -1) {
+        return -1;
+      }
+      if (indexB !== -1) {
+        return 1;
+      }
+      // 如果都不在预定义顺序中，则按字母顺序排序
+      const aValue = getter(a);
+      const bValue = getter(b);
+      if (aValue && bValue) {
+        const compareResult = aValue.localeCompare(bValue);
+        if (compareResult !== 0) {
+          return compareResult;
+        }
+      }
+    }
+
+    // 如果两个值相等，则返回 0
+    return 0;
+  };
+};
+
+// 使用通用函数创建排序方法 - 需要单独处理多级排序
+const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 首先按 target_attribute 排序
+  const attrCompare = sortAttributeHelper(
+    (item) => item.target_attribute,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attrCompare !== 0) return attrCompare;
+
+  // 如果 target_attribute 相同，按 target_param 排序
+  const paramCompare = sortAttributeHelper(
+    (item) => item.target_param,
+    tableDominantRowHeaderSpecialize,
+  )(a, b);
+
+  if (paramCompare !== 0) return paramCompare;
+
+  // 如果 target_param 也相同，按 target_attribute_2 排序
+  const attr2Compare = sortAttributeHelper(
+    (item) => item.target_attribute_2,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attr2Compare !== 0) return attr2Compare;
+
+  // 按行号排序
+  return a.row - b.row;
+};
+
+const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 首先按 target_attribute_2 排序
+  const attr2Compare = sortAttributeHelper(
+    (item) => item.target_attribute_2,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attr2Compare !== 0) return attr2Compare;
+
+  // 如果 target_attribute_2 相同，按 target_param_2 排序
+  const param2Compare = sortAttributeHelper(
+    (item) => item.target_param_2,
+    tableDominantRowHeaderSpecialize,
+  )(a, b);
+
+  if (param2Compare !== 0) return param2Compare;
+
+  // 如果 target_param_2 也相同，按 target_attribute 排序
+  const attrCompare = sortAttributeHelper(
+    (item) => item.target_attribute,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attrCompare !== 0) return attrCompare;
+
+  // 按行号排序
+  return a.row - b.row;
+};
+
+// 添加Resonance表的排序方法
 const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => {
   const order = tableResonanceRowHeaderSpecialize;
   const indexA = order.indexOf(a.specialize || '');
@@ -507,195 +645,6 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
     return a.row - b.row;
   }
   // 如果specialize都为空，按行号排序
-  return a.row - b.row;
-};
-
-// 添加Dominant表排序方法
-const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
-  // 首先按 target_attribute 排序（使用预定义顺序）
-  const order = tableDominantRowHeaderAttribute;
-  const indexA = order.indexOf(a.target_attribute || '');
-  const indexB = order.indexOf(b.target_attribute || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-  } else {
-    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-    if (indexA !== -1) {
-      return -1;
-    }
-    if (indexB !== -1) {
-      return 1;
-    }
-    // 如果都不在预定义顺序中，则按字母顺序排序
-    if (a.target_attribute && b.target_attribute) {
-      const compareResult = a.target_attribute.localeCompare(b.target_attribute);
-      if (compareResult !== 0) {
-        return compareResult;
-      }
-    }
-  }
-
-  // 如果 target_attribute 相同或都为空，按 target_param 排序
-  const paramOrder = tableDominantRowHeaderSpecialize;
-  const paramIndexA = paramOrder.indexOf(a.target_param || '');
-  const paramIndexB = paramOrder.indexOf(b.target_param || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (paramIndexA !== -1 && paramIndexB !== -1) {
-    if (paramIndexA !== paramIndexB) {
-      return paramIndexA - paramIndexB;
-    }
-  } else {
-    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-    if (paramIndexA !== -1) {
-      return -1;
-    }
-    if (paramIndexB !== -1) {
-      return 1;
-    }
-    // 如果都不在预定义顺序中，则按字母顺序排序
-    if (a.target_param && b.target_param) {
-      const compareResult = a.target_param.localeCompare(b.target_param);
-      if (compareResult !== 0) {
-        return compareResult;
-      }
-    }
-  }
-
-  // 如果 target_attribute 和 target_param 都相同或都为空，按行号排序
-  return a.row - b.row;
-};
-
-const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
-  // 首先按 target_attribute_2 排序（使用预定义顺序）
-  const order = tableDominantRowHeaderAttribute;
-  const indexA = order.indexOf(a.target_attribute_2 || '');
-  const indexB = order.indexOf(b.target_attribute_2 || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-  } else {
-    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-    if (indexA !== -1) {
-      return -1;
-    }
-    if (indexB !== -1) {
-      return 1;
-    }
-    // 如果都不在预定义顺序中，则按字母顺序排序
-    if (a.target_attribute_2 && b.target_attribute_2) {
-      const compareResult = a.target_attribute_2.localeCompare(b.target_attribute_2);
-      if (compareResult !== 0) {
-        return compareResult;
-      }
-    }
-  }
-
-  // 如果 target_attribute_2 相同或都为空，按 target_param_2 排序
-  const paramOrder = tableDominantRowHeaderSpecialize;
-  const paramIndexA = paramOrder.indexOf(a.target_param_2 || '');
-  const paramIndexB = paramOrder.indexOf(b.target_param_2 || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (paramIndexA !== -1 && paramIndexB !== -1) {
-    if (paramIndexA !== paramIndexB) {
-      return paramIndexA - paramIndexB;
-    }
-  } else {
-    // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-    if (paramIndexA !== -1) {
-      return -1;
-    }
-    if (paramIndexB !== -1) {
-      return 1;
-    }
-    // 如果都不在预定义顺序中，则按字母顺序排序
-    if (a.target_param_2 && b.target_param_2) {
-      const compareResult = a.target_param_2.localeCompare(b.target_param_2);
-      if (compareResult !== 0) {
-        return compareResult;
-      }
-    }
-  }
-
-  // 如果 target_attribute_2 和 target_param_2 都相同或都为空，按行号排序
-  return a.row - b.row;
-};
-
-const sortDominantParam = (a: TableResonanceRow, b: TableResonanceRow) => {
-  const order = tableDominantRowHeaderSpecialize;
-  const indexA = order.indexOf(a.target_param || '');
-  const indexB = order.indexOf(b.target_param || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-    // 如果target_param相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_param && b.target_param) {
-    const compareResult = a.target_param.localeCompare(b.target_param);
-    if (compareResult !== 0) {
-      return compareResult;
-    }
-    // 如果target_param相同，按行号排序
-    return a.row - b.row;
-  }
-  // 如果target_param都为空，按行号排序
-  return a.row - b.row;
-};
-
-const sortDominantParam2 = (a: TableResonanceRow, b: TableResonanceRow) => {
-  const order = tableDominantRowHeaderSpecialize;
-  const indexA = order.indexOf(a.target_param_2 || '');
-  const indexB = order.indexOf(b.target_param_2 || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-    // 如果target_param_2相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_param_2 && b.target_param_2) {
-    const compareResult = a.target_param_2.localeCompare(b.target_param_2);
-    if (compareResult !== 0) {
-      return compareResult;
-    }
-    // 如果target_param_2相同，按行号排序
-    return a.row - b.row;
-  }
-  // 如果target_param_2都为空，按行号排序
   return a.row - b.row;
 };
 
@@ -1152,8 +1101,13 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
     return;
   }
 
-  if (!switchClickIcon.value) {
-    // modeSwitch为false时，在新标签页打开链接
+  // 如果两个开关都关闭，则不执行任何操作
+  if (!switchToggleCardStatus.value && !switchViewCardInfo.value) {
+    return;
+  }
+
+  // 如果只开启查看卡片信息开关
+  if (switchViewCardInfo.value) {
     if (icon.link) {
       // 提取链接中的数字并减1
       const modifiedLink = icon.link.replace(/c_(\d+)_/, (match, num) => {
@@ -1164,8 +1118,11 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
     } else {
       console.warn(`No link found for card with cid: ${icon.cid}`);
     }
-  } else {
-    // modeSwitch为true时，执行切换图片状态的操作
+    return;
+  }
+
+  // 否则，判断是否开启切换卡片状态开关
+  else if (switchToggleCardStatus.value) {
     const targetName = icon.title;
     const newState = !icon.isBrightness;
 
@@ -1200,6 +1157,7 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
         }
       });
     });
+    return;
   }
 };
 
@@ -1244,7 +1202,6 @@ const isNameMatched = (title: string | undefined, filter: string) => {
 // 切换所有图片的亮度
 const toggleAllImagesBrightness = () => {
   allImagesBright.value = !allImagesBright.value;
-
   tableDataResonance.value.forEach((dataRow) => {
     Object.keys(dataRow).forEach((colKey) => {
       const colValue = dataRow[colKey];
@@ -1424,8 +1381,26 @@ const importCids = async () => {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
 
+:deep(.el-table) tbody .el-table__cell.icons .cell {
+  padding: 0 4px;
+}
+
 .el-link {
   vertical-align: inherit;
+}
+
+.unit-viewer-config {
+  margin-bottom: 1em;
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0.5em 0;
+  }
+}
+
+.unit-table {
+  padding: 1em 0;
 }
 
 .el-table {
@@ -1441,28 +1416,18 @@ const importCids = async () => {
   }
 
   .icon {
-    --target-width: 48px;
-
     display: inline-block;
+    scale: 1;
+    cursor: pointer;
+    margin: 0;
+    border-radius: 4px;
     width: 48px;
     height: 48px;
-    border-radius: 4px;
-    cursor: pointer; // 添加光标效果提示可点击
-
-    scale: 1;
-    margin: 0;
-
-    // From Sep 2025 Edge/Chrome update
-    // scale: calc(var(--target-width) / 48px);
-    // margin: calc((var(--target-width) - 48px) / 2);
   }
 
   .icon-small {
     scale: 0.4;
     margin: 0;
-
-    // From Sep 2025 Edge/Chrome update
-    // --target-width: 72px;
   }
 
   .icon.dark {
@@ -1472,13 +1437,5 @@ const importCids = async () => {
   html.dark .icon.dark {
     filter: brightness(0.25);
   }
-}
-
-.unit-viewer-config {
-  margin-bottom: 1em;
-}
-
-.unit-table {
-  padding: 1em 0;
 }
 </style>
