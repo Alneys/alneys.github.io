@@ -33,6 +33,7 @@
       </div>
       <div>
         <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
+        <el-switch v-model="switchShowLabels" active-text="简单标题" />
       </div>
     </div>
 
@@ -80,7 +81,11 @@
           v-for="colIndex in tableResonanceColumnHeader.length"
           :key="colIndex"
           :prop="tableResonanceColumnHeader[colIndex - 1].prop"
-          :label="`${tableResonanceColumnHeader[colIndex - 1].label}`"
+          :label="
+            switchShowLabels
+              ? tableResonanceColumnHeader[colIndex - 1].labelCn
+              : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
+          "
           :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
         >
           <template #default="scope">
@@ -214,7 +219,11 @@
           v-for="colIndex in tableDominantColumnHeader.length"
           :key="colIndex"
           :prop="tableDominantColumnHeader[colIndex - 1].prop"
-          :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
+          :label="
+            switchShowLabels
+              ? tableDominantColumnHeader[colIndex - 1].labelCn
+              : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
+          "
           :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
           :min-width="
             isSmallScreen
@@ -352,11 +361,21 @@ interface CgssCardSkillTableItem {
 const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
-  { prop: 'motif', label: '共鸣 resonance motif', skill: 'motif' },
-  { prop: 'synergy', label: '大偏 synergy', skill: 'synergy' },
-  { prop: 'symphony', label: '交响 symphony', skill: 'symphony' },
-  { prop: 'spike', label: '尖峰 spike', skill: 'spike' },
-  { prop: 'refrain', label: '复读 refrain', skill: 'refrain' },
+  {
+    prop: 'motif',
+    labelCn: '共鸣',
+    labelEn: 'resonance motif',
+    skill: 'motif',
+  },
+  { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy' },
+  {
+    prop: 'symphony',
+    labelCn: '交响',
+    labelEn: 'symphony',
+    skill: 'symphony',
+  },
+  { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike' },
+  { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain' },
 ];
 
 // Dominant table
@@ -365,29 +384,37 @@ const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
 const tableDominantColumnHeader = [
-  { prop: 'dominant', label: '双色 dominant', skill: 'dominant', minWidth: 64 },
+  {
+    prop: 'dominant',
+    labelCn: '双色',
+    labelEn: 'dominant',
+    skill: 'dominant',
+    minWidth: 64,
+  },
   {
     prop: 'alternate',
-    label: '变换 alternate',
+    labelCn: '变换',
+    labelEn: 'alternate',
     skill: 'alternate',
     attribute: 'target_attribute',
     param: 'target_param',
-    // minWidth: 108,
-    minWidthSmallScreen: 108,
+    minWidthSmallScreen: 100,
   },
   {
     prop: 'mutual',
-    label: '交互 mutual',
+    labelCn: '交互',
+    labelEn: 'mutual',
     skill: 'mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
-    width: 160,
-    minWidth: 160,
-    minWidthSmallScreen: 108,
+    width: 150,
+    minWidth: 150,
+    minWidthSmallScreen: 100,
   },
   {
     prop: 'overload_4',
-    label: '过载 overload 4s',
+    labelCn: '过载 4s',
+    labelEn: 'overload',
     skill: 'overload',
     attribute: 'target_attribute',
     param: 'target_param',
@@ -395,7 +422,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overdrive_4',
-    label: '超载 overdrive 4s',
+    labelCn: '超载 4s',
+    labelEn: 'overdrive',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
@@ -403,7 +431,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overload_6',
-    label: '过载 overload 6s',
+    labelCn: '过载 6s',
+    labelEn: 'overload',
     skill: 'overload',
     attribute: 'target_attribute',
     param: 'target_param',
@@ -411,7 +440,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overdrive_6',
-    label: '超载 overdrive 6s',
+    labelCn: '超载 6s',
+    labelEn: 'overdrive',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
@@ -419,7 +449,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overload_7',
-    label: '过载 overload 7s',
+    labelCn: '过载 7s',
+    labelEn: 'overload',
     skill: 'overload',
     attribute: 'target_attribute',
     param: 'target_param',
@@ -427,7 +458,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overdrive_7',
-    label: '超载 overdrive 7s',
+    labelCn: '超载 7s',
+    labelEn: 'overdrive',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
@@ -435,7 +467,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overload_9',
-    label: '过载 overload 9s',
+    labelCn: '过载 9s',
+    labelEn: 'overload',
     skill: 'overload',
     attribute: 'target_attribute',
     param: 'target_param',
@@ -443,7 +476,8 @@ const tableDominantColumnHeader = [
   },
   {
     prop: 'overdrive_9',
-    label: '超载 overdrive 9s',
+    labelCn: '超载 9s',
+    labelEn: 'overdrive',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
@@ -480,12 +514,10 @@ interface TableResonanceRow {
 const switchToggleCardStatus = ref(true);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
-const inputNameFilter =
-  ref(`水本ゆかり、椎名法子、間中美里、五十嵐響子、柳瀬美由紀、長富蓮実、横山千佳、太田優、前川みく、宮本フレデリカ、井村雪菜、工藤忍、佐久間まゆ、乙倉悠貴、原田美世、池袋晶葉
-
-黒川千秋、桐野アヤ、川島瑞樹、水木聖來、藤原肇、新田美波、高垣楓、伊集院惠、柊志乃、瀬名詩織、佐城雪美、和久井留美、塩見周子、速水奏、大石泉、森久保乃々
-
-高森藍子、並木芽衣子、赤城みりあ、真鍋いつき、大槻唯、海老原菜帆、衛藤美紗希、浜川愛結奈、諸星きらり、喜多日菜子、三好紗南、土屋亜子、南条光、イヴ・サンタクロース、夢見りあむ、久川凪`);
+const switchShowLabels = ref(false);
+const inputNameFilter = ref(
+  `中野有香 持田亜里沙 三村かな子 江上椿 棟方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 的場梨沙 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
+);
 const allImagesBright = ref(true);
 
 // 添加监听器实现互斥逻辑
@@ -1394,10 +1426,6 @@ const importCids = async () => {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
 
-:deep(.el-table) tbody .el-table__cell.icons .cell {
-  padding: 0 4px;
-}
-
 :deep(.el-table) {
   .skill-motif,
   .skill-symphony,
@@ -1406,6 +1434,18 @@ const importCids = async () => {
   .skill-mutual,
   .skill-overdrive {
     background-color: hsl(0, 0%, 95%);
+  }
+
+  .el-table__cell {
+    padding: 2px 0;
+  }
+
+  thead .el-table__cell.icons .cell {
+    padding: 8px 8px;
+  }
+
+  tbody .el-table__cell.icons .cell {
+    padding: 0 2px;
   }
 }
 
