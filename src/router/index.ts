@@ -26,7 +26,7 @@ const router = createRouter({
             {
               path: 'unit-viewer',
               name: 'cgss-unit-viewer',
-              component: () => import('@/views/cgss/cgssUnitViewer.vue'),
+              component: () => import('@/views/cgss/CgssUnitViewer.vue'),
             },
           ],
         },

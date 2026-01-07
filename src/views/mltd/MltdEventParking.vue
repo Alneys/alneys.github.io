@@ -271,7 +271,7 @@ function calcParkingTheater(
                 <p>道具数：{{ form.token!.toLocaleString('en-US') }}</p>
 
                 <h4>控分方案</h4>
-                <template v-for="each of parkingResult.result" :key="each.name">
+                <template v-for="each of parkingResult?.result" :key="each.name">
                   <p v-if="each.value > 0">
                     {{ each.name }} {{ each.multiplier }} ：{{ each.value }}次
                   </p>
