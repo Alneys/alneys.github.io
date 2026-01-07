@@ -1235,8 +1235,8 @@ const toggleAllImagesBrightness = () => {
 // 导出卡片
 const exportCids = async () => {
   try {
-    // 收集所有点亮的卡片CID
-    const brightCids: string[] = [];
+    // 收集所有未点亮的卡片CID
+    const darkCids: string[] = [];
 
     // 遍历Resonance表
     tableDataResonance.value.forEach((dataRow) => {
@@ -1244,8 +1244,8 @@ const exportCids = async () => {
         const colValue = dataRow[colKey];
         if (Array.isArray(colValue)) {
           colValue.forEach((img) => {
-            if (img && img.isBrightness) {
-              brightCids.push(img.cid);
+            if (img && !img.isBrightness) {
+              darkCids.push(img.cid);
             }
           });
         }
@@ -1258,8 +1258,8 @@ const exportCids = async () => {
         const colValue = dataRow[colKey];
         if (Array.isArray(colValue)) {
           colValue.forEach((img) => {
-            if (img && img.isBrightness) {
-              brightCids.push(img.cid);
+            if (img && !img.isBrightness) {
+              darkCids.push(img.cid);
             }
           });
         }
@@ -1267,10 +1267,13 @@ const exportCids = async () => {
     });
 
     // 去重
-    const uniqueCids = [...new Set(brightCids)];
+    const uniqueCids = [...new Set(darkCids)];
+
+    // 创建包含disabled数组的对象
+    const exportData = { disabled: uniqueCids };
 
     // 转换为JSON字符串
-    const jsonStr = JSON.stringify(uniqueCids, null, 2);
+    const jsonStr = JSON.stringify(exportData);
 
     // 复制到剪贴板
     await navigator.clipboard.writeText(jsonStr);
@@ -1290,18 +1293,24 @@ const importCids = async () => {
     const clipboardText = await navigator.clipboard.readText();
 
     // 解析JSON
-    let importedCids: string[];
+    let importedData: { disabled: string[] };
     try {
-      importedCids = JSON.parse(clipboardText);
+      importedData = JSON.parse(clipboardText);
 
-      // 验证是否为字符串数组
-      if (!Array.isArray(importedCids) || !importedCids.every((item) => typeof item === 'string')) {
-        throw new Error('剪贴板内容不是有效的字符串数组');
+      // 验证数据结构
+      if (
+        !Array.isArray(importedData.disabled) ||
+        !importedData.disabled.every((item) => typeof item === 'string')
+      ) {
+        throw new Error('剪贴板内容不是有效的 {disabled: []} 格式');
       }
     } catch (error) {
-      ElMessage.error('剪贴板内容不是有效的JSON数组');
+      ElMessage.error('剪贴板内容不是有效的 {disabled: []} 格式JSON');
       return;
     }
+
+    // 获取disabled数组
+    const disabledCids = importedData.disabled;
 
     // 更新所有表格中的卡片状态
     tableDataResonance.value.forEach((dataRow) => {
@@ -1309,10 +1318,10 @@ const importCids = async () => {
         const colValue = dataRow[colKey];
         if (Array.isArray(colValue)) {
           colValue.forEach((img) => {
-            if (img && importedCids.includes(img.cid)) {
-              img.isBrightness = true;
+            if (img && disabledCids.includes(img.cid)) {
+              img.isBrightness = false; // 在disabled列表中的卡片设为暗
             } else {
-              img.isBrightness = false;
+              img.isBrightness = true; // 不在disabled列表中的卡片设为亮
             }
           });
         }
@@ -1324,10 +1333,10 @@ const importCids = async () => {
         const colValue = dataRow[colKey];
         if (Array.isArray(colValue)) {
           colValue.forEach((img) => {
-            if (img && importedCids.includes(img.cid)) {
-              img.isBrightness = true;
+            if (img && disabledCids.includes(img.cid)) {
+              img.isBrightness = false; // 在disabled列表中的卡片设为暗
             } else {
-              img.isBrightness = false;
+              img.isBrightness = true; // 不在disabled列表中的卡片设为亮
             }
           });
         }
@@ -1335,12 +1344,12 @@ const importCids = async () => {
     });
 
     // 更新allImagesBright状态
-    allImagesBright.value = importedCids.length > 0;
+    allImagesBright.value = disabledCids.length === 0;
 
     ElMessage.success('导入成功！');
   } catch (error) {
     console.error('导入失败:', error);
-    ElMessage.error('导入失败，请确保剪贴板中有有效的JSON数组');
+    ElMessage.error('导入失败，请确保剪贴板中有有效的 {disabled: []} 格式JSON');
   }
 };
 </script>
