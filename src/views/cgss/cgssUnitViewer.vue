@@ -48,7 +48,8 @@
       </div>
       <div>
         <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
-        <el-switch v-model="switchShowLabels" active-text="简单标题" />
+        <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
+        <el-switch v-model="switchShowExtraColumns" active-text="展示额外的列" />
       </div>
     </div>
 
@@ -92,77 +93,91 @@
           </template>
         </el-table-column>
         <!-- 后续列：根据tableResonanceColumnHeader动态生成 -->
-        <el-table-column
-          v-for="colIndex in tableResonanceColumnHeader.length"
-          :key="colIndex"
-          :prop="tableResonanceColumnHeader[colIndex - 1].prop"
-          :label="
-            switchShowLabels
-              ? tableResonanceColumnHeader[colIndex - 1].labelCn
-              : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
-          "
-          :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
-        >
-          <template #default="scope">
-            <div class="table-icons-container">
-              <el-tooltip
-                v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].prop]"
-                :key="imgIndex"
-                placement="top"
-                :show-after="640"
-              >
-                <template #content>
-                  <div style="font-size: 14px">
-                    <span v-if="img.title">{{ img.title }}</span>
-                    <br />
-                    <span
-                      v-if="img.attribute"
-                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
-                    >
-                      {{ img.attribute }}</span
-                    >
-                    <br />
-                    <span
-                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.vocal || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.dance || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.visual || 0 }}</span
-                    >
-                  </div>
-                </template>
-                <div
-                  :class="{
-                    'cgss-icon': true,
-                    [`id_${img.cid}`]: true,
-                    dark: !img.isBrightness && switchToggleCardStatus,
-                    'icon-small': !isNameMatched(img.title, inputNameFilter),
-                  }"
-                  @click="
-                    handleIconClick(
-                      scope.row,
-                      tableResonanceColumnHeader[colIndex - 1].prop,
-                      Number(imgIndex),
-                    )
-                  "
-                ></div>
-              </el-tooltip>
-              <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
-                x
+        <template v-for="colIndex in tableResonanceColumnHeader.length" :key="colIndex">
+          <el-table-column
+            v-if="!tableResonanceColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
+            :prop="tableResonanceColumnHeader[colIndex - 1].prop"
+            :label="
+              switchShowSimpleLabels
+                ? tableResonanceColumnHeader[colIndex - 1].labelCn
+                : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
+            "
+            :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
+            :min-width="
+              isSmallScreen
+                ? tableResonanceColumnHeader[colIndex - 1].minWidthSmallScreen
+                : tableResonanceColumnHeader[colIndex - 1].minWidth
+            "
+          >
+            <template #default="scope">
+              <div class="table-icons-resonance">
+                <el-tooltip
+                  v-for="(img, imgIndex) in scope.row[
+                    tableResonanceColumnHeader[colIndex - 1].prop
+                  ]"
+                  :key="imgIndex"
+                  placement="top"
+                  :show-after="640"
+                >
+                  <template #content>
+                    <div style="font-size: 14px">
+                      <span v-if="img.title">{{ img.title }}</span>
+                      <br />
+                      <span
+                        v-if="img.attribute"
+                        :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
+                      >
+                        {{ img.attribute }}</span
+                      >
+                      <br />
+                      <span
+                        :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold is-underline' : ''}`"
+                      >
+                        {{ img.vocal || 0 }}</span
+                      >
+                      &nbsp;
+                      <span
+                        :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold is-underline' : ''}`"
+                      >
+                        {{ img.dance || 0 }}</span
+                      >
+                      &nbsp;
+                      <span
+                        :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold is-underline' : ''}`"
+                      >
+                        {{ img.visual || 0 }}</span
+                      >
+                      <br />
+                      <span class="is-bold">{{ img.skill || 0 }}</span>
+                      &nbsp;
+                      <span class="is-bold">{{ img.tw || 0 }}</span>
+                    </div>
+                  </template>
+                  <div
+                    :class="{
+                      'cgss-icon': true,
+                      [`id_${img.cid}`]: true,
+                      dark: !img.isBrightness && switchToggleCardStatus,
+                      'icon-small':
+                        tableResonanceColumnHeader[colIndex - 1].extraColumn && !switchNameFilter,
+                      'icon-not-match': !isNameMatched(img.title, inputNameFilter),
+                    }"
+                    @click="
+                      handleIconClick(
+                        scope.row,
+                        tableResonanceColumnHeader[colIndex - 1].prop,
+                        Number(imgIndex),
+                      )
+                    "
+                  ></div>
+                </el-tooltip>
+                <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
+                  x
+                </div>
               </div>
-            </div>
-          </template>
-        </el-table-column>
+            </template>
+          </el-table-column>
+        </template>
       </el-table>
     </div>
     <div class="al-divider"></div>
@@ -230,83 +245,88 @@
         </el-table-column>
 
         <!-- 后续列：根据tableDominantColumnHeader动态生成 -->
-        <el-table-column
-          v-for="colIndex in tableDominantColumnHeader.length"
-          :key="colIndex"
-          :prop="tableDominantColumnHeader[colIndex - 1].prop"
-          :label="
-            switchShowLabels
-              ? tableDominantColumnHeader[colIndex - 1].labelCn
-              : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
-          "
-          :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
-          :min-width="
-            isSmallScreen
-              ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
-              : tableDominantColumnHeader[colIndex - 1].minWidth
-          "
-          :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
-        >
-          <template #default="scope">
-            <div class="table-icons-container">
-              <el-tooltip
-                v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
-                :key="imgIndex"
-                placement="top"
-                :show-after="500"
-              >
-                <template #content>
-                  <div style="font-size: 14px">
-                    <span v-if="img.title">{{ img.title }}</span>
-                    <br />
-                    <span
-                      v-if="img.attribute"
-                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
-                    >
-                      {{ img.attribute }}</span
-                    >
-                    <br />
-                    <span
-                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.vocal || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.dance || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.visual || 0 }}</span
-                    >
-                  </div>
-                </template>
-                <div
-                  :class="{
-                    'cgss-icon': true,
-                    [`id_${img.cid}`]: true,
-                    dark: !img.isBrightness && switchToggleCardStatus,
-                    'icon-small': !isNameMatched(img.title, inputNameFilter),
-                  }"
-                  @click="
-                    handleIconClick(
-                      scope.row,
-                      tableDominantColumnHeader[colIndex - 1].prop,
-                      Number(imgIndex),
-                    )
-                  "
-                ></div>
-              </el-tooltip>
-              <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
-                x
+        <template v-for="colIndex in tableDominantColumnHeader.length" :key="colIndex">
+          <el-table-column
+            v-if="!tableDominantColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
+            :prop="tableDominantColumnHeader[colIndex - 1].prop"
+            :label="
+              switchShowSimpleLabels
+                ? tableDominantColumnHeader[colIndex - 1].labelCn
+                : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
+            "
+            :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
+            :min-width="
+              isSmallScreen
+                ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
+                : tableDominantColumnHeader[colIndex - 1].minWidth
+            "
+            :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
+          >
+            <template #default="scope">
+              <div class="table-icons-container">
+                <el-tooltip
+                  v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
+                  :key="imgIndex"
+                  placement="top"
+                  :show-after="500"
+                >
+                  <template #content>
+                    <div style="font-size: 14px">
+                      <span v-if="img.title">{{ img.title }}</span>
+                      <br />
+                      <span
+                        v-if="img.attribute"
+                        :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
+                      >
+                        {{ img.attribute }}</span
+                      >
+                      <br />
+                      <span
+                        :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold is-underline' : ''}`"
+                      >
+                        {{ img.vocal || 0 }}</span
+                      >
+                      &nbsp;
+                      <span
+                        :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold is-underline' : ''}`"
+                      >
+                        {{ img.dance || 0 }}</span
+                      >
+                      &nbsp;
+                      <span
+                        :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold is-underline' : ''}`"
+                      >
+                        {{ img.visual || 0 }}</span
+                      >
+                      <br />
+                      <span class="is-bold">{{ img.skill || 0 }}</span>
+                      &nbsp;
+                      <span class="is-bold">{{ img.tw || 0 }}</span>
+                    </div>
+                  </template>
+                  <div
+                    :class="{
+                      'cgss-icon': true,
+                      [`id_${img.cid}`]: true,
+                      dark: !img.isBrightness && switchToggleCardStatus,
+                      'icon-not-match': !isNameMatched(img.title, inputNameFilter),
+                    }"
+                    @click="
+                      handleIconClick(
+                        scope.row,
+                        tableDominantColumnHeader[colIndex - 1].prop,
+                        Number(imgIndex),
+                      )
+                    "
+                  ></div>
+                </el-tooltip>
+                <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
+                  x
+                </div>
               </div>
-            </div>
-          </template>
-        </el-table-column>
+            </template>
+          </el-table-column>
+        </template>
       </el-table>
     </div>
     <!-- <div>
@@ -357,7 +377,6 @@ interface CgssCardSkillTableItem {
       m_proc: number;
       m_dur: number;
       tw: number;
-      ef: number;
     };
   };
   leaderSkill: {
@@ -373,6 +392,7 @@ interface CgssCardSkillTableItem {
 }
 
 // Resonance table
+const tableResonanceRowHeaderAttribute = ['cute', 'cool', 'passion'];
 const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
@@ -381,20 +401,39 @@ const tableResonanceColumnHeader = [
     labelCn: '共鸣',
     labelEn: 'resonance motif',
     skill: 'motif',
+    minWidth: 150,
+    minWidthSmallScreen: undefined,
   },
-  { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy' },
+  { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy', minWidth: 150 },
   {
     prop: 'symphony',
     labelCn: '交响',
     labelEn: 'symphony',
     skill: 'symphony',
+    minWidth: 100,
   },
-  { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike' },
-  { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain' },
+  { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike', minWidth: 100 },
+  { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain', minWidth: 150 },
+  {
+    prop: 'coordinate',
+    labelCn: '协调',
+    labelEn: 'coordinate',
+    skill: 'focus_flat',
+    minWidth: 250,
+    extraColumn: true,
+  },
+  {
+    prop: 'magic',
+    labelCn: '魔法',
+    labelEn: 'magic',
+    skill: 'magic',
+    minWidth: 300,
+    extraColumn: true,
+  },
 ];
 
 // Dominant table
-const tableDominantRowHeaderAttribute = ['cute', 'cool', 'passion'];
+const tableDominantRowHeaderAttribute = tableResonanceRowHeaderAttribute;
 const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
@@ -405,6 +444,7 @@ const tableDominantColumnHeader = [
     labelEn: 'dominant',
     skill: 'dominant',
     minWidth: 64,
+    extraColumn: false,
   },
   {
     prop: 'alternate',
@@ -529,9 +569,10 @@ interface TableResonanceRow {
 const switchToggleCardStatus = ref(true);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
-const switchShowLabels = ref(false);
+const switchShowSimpleLabels = ref(false);
+const switchShowExtraColumns = ref(false);
 const inputNameFilter = ref(
-  `中野有香 持田亜里沙 三村かな子 江上椿 棟方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 的場梨沙 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
+  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
 );
 
 const allImagesBright = ref(true);
@@ -724,6 +765,23 @@ const sortDominantTw = (a: TableResonanceRow, b: TableResonanceRow) => {
   return a.row - b.row;
 };
 
+// 创建一个函数来生成卡片数据对象
+const createCardDataItem = (item: CgssCardSkillTableItem) => {
+  return {
+    cid: item.cid,
+    name: item.name,
+    title: `[${item.title}] ${item.name}`,
+    link: item.link,
+    isBrightness: true,
+    attribute: item.attribute,
+    vocal: item.stats.vocal,
+    visual: item.stats.visual,
+    dance: item.stats.dance,
+    skill: item.skill.type,
+    tw: `${item.skill.params.tw}s`,
+  };
+};
+
 // 初始化Resonance表格数据
 const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
   // 创建表格数据结构
@@ -741,6 +799,8 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
         symphony: [],
         spike: [],
         refrain: [],
+        coordinate: [],
+        magic: [],
       });
     });
   });
@@ -760,7 +820,12 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     }
 
     // 根据skill.tw确定行索引
-    const twIndex = tableResonanceRowHeaderTw.indexOf(String(item.skill.params.tw));
+    let twIndex = tableResonanceRowHeaderTw.indexOf(String(item.skill.params.tw));
+    // 处理 magic 类型的技能
+    if (item.skill.type === 'magic') {
+      // 使用 attribute 确定所在的位置
+      twIndex = tableResonanceRowHeaderAttribute.indexOf(String(item.attribute.toLowerCase()));
+    }
     if (twIndex === -1) {
       // 如果tw不在预定义范围内，跳过该数据
       return;
@@ -779,17 +844,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
 
     // 将数据添加到对应单元格
     if (Array.isArray(result[rowIndex][colName])) {
-      result[rowIndex][colName].push({
-        cid: item.cid,
-        name: item.name,
-        title: `[${item.title}] ${item.name}`,
-        link: item.link,
-        isBrightness: true,
-        attribute: item.attribute,
-        vocal: item.stats.vocal,
-        visual: item.stats.visual,
-        dance: item.stats.dance,
-      });
+      result[rowIndex][colName].push(createCardDataItem(item));
     }
   });
 
@@ -911,17 +966,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           Array.isArray(result[rowIndex].dominant)
         ) {
           // typescript bug
-          (result[rowIndex].dominant as CellItem[]).push({
-            cid: item.cid,
-            name: item.name,
-            title: `[${item.title}] ${item.name}`,
-            link: item.link,
-            isBrightness: true,
-            attribute: item.attribute,
-            vocal: item.stats.vocal,
-            visual: item.stats.visual,
-            dance: item.stats.dance,
-          });
+          (result[rowIndex].dominant as CellItem[]).push(createCardDataItem(item));
         } else {
           console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
@@ -941,17 +986,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].alternate as CellItem[]).push({
-            cid: item.cid,
-            name: item.name,
-            title: `[${item.title}] ${item.name}`,
-            link: item.link,
-            isBrightness: true,
-            attribute: item.attribute,
-            vocal: item.stats.vocal,
-            visual: item.stats.visual,
-            dance: item.stats.dance,
-          });
+          (result[rowIndex].alternate as CellItem[]).push(createCardDataItem(item));
         }
 
         // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
@@ -963,17 +998,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].mutual as CellItem[]).push({
-            cid: item.cid,
-            name: item.name,
-            title: `[${item.title}] ${item.name}`,
-            link: item.link,
-            isBrightness: true,
-            attribute: item.attribute,
-            vocal: item.stats.vocal,
-            visual: item.stats.visual,
-            dance: item.stats.dance,
-          });
+          (result[rowIndex].mutual as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -995,17 +1020,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param &&
                 item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push({
-                  cid: item.cid,
-                  name: item.name,
-                  title: `[${item.title}] ${item.name}`,
-                  link: item.link,
-                  isBrightness: true,
-                  attribute: item.attribute,
-                  vocal: item.stats.vocal,
-                  visual: item.stats.visual,
-                  dance: item.stats.dance,
-                });
+                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
               // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
               else if (
@@ -1014,17 +1029,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param_2 &&
                 item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push({
-                  cid: item.cid,
-                  name: item.name,
-                  title: `[${item.title}] ${item.name}`,
-                  link: item.link,
-                  isBrightness: true,
-                  attribute: item.attribute,
-                  vocal: item.stats.vocal,
-                  visual: item.stats.visual,
-                  dance: item.stats.dance,
-                });
+                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
             }
           }
@@ -1549,6 +1554,13 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     font-weight: bold;
   }
 
+  .table-icons-resonance {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
   .table-icons-container {
     display: flex;
     flex-wrap: wrap;
@@ -1567,7 +1579,12 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   }
 
   .icon-small {
-    scale: 0.4;
+    scale: 0.75;
+    margin: -6px;
+  }
+
+  .icon-not-match {
+    scale: 0.375;
     margin: 0;
   }
 
