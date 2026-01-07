@@ -6,14 +6,14 @@
       <div>
         <el-switch
           v-model="switchClickIcon"
-          active-text="切换图片状态"
+          active-text="切换卡片状态"
           inactive-text="查看卡片信息"
         />
       </div>
       <div>
         <el-switch v-model="switchNameFilter" active-text="筛选名字" />
       </div>
-      <div v-if="switchNameFilter">
+      <div v-if="switchNameFilter" style="margin-bottom: 1em">
         <el-input
           v-model="inputNameFilter"
           placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
@@ -22,9 +22,16 @@
           clearable
         ></el-input>
       </div>
+      <div>
+        <el-button @click="toggleAllImagesBrightness" type="primary" size="default">
+          切换所有状态
+        </el-button>
+        <el-button @click="exportCids" type="success" size="default"> 导出当前状态 </el-button>
+        <el-button @click="importCids" type="warning" size="default"> 导入当前状态 </el-button>
+      </div>
     </div>
     <div class="al-divider"></div>
-    <div class="unit-title" id="unit-resonance">Resonance</div>
+    <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
     <div class="unit-table">
       <el-table
         :data="tableDataResonance"
@@ -83,19 +90,19 @@
                     >
                     <br />
                     <span
-                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold' : ''}`"
+                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.vocal || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold' : ''}`"
+                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.dance || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold' : ''}`"
+                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.visual || 0 }}</span
                     >
@@ -123,13 +130,13 @@
       </el-table>
     </div>
     <div class="al-divider"></div>
-    <div class="unit-title" id="unit-dominant">Dominant</div>
+    <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
     <div class="unit-table">
       <el-table :data="filteredTableDataDominant" border style="width: 100%">
         <!-- 第一列：target_attribute_2 target_param_2 -->
         <el-table-column
           prop="target_attribute_2"
-          label="属性2"
+          label="歌曲属性"
           :width="96"
           sortable
           :sort-orders="['ascending', 'descending', null]"
@@ -149,7 +156,7 @@
         <!-- 第二列：target_attribute target_param -->
         <el-table-column
           prop="target_attribute"
-          label="属性1"
+          label="原属性"
           :width="96"
           sortable
           :sort-orders="['ascending', 'descending', null]"
@@ -207,19 +214,19 @@
                     >
                     <br />
                     <span
-                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold' : ''}`"
+                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.vocal || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold' : ''}`"
+                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.dance || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold' : ''}`"
+                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.visual || 0 }}</span
                     >
@@ -438,6 +445,7 @@ const inputNameFilter =
 黒川千秋、桐野アヤ、川島瑞樹、水木聖來、藤原肇、新田美波、高垣楓、伊集院惠、柊志乃、瀬名詩織、佐城雪美、和久井留美、塩見周子、速水奏、大石泉、森久保乃々
 
 高森藍子、並木芽衣子、赤城みりあ、真鍋いつき、大槻唯、海老原菜帆、衛藤美紗希、浜川愛結奈、諸星きらり、喜多日菜子、三好紗南、土屋亜子、南条光、イヴ・サンタクロース、夢見りあむ、久川凪`);
+const allImagesBright = ref(true);
 
 // 响应式属性用于判断是否为移动端
 const isMobile = ref(window.innerWidth < 768);
@@ -1204,12 +1212,12 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
     return row.target_param === param || row.target_param_2 === param;
   }
 
-  // 如果是alternate列，需要检查target_param
+  // 如果是alternate或者overload列，需要检查target_param
   if (columnHeader.value === 'alternate' || columnHeader.skill === 'overload') {
     return row.target_param === param;
   }
 
-  // 如果是mutual列，需要检查target_param_2
+  // 如果是mutual或者overdrive列，需要检查target_param_2
   if (columnHeader.value === 'mutual' || columnHeader.skill === 'overdrive') {
     return row.target_param_2 === param;
   }
@@ -1226,10 +1234,158 @@ const isNameMatched = (title: string | undefined, filter: string) => {
   // 将过滤器按空格、换行、半角逗号或全角顿号分割，并移除空字符串
   const names = filter.split(/[ ,、\n]+/).filter((name) => name.trim() !== '');
 
+  // 如果没有名称，则返回true
   if (names.length === 0) return true;
 
   // 检查标题是否包含任何一个名称（不区分大小写）
   return names.some((name) => title.toLowerCase().includes(name.toLowerCase().trim()));
+};
+
+// 切换所有图片的亮度
+const toggleAllImagesBrightness = () => {
+  allImagesBright.value = !allImagesBright.value;
+
+  tableDataResonance.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      // 验证列值是否为数组
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          // 验证图片对象是否有效
+          if (img) {
+            img.isBrightness = allImagesBright.value;
+          }
+        });
+      }
+    });
+  });
+
+  tableDataDominant.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      // 验证列值是否为数组
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          // 验证图片对象是否有效
+          if (img) {
+            img.isBrightness = allImagesBright.value;
+          }
+        });
+      }
+    });
+  });
+};
+
+// 导出卡片
+const exportCids = async () => {
+  try {
+    // 收集所有点亮的卡片CID
+    const brightCids: string[] = [];
+
+    // 遍历Resonance表
+    tableDataResonance.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && img.isBrightness) {
+              brightCids.push(img.cid);
+            }
+          });
+        }
+      });
+    });
+
+    // 遍历Dominant表
+    tableDataDominant.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && img.isBrightness) {
+              brightCids.push(img.cid);
+            }
+          });
+        }
+      });
+    });
+
+    // 去重
+    const uniqueCids = [...new Set(brightCids)];
+
+    // 转换为JSON字符串
+    const jsonStr = JSON.stringify(uniqueCids, null, 2);
+
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(jsonStr);
+
+    // 显示成功提示
+    ElMessage.success('已导出到剪贴板！');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败，请重试');
+  }
+};
+
+// 导入卡片
+const importCids = async () => {
+  try {
+    // 从剪贴板读取数据
+    const clipboardText = await navigator.clipboard.readText();
+
+    // 解析JSON
+    let importedCids: string[];
+    try {
+      importedCids = JSON.parse(clipboardText);
+
+      // 验证是否为字符串数组
+      if (!Array.isArray(importedCids) || !importedCids.every((item) => typeof item === 'string')) {
+        throw new Error('剪贴板内容不是有效的字符串数组');
+      }
+    } catch (error) {
+      ElMessage.error('剪贴板内容不是有效的JSON数组');
+      return;
+    }
+
+    // 更新所有表格中的卡片状态
+    tableDataResonance.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && importedCids.includes(img.cid)) {
+              img.isBrightness = true;
+            } else {
+              img.isBrightness = false;
+            }
+          });
+        }
+      });
+    });
+
+    tableDataDominant.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && importedCids.includes(img.cid)) {
+              img.isBrightness = true;
+            } else {
+              img.isBrightness = false;
+            }
+          });
+        }
+      });
+    });
+
+    // 更新allImagesBright状态
+    allImagesBright.value = importedCids.length > 0;
+
+    ElMessage.success('导入成功！');
+  } catch (error) {
+    console.error('导入失败:', error);
+    ElMessage.error('导入失败，请确保剪贴板中有有效的JSON数组');
+  }
 };
 </script>
 
@@ -1239,6 +1395,10 @@ const isNameMatched = (title: string | undefined, filter: string) => {
 
 .is-bold {
   font-weight: bold;
+}
+
+.is-underline {
+  text-decoration: underline;
 }
 
 .color-cg-cute {
