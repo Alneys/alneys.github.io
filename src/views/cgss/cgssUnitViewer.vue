@@ -1,12 +1,43 @@
 <template>
-  <div class="unit-viewer">
+  <div class="cgss-unit-viewer">
     <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
     <div class="al-divider"></div>
-    <div class="unit-mode-switch">
-      <el-switch v-model="modeSwitch" active-text="切换图片状态" inactive-text="查看卡片信息" />
+    <div class="unit-viewer-config">
+      <div>
+        <el-switch v-model="switchNameFilter" active-text="筛选名字" />
+      </div>
+      <div v-if="switchNameFilter" style="margin-bottom: 1em">
+        <el-input
+          v-model="inputNameFilter"
+          placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
+          type="textarea"
+          :rows="5"
+          clearable
+        ></el-input>
+      </div>
+      <div>
+        <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
+      </div>
+      <div v-if="switchToggleCardStatus">
+        <div>
+          <el-button @click="toggleAllImagesBrightness" type="primary" size="default">
+            切换所有状态
+          </el-button>
+        </div>
+        <div>
+          <el-button @click="exportCids" type="success" size="default"> 导出当前状态 </el-button>
+        </div>
+        <div>
+          <el-button @click="importCids" type="warning" size="default"> 导入当前状态 </el-button>
+        </div>
+      </div>
+      <div>
+        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
+      </div>
     </div>
+
     <div class="al-divider"></div>
-    <div class="unit-title" id="unit-resonance">Resonance</div>
+    <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
     <div class="unit-table">
       <el-table
         :data="tableDataResonance"
@@ -19,7 +50,7 @@
           prop="specialize"
           label="属性"
           :width="80"
-          :fixed="!isMobile ? 'left' : undefined"
+          :fixed="!isSmallScreen ? 'left' : undefined"
           sortable
           :sort-orders="['descending', 'ascending']"
           :sort-method="sortResonanceSpecialize"
@@ -31,7 +62,12 @@
           </template>
         </el-table-column>
         <!-- 第二列：间隔值 -->
-        <el-table-column prop="tw" label="间隔" :width="64" :fixed="!isMobile ? 'left' : undefined">
+        <el-table-column
+          prop="tw"
+          label="间隔"
+          :width="60"
+          :fixed="!isSmallScreen ? 'left' : undefined"
+        >
           <template #default="scope">
             <span style="font-weight: bold">
               {{ scope.row.tw }}
@@ -44,6 +80,7 @@
           :key="colIndex"
           :prop="tableResonanceColumnHeader[colIndex - 1].value"
           :label="`${tableResonanceColumnHeader[colIndex - 1].label}`"
+          class-name="icons"
         >
           <template #default="scope">
             <div class="table-icons-container">
@@ -56,25 +93,28 @@
                 <template #content>
                   <div style="font-size: 14px">
                     <span v-if="img.title">{{ img.title }}</span>
-                    &nbsp;|&nbsp;
-                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()}`">
+                    <br />
+                    <span
+                      v-if="img.attribute"
+                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
+                    >
                       {{ img.attribute }}</span
                     >
-                    &nbsp;|&nbsp;
+                    <br />
                     <span
-                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold' : ''}`"
+                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.vocal || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold' : ''}`"
+                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.dance || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold' : ''}`"
+                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.visual || 0 }}</span
                     >
@@ -82,12 +122,13 @@
                 </template>
                 <div
                   :class="{
-                    icon: true,
-                    [`icon_${img.cid}`]: true,
-                    dark: !img.isBrightness,
+                    'cgss-icon': true,
+                    [`id_${img.cid}`]: true,
+                    dark: !img.isBrightness && switchToggleCardStatus,
+                    'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
                   @click="
-                    handleImageClick(
+                    handleIconClick(
                       scope.row,
                       tableResonanceColumnHeader[colIndex - 1].value,
                       Number(imgIndex),
@@ -101,75 +142,63 @@
       </el-table>
     </div>
     <div class="al-divider"></div>
-    <div class="unit-title" id="unit-dominant">Dominant</div>
+    <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
     <div class="unit-table">
-      <el-table :data="filteredTableDataDominant" border style="width: 100%">
-        <!-- 第一列：target_attribute_2 -->
+      <el-table
+        :data="filteredTableDataDominant"
+        border
+        style="width: 100%"
+        :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
+      >
+        <!-- 第一列：target_attribute_2 target_param_2 -->
         <el-table-column
           prop="target_attribute_2"
-          label="属性2"
+          label="歌曲属性"
           :width="96"
           sortable
-          :sort-orders="['descending', 'ascending']"
+          :sort-orders="['ascending', 'descending', null]"
           :sort-method="sortDominantAttribute2"
         >
           <template #default="scope">
             <span :class="`table-row-info color-cg-${scope.row.target_attribute_2}`">{{
               scope.row.target_attribute_2 || ''
             }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 第二列：target_attribute -->
-        <el-table-column
-          prop="target_attribute"
-          label="属性1"
-          :width="96"
-          sortable
-          :sort-orders="['ascending', 'descending']"
-          :sort-method="sortDominantAttribute"
-        >
-          <template #default="scope">
-            <span :class="`table-row-info color-cg-${scope.row.target_attribute}`">{{
-              scope.row.target_attribute || ''
-            }}</span>
-          </template>
-        </el-table-column>
-
-        <!-- 第三列：target_param_2 -->
-        <el-table-column
-          prop="target_param_2"
-          label="参数2"
-          :width="96"
-          sortable
-          :sort-orders="['ascending', 'descending']"
-          :sort-method="sortDominantParam2"
-        >
-          <template #default="scope">
+            <br />
             <span :class="`table-row-info color-cg-${scope.row.target_param_2}`">{{
               scope.row.target_param_2 || ''
             }}</span>
           </template>
         </el-table-column>
 
-        <!-- 第四列：target_param -->
+        <!-- 第二列：target_attribute target_param -->
         <el-table-column
-          prop="target_param"
-          label="参数1"
+          prop="target_attribute"
+          label="原属性"
           :width="96"
           sortable
-          :sort-orders="['ascending', 'descending']"
-          :sort-method="sortDominantParam"
+          :sort-orders="['ascending', 'descending', null]"
+          :sort-method="sortDominantAttribute"
         >
           <template #default="scope">
+            <span :class="`table-row-info color-cg-${scope.row.target_attribute}`">{{
+              scope.row.target_attribute || ''
+            }}</span>
+            <br />
             <span :class="`table-row-info color-cg-${scope.row.target_param}`">{{
               scope.row.target_param || ''
             }}</span>
           </template>
         </el-table-column>
 
-        <!-- 第五列：tw -->
-        <el-table-column prop="tw" label="间隔" :width="64">
+        <!-- 第三列：tw -->
+        <el-table-column
+          prop="tw"
+          label="间隔"
+          :width="60"
+          sortable
+          :sort-orders="['ascending', 'descending', null]"
+          :sort-method="sortDominantTw"
+        >
           <template #default="scope">
             <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
           </template>
@@ -181,6 +210,12 @@
           :key="colIndex"
           :prop="tableDominantColumnHeader[colIndex - 1].value"
           :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
+          class-name="icons"
+          :min-width="
+            isSmallScreen
+              ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
+              : tableDominantColumnHeader[colIndex - 1].minWidth
+          "
         >
           <template #default="scope">
             <div class="table-icons-container">
@@ -193,25 +228,28 @@
                 <template #content>
                   <div style="font-size: 14px">
                     <span v-if="img.title">{{ img.title }}</span>
-                    &nbsp;|&nbsp;
-                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()}`">
+                    <br />
+                    <span
+                      v-if="img.attribute"
+                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
+                    >
                       {{ img.attribute }}</span
                     >
-                    &nbsp;|&nbsp;
+                    <br />
                     <span
-                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold' : ''}`"
+                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.vocal || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold' : ''}`"
+                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.dance || 0 }}</span
                     >
                     &nbsp;
                     <span
-                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold' : ''}`"
+                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold is-underline' : ''}`"
                     >
                       {{ img.visual || 0 }}</span
                     >
@@ -219,12 +257,13 @@
                 </template>
                 <div
                   :class="{
-                    icon: true,
-                    [`icon_${img.cid}`]: true,
-                    dark: !img.isBrightness,
+                    'cgss-icon': true,
+                    [`id_${img.cid}`]: true,
+                    dark: !img.isBrightness && switchToggleCardStatus,
+                    'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
                   @click="
-                    handleImageClick(
+                    handleIconClick(
                       scope.row,
                       tableDominantColumnHeader[colIndex - 1].value,
                       Number(imgIndex),
@@ -237,9 +276,9 @@
         </el-table-column>
       </el-table>
     </div>
-    <div>
+    <!-- <div>
       <p>更多组队信息开发中……</p>
-    </div>
+    </div> -->
     <div class="al-divider"></div>
     <div class="unit-information">
       <p>
@@ -316,18 +355,86 @@ const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
 const tableDominantColumnHeader = [
-  { value: 'dominant', label: '双色 dominant' },
+  { value: 'dominant', label: '双色 dominant', minWidth: 64 },
   {
     value: 'alternate',
     label: '变换 alternate',
     attribute: 'target_attribute',
     param: 'target_param',
+    minWidth: 108,
+    minWidthSmallScreen: 108,
   },
   {
     value: 'mutual',
     label: '交互 mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
+    minWidth: 160,
+    minWidthSmallScreen: 108,
+  },
+  {
+    value: 'overload_4',
+    label: '过载 overload 4s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '4',
+  },
+  {
+    value: 'overdrive_4',
+    label: '超载 overdrive 4s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '4',
+  },
+  {
+    value: 'overload_6',
+    label: '过载 overload 6s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '6',
+  },
+  {
+    value: 'overdrive_6',
+    label: '超载 overdrive 6s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '6',
+  },
+  {
+    value: 'overload_7',
+    label: '过载 overload 7s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '7',
+  },
+  {
+    value: 'overdrive_7',
+    label: '超载 overdrive 7s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '7',
+  },
+  {
+    value: 'overload_9',
+    label: '过载 overload 9s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '9',
+  },
+  {
+    value: 'overdrive_9',
+    label: '超载 overdrive 9s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '9',
   },
 ];
 
@@ -356,15 +463,37 @@ interface TableResonanceRow {
   [key: string]: CellItem[] | string | number | undefined;
 }
 
-// 点击图片模式切换
-const modeSwitch = ref(true);
+// 模式切换
+const switchToggleCardStatus = ref(true);
+const switchViewCardInfo = ref(false);
+const switchNameFilter = ref(false);
+const inputNameFilter =
+  ref(`水本ゆかり、椎名法子、間中美里、五十嵐響子、柳瀬美由紀、長富蓮実、横山千佳、太田優、前川みく、宮本フレデリカ、井村雪菜、工藤忍、佐久間まゆ、乙倉悠貴、原田美世、池袋晶葉
 
-// 响应式属性用于判断是否为移动端
-const isMobile = ref(window.innerWidth < 768);
+黒川千秋、桐野アヤ、川島瑞樹、水木聖來、藤原肇、新田美波、高垣楓、伊集院惠、柊志乃、瀬名詩織、佐城雪美、和久井留美、塩見周子、速水奏、大石泉、森久保乃々
+
+高森藍子、並木芽衣子、赤城みりあ、真鍋いつき、大槻唯、海老原菜帆、衛藤美紗希、浜川愛結奈、諸星きらり、喜多日菜子、三好紗南、土屋亜子、南条光、イヴ・サンタクロース、夢見りあむ、久川凪`);
+const allImagesBright = ref(true);
+
+// 添加监听器实现互斥逻辑
+watch(switchToggleCardStatus, (newValue) => {
+  if (newValue && switchViewCardInfo.value) {
+    switchViewCardInfo.value = false;
+  }
+});
+
+watch(switchViewCardInfo, (newValue) => {
+  if (newValue && switchToggleCardStatus.value) {
+    switchToggleCardStatus.value = false;
+  }
+});
+
+// 响应式属性用于判断屏幕宽度是否足够
+const isSmallScreen = ref(window.innerWidth < 1512);
 
 // 监听窗口大小变化
 const handleResize = () => {
-  isMobile.value = window.innerWidth < 768;
+  isSmallScreen.value = window.innerWidth < 1512;
 };
 
 onMounted(() => {
@@ -386,7 +515,104 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
   }
 };
 
-// 添加排序方法
+// 创建一个用于处理单个参数排序的通用函数
+const sortAttributeHelper = (
+  getter: (item: TableResonanceRow) => string | undefined,
+  order: string[],
+) => {
+  return (a: TableResonanceRow, b: TableResonanceRow) => {
+    const indexA = order.indexOf(getter(a) || '');
+    const indexB = order.indexOf(getter(b) || '');
+
+    // 如果值在预定义顺序中，则按预定义顺序排序
+    if (indexA !== -1 && indexB !== -1) {
+      if (indexA !== indexB) {
+        return indexA - indexB;
+      }
+    } else {
+      // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
+      if (indexA !== -1) {
+        return -1;
+      }
+      if (indexB !== -1) {
+        return 1;
+      }
+      // 如果都不在预定义顺序中，则按字母顺序排序
+      const aValue = getter(a);
+      const bValue = getter(b);
+      if (aValue && bValue) {
+        const compareResult = aValue.localeCompare(bValue);
+        if (compareResult !== 0) {
+          return compareResult;
+        }
+      }
+    }
+
+    // 如果两个值相等，则返回 0
+    return 0;
+  };
+};
+
+// 使用通用函数创建排序方法 - 需要单独处理多级排序
+const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 首先按 target_attribute 排序
+  const attrCompare = sortAttributeHelper(
+    (item) => item.target_attribute,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attrCompare !== 0) return attrCompare;
+
+  // 如果 target_attribute 相同，按 target_param 排序
+  const paramCompare = sortAttributeHelper(
+    (item) => item.target_param,
+    tableDominantRowHeaderSpecialize,
+  )(a, b);
+
+  if (paramCompare !== 0) return paramCompare;
+
+  // 如果 target_param 也相同，按 target_attribute_2 排序
+  const attr2Compare = sortAttributeHelper(
+    (item) => item.target_attribute_2,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attr2Compare !== 0) return attr2Compare;
+
+  // 按行号排序
+  return a.row - b.row;
+};
+
+const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 首先按 target_attribute_2 排序
+  const attr2Compare = sortAttributeHelper(
+    (item) => item.target_attribute_2,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attr2Compare !== 0) return attr2Compare;
+
+  // 如果 target_attribute_2 相同，按 target_param_2 排序
+  const param2Compare = sortAttributeHelper(
+    (item) => item.target_param_2,
+    tableDominantRowHeaderSpecialize,
+  )(a, b);
+
+  if (param2Compare !== 0) return param2Compare;
+
+  // 如果 target_param_2 也相同，按 target_attribute 排序
+  const attrCompare = sortAttributeHelper(
+    (item) => item.target_attribute,
+    tableDominantRowHeaderAttribute,
+  )(a, b);
+
+  if (attrCompare !== 0) return attrCompare;
+
+  // 按行号排序
+  return a.row - b.row;
+};
+
+// 添加Resonance表的排序方法
 const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => {
   const order = tableResonanceRowHeaderSpecialize;
   const indexA = order.indexOf(a.specialize || '');
@@ -422,144 +648,16 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
   return a.row - b.row;
 };
 
-// 添加Dominant表排序方法
-const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
-  const order = tableDominantRowHeaderAttribute;
-  const indexA = order.indexOf(a.target_attribute || '');
-  const indexB = order.indexOf(b.target_attribute || '');
+const sortDominantTw = (a: TableResonanceRow, b: TableResonanceRow) => {
+  // 提取数值部分进行比较，去掉 's' 后缀
+  const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
+  const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
 
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-    // 如果target_attribute相同，按行号排序
-    return a.row - b.row;
+  // 按数值大小排序
+  if (numA !== numB) {
+    return numA - numB;
   }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_attribute && b.target_attribute) {
-    const compareResult = a.target_attribute.localeCompare(b.target_attribute);
-    if (compareResult !== 0) {
-      return compareResult;
-    }
-    // 如果target_attribute相同，按行号排序
-    return a.row - b.row;
-  }
-  // 如果target_attribute都为空，按行号排序
-  return a.row - b.row;
-};
-
-const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
-  const order = tableDominantRowHeaderAttribute;
-  const indexA = order.indexOf(a.target_attribute_2 || '');
-  const indexB = order.indexOf(b.target_attribute_2 || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-    // 如果target_attribute_2相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_attribute_2 && b.target_attribute_2) {
-    const compareResult = a.target_attribute_2.localeCompare(b.target_attribute_2);
-    if (compareResult !== 0) {
-      return compareResult;
-    }
-    // 如果target_attribute_2相同，按行号排序
-    return a.row - b.row;
-  }
-  // 如果target_attribute_2都为空，按行号排序
-  return a.row - b.row;
-};
-
-const sortDominantParam = (a: TableResonanceRow, b: TableResonanceRow) => {
-  const order = tableDominantRowHeaderSpecialize;
-  const indexA = order.indexOf(a.target_param || '');
-  const indexB = order.indexOf(b.target_param || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-    // 如果target_param相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_param && b.target_param) {
-    const compareResult = a.target_param.localeCompare(b.target_param);
-    if (compareResult !== 0) {
-      return compareResult;
-    }
-    // 如果target_param相同，按行号排序
-    return a.row - b.row;
-  }
-  // 如果target_param都为空，按行号排序
-  return a.row - b.row;
-};
-
-const sortDominantParam2 = (a: TableResonanceRow, b: TableResonanceRow) => {
-  const order = tableDominantRowHeaderSpecialize;
-  const indexA = order.indexOf(a.target_param_2 || '');
-  const indexB = order.indexOf(b.target_param_2 || '');
-
-  // 如果值在预定义顺序中，则按预定义顺序排序
-  if (indexA !== -1 && indexB !== -1) {
-    if (indexA !== indexB) {
-      return indexA - indexB;
-    }
-    // 如果target_param_2相同，按行号排序
-    return a.row - b.row;
-  }
-
-  // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-  if (indexA !== -1) {
-    return -1;
-  }
-  if (indexB !== -1) {
-    return 1;
-  }
-
-  // 如果都不在预定义顺序中，则按字母顺序排序
-  if (a.target_param_2 && b.target_param_2) {
-    const compareResult = a.target_param_2.localeCompare(b.target_param_2);
-    if (compareResult !== 0) {
-      return compareResult;
-    }
-    // 如果target_param_2相同，按行号排序
-    return a.row - b.row;
-  }
-  // 如果target_param_2都为空，按行号排序
+  // 如果tw相同，按行号排序
   return a.row - b.row;
 };
 
@@ -666,6 +764,14 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                   dominant: [], // 主要效果列
                   alternate: [], // 变换效果列
                   mutual: [], // 交互效果列
+                  overload_4: [], // 过载效果列
+                  overload_6: [], // 过载效果列
+                  overload_7: [], // 过载效果列
+                  overload_9: [], // 过载效果列
+                  overdrive_4: [], // 超载效果列
+                  overdrive_6: [], // 超载效果列
+                  overdrive_7: [], // 超载效果列
+                  overdrive_9: [], // 超载效果列
                 });
               }
             });
@@ -735,23 +841,14 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
         const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
 
-        // 根据技能类型确定插入到哪个列
-        let targetColumn = '';
-        if (item.leaderSkill.description.includes('dominant')) {
-          targetColumn = 'dominant';
-        } else {
-          // 默认插入到dominant列，以保持原有功能
-          targetColumn = 'dominant';
-        }
-
         // 将数据添加到对应单元格
         if (
           result[rowIndex] &&
-          result[rowIndex][targetColumn] &&
-          Array.isArray(result[rowIndex][targetColumn])
+          result[rowIndex].dominant &&
+          Array.isArray(result[rowIndex].dominant)
         ) {
           // typescript bug
-          (result[rowIndex][targetColumn] as CellItem[]).push({
+          (result[rowIndex].dominant as CellItem[]).push({
             cid: item.cid,
             name: item.name,
             title: `[${item.title}] ${item.name}`,
@@ -763,9 +860,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
             dance: item.stats.dance,
           });
         } else {
-          console.warn(
-            `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
-          );
+          console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
       }
     }
@@ -819,48 +914,134 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
         }
       });
     }
+
+    // 处理 overload 和 overdrive 类型的技能
+    if (item.skill.type === 'overload' || item.skill.type === 'overdrive') {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // 遍历所有列定义，查找匹配的overload和overdrive列
+        tableDominantColumnHeader.forEach((colDef) => {
+          // 检查是否为overload或overdrive类型的列
+          if (colDef.skill === item.skill.type) {
+            // 检查tw是否匹配
+            if (colDef.tw === String(item.skill.params.tw)) {
+              // overload: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于5000
+              if (
+                item.skill.type === 'overload' &&
+                item.attribute.toLowerCase() === row.target_attribute &&
+                row.target_param &&
+                item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
+              ) {
+                (result[rowIndex][colDef.value] as CellItem[]).push({
+                  cid: item.cid,
+                  name: item.name,
+                  title: `[${item.title}] ${item.name}`,
+                  link: item.link,
+                  isBrightness: true,
+                  attribute: item.attribute,
+                  vocal: item.stats.vocal,
+                  visual: item.stats.visual,
+                  dance: item.stats.dance,
+                });
+              }
+              // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
+              else if (
+                item.skill.type === 'overdrive' &&
+                item.attribute.toLowerCase() === row.target_attribute_2 &&
+                row.target_param_2 &&
+                item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
+              ) {
+                (result[rowIndex][colDef.value] as CellItem[]).push({
+                  cid: item.cid,
+                  name: item.name,
+                  title: `[${item.title}] ${item.name}`,
+                  link: item.link,
+                  isBrightness: true,
+                  attribute: item.attribute,
+                  vocal: item.stats.vocal,
+                  visual: item.stats.visual,
+                  dance: item.stats.dance,
+                });
+              }
+            }
+          }
+        });
+      });
+    }
   });
 
-  // 对alternate和mutual列的数据按照目标param的数值从大到小排序
+  // 定义排序函数
+  const sortCardsByParam = (
+    cards: CellItem[],
+    targetParam: string | undefined,
+
+    data: CgssCardSkillTableItem[],
+  ) => {
+    if (!targetParam) return cards;
+
+    return cards.sort((a, b) => {
+      // 找到a卡片的数值
+      const cardA = data.find((item) => item.cid === a.cid);
+      // 找到b卡片的数值
+      const cardB = data.find((item) => item.cid === b.cid);
+
+      if (!cardA || !cardB) return 0;
+
+      // 根据target_param或target_param_2获取对应数值
+      const paramKey = targetParam as keyof CgssCardSkillTableItem['stats'];
+
+      const aValue = cardA.stats[paramKey] || 0;
+      const bValue = cardB.stats[paramKey] || 0;
+
+      // 从大到小排序
+      return bValue - aValue;
+    });
+  };
+
+  // 对列的数据进行排序
   result.forEach((row) => {
     // 对alternate列进行排序：根据对应行的target_param数值
     if (Array.isArray(row.alternate) && row.alternate.length > 0) {
-      row.alternate.sort((a, b) => {
-        // 找到a卡片的数值
-        const cardA = data.find((item) => item.cid === a.cid);
-        // 找到b卡片的数值
-        const cardB = data.find((item) => item.cid === b.cid);
-
-        if (!cardA || !cardB) return 0;
-
-        // 根据target_param获取对应数值，例如如果target_param是'vocal'，则获取cardA.stats.vocal
-        const aValue = cardA.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
-        const bValue = cardB.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
-
-        // 从大到小排序
-        return bValue - aValue;
-      });
+      row.alternate = sortCardsByParam(row.alternate, row.target_param, data);
     }
 
     // 对mutual列进行排序：根据对应行的target_param_2数值
     if (Array.isArray(row.mutual) && row.mutual.length > 0) {
-      row.mutual.sort((a, b) => {
-        // 找到a卡片的数值
-        const cardA = data.find((item) => item.cid === a.cid);
-        // 找到b卡片的数值
-        const cardB = data.find((item) => item.cid === b.cid);
+      row.mutual = sortCardsByParam(row.mutual, row.target_param_2, data);
+    }
 
-        if (!cardA || !cardB) return 0;
+    // 对overload列进行排序：根据对应行的target_param数值
+    if (Array.isArray(row.overload_4) && row.overload_4.length > 0) {
+      row.overload_4 = sortCardsByParam(row.overload_4, row.target_param, data);
+    }
 
-        // 根据target_param_2获取对应数值，例如如果target_param_2是'dance'，则获取cardA.stats.dance
-        const aValue =
-          cardA.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
-        const bValue =
-          cardB.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
+    if (Array.isArray(row.overload_6) && row.overload_6.length > 0) {
+      row.overload_6 = sortCardsByParam(row.overload_6, row.target_param, data);
+    }
 
-        // 从大到小排序
-        return bValue - aValue;
-      });
+    if (Array.isArray(row.overload_7) && row.overload_7.length > 0) {
+      row.overload_7 = sortCardsByParam(row.overload_7, row.target_param, data);
+    }
+
+    if (Array.isArray(row.overload_9) && row.overload_9.length > 0) {
+      row.overload_9 = sortCardsByParam(row.overload_9, row.target_param, data);
+    }
+
+    // 对overdrive列进行排序：根据对应行的target_param_2数值
+    if (Array.isArray(row.overdrive_4) && row.overdrive_4.length > 0) {
+      row.overdrive_4 = sortCardsByParam(row.overdrive_4, row.target_param_2, data);
+    }
+
+    if (Array.isArray(row.overdrive_6) && row.overdrive_6.length > 0) {
+      row.overdrive_6 = sortCardsByParam(row.overdrive_6, row.target_param_2, data);
+    }
+
+    if (Array.isArray(row.overdrive_7) && row.overdrive_7.length > 0) {
+      row.overdrive_7 = sortCardsByParam(row.overdrive_7, row.target_param_2, data);
+    }
+
+    if (Array.isArray(row.overdrive_9) && row.overdrive_9.length > 0) {
+      row.overdrive_9 = sortCardsByParam(row.overdrive_9, row.target_param_2, data);
     }
   });
 
@@ -888,10 +1069,10 @@ const filteredTableDataDominant = computed(() => {
 });
 
 // 处理图片点击事件
-const handleImageClick = (row: TableResonanceRow, colKey: string, index: number) => {
+const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) => {
   // 验证输入参数
   if (!row || !colKey || index < 0) {
-    console.warn('Invalid parameters for handleImageClick');
+    console.warn('Invalid parameters for handleIconClick');
     return;
   }
 
@@ -902,29 +1083,37 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
     return;
   }
 
-  const image = colData[index];
+  const icon = colData[index];
   // 验证图片对象是否有效
-  if (!image || typeof image.cid === 'undefined') {
-    console.warn('Invalid image object');
+  if (!icon || typeof icon.cid === 'undefined') {
+    console.warn('Invalid icon object');
     return;
   }
 
-  if (!modeSwitch.value) {
-    // modeSwitch为false时，在新标签页打开链接
-    if (image.link) {
+  // 如果两个开关都关闭，则不执行任何操作
+  if (!switchToggleCardStatus.value && !switchViewCardInfo.value) {
+    return;
+  }
+
+  // 如果只开启查看卡片信息开关
+  if (switchViewCardInfo.value) {
+    if (icon.link) {
       // 提取链接中的数字并减1
-      const modifiedLink = image.link.replace(/c_(\d+)_/, (match, num) => {
+      const modifiedLink = icon.link.replace(/c_(\d+)_/, (match, num) => {
         const newNum = parseInt(num) - 1;
         return `c_${newNum}_`;
       });
       window.open('https://starlight.346lab.org' + modifiedLink, '_blank');
     } else {
-      console.warn(`No link found for card with cid: ${image.cid}`);
+      console.warn(`No link found for card with cid: ${icon.cid}`);
     }
-  } else {
-    // modeSwitch为true时，执行切换图片状态的操作
-    const targetName = image.title;
-    const newState = !image.isBrightness;
+    return;
+  }
+
+  // 否则，判断是否开启切换卡片状态开关
+  else if (switchToggleCardStatus.value) {
+    const targetName = icon.title;
+    const newState = !icon.isBrightness;
 
     // 更新所有名称相同的图片的状态 - resonance表
     tableDataResonance.value.forEach((dataRow) => {
@@ -957,6 +1146,7 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
         }
       });
     });
+    return;
   }
 };
 
@@ -969,17 +1159,179 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
     return row.target_param === param || row.target_param_2 === param;
   }
 
-  // 如果是alternate列，需要检查target_param
-  if (columnHeader.value === 'alternate') {
+  // 如果是alternate或者overload列，需要检查target_param
+  if (columnHeader.value === 'alternate' || columnHeader.skill === 'overload') {
     return row.target_param === param;
   }
 
-  // 如果是mutual列，需要检查target_param_2
-  if (columnHeader.value === 'mutual') {
+  // 如果是mutual或者overdrive列，需要检查target_param_2
+  if (columnHeader.value === 'mutual' || columnHeader.skill === 'overdrive') {
     return row.target_param_2 === param;
   }
 
   return false;
+};
+
+const isNameMatched = (title: string | undefined, filter: string) => {
+  // 未启用名称过滤时，返回true
+  if (!switchNameFilter.value) return true;
+
+  if (!title || !filter) return true;
+
+  // 将过滤器按空格、换行、半角逗号或全角顿号分割，并移除空字符串
+  const names = filter.split(/[ ,、\n]+/).filter((name) => name.trim() !== '');
+
+  // 如果没有名称，则返回true
+  if (names.length === 0) return true;
+
+  // 检查标题是否包含任何一个名称（不区分大小写）
+  return names.some((name) => title.toLowerCase().includes(name.toLowerCase().trim()));
+};
+
+// 切换所有图片的亮度
+const toggleAllImagesBrightness = () => {
+  allImagesBright.value = !allImagesBright.value;
+  tableDataResonance.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      // 验证列值是否为数组
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          // 验证图片对象是否有效
+          if (img) {
+            img.isBrightness = allImagesBright.value;
+          }
+        });
+      }
+    });
+  });
+
+  tableDataDominant.value.forEach((dataRow) => {
+    Object.keys(dataRow).forEach((colKey) => {
+      const colValue = dataRow[colKey];
+      // 验证列值是否为数组
+      if (Array.isArray(colValue)) {
+        colValue.forEach((img) => {
+          // 验证图片对象是否有效
+          if (img) {
+            img.isBrightness = allImagesBright.value;
+          }
+        });
+      }
+    });
+  });
+};
+
+// 导出卡片
+const exportCids = async () => {
+  try {
+    // 收集所有点亮的卡片CID
+    const brightCids: string[] = [];
+
+    // 遍历Resonance表
+    tableDataResonance.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && img.isBrightness) {
+              brightCids.push(img.cid);
+            }
+          });
+        }
+      });
+    });
+
+    // 遍历Dominant表
+    tableDataDominant.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && img.isBrightness) {
+              brightCids.push(img.cid);
+            }
+          });
+        }
+      });
+    });
+
+    // 去重
+    const uniqueCids = [...new Set(brightCids)];
+
+    // 转换为JSON字符串
+    const jsonStr = JSON.stringify(uniqueCids, null, 2);
+
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(jsonStr);
+
+    // 显示成功提示
+    ElMessage.success('已导出到剪贴板！');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败，请重试');
+  }
+};
+
+// 导入卡片
+const importCids = async () => {
+  try {
+    // 从剪贴板读取数据
+    const clipboardText = await navigator.clipboard.readText();
+
+    // 解析JSON
+    let importedCids: string[];
+    try {
+      importedCids = JSON.parse(clipboardText);
+
+      // 验证是否为字符串数组
+      if (!Array.isArray(importedCids) || !importedCids.every((item) => typeof item === 'string')) {
+        throw new Error('剪贴板内容不是有效的字符串数组');
+      }
+    } catch (error) {
+      ElMessage.error('剪贴板内容不是有效的JSON数组');
+      return;
+    }
+
+    // 更新所有表格中的卡片状态
+    tableDataResonance.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && importedCids.includes(img.cid)) {
+              img.isBrightness = true;
+            } else {
+              img.isBrightness = false;
+            }
+          });
+        }
+      });
+    });
+
+    tableDataDominant.value.forEach((dataRow) => {
+      Object.keys(dataRow).forEach((colKey) => {
+        const colValue = dataRow[colKey];
+        if (Array.isArray(colValue)) {
+          colValue.forEach((img) => {
+            if (img && importedCids.includes(img.cid)) {
+              img.isBrightness = true;
+            } else {
+              img.isBrightness = false;
+            }
+          });
+        }
+      });
+    });
+
+    // 更新allImagesBright状态
+    allImagesBright.value = importedCids.length > 0;
+
+    ElMessage.success('导入成功！');
+  } catch (error) {
+    console.error('导入失败:', error);
+    ElMessage.error('导入失败，请确保剪贴板中有有效的JSON数组');
+  }
 };
 </script>
 
@@ -989,6 +1341,10 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
 
 .is-bold {
   font-weight: bold;
+}
+
+.is-underline {
+  text-decoration: underline;
 }
 
 .color-cg-cute {
@@ -1014,8 +1370,26 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   --el-table-header-text-color: var(--el-text-color-regular);
 }
 
+:deep(.el-table) tbody .el-table__cell.icons .cell {
+  padding: 0 4px;
+}
+
 .el-link {
   vertical-align: inherit;
+}
+
+.unit-viewer-config {
+  margin-bottom: 1em;
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0.5em 0;
+  }
+}
+
+.unit-table {
+  padding: 1em 0;
 }
 
 .el-table {
@@ -1030,33 +1404,27 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
     align-items: center;
   }
 
-  .icon {
-    --target-width: 48px;
-
+  .cgss-icon {
     display: inline-block;
+    scale: 1;
+    cursor: pointer;
+    margin: 0;
+    border-radius: 4px;
     width: 48px;
     height: 48px;
-    border-radius: 4px;
-    cursor: pointer; // 添加光标效果提示可点击
-
-    scale: calc(var(--target-width) / 48px);
-    margin: calc((var(--target-width) - 48px) / 2);
   }
 
-  .icon.dark {
+  .icon-small {
+    scale: 0.4;
+    margin: 0;
+  }
+
+  .cgss-icon.dark {
     filter: brightness(0.4);
   }
 
-  html.dark .icon.dark {
+  html.dark .cgss-icon.dark {
     filter: brightness(0.25);
   }
-}
-
-.unit-mode-switch {
-  margin-bottom: 1em;
-}
-
-.unit-table {
-  padding: 1em 0;
 }
 </style>
