@@ -14,3 +14,22 @@
     @include set-css-var-value('color-' + $name, map.get($colors, $name));
   }
 }
+
+.color-cg-cute {
+  color: var(--im-color-cg-cute);
+}
+.color-cg-cool {
+  color: var(--im-color-cg-cool);
+}
+.color-cg-passion {
+  color: var(--im-color-cg-passion);
+}
+.color-cg-vocal {
+  color: var(--im-color-cg-vocal);
+}
+.color-cg-dance {
+  color: var(--im-color-cg-dance);
+}
+.color-cg-visual {
+  color: var(--im-color-cg-visual);
+}

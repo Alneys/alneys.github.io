@@ -111,48 +111,16 @@
           >
             <template #default="scope">
               <div class="table-icons-resonance">
-                <el-tooltip
+                <cgss-unit-viewer-card-tooltip
                   v-for="(img, imgIndex) in scope.row[
                     tableResonanceColumnHeader[colIndex - 1].prop
                   ]"
                   :key="imgIndex"
-                  placement="top"
-                  :show-after="640"
+                  :card="img"
+                  :is-vocal-bold="scope.row.specialize === 'vocal'"
+                  :is-dance-bold="scope.row.specialize === 'dance'"
+                  :is-visual-bold="scope.row.specialize === 'visual'"
                 >
-                  <template #content>
-                    <div style="font-size: 14px">
-                      <span v-if="img.title">{{ img.title }}</span>
-                      <br />
-                      <span
-                        v-if="img.attribute"
-                        :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
-                      >
-                        {{ img.attribute }}</span
-                      >
-                      <br />
-                      <span
-                        :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold is-underline' : ''}`"
-                      >
-                        {{ img.vocal || 0 }}</span
-                      >
-                      &nbsp;
-                      <span
-                        :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold is-underline' : ''}`"
-                      >
-                        {{ img.dance || 0 }}</span
-                      >
-                      &nbsp;
-                      <span
-                        :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold is-underline' : ''}`"
-                      >
-                        {{ img.visual || 0 }}</span
-                      >
-                      <br />
-                      <span class="is-bold">{{ img.skill || 0 }}</span>
-                      &nbsp;
-                      <span class="is-bold">{{ img.tw || 0 }}</span>
-                    </div>
-                  </template>
                   <div
                     :class="{
                       'cgss-icon': true,
@@ -170,7 +138,7 @@
                       )
                     "
                   ></div>
-                </el-tooltip>
+                </cgss-unit-viewer-card-tooltip>
                 <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
                   x
                 </div>
@@ -264,46 +232,14 @@
           >
             <template #default="scope">
               <div class="table-icons-container">
-                <el-tooltip
+                <CgssUnitViewerCardTooltip
                   v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
                   :key="imgIndex"
-                  placement="top"
-                  :show-after="500"
+                  :card="img"
+                  :is-vocal-bold="isParamBold(colIndex - 1, scope.row, 'vocal')"
+                  :is-dance-bold="isParamBold(colIndex - 1, scope.row, 'dance')"
+                  :is-visual-bold="isParamBold(colIndex - 1, scope.row, 'visual')"
                 >
-                  <template #content>
-                    <div style="font-size: 14px">
-                      <span v-if="img.title">{{ img.title }}</span>
-                      <br />
-                      <span
-                        v-if="img.attribute"
-                        :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
-                      >
-                        {{ img.attribute }}</span
-                      >
-                      <br />
-                      <span
-                        :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold is-underline' : ''}`"
-                      >
-                        {{ img.vocal || 0 }}</span
-                      >
-                      &nbsp;
-                      <span
-                        :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold is-underline' : ''}`"
-                      >
-                        {{ img.dance || 0 }}</span
-                      >
-                      &nbsp;
-                      <span
-                        :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold is-underline' : ''}`"
-                      >
-                        {{ img.visual || 0 }}</span
-                      >
-                      <br />
-                      <span class="is-bold">{{ img.skill || 0 }}</span>
-                      &nbsp;
-                      <span class="is-bold">{{ img.tw || 0 }}</span>
-                    </div>
-                  </template>
                   <div
                     :class="{
                       'cgss-icon': true,
@@ -319,7 +255,7 @@
                       )
                     "
                   ></div>
-                </el-tooltip>
+                </CgssUnitViewerCardTooltip>
                 <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
                   x
                 </div>
@@ -351,7 +287,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, onUnmounted } from 'vue';
+import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
+import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
 
 const env = import.meta.env;
@@ -1127,8 +1064,6 @@ const tableDataDominant = ref<TableResonanceRow[]>(
 );
 
 // 使用计算属性过滤dominant表中dominant列为空的行
-import { computed } from 'vue';
-
 // 修改dominant表的数据源，使用计算属性过滤空行
 const filteredTableDataDominant = computed(() => {
   return tableDataDominant.value.filter(
@@ -1476,33 +1411,6 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
 
 <style lang="scss" scoped>
 @import '@/assets/styles/im/im-cgss-icons.css';
-
-.is-bold {
-  font-weight: bold;
-}
-
-.is-underline {
-  text-decoration: underline;
-}
-
-.color-cg-cute {
-  color: var(--im-color-cg-cute);
-}
-.color-cg-cool {
-  color: var(--im-color-cg-cool);
-}
-.color-cg-passion {
-  color: var(--im-color-cg-passion);
-}
-.color-cg-vocal {
-  color: var(--im-color-cg-vocal);
-}
-.color-cg-dance {
-  color: var(--im-color-cg-dance);
-}
-.color-cg-visual {
-  color: var(--im-color-cg-visual);
-}
 
 .el-table {
   --el-table-header-text-color: var(--el-text-color-regular);
