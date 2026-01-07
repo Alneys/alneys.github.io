@@ -36,19 +36,20 @@
           </el-button>
         </div>
         <div>
-          <el-button @click="exportCidsToLocalStorage" type="primary" size="default">
+          <el-button @click="exportCidsToLocalStorage" type="success" size="default">
             导出当前状态到浏览器
           </el-button>
         </div>
         <div>
-          <el-button @click="importCidsFromLocalStorage" type="success" size="default">
+          <el-button @click="importCidsFromLocalStorage" type="warning" size="default">
             从浏览器导入
           </el-button>
         </div>
       </div>
       <div>
         <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
-        <el-switch v-model="switchShowLabels" active-text="简单标题" />
+        <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
+        <el-switch v-model="switchShowExtraColumns" active-text="展示额外的列" />
       </div>
     </div>
 
@@ -58,7 +59,7 @@
       <el-table
         :data="tableDataResonance"
         style="width: 100%"
-        :max-height="isMobile ? 640 : undefined"
+        :max-height="isMobile ? 560 : 9999"
         border
         :span-method="tableResonanceSpanMethod"
       >
@@ -92,77 +93,60 @@
           </template>
         </el-table-column>
         <!-- 后续列：根据tableResonanceColumnHeader动态生成 -->
-        <el-table-column
-          v-for="colIndex in tableResonanceColumnHeader.length"
-          :key="colIndex"
-          :prop="tableResonanceColumnHeader[colIndex - 1].prop"
-          :label="
-            switchShowLabels
-              ? tableResonanceColumnHeader[colIndex - 1].labelCn
-              : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
-          "
-          :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
-        >
-          <template #default="scope">
-            <div class="table-icons-container">
-              <el-tooltip
-                v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].prop]"
-                :key="imgIndex"
-                placement="top"
-                :show-after="640"
-              >
-                <template #content>
-                  <div style="font-size: 14px">
-                    <span v-if="img.title">{{ img.title }}</span>
-                    <br />
-                    <span
-                      v-if="img.attribute"
-                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
-                    >
-                      {{ img.attribute }}</span
-                    >
-                    <br />
-                    <span
-                      :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.vocal || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-dance ${scope.row.specialize === 'dance' ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.dance || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-visual ${scope.row.specialize === 'visual' ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.visual || 0 }}</span
-                    >
-                  </div>
-                </template>
-                <div
-                  :class="{
-                    'cgss-icon': true,
-                    [`id_${img.cid}`]: true,
-                    dark: !img.isBrightness && switchToggleCardStatus,
-                    'icon-small': !isNameMatched(img.title, inputNameFilter),
-                  }"
-                  @click="
-                    handleIconClick(
-                      scope.row,
-                      tableResonanceColumnHeader[colIndex - 1].prop,
-                      Number(imgIndex),
-                    )
-                  "
-                ></div>
-              </el-tooltip>
-              <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
-                x
+        <template v-for="colIndex in tableResonanceColumnHeader.length" :key="colIndex">
+          <el-table-column
+            v-if="!tableResonanceColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
+            :prop="tableResonanceColumnHeader[colIndex - 1].prop"
+            :label="
+              switchShowSimpleLabels
+                ? tableResonanceColumnHeader[colIndex - 1].labelCn
+                : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
+            "
+            :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
+            :min-width="
+              isSmallScreen
+                ? tableResonanceColumnHeader[colIndex - 1].minWidthSmallScreen
+                : tableResonanceColumnHeader[colIndex - 1].minWidth
+            "
+          >
+            <template #default="scope">
+              <div class="table-icons-resonance">
+                <cgss-unit-viewer-card-tooltip
+                  v-for="(img, imgIndex) in scope.row[
+                    tableResonanceColumnHeader[colIndex - 1].prop
+                  ]"
+                  :key="imgIndex"
+                  :card="img"
+                  :is-vocal-bold="scope.row.specialize === 'vocal'"
+                  :is-dance-bold="scope.row.specialize === 'dance'"
+                  :is-visual-bold="scope.row.specialize === 'visual'"
+                >
+                  <div
+                    :class="{
+                      'cgss-icon': true,
+                      [`id_${img.cid}`]: true,
+                      dark: switchToggleCardStatus && !img.isBrightness,
+                      'icon-small': tableResonanceColumnHeader[colIndex - 1].extraColumn,
+                      'icon-not-match':
+                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
+                    }"
+                    @click="
+                      handleIconClick(
+                        scope.row,
+                        tableResonanceColumnHeader[colIndex - 1].prop,
+                        Number(imgIndex),
+                      )
+                    "
+                  ></div>
+                </cgss-unit-viewer-card-tooltip>
+                <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
+                  x
+                </div>
               </div>
-            </div>
-          </template>
-        </el-table-column>
+            </template>
+          </el-table-column>
+        </template>
       </el-table>
     </div>
     <div class="al-divider"></div>
@@ -171,7 +155,7 @@
       <el-table
         :data="filteredTableDataDominant"
         style="width: 100%"
-        :max-height="isMobile ? 720 : undefined"
+        :max-height="isMobile ? 560 : 9999"
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
       >
@@ -230,83 +214,59 @@
         </el-table-column>
 
         <!-- 后续列：根据tableDominantColumnHeader动态生成 -->
-        <el-table-column
-          v-for="colIndex in tableDominantColumnHeader.length"
-          :key="colIndex"
-          :prop="tableDominantColumnHeader[colIndex - 1].prop"
-          :label="
-            switchShowLabels
-              ? tableDominantColumnHeader[colIndex - 1].labelCn
-              : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
-          "
-          :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
-          :min-width="
-            isSmallScreen
-              ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
-              : tableDominantColumnHeader[colIndex - 1].minWidth
-          "
-          :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
-        >
-          <template #default="scope">
-            <div class="table-icons-container">
-              <el-tooltip
-                v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
-                :key="imgIndex"
-                placement="top"
-                :show-after="500"
-              >
-                <template #content>
-                  <div style="font-size: 14px">
-                    <span v-if="img.title">{{ img.title }}</span>
-                    <br />
-                    <span
-                      v-if="img.attribute"
-                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
-                    >
-                      {{ img.attribute }}</span
-                    >
-                    <br />
-                    <span
-                      :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.vocal || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-dance ${isParamBold(colIndex - 1, scope.row, 'dance') ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.dance || 0 }}</span
-                    >
-                    &nbsp;
-                    <span
-                      :class="`color-cg-visual ${isParamBold(colIndex - 1, scope.row, 'visual') ? 'is-bold is-underline' : ''}`"
-                    >
-                      {{ img.visual || 0 }}</span
-                    >
-                  </div>
-                </template>
-                <div
-                  :class="{
-                    'cgss-icon': true,
-                    [`id_${img.cid}`]: true,
-                    dark: !img.isBrightness && switchToggleCardStatus,
-                    'icon-small': !isNameMatched(img.title, inputNameFilter),
-                  }"
-                  @click="
-                    handleIconClick(
-                      scope.row,
-                      tableDominantColumnHeader[colIndex - 1].prop,
-                      Number(imgIndex),
-                    )
-                  "
-                ></div>
-              </el-tooltip>
-              <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
-                x
+        <template v-for="colIndex in tableDominantColumnHeader.length" :key="colIndex">
+          <el-table-column
+            v-if="!tableDominantColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
+            :prop="tableDominantColumnHeader[colIndex - 1].prop"
+            :label="
+              switchShowSimpleLabels
+                ? tableDominantColumnHeader[colIndex - 1].labelCn
+                : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
+            "
+            :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
+            :min-width="
+              isSmallScreen
+                ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
+                : tableDominantColumnHeader[colIndex - 1].minWidth
+            "
+            :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
+          >
+            <template #default="scope">
+              <div class="table-icons-container">
+                <CgssUnitViewerCardTooltip
+                  v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
+                  :key="imgIndex"
+                  :card="img"
+                  :is-vocal-bold="isParamBold(colIndex - 1, scope.row, 'vocal')"
+                  :is-dance-bold="isParamBold(colIndex - 1, scope.row, 'dance')"
+                  :is-visual-bold="isParamBold(colIndex - 1, scope.row, 'visual')"
+                >
+                  <div
+                    :class="{
+                      'cgss-icon': true,
+                      [`id_${img.cid}`]: true,
+                      dark: !img.isBrightness && switchToggleCardStatus,
+                      'icon-small': tableDominantColumnHeader[colIndex - 1].extraColumn,
+                      'icon-not-match':
+                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
+                    }"
+                    @click="
+                      handleIconClick(
+                        scope.row,
+                        tableDominantColumnHeader[colIndex - 1].prop,
+                        Number(imgIndex),
+                      )
+                    "
+                  ></div>
+                </CgssUnitViewerCardTooltip>
+                <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
+                  x
+                </div>
               </div>
-            </div>
-          </template>
-        </el-table-column>
+            </template>
+          </el-table-column>
+        </template>
       </el-table>
     </div>
     <!-- <div>
@@ -331,7 +291,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, onUnmounted } from 'vue';
+import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
+import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
 
 const env = import.meta.env;
@@ -357,7 +318,6 @@ interface CgssCardSkillTableItem {
       m_proc: number;
       m_dur: number;
       tw: number;
-      ef: number;
     };
   };
   leaderSkill: {
@@ -373,6 +333,7 @@ interface CgssCardSkillTableItem {
 }
 
 // Resonance table
+const tableResonanceRowHeaderAttribute = ['cute', 'cool', 'passion'];
 const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
@@ -381,20 +342,39 @@ const tableResonanceColumnHeader = [
     labelCn: '共鸣',
     labelEn: 'resonance motif',
     skill: 'motif',
+    minWidth: 150,
+    minWidthSmallScreen: undefined,
   },
-  { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy' },
+  { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy', minWidth: 150 },
   {
     prop: 'symphony',
     labelCn: '交响',
     labelEn: 'symphony',
     skill: 'symphony',
+    minWidth: 100,
   },
-  { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike' },
-  { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain' },
+  { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike', minWidth: 100 },
+  { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain', minWidth: 150 },
+  {
+    prop: 'coordinate',
+    labelCn: '协调',
+    labelEn: 'coordinate',
+    skill: 'focus_flat',
+    minWidth: 250,
+    extraColumn: true,
+  },
+  {
+    prop: 'magic',
+    labelCn: '魔法',
+    labelEn: 'magic',
+    skill: 'magic',
+    minWidth: 300,
+    extraColumn: true,
+  },
 ];
 
 // Dominant table
-const tableDominantRowHeaderAttribute = ['cute', 'cool', 'passion'];
+const tableDominantRowHeaderAttribute = tableResonanceRowHeaderAttribute;
 const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
@@ -405,6 +385,7 @@ const tableDominantColumnHeader = [
     labelEn: 'dominant',
     skill: 'dominant',
     minWidth: 64,
+    extraColumn: false,
   },
   {
     prop: 'alternate',
@@ -413,7 +394,9 @@ const tableDominantColumnHeader = [
     skill: 'alternate',
     attribute: 'target_attribute',
     param: 'target_param',
-    minWidthSmallScreen: 100,
+    width: 108,
+    minWidth: 108,
+    minWidthSmallScreen: 108,
   },
   {
     prop: 'mutual',
@@ -498,6 +481,25 @@ const tableDominantColumnHeader = [
     param: 'target_param_2',
     tw: '9',
   },
+  {
+    prop: 'act',
+    labelCn: '演技',
+    labelEn: 'act',
+    skill: 'psb_',
+    param: 'target_param',
+    minWidth: 116,
+    minWidthSmallScreen: 116,
+    extraColumn: true,
+  },
+  {
+    prop: 'combo',
+    labelCn: '连击',
+    labelEn: 'combo',
+    skill: 'cboost',
+    minWidth: 80,
+    param: 'target_param_2',
+    extraColumn: true,
+  },
 ];
 
 // Cell item
@@ -529,9 +531,10 @@ interface TableResonanceRow {
 const switchToggleCardStatus = ref(true);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
-const switchShowLabels = ref(false);
+const switchShowSimpleLabels = ref(window.innerWidth < 768);
+const switchShowExtraColumns = ref(false);
 const inputNameFilter = ref(
-  `中野有香 持田亜里沙 三村かな子 江上椿 棟方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 的場梨沙 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
+  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
 );
 
 const allImagesBright = ref(true);
@@ -724,24 +727,45 @@ const sortDominantTw = (a: TableResonanceRow, b: TableResonanceRow) => {
   return a.row - b.row;
 };
 
+// 创建一个函数来生成卡片数据对象
+const createCardDataItem = (item: CgssCardSkillTableItem) => {
+  return {
+    cid: item.cid,
+    name: item.name,
+    title: `[${item.title}] ${item.name}`,
+    link: item.link,
+    isBrightness: true,
+    attribute: item.attribute,
+    vocal: item.stats.vocal,
+    visual: item.stats.visual,
+    dance: item.stats.dance,
+    skill: item.skill.type,
+    tw: `${item.skill.params.tw}s`,
+  };
+};
+
 // 初始化Resonance表格数据
 const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
   // 创建表格数据结构
   const result: TableResonanceRow[] = [];
 
   // 为每个specialize和tw的组合创建数据行
+  // 使用tableResonanceColumnHeader的prop来动态生成初始数据
   tableResonanceRowHeaderSpecialize.forEach((specialize) => {
     tableResonanceRowHeaderTw.forEach((tw) => {
-      result.push({
+      // 动态创建列数据，使用tableResonanceColumnHeader的prop
+      const row: TableResonanceRow = {
         specialize: specialize, // 添加属性信息
         tw: tw + 's', // 添加间隔信息
         row: result.length, // 添加行号
-        motif: [],
-        synergy: [],
-        symphony: [],
-        spike: [],
-        refrain: [],
+      };
+
+      // 遍历tableResonanceColumnHeader，为每个prop创建空数组
+      tableResonanceColumnHeader.forEach((column) => {
+        row[column.prop] = [];
       });
+
+      result.push(row);
     });
   });
 
@@ -760,7 +784,12 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     }
 
     // 根据skill.tw确定行索引
-    const twIndex = tableResonanceRowHeaderTw.indexOf(String(item.skill.params.tw));
+    let twIndex = tableResonanceRowHeaderTw.indexOf(String(item.skill.params.tw));
+    // 处理 magic 类型的技能
+    if (item.skill.type === 'magic') {
+      // 使用 attribute 确定所在的位置
+      twIndex = tableResonanceRowHeaderAttribute.indexOf(String(item.attribute.toLowerCase()));
+    }
     if (twIndex === -1) {
       // 如果tw不在预定义范围内，跳过该数据
       return;
@@ -779,17 +808,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
 
     // 将数据添加到对应单元格
     if (Array.isArray(result[rowIndex][colName])) {
-      result[rowIndex][colName].push({
-        cid: item.cid,
-        name: item.name,
-        title: `[${item.title}] ${item.name}`,
-        link: item.link,
-        isBrightness: true,
-        attribute: item.attribute,
-        vocal: item.stats.vocal,
-        visual: item.stats.visual,
-        dance: item.stats.dance,
-      });
+      result[rowIndex][colName].push(createCardDataItem(item));
     }
   });
 
@@ -816,26 +835,22 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
               // target_param: 3个
               if (param !== param2) {
                 // 确保param !== param2 (3*2 = 6种组合)
-                // 为每种组合创建一行数据
-                result.push({
+                // 动态创建列数据，使用tableDominantColumnHeader的prop
+                const row: TableResonanceRow = {
                   target_attribute_2: attr2, // 第一列: target_attribute_2
                   target_attribute: attr, // 第二列: target_attribute
                   tw: tw + 's', // 第三列: tw
                   target_param_2: param2, // 第四列: target_param_2
                   target_param: param, // 第五列: target_param
                   row: result.length, // 添加行号
-                  dominant: [], // 主要效果列
-                  alternate: [], // 变换效果列
-                  mutual: [], // 交互效果列
-                  overload_4: [], // 过载效果列
-                  overload_6: [], // 过载效果列
-                  overload_7: [], // 过载效果列
-                  overload_9: [], // 过载效果列
-                  overdrive_4: [], // 超载效果列
-                  overdrive_6: [], // 超载效果列
-                  overdrive_7: [], // 超载效果列
-                  overdrive_9: [], // 超载效果列
+                };
+
+                // 遍历tableDominantColumnHeader，为每个prop创建空数组
+                tableDominantColumnHeader.forEach((column) => {
+                  row[column.prop] = [];
                 });
+
+                result.push(row);
               }
             });
           });
@@ -911,17 +926,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           Array.isArray(result[rowIndex].dominant)
         ) {
           // typescript bug
-          (result[rowIndex].dominant as CellItem[]).push({
-            cid: item.cid,
-            name: item.name,
-            title: `[${item.title}] ${item.name}`,
-            link: item.link,
-            isBrightness: true,
-            attribute: item.attribute,
-            vocal: item.stats.vocal,
-            visual: item.stats.visual,
-            dance: item.stats.dance,
-          });
+          (result[rowIndex].dominant as CellItem[]).push(createCardDataItem(item));
         } else {
           console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
@@ -941,17 +946,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].alternate as CellItem[]).push({
-            cid: item.cid,
-            name: item.name,
-            title: `[${item.title}] ${item.name}`,
-            link: item.link,
-            isBrightness: true,
-            attribute: item.attribute,
-            vocal: item.stats.vocal,
-            visual: item.stats.visual,
-            dance: item.stats.dance,
-          });
+          (result[rowIndex].alternate as CellItem[]).push(createCardDataItem(item));
         }
 
         // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
@@ -963,17 +958,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].mutual as CellItem[]).push({
-            cid: item.cid,
-            name: item.name,
-            title: `[${item.title}] ${item.name}`,
-            link: item.link,
-            isBrightness: true,
-            attribute: item.attribute,
-            vocal: item.stats.vocal,
-            visual: item.stats.visual,
-            dance: item.stats.dance,
-          });
+          (result[rowIndex].mutual as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -995,17 +980,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param &&
                 item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push({
-                  cid: item.cid,
-                  name: item.name,
-                  title: `[${item.title}] ${item.name}`,
-                  link: item.link,
-                  isBrightness: true,
-                  attribute: item.attribute,
-                  vocal: item.stats.vocal,
-                  visual: item.stats.visual,
-                  dance: item.stats.dance,
-                });
+                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
               // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
               else if (
@@ -1014,21 +989,41 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param_2 &&
                 item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push({
-                  cid: item.cid,
-                  name: item.name,
-                  title: `[${item.title}] ${item.name}`,
-                  link: item.link,
-                  isBrightness: true,
-                  attribute: item.attribute,
-                  vocal: item.stats.vocal,
-                  visual: item.stats.visual,
-                  dance: item.stats.dance,
-                });
+                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
             }
           }
         });
+      });
+    }
+
+    // 处理 act 类型的技能 (演技技能，如 psb_ 开头的技能)
+    if (item.skill.type.startsWith('psb_')) {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // act: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于5000
+        if (
+          item.attribute.toLowerCase() === row.target_attribute &&
+          row.target_param &&
+          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
+        ) {
+          (result[rowIndex].act as CellItem[]).push(createCardDataItem(item));
+        }
+      });
+    }
+
+    // 处理 combo 类型的技能 (连击技能，如 cboost 开头的技能)
+    if (item.skill.type.startsWith('cboost')) {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // combo: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
+        if (
+          item.attribute.toLowerCase() === row.target_attribute_2 &&
+          row.target_param_2 &&
+          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
+        ) {
+          (result[rowIndex].combo as CellItem[]).push(createCardDataItem(item));
+        }
       });
     }
   });
@@ -1106,6 +1101,16 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (Array.isArray(row.overdrive_9) && row.overdrive_9.length > 0) {
       row.overdrive_9 = sortCardsByParam(row.overdrive_9, row.target_param_2, data);
     }
+
+    // 对act列进行排序：根据对应行的target_param数值
+    if (Array.isArray(row.act) && row.act.length > 0) {
+      row.act = sortCardsByParam(row.act, row.target_param, data);
+    }
+
+    // 对combo列进行排序：根据对应行的target_param_2数值
+    if (Array.isArray(row.combo) && row.combo.length > 0) {
+      row.combo = sortCardsByParam(row.combo, row.target_param_2, data);
+    }
   });
 
   return result;
@@ -1122,8 +1127,6 @@ const tableDataDominant = ref<TableResonanceRow[]>(
 );
 
 // 使用计算属性过滤dominant表中dominant列为空的行
-import { computed } from 'vue';
-
 // 修改dominant表的数据源，使用计算属性过滤空行
 const filteredTableDataDominant = computed(() => {
   return tableDataDominant.value.filter(
@@ -1223,12 +1226,20 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   }
 
   // 如果是alternate或者overload列，需要检查target_param
-  if (columnHeader.skill === 'alternate' || columnHeader.skill === 'overload') {
+  if (
+    columnHeader.skill === 'alternate' ||
+    columnHeader.skill === 'overload' ||
+    columnHeader.skill.startsWith('psb_')
+  ) {
     return row.target_param === param;
   }
 
   // 如果是mutual或者overdrive列，需要检查target_param_2
-  if (columnHeader.skill === 'mutual' || columnHeader.skill === 'overdrive') {
+  if (
+    columnHeader.skill === 'mutual' ||
+    columnHeader.skill === 'overdrive' ||
+    columnHeader.skill.startsWith('cboost')
+  ) {
     return row.target_param_2 === param;
   }
 
@@ -1472,33 +1483,6 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
 <style lang="scss" scoped>
 @import '@/assets/styles/im/im-cgss-icons.css';
 
-.is-bold {
-  font-weight: bold;
-}
-
-.is-underline {
-  text-decoration: underline;
-}
-
-.color-cg-cute {
-  color: var(--im-color-cg-cute);
-}
-.color-cg-cool {
-  color: var(--im-color-cg-cool);
-}
-.color-cg-passion {
-  color: var(--im-color-cg-passion);
-}
-.color-cg-vocal {
-  color: var(--im-color-cg-vocal);
-}
-.color-cg-dance {
-  color: var(--im-color-cg-dance);
-}
-.color-cg-visual {
-  color: var(--im-color-cg-visual);
-}
-
 .el-table {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
@@ -1509,7 +1493,9 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   .skill-refrain,
   .skill-dominant,
   .skill-mutual,
-  .skill-overdrive {
+  .skill-overdrive,
+  .skill-magic,
+  .skill-cboost {
     background-color: hsl(0, 0%, 95%);
   }
 
@@ -1549,6 +1535,13 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     font-weight: bold;
   }
 
+  .table-icons-resonance {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
   .table-icons-container {
     display: flex;
     flex-wrap: wrap;
@@ -1566,9 +1559,29 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     height: 48px;
   }
 
-  .icon-small {
-    scale: 0.4;
+  .icon-not-match {
+    scale: 0.375;
     margin: 0;
+  }
+
+  .icon-match {
+    scale: 1;
+    margin: 0;
+  }
+
+  .icon-small {
+    scale: 0.75;
+    margin: -6px;
+
+    &.icon-match {
+      scale: 1;
+      margin: 0;
+    }
+
+    &.icon-not-match {
+      scale: 0.375;
+      margin: -12px;
+    }
   }
 
   .cgss-icon.dark {
