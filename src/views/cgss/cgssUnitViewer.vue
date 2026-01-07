@@ -56,11 +56,11 @@
                 <template #content>
                   <div style="font-size: 14px">
                     <span v-if="img.title">{{ img.title }}</span>
-                    &nbsp;|&nbsp;
-                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()}`">
+                    <br />
+                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()} is-bold`">
                       {{ img.attribute }}</span
                     >
-                    &nbsp;|&nbsp;
+                    <br />
                     <span
                       :class="`color-cg-vocal ${scope.row.specialize === 'vocal' ? 'is-bold' : ''}`"
                     >
@@ -176,11 +176,11 @@
                 <template #content>
                   <div style="font-size: 14px">
                     <span v-if="img.title">{{ img.title }}</span>
-                    &nbsp;|&nbsp;
-                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()}`">
+                    <br />
+                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()} is-bold`">
                       {{ img.attribute }}</span
                     >
-                    &nbsp;|&nbsp;
+                    <br />
                     <span
                       :class="`color-cg-vocal ${isParamBold(colIndex - 1, scope.row, 'vocal') ? 'is-bold' : ''}`"
                     >
