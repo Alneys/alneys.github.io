@@ -42,6 +42,7 @@
       <el-table
         :data="tableDataResonance"
         style="width: 100%"
+        :max-height="isMobile ? 640 : undefined"
         border
         :span-method="tableResonanceSpanMethod"
       >
@@ -88,7 +89,7 @@
                 v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].prop]"
                 :key="imgIndex"
                 placement="top"
-                :show-after="500"
+                :show-after="640"
               >
                 <template #content>
                   <div style="font-size: 14px">
@@ -149,8 +150,9 @@
     <div class="unit-table">
       <el-table
         :data="filteredTableDataDominant"
-        border
         style="width: 100%"
+        :max-height="isMobile ? 720 : undefined"
+        border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
       >
         <!-- 第一列：target_attribute_2 target_param_2 -->
@@ -288,6 +290,7 @@
     </div> -->
     <div class="al-divider"></div>
     <div class="unit-information">
+      <p>建议在1080P或以上分辨率屏幕上使用，针对移动端做了少许优化</p>
       <p>
         特别感谢：<el-link href="https://starlight.346lab.org" target="_blank"
           >https://starlight.346lab.org</el-link
@@ -499,10 +502,12 @@ watch(switchViewCardInfo, (newValue) => {
 });
 
 // 响应式属性用于判断屏幕宽度是否足够
+const isMobile = ref(window.innerWidth < 768);
 const isSmallScreen = ref(window.innerWidth < 1528);
 
 // 监听窗口大小变化
 const handleResize = () => {
+  isMobile.value = window.innerWidth < 768;
   isSmallScreen.value = window.innerWidth < 1528;
 };
 
