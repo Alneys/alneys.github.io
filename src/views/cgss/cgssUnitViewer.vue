@@ -329,6 +329,70 @@ const tableDominantColumnHeader = [
     attribute: 'target_attribute_2',
     param: 'target_param_2',
   },
+  {
+    value: 'overload_4',
+    label: '过载 overload 4s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '4',
+  },
+  {
+    value: 'overdrive_4',
+    label: '超载 overdrive 4s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '4',
+  },
+  {
+    value: 'overload_6',
+    label: '过载 overload 6s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '6',
+  },
+  {
+    value: 'overdrive_6',
+    label: '超载 overdrive 6s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '6',
+  },
+  {
+    value: 'overload_7',
+    label: '过载 overload 7s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '7',
+  },
+  {
+    value: 'overdrive_7',
+    label: '超载 overdrive 7s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '7',
+  },
+  {
+    value: 'overload_9',
+    label: '过载 overload 9s',
+    skill: 'overload',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    tw: '9',
+  },
+  {
+    value: 'overdrive_9',
+    label: '超载 overdrive 9s',
+    skill: 'overdrive',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    tw: '9',
+  },
 ];
 
 // Cell item
@@ -666,6 +730,14 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                   dominant: [], // 主要效果列
                   alternate: [], // 变换效果列
                   mutual: [], // 交互效果列
+                  overload_4: [], // 过载效果列
+                  overload_6: [], // 过载效果列
+                  overload_7: [], // 过载效果列
+                  overload_9: [], // 过载效果列
+                  overdrive_4: [], // 超载效果列
+                  overdrive_6: [], // 超载效果列
+                  overdrive_7: [], // 超载效果列
+                  overdrive_9: [], // 超载效果列
                 });
               }
             });
@@ -819,48 +891,135 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
         }
       });
     }
+
+    // 处理 overload 和 overdrive 类型的技能
+    if (item.skill.type === 'overload' || item.skill.type === 'overdrive') {
+      // 遍历结果数组，找到所有符合条件的行
+      result.forEach((row, rowIndex) => {
+        // 遍历所有列定义，查找匹配的overload和overdrive列
+        tableDominantColumnHeader.forEach((colDef) => {
+          console.log(colDef);
+          // 检查是否为overload或overdrive类型的列
+          if (colDef.skill === item.skill.type) {
+            // 检查tw是否匹配
+            if (colDef.tw === String(item.skill.params.tw)) {
+              // overload: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于5000
+              if (
+                item.skill.type === 'overload' &&
+                item.attribute.toLowerCase() === row.target_attribute &&
+                row.target_param &&
+                item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
+              ) {
+                (result[rowIndex][colDef.value] as CellItem[]).push({
+                  cid: item.cid,
+                  name: item.name,
+                  title: `[${item.title}] ${item.name}`,
+                  link: item.link,
+                  isBrightness: true,
+                  attribute: item.attribute,
+                  vocal: item.stats.vocal,
+                  visual: item.stats.visual,
+                  dance: item.stats.dance,
+                });
+              }
+              // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
+              else if (
+                item.skill.type === 'overdrive' &&
+                item.attribute.toLowerCase() === row.target_attribute_2 &&
+                row.target_param_2 &&
+                item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
+              ) {
+                (result[rowIndex][colDef.value] as CellItem[]).push({
+                  cid: item.cid,
+                  name: item.name,
+                  title: `[${item.title}] ${item.name}`,
+                  link: item.link,
+                  isBrightness: true,
+                  attribute: item.attribute,
+                  vocal: item.stats.vocal,
+                  visual: item.stats.visual,
+                  dance: item.stats.dance,
+                });
+              }
+            }
+          }
+        });
+      });
+    }
   });
 
-  // 对alternate和mutual列的数据按照目标param的数值从大到小排序
+  // 定义排序函数
+  const sortCardsByParam = (
+    cards: CellItem[],
+    targetParam: string | undefined,
+
+    data: CgssCardSkillTableItem[],
+  ) => {
+    if (!targetParam) return cards;
+
+    return cards.sort((a, b) => {
+      // 找到a卡片的数值
+      const cardA = data.find((item) => item.cid === a.cid);
+      // 找到b卡片的数值
+      const cardB = data.find((item) => item.cid === b.cid);
+
+      if (!cardA || !cardB) return 0;
+
+      // 根据target_param或target_param_2获取对应数值
+      const paramKey = targetParam as keyof CgssCardSkillTableItem['stats'];
+
+      const aValue = cardA.stats[paramKey] || 0;
+      const bValue = cardB.stats[paramKey] || 0;
+
+      // 从大到小排序
+      return bValue - aValue;
+    });
+  };
+
+  // 对列的数据进行排序
   result.forEach((row) => {
     // 对alternate列进行排序：根据对应行的target_param数值
     if (Array.isArray(row.alternate) && row.alternate.length > 0) {
-      row.alternate.sort((a, b) => {
-        // 找到a卡片的数值
-        const cardA = data.find((item) => item.cid === a.cid);
-        // 找到b卡片的数值
-        const cardB = data.find((item) => item.cid === b.cid);
-
-        if (!cardA || !cardB) return 0;
-
-        // 根据target_param获取对应数值，例如如果target_param是'vocal'，则获取cardA.stats.vocal
-        const aValue = cardA.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
-        const bValue = cardB.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] || 0;
-
-        // 从大到小排序
-        return bValue - aValue;
-      });
+      row.alternate = sortCardsByParam(row.alternate, row.target_param, data);
     }
 
     // 对mutual列进行排序：根据对应行的target_param_2数值
     if (Array.isArray(row.mutual) && row.mutual.length > 0) {
-      row.mutual.sort((a, b) => {
-        // 找到a卡片的数值
-        const cardA = data.find((item) => item.cid === a.cid);
-        // 找到b卡片的数值
-        const cardB = data.find((item) => item.cid === b.cid);
+      row.mutual = sortCardsByParam(row.mutual, row.target_param_2, data);
+    }
 
-        if (!cardA || !cardB) return 0;
+    // 对overload列进行排序：根据对应行的target_param数值
+    if (Array.isArray(row.overload_4) && row.overload_4.length > 0) {
+      row.overload_4 = sortCardsByParam(row.overload_4, row.target_param, data);
+    }
 
-        // 根据target_param_2获取对应数值，例如如果target_param_2是'dance'，则获取cardA.stats.dance
-        const aValue =
-          cardA.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
-        const bValue =
-          cardB.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] || 0;
+    if (Array.isArray(row.overload_6) && row.overload_6.length > 0) {
+      row.overload_6 = sortCardsByParam(row.overload_6, row.target_param, data);
+    }
 
-        // 从大到小排序
-        return bValue - aValue;
-      });
+    if (Array.isArray(row.overload_7) && row.overload_7.length > 0) {
+      row.overload_7 = sortCardsByParam(row.overload_7, row.target_param, data);
+    }
+
+    if (Array.isArray(row.overload_9) && row.overload_9.length > 0) {
+      row.overload_9 = sortCardsByParam(row.overload_9, row.target_param, data);
+    }
+
+    // 对overdrive列进行排序：根据对应行的target_param_2数值
+    if (Array.isArray(row.overdrive_4) && row.overdrive_4.length > 0) {
+      row.overdrive_4 = sortCardsByParam(row.overdrive_4, row.target_param_2, data);
+    }
+
+    if (Array.isArray(row.overdrive_6) && row.overdrive_6.length > 0) {
+      row.overdrive_6 = sortCardsByParam(row.overdrive_6, row.target_param_2, data);
+    }
+
+    if (Array.isArray(row.overdrive_7) && row.overdrive_7.length > 0) {
+      row.overdrive_7 = sortCardsByParam(row.overdrive_7, row.target_param_2, data);
+    }
+
+    if (Array.isArray(row.overdrive_9) && row.overdrive_9.length > 0) {
+      row.overdrive_9 = sortCardsByParam(row.overdrive_9, row.target_param_2, data);
     }
   });
 
@@ -970,12 +1129,12 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   }
 
   // 如果是alternate列，需要检查target_param
-  if (columnHeader.value === 'alternate') {
+  if (columnHeader.value === 'alternate' || columnHeader.skill === 'overload') {
     return row.target_param === param;
   }
 
   // 如果是mutual列，需要检查target_param_2
-  if (columnHeader.value === 'mutual') {
+  if (columnHeader.value === 'mutual' || columnHeader.skill === 'overdrive') {
     return row.target_param_2 === param;
   }
 
