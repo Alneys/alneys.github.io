@@ -1270,7 +1270,7 @@ const exportCids = async () => {
     const uniqueCids = [...new Set(brightCids)];
 
     // 转换为JSON字符串
-    const jsonStr = JSON.stringify(uniqueCids, null, 2);
+    const jsonStr = JSON.stringify(uniqueCids);
 
     // 复制到剪贴板
     await navigator.clipboard.writeText(jsonStr);
