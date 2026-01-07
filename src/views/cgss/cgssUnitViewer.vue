@@ -122,8 +122,8 @@
                 </template>
                 <div
                   :class="{
-                    icon: true,
-                    [`icon_${img.cid}`]: true,
+                    'cgss-icon': true,
+                    [`id_${img.cid}`]: true,
                     dark: !img.isBrightness && switchToggleCardStatus,
                     'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
@@ -257,8 +257,8 @@
                 </template>
                 <div
                   :class="{
-                    icon: true,
-                    [`icon_${img.cid}`]: true,
+                    'cgss-icon': true,
+                    [`id_${img.cid}`]: true,
                     dark: !img.isBrightness && switchToggleCardStatus,
                     'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
@@ -841,23 +841,14 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           param2Index * (paramCount - 1) + (paramIndex > param2Index ? paramIndex - 1 : paramIndex);
         const rowIndex = (attrComboIndex * twCount + twIndex) * validParamCombos + paramComboIndex;
 
-        // 根据技能类型确定插入到哪个列
-        let targetColumn = '';
-        if (item.leaderSkill.description.includes('dominant')) {
-          targetColumn = 'dominant';
-        } else {
-          // 默认插入到dominant列，以保持原有功能
-          targetColumn = 'dominant';
-        }
-
         // 将数据添加到对应单元格
         if (
           result[rowIndex] &&
-          result[rowIndex][targetColumn] &&
-          Array.isArray(result[rowIndex][targetColumn])
+          result[rowIndex].dominant &&
+          Array.isArray(result[rowIndex].dominant)
         ) {
           // typescript bug
-          (result[rowIndex][targetColumn] as CellItem[]).push({
+          (result[rowIndex].dominant as CellItem[]).push({
             cid: item.cid,
             name: item.name,
             title: `[${item.title}] ${item.name}`,
@@ -869,9 +860,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
             dance: item.stats.dance,
           });
         } else {
-          console.warn(
-            `Target column ${targetColumn} not found or not an array at rowIndex ${rowIndex}`,
-          );
+          console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
       }
     }
@@ -1415,7 +1404,7 @@ const importCids = async () => {
     align-items: center;
   }
 
-  .icon {
+  .cgss-icon {
     display: inline-block;
     scale: 1;
     cursor: pointer;
@@ -1430,11 +1419,11 @@ const importCids = async () => {
     margin: 0;
   }
 
-  .icon.dark {
+  .cgss-icon.dark {
     filter: brightness(0.4);
   }
 
-  html.dark .icon.dark {
+  html.dark .cgss-icon.dark {
     filter: brightness(0.25);
   }
 }
