@@ -219,6 +219,7 @@
               ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
               : tableDominantColumnHeader[colIndex - 1].minWidth
           "
+          :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
         >
           <template #default="scope">
             <div class="table-icons-container">
@@ -368,7 +369,7 @@ const tableDominantColumnHeader = [
     skill: 'alternate',
     attribute: 'target_attribute',
     param: 'target_param',
-    minWidth: 108,
+    // minWidth: 108,
     minWidthSmallScreen: 108,
   },
   {
@@ -377,6 +378,7 @@ const tableDominantColumnHeader = [
     skill: 'mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
+    width: 160,
     minWidth: 160,
     minWidthSmallScreen: 108,
   },
@@ -497,11 +499,11 @@ watch(switchViewCardInfo, (newValue) => {
 });
 
 // 响应式属性用于判断屏幕宽度是否足够
-const isSmallScreen = ref(window.innerWidth < 1512);
+const isSmallScreen = ref(window.innerWidth < 1528);
 
 // 监听窗口大小变化
 const handleResize = () => {
-  isSmallScreen.value = window.innerWidth < 1512;
+  isSmallScreen.value = window.innerWidth < 1528;
 };
 
 onMounted(() => {
