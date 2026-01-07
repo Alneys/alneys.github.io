@@ -2,8 +2,26 @@
   <div class="unit-viewer">
     <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
     <div class="al-divider"></div>
-    <div class="unit-mode-switch">
-      <el-switch v-model="modeSwitch" active-text="切换图片状态" inactive-text="查看卡片信息" />
+    <div class="unit-viewer-config">
+      <div>
+        <el-switch
+          v-model="switchClickIcon"
+          active-text="切换图片状态"
+          inactive-text="查看卡片信息"
+        />
+      </div>
+      <div>
+        <el-switch v-model="switchNameFilter" active-text="筛选名字" />
+      </div>
+      <div v-if="switchNameFilter">
+        <el-input
+          v-model="inputNameFilter"
+          placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
+          type="textarea"
+          :rows="8"
+          clearable
+        ></el-input>
+      </div>
     </div>
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-resonance">Resonance</div>
@@ -57,7 +75,10 @@
                   <div style="font-size: 14px">
                     <span v-if="img.title">{{ img.title }}</span>
                     <br />
-                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()} is-bold`">
+                    <span
+                      v-if="img.attribute"
+                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
+                    >
                       {{ img.attribute }}</span
                     >
                     <br />
@@ -85,9 +106,10 @@
                     icon: true,
                     [`icon_${img.cid}`]: true,
                     dark: !img.isBrightness,
+                    'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
                   @click="
-                    handleImageClick(
+                    handleIconClick(
                       scope.row,
                       tableResonanceColumnHeader[colIndex - 1].value,
                       Number(imgIndex),
@@ -177,7 +199,10 @@
                   <div style="font-size: 14px">
                     <span v-if="img.title">{{ img.title }}</span>
                     <br />
-                    <span v-if="img.attribute" :class="`color-cg-${img.attribute.toLowerCase()} is-bold`">
+                    <span
+                      v-if="img.attribute"
+                      :class="`color-cg-${img.attribute.toLowerCase()} is-bold`"
+                    >
                       {{ img.attribute }}</span
                     >
                     <br />
@@ -205,9 +230,10 @@
                     icon: true,
                     [`icon_${img.cid}`]: true,
                     dark: !img.isBrightness,
+                    'icon-small': !isNameMatched(img.title, inputNameFilter),
                   }"
                   @click="
-                    handleImageClick(
+                    handleIconClick(
                       scope.row,
                       tableDominantColumnHeader[colIndex - 1].value,
                       Number(imgIndex),
@@ -220,9 +246,9 @@
         </el-table-column>
       </el-table>
     </div>
-    <div>
+    <!-- <div>
       <p>更多组队信息开发中……</p>
-    </div>
+    </div> -->
     <div class="al-divider"></div>
     <div class="unit-information">
       <p>
@@ -403,8 +429,15 @@ interface TableResonanceRow {
   [key: string]: CellItem[] | string | number | undefined;
 }
 
-// 点击图片模式切换
-const modeSwitch = ref(true);
+// 模式切换
+const switchClickIcon = ref(true);
+const switchNameFilter = ref(false);
+const inputNameFilter =
+  ref(`水本ゆかり、椎名法子、間中美里、五十嵐響子、柳瀬美由紀、長富蓮実、横山千佳、太田優、前川みく、宮本フレデリカ、井村雪菜、工藤忍、佐久間まゆ、乙倉悠貴、原田美世、池袋晶葉
+
+黒川千秋、桐野アヤ、川島瑞樹、水木聖來、藤原肇、新田美波、高垣楓、伊集院惠、柊志乃、瀬名詩織、佐城雪美、和久井留美、塩見周子、速水奏、大石泉、森久保乃々
+
+高森藍子、並木芽衣子、赤城みりあ、真鍋いつき、大槻唯、海老原菜帆、衛藤美紗希、浜川愛結奈、諸星きらり、喜多日菜子、三好紗南、土屋亜子、南条光、イヴ・サンタクロース、夢見りあむ、久川凪`);
 
 // 响应式属性用于判断是否为移动端
 const isMobile = ref(window.innerWidth < 768);
@@ -942,7 +975,6 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
       result.forEach((row, rowIndex) => {
         // 遍历所有列定义，查找匹配的overload和overdrive列
         tableDominantColumnHeader.forEach((colDef) => {
-          console.log(colDef);
           // 检查是否为overload或overdrive类型的列
           if (colDef.skill === item.skill.type) {
             // 检查tw是否匹配
@@ -1091,10 +1123,10 @@ const filteredTableDataDominant = computed(() => {
 });
 
 // 处理图片点击事件
-const handleImageClick = (row: TableResonanceRow, colKey: string, index: number) => {
+const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) => {
   // 验证输入参数
   if (!row || !colKey || index < 0) {
-    console.warn('Invalid parameters for handleImageClick');
+    console.warn('Invalid parameters for handleIconClick');
     return;
   }
 
@@ -1105,29 +1137,29 @@ const handleImageClick = (row: TableResonanceRow, colKey: string, index: number)
     return;
   }
 
-  const image = colData[index];
+  const icon = colData[index];
   // 验证图片对象是否有效
-  if (!image || typeof image.cid === 'undefined') {
-    console.warn('Invalid image object');
+  if (!icon || typeof icon.cid === 'undefined') {
+    console.warn('Invalid icon object');
     return;
   }
 
-  if (!modeSwitch.value) {
+  if (!switchClickIcon.value) {
     // modeSwitch为false时，在新标签页打开链接
-    if (image.link) {
+    if (icon.link) {
       // 提取链接中的数字并减1
-      const modifiedLink = image.link.replace(/c_(\d+)_/, (match, num) => {
+      const modifiedLink = icon.link.replace(/c_(\d+)_/, (match, num) => {
         const newNum = parseInt(num) - 1;
         return `c_${newNum}_`;
       });
       window.open('https://starlight.346lab.org' + modifiedLink, '_blank');
     } else {
-      console.warn(`No link found for card with cid: ${image.cid}`);
+      console.warn(`No link found for card with cid: ${icon.cid}`);
     }
   } else {
     // modeSwitch为true时，执行切换图片状态的操作
-    const targetName = image.title;
-    const newState = !image.isBrightness;
+    const targetName = icon.title;
+    const newState = !icon.isBrightness;
 
     // 更新所有名称相同的图片的状态 - resonance表
     tableDataResonance.value.forEach((dataRow) => {
@@ -1183,6 +1215,21 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   }
 
   return false;
+};
+
+const isNameMatched = (title: string | undefined, filter: string) => {
+  // 未启用名称过滤时，返回true
+  if (!switchNameFilter.value) return true;
+
+  if (!title || !filter) return true;
+
+  // 将过滤器按空格、换行、半角逗号或全角顿号分割，并移除空字符串
+  const names = filter.split(/[ ,、\n]+/).filter((name) => name.trim() !== '');
+
+  if (names.length === 0) return true;
+
+  // 检查标题是否包含任何一个名称（不区分大小写）
+  return names.some((name) => title.toLowerCase().includes(name.toLowerCase().trim()));
 };
 </script>
 
@@ -1242,8 +1289,20 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
     border-radius: 4px;
     cursor: pointer; // 添加光标效果提示可点击
 
-    scale: calc(var(--target-width) / 48px);
-    margin: calc((var(--target-width) - 48px) / 2);
+    scale: 1;
+    margin: 0;
+
+    // From Sep 2025 Edge/Chrome update
+    // scale: calc(var(--target-width) / 48px);
+    // margin: calc((var(--target-width) - 48px) / 2);
+  }
+
+  .icon-small {
+    scale: 0.4;
+    margin: 0;
+
+    // From Sep 2025 Edge/Chrome update
+    // --target-width: 72px;
   }
 
   .icon.dark {
@@ -1255,7 +1314,7 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   }
 }
 
-.unit-mode-switch {
+.unit-viewer-config {
   margin-bottom: 1em;
 }
 
