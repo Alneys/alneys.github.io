@@ -78,14 +78,14 @@
         <el-table-column
           v-for="colIndex in tableResonanceColumnHeader.length"
           :key="colIndex"
-          :prop="tableResonanceColumnHeader[colIndex - 1].value"
+          :prop="tableResonanceColumnHeader[colIndex - 1].prop"
           :label="`${tableResonanceColumnHeader[colIndex - 1].label}`"
-          class-name="icons"
+          :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
         >
           <template #default="scope">
             <div class="table-icons-container">
               <el-tooltip
-                v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].value]"
+                v-for="(img, imgIndex) in scope.row[tableResonanceColumnHeader[colIndex - 1].prop]"
                 :key="imgIndex"
                 placement="top"
                 :show-after="500"
@@ -130,12 +130,15 @@
                   @click="
                     handleIconClick(
                       scope.row,
-                      tableResonanceColumnHeader[colIndex - 1].value,
+                      tableResonanceColumnHeader[colIndex - 1].prop,
                       Number(imgIndex),
                     )
                   "
                 ></div>
               </el-tooltip>
+              <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
+                x
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -208,9 +211,9 @@
         <el-table-column
           v-for="colIndex in tableDominantColumnHeader.length"
           :key="colIndex"
-          :prop="tableDominantColumnHeader[colIndex - 1].value"
+          :prop="tableDominantColumnHeader[colIndex - 1].prop"
           :label="`${tableDominantColumnHeader[colIndex - 1].label}`"
-          class-name="icons"
+          :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
           :min-width="
             isSmallScreen
               ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
@@ -220,7 +223,7 @@
           <template #default="scope">
             <div class="table-icons-container">
               <el-tooltip
-                v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].value]"
+                v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
                 :key="imgIndex"
                 placement="top"
                 :show-after="500"
@@ -265,12 +268,15 @@
                   @click="
                     handleIconClick(
                       scope.row,
-                      tableDominantColumnHeader[colIndex - 1].value,
+                      tableDominantColumnHeader[colIndex - 1].prop,
                       Number(imgIndex),
                     )
                   "
                 ></div>
               </el-tooltip>
+              <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
+                x
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -342,11 +348,11 @@ interface CgssCardSkillTableItem {
 const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
-  { value: 'motif', label: '共鸣 resonance motif' },
-  { value: 'synergy', label: '大偏 synergy' },
-  { value: 'symphony', label: '交响 symphony' },
-  { value: 'spike', label: '尖峰 spike' },
-  { value: 'refrain', label: '复读 refrain' },
+  { prop: 'motif', label: '共鸣 resonance motif', skill: 'motif' },
+  { prop: 'synergy', label: '大偏 synergy', skill: 'synergy' },
+  { prop: 'symphony', label: '交响 symphony', skill: 'symphony' },
+  { prop: 'spike', label: '尖峰 spike', skill: 'spike' },
+  { prop: 'refrain', label: '复读 refrain', skill: 'refrain' },
 ];
 
 // Dominant table
@@ -355,25 +361,27 @@ const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
 const tableDominantColumnHeader = [
-  { value: 'dominant', label: '双色 dominant', minWidth: 64 },
+  { prop: 'dominant', label: '双色 dominant', skill: 'dominant', minWidth: 64 },
   {
-    value: 'alternate',
+    prop: 'alternate',
     label: '变换 alternate',
+    skill: 'alternate',
     attribute: 'target_attribute',
     param: 'target_param',
     minWidth: 108,
     minWidthSmallScreen: 108,
   },
   {
-    value: 'mutual',
+    prop: 'mutual',
     label: '交互 mutual',
+    skill: 'mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
     minWidth: 160,
     minWidthSmallScreen: 108,
   },
   {
-    value: 'overload_4',
+    prop: 'overload_4',
     label: '过载 overload 4s',
     skill: 'overload',
     attribute: 'target_attribute',
@@ -381,7 +389,7 @@ const tableDominantColumnHeader = [
     tw: '4',
   },
   {
-    value: 'overdrive_4',
+    prop: 'overdrive_4',
     label: '超载 overdrive 4s',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
@@ -389,7 +397,7 @@ const tableDominantColumnHeader = [
     tw: '4',
   },
   {
-    value: 'overload_6',
+    prop: 'overload_6',
     label: '过载 overload 6s',
     skill: 'overload',
     attribute: 'target_attribute',
@@ -397,7 +405,7 @@ const tableDominantColumnHeader = [
     tw: '6',
   },
   {
-    value: 'overdrive_6',
+    prop: 'overdrive_6',
     label: '超载 overdrive 6s',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
@@ -405,7 +413,7 @@ const tableDominantColumnHeader = [
     tw: '6',
   },
   {
-    value: 'overload_7',
+    prop: 'overload_7',
     label: '过载 overload 7s',
     skill: 'overload',
     attribute: 'target_attribute',
@@ -413,7 +421,7 @@ const tableDominantColumnHeader = [
     tw: '7',
   },
   {
-    value: 'overdrive_7',
+    prop: 'overdrive_7',
     label: '超载 overdrive 7s',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
@@ -421,7 +429,7 @@ const tableDominantColumnHeader = [
     tw: '7',
   },
   {
-    value: 'overload_9',
+    prop: 'overload_9',
     label: '过载 overload 9s',
     skill: 'overload',
     attribute: 'target_attribute',
@@ -429,7 +437,7 @@ const tableDominantColumnHeader = [
     tw: '9',
   },
   {
-    value: 'overdrive_9',
+    prop: 'overdrive_9',
     label: '超载 overdrive 9s',
     skill: 'overdrive',
     attribute: 'target_attribute_2',
@@ -707,12 +715,12 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     const rowIndex = specializeIndex * tableResonanceRowHeaderTw.length + twIndex;
 
     // 根据skill.type确定列名
-    const columnInfo = tableResonanceColumnHeader.find((col) => col.value === item.skill.type);
+    const columnInfo = tableResonanceColumnHeader.find((col) => col.skill === item.skill.type);
     if (!columnInfo) {
       // 如果type不在预定义范围内，跳过该数据
       return;
     }
-    let colName = columnInfo.value;
+    let colName = columnInfo.prop;
 
     // 将数据添加到对应单元格
     if (Array.isArray(result[rowIndex][colName])) {
@@ -932,7 +940,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param &&
                 item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.value] as CellItem[]).push({
+                (result[rowIndex][colDef.prop] as CellItem[]).push({
                   cid: item.cid,
                   name: item.name,
                   title: `[${item.title}] ${item.name}`,
@@ -951,7 +959,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param_2 &&
                 item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.value] as CellItem[]).push({
+                (result[rowIndex][colDef.prop] as CellItem[]).push({
                   cid: item.cid,
                   name: item.name,
                   title: `[${item.title}] ${item.name}`,
@@ -1155,17 +1163,17 @@ const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) =>
   const columnHeader = tableDominantColumnHeader[colIndex];
 
   // 如果是dominant列，需要检查target_param或target_param_2
-  if (columnHeader.value === 'dominant') {
+  if (columnHeader.skill === 'dominant') {
     return row.target_param === param || row.target_param_2 === param;
   }
 
   // 如果是alternate或者overload列，需要检查target_param
-  if (columnHeader.value === 'alternate' || columnHeader.skill === 'overload') {
+  if (columnHeader.skill === 'alternate' || columnHeader.skill === 'overload') {
     return row.target_param === param;
   }
 
   // 如果是mutual或者overdrive列，需要检查target_param_2
-  if (columnHeader.value === 'mutual' || columnHeader.skill === 'overdrive') {
+  if (columnHeader.skill === 'mutual' || columnHeader.skill === 'overdrive') {
     return row.target_param_2 === param;
   }
 
@@ -1372,6 +1380,17 @@ const importCids = async () => {
 
 :deep(.el-table) tbody .el-table__cell.icons .cell {
   padding: 0 4px;
+}
+
+:deep(.el-table) {
+  .skill-motif,
+  .skill-symphony,
+  .skill-refrain,
+  .skill-dominant,
+  .skill-mutual,
+  .skill-overdrive {
+    background-color: hsl(0, 0%, 95%);
+  }
 }
 
 .el-link {
