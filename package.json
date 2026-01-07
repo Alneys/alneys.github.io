@@ -16,15 +16,15 @@
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",
     "cheerio": "^1.1.2",
-    "echarts": "~5.6.0",
-    "element-plus": "~2.11.5",
-    "pinia": "~3.0.3",
-    "vue": "~3.5.22",
-    "vue-router": "~4.5.1"
+    "echarts": "~6.0.0",
+    "element-plus": "~2.13.0",
+    "pinia": "~3.0.4",
+    "vue": "~3.5.26",
+    "vue-router": "~4.6.4"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "~1.12.0",
-    "@tsconfig/node22": "^22.0.2",
+    "@tsconfig/node24": "^24.0.3",
     "@types/jsdom": "~21.1.7",
     "@types/node": "^22.18.12",
     "@vitejs/plugin-vue": "^6.0.1",
