@@ -89,30 +89,27 @@
           </template>
         </el-table-column>
         <!-- 后续列：根据tableResonanceColumnHeader动态生成 -->
-        <template v-for="colIndex in tableResonanceColumnHeader.length" :key="colIndex">
+        <template
+          v-for="(headerItem, headerIndex) in tableResonanceColumnHeader"
+          :key="headerItem.prop"
+        >
           <el-table-column
-            v-if="!tableResonanceColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
-            :prop="tableResonanceColumnHeader[colIndex - 1].prop"
+            v-if="!headerItem.extraColumn || switchShowExtraColumns"
+            :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
-                ? tableResonanceColumnHeader[colIndex - 1].labelCn
-                : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
+                ? headerItem.labelCn
+                : `${headerItem.labelCn} ${headerItem.labelEn}`
             "
-            :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
-            :min-width="
-              isSmallScreen
-                ? tableResonanceColumnHeader[colIndex - 1].minWidthSmallScreen
-                : tableResonanceColumnHeader[colIndex - 1].minWidth
-            "
+            :class-name="`icons skill-${headerItem.prop}`"
+            :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
           >
             <template #default="scope">
               <div class="table-icons-resonance">
                 <cgss-unit-viewer-card-tooltip
-                  v-for="(img, imgIndex) in scope.row[
-                    tableResonanceColumnHeader[colIndex - 1].prop
-                  ]"
-                  :key="imgIndex"
-                  :card="img"
+                  v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
+                  :key="iconIndex"
+                  :card="icon"
                   :is-vocal-underlined="scope.row.specialize === 'vocal'"
                   :is-dance-underlined="scope.row.specialize === 'dance'"
                   :is-visual-underlined="scope.row.specialize === 'visual'"
@@ -120,25 +117,17 @@
                   <div
                     :class="{
                       'cgss-icon': true,
-                      [`id_${img.cid}`]: true,
-                      dark: switchToggleCardStatus && !img.isBrightness,
-                      'icon-small': tableResonanceColumnHeader[colIndex - 1].extraColumn,
+                      [`id_${icon.cid}`]: true,
+                      dark: switchToggleCardStatus && !icon.isBrightness,
+                      'icon-small': headerItem.extraColumn,
                       'icon-not-match':
-                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
-                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
+                        switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(icon.title, inputNameFilter),
                     }"
-                    @click="
-                      handleIconClick(
-                        scope.row,
-                        tableResonanceColumnHeader[colIndex - 1].prop,
-                        Number(imgIndex),
-                      )
-                    "
+                    @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
                 </cgss-unit-viewer-card-tooltip>
-                <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
-                  x
-                </div>
+                <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
             </template>
           </el-table-column>
@@ -215,55 +204,46 @@
         </el-table-column>
 
         <!-- 后续列：根据tableDominantColumnHeader动态生成 -->
-        <template v-for="colIndex in tableDominantColumnHeader.length" :key="colIndex">
+        <template
+          v-for="(headerItem, headerIndex) in tableDominantColumnHeader"
+          :key="headerItem.prop"
+        >
           <el-table-column
-            v-if="!tableDominantColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
-            :prop="tableDominantColumnHeader[colIndex - 1].prop"
+            v-if="!headerItem.extraColumn || switchShowExtraColumns"
+            :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
-                ? tableDominantColumnHeader[colIndex - 1].labelCn
-                : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
+                ? headerItem.labelCn
+                : `${headerItem.labelCn} ${headerItem.labelEn}`
             "
-            :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
-            :min-width="
-              isSmallScreen
-                ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
-                : tableDominantColumnHeader[colIndex - 1].minWidth
-            "
-            :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
+            :class-name="`icons skill-${headerItem.skill ?? headerItem.prop}`"
+            :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
+            :width="isSmallScreen ? undefined : headerItem.width"
           >
             <template #default="scope">
               <div class="table-icons-container">
                 <CgssUnitViewerCardTooltip
-                  v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
-                  :key="imgIndex"
-                  :card="img"
-                  :is-vocal-underlined="isDominantParamBold(colIndex - 1, scope.row, 'vocal')"
-                  :is-dance-underlined="isDominantParamBold(colIndex - 1, scope.row, 'dance')"
-                  :is-visual-underlined="isDominantParamBold(colIndex - 1, scope.row, 'visual')"
+                  v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
+                  :key="iconIndex"
+                  :card="icon"
+                  :is-vocal-underlined="isDominantParamBold(headerItem, scope.row, 'vocal')"
+                  :is-dance-underlined="isDominantParamBold(headerItem, scope.row, 'dance')"
+                  :is-visual-underlined="isDominantParamBold(headerItem, scope.row, 'visual')"
                 >
                   <div
                     :class="{
                       'cgss-icon': true,
-                      [`id_${img.cid}`]: true,
-                      dark: !img.isBrightness && switchToggleCardStatus,
-                      'icon-small': tableDominantColumnHeader[colIndex - 1].extraColumn,
+                      [`id_${icon.cid}`]: true,
+                      dark: !icon.isBrightness && switchToggleCardStatus,
+                      'icon-small': headerItem.extraColumn,
                       'icon-not-match':
-                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
-                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
+                        switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(icon.title, inputNameFilter),
                     }"
-                    @click="
-                      handleIconClick(
-                        scope.row,
-                        tableDominantColumnHeader[colIndex - 1].prop,
-                        Number(imgIndex),
-                      )
-                    "
+                    @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
                 </CgssUnitViewerCardTooltip>
-                <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
-                  x
-                </div>
+                <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
             </template>
           </el-table-column>
@@ -858,7 +838,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     let colName = columnInfo.prop;
 
     // 将数据添加到对应单元格
-    if (Array.isArray(result[rowIndex][colName])) {
+    if (Array.isArray(result[rowIndex]?.[colName])) {
       result[rowIndex][colName].push(createCardDataItem(item));
     }
   });
@@ -989,6 +969,11 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (item.skill.type === 'alternate' || item.skill.type === 'mutual') {
       // 遍历结果数组，找到所有符合条件的行
       result.forEach((row, rowIndex) => {
+        // // 检查行是否存在
+        // if (!result[rowIndex]) {
+        //   return;
+        // }
+
         // 处理 alternate 类型：匹配 skill.type 是 alternate，attribute 与当前行 target_attribute 相同，
         // row.target_param 的值大于5000，且skill.tw与当前行tw相同
         if (
@@ -998,7 +983,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].alternate as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.alternate as CellItem[]).push(createCardDataItem(item));
         }
 
         // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
@@ -1010,7 +995,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].mutual as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.mutual as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1032,7 +1017,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param &&
                 item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
+                (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
               // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
               else if (
@@ -1041,7 +1026,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param_2 &&
                 item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
+                (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
             }
           }
@@ -1059,7 +1044,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           row.target_param &&
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
         ) {
-          (result[rowIndex].act as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.act as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1074,7 +1059,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           row.target_param_2 &&
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
         ) {
-          (result[rowIndex].combo as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.combo as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1269,28 +1254,30 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
 };
 
 // 添加一个函数来判断参数是否需要加粗
-const isDominantParamBold = (colIndex: number, row: TableResonanceRow, param: string) => {
-  const columnHeader = tableDominantColumnHeader[colIndex];
-
+const isDominantParamBold = (
+  headerItem: (typeof tableDominantColumnHeader)[number],
+  row: TableResonanceRow,
+  param: string,
+) => {
   // 如果是dominant列，需要检查target_param或target_param_2
-  if (columnHeader.skill === 'dominant') {
+  if (headerItem.skill === 'dominant') {
     return row.target_param === param || row.target_param_2 === param;
   }
 
   // 如果是alternate或者overload列，需要检查target_param
   if (
-    columnHeader.skill === 'alternate' ||
-    columnHeader.skill === 'overload' ||
-    columnHeader.skill.startsWith('psb_')
+    headerItem.skill === 'alternate' ||
+    headerItem.skill === 'overload' ||
+    headerItem.skill.startsWith('psb_')
   ) {
     return row.target_param === param;
   }
 
   // 如果是mutual或者overdrive列，需要检查target_param_2
   if (
-    columnHeader.skill === 'mutual' ||
-    columnHeader.skill === 'overdrive' ||
-    columnHeader.skill.startsWith('cboost')
+    headerItem.skill === 'mutual' ||
+    headerItem.skill === 'overdrive' ||
+    headerItem.skill.startsWith('cboost')
   ) {
     return row.target_param_2 === param;
   }
