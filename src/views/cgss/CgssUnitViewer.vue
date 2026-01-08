@@ -127,9 +127,9 @@
                   ]"
                   :key="imgIndex"
                   :card="img"
-                  :is-vocal-bold="scope.row.specialize === 'vocal'"
-                  :is-dance-bold="scope.row.specialize === 'dance'"
-                  :is-visual-bold="scope.row.specialize === 'visual'"
+                  :is-vocal-underlined="scope.row.specialize === 'vocal'"
+                  :is-dance-underlined="scope.row.specialize === 'dance'"
+                  :is-visual-underlined="scope.row.specialize === 'visual'"
                 >
                   <div
                     :class="{
@@ -252,9 +252,9 @@
                   v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
                   :key="imgIndex"
                   :card="img"
-                  :is-vocal-bold="isDominantParamBold(colIndex - 1, scope.row, 'vocal')"
-                  :is-dance-bold="isDominantParamBold(colIndex - 1, scope.row, 'dance')"
-                  :is-visual-bold="isDominantParamBold(colIndex - 1, scope.row, 'visual')"
+                  :is-vocal-underlined="isDominantParamBold(colIndex - 1, scope.row, 'vocal')"
+                  :is-dance-underlined="isDominantParamBold(colIndex - 1, scope.row, 'dance')"
+                  :is-visual-underlined="isDominantParamBold(colIndex - 1, scope.row, 'visual')"
                 >
                   <div
                     :class="{

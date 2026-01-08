@@ -1,4 +1,3 @@
-<!-- CgssUnitViewerCardTooltip.vue -->
 <template>
   <el-tooltip placement="top" :show-after="640">
     <template #content>
@@ -9,15 +8,15 @@
           {{ card.attribute }}
         </span>
         <br />
-        <span :class="`color-cg-vocal ${isVocalBold ? 'is-bold is-underline' : ''}`">
+        <span :class="`color-cg-vocal ${isVocalBold ? 'is-bold' : ''} ${props.isVocalUnderlined ? 'is-underline' : ''}`">
           {{ card.vocal || 0 }}
         </span>
         &nbsp;
-        <span :class="`color-cg-dance ${isDanceBold ? 'is-bold is-underline' : ''}`">
+        <span :class="`color-cg-dance ${isDanceBold ? 'is-bold' : ''} ${props.isDanceUnderlined ? 'is-underline' : ''}`">
           {{ card.dance || 0 }}
         </span>
         &nbsp;
-        <span :class="`color-cg-visual ${isVisualBold ? 'is-bold is-underline' : ''}`">
+        <span :class="`color-cg-visual ${isVisualBold ? 'is-bold' : ''} ${props.isVisualUnderlined ? 'is-underline' : ''}`">
           {{ card.visual || 0 }}
         </span>
         <br />
@@ -31,6 +30,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 interface CardData {
   title?: string;
   attribute?: string;
@@ -41,16 +42,37 @@ interface CardData {
   tw?: number;
 }
 
-defineProps<{
+const props = defineProps<{
   card: CardData;
-  isVocalBold: boolean;
-  isDanceBold: boolean;
-  isVisualBold: boolean;
+  isVocalUnderlined?: boolean;
+  isDanceUnderlined?: boolean;
+  isVisualUnderlined?: boolean;
 }>();
+
+// 使用计算属性来计算总和和判断加粗状态
+const totalStats = computed(() => {
+  const { vocal, dance, visual } = props.card;
+  // 检查是否所有值都是有效的数字
+  if (typeof vocal !== 'number' || typeof dance !== 'number' || typeof visual !== 'number') {
+    return 0;
+  }
+  return vocal + dance + visual;
+});
+
+const isVocalBold = computed(() =>
+  props.card.vocal && totalStats.value > 0 ? props.card.vocal / totalStats.value > 0.35 : false,
+);
+
+const isDanceBold = computed(() =>
+  props.card.dance && totalStats.value > 0 ? props.card.dance / totalStats.value > 0.35 : false,
+);
+
+const isVisualBold = computed(() =>
+  props.card.visual && totalStats.value > 0 ? props.card.visual / totalStats.value > 0.35 : false,
+);
 </script>
 
 <style scoped>
-/* 如果父组件已定义 color-cg-* 等样式，此处通常无需重复定义 */
 .is-bold {
   font-weight: bold;
 }
