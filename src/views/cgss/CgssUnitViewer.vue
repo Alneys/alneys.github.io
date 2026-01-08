@@ -17,7 +17,7 @@
         <div v-if="inputNameFilterDefaultInformation">{{ inputNameFilterDefaultInformation }}</div>
       </div>
       <div>
-        <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
+        <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换状态" />
         <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
       </div>
       <cgss-unit-viewer-state-manager
@@ -35,7 +35,7 @@
       </cgss-unit-viewer-state-manager>
       <div>
         <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
-        <el-switch v-model="switchShowExtraTableConfig" active-text="更多表格控制" />
+        <el-switch v-model="switchShowExtraTableConfig" active-text="更多表格选项" />
       </div>
     </div>
 
@@ -120,9 +120,10 @@
                       [`id_${icon.cid}`]: true,
                       dark: switchToggleCardStatus && !icon.isBrightness,
                       'icon-small': headerItem.extraColumn,
-                      'icon-not-match':
+                      'icon-filter-not-match':
                         switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
-                      'icon-match': switchNameFilter && isNameMatched(icon.title, inputNameFilter),
+                      'icon-filter-match':
+                        switchNameFilter && isNameMatched(icon.title, inputNameFilter),
                     }"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
@@ -139,6 +140,7 @@
     <div v-if="switchShowExtraTableConfig" class="unit-viewer-config">
       <div>
         <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
+        <el-switch v-model="switchShowOverloadOverdrive" active-text="显示过载/超载列" />
       </div>
     </div>
     <div class="unit-table">
@@ -209,7 +211,11 @@
           :key="headerItem.prop"
         >
           <el-table-column
-            v-if="!headerItem.extraColumn || switchShowExtraColumns"
+            v-if="
+              (!headerItem.extraColumn || switchShowExtraColumns) &&
+              ((headerItem.skill !== 'overload' && headerItem.skill !== 'overdrive') ||
+                switchShowOverloadOverdrive)
+            "
             :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
@@ -236,9 +242,10 @@
                       [`id_${icon.cid}`]: true,
                       dark: !icon.isBrightness && switchToggleCardStatus,
                       'icon-small': headerItem.extraColumn,
-                      'icon-not-match':
+                      'icon-filter-not-match':
                         switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
-                      'icon-match': switchNameFilter && isNameMatched(icon.title, inputNameFilter),
+                      'icon-filter-match':
+                        switchNameFilter && isNameMatched(icon.title, inputNameFilter),
                     }"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
@@ -532,6 +539,8 @@ const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraTableConfig = ref(true);
 const switchShowExtraColumns = ref(false);
+const switchShowOverloadOverdrive = ref(true);
+
 const inputNameFilter = ref(
   `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
 );
@@ -1466,13 +1475,13 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     height: 48px;
   }
 
-  .icon-not-match {
-    scale: 0.375;
+  .icon-filter-match {
+    scale: 1;
     margin: 0;
   }
 
-  .icon-match {
-    scale: 1;
+  .icon-filter-not-match {
+    scale: 0.375;
     margin: 0;
   }
 
@@ -1480,12 +1489,12 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     scale: 0.75;
     margin: -6px;
 
-    &.icon-match {
+    &.icon-filter-match {
       scale: 1;
       margin: 0;
     }
 
-    &.icon-not-match {
+    &.icon-filter-not-match {
       scale: 0.375;
       margin: -12px;
     }
