@@ -14,10 +14,11 @@
           :rows="3"
           clearable
         ></el-input>
-        <div>当前默认数据：LIVE Carnival 2026 Spring</div>
+        <div v-if="inputNameFilterDefaultInformation">{{ inputNameFilterDefaultInformation }}</div>
       </div>
       <div>
         <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
+        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
       </div>
       <div v-if="switchToggleCardStatus">
         <div>
@@ -47,14 +48,18 @@
         </div>
       </div>
       <div>
-        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
         <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
-        <el-switch v-model="switchShowExtraColumns" active-text="展示额外的列" />
+        <el-switch v-model="switchShowExtraTableConfig" active-text="更多表格控制" />
       </div>
     </div>
 
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
+    <div v-if="switchShowExtraTableConfig" class="unit-viewer-config">
+      <div>
+        <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
+      </div>
+    </div>
     <div class="unit-table">
       <el-table
         :data="tableDataResonance"
@@ -62,6 +67,7 @@
         :max-height="isMobile ? 560 : 9999"
         border
         :span-method="tableResonanceSpanMethod"
+        @sort-change="handleResonanceSortChange"
       >
         <!-- 第一列：属性 -->
         <el-table-column
@@ -70,7 +76,7 @@
           :width="80"
           :fixed="!isSmallScreen ? 'left' : undefined"
           sortable
-          :sort-orders="['descending', 'ascending']"
+          :sort-orders="['ascending', 'descending']"
           :sort-method="sortResonanceSpecialize"
         >
           <template #default="scope">
@@ -84,7 +90,11 @@
           prop="tw"
           label="间隔"
           :width="60"
+          sortable
+          :sort-method="sortTableTw"
+          :sort-orders="['ascending', 'descending']"
           :fixed="!isSmallScreen ? 'left' : undefined"
+          @sort-change="handleResonanceSortChange"
         >
           <template #default="scope">
             <span style="font-weight: bold">
@@ -151,6 +161,11 @@
     </div>
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
+    <div v-if="switchShowExtraTableConfig" class="unit-viewer-config">
+      <div>
+        <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
+      </div>
+    </div>
     <div class="unit-table">
       <el-table
         :data="filteredTableDataDominant"
@@ -206,7 +221,7 @@
           :width="60"
           sortable
           :sort-orders="['ascending', 'descending', null]"
-          :sort-method="sortDominantTw"
+          :sort-method="sortTableTw"
         >
           <template #default="scope">
             <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
@@ -338,6 +353,14 @@ const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
   {
+    prop: 'magic',
+    labelCn: '魔法',
+    labelEn: 'magic',
+    skill: 'magic',
+    minWidth: 200,
+    extraColumn: true,
+  },
+  {
     prop: 'motif',
     labelCn: '共鸣',
     labelEn: 'resonance motif',
@@ -360,15 +383,15 @@ const tableResonanceColumnHeader = [
     labelCn: '协调',
     labelEn: 'coordinate',
     skill: 'focus_flat',
-    minWidth: 250,
+    minWidth: 200,
     extraColumn: true,
   },
   {
-    prop: 'magic',
-    labelCn: '魔法',
-    labelEn: 'magic',
-    skill: 'magic',
-    minWidth: 300,
+    prop: 'sparkle',
+    labelCn: '闪耀',
+    labelEn: 'sparkle',
+    skill: 'sparkle',
+    minWidth: 150,
     extraColumn: true,
   },
 ];
@@ -405,9 +428,9 @@ const tableDominantColumnHeader = [
     skill: 'mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
-    width: 150,
-    minWidth: 150,
-    minWidthSmallScreen: 100,
+    width: 152,
+    minWidth: 152,
+    minWidthSmallScreen: 108,
   },
   {
     prop: 'overload_4',
@@ -532,10 +555,12 @@ const switchToggleCardStatus = ref(true);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
+const switchShowExtraTableConfig = ref(true);
 const switchShowExtraColumns = ref(false);
 const inputNameFilter = ref(
-  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
+  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
 );
+const inputNameFilterDefaultInformation = ref('当前默认数据：LIVE Carnival 2026 Spring');
 
 const allImagesBright = ref(true);
 
@@ -570,8 +595,29 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
 
+// 添加响应式变量跟踪当前排序字段
+const currentSortField = ref('specialize'); // 默认按specialize排序
+
+// 添加handleResonanceSortChange函数
+const handleResonanceSortChange = ({ column, prop, order }: any) => {
+  if (prop) {
+    currentSortField.value = prop;
+  }
+};
+
+// 使用计算属性来确定是否需要合并单元格
+const shouldMergeSpecializeCells = computed(() => {
+  return currentSortField.value === 'specialize';
+});
+
 // 合并单元格
 const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+  // 如果不是按specialize排序，则不合并单元格
+  if (!shouldMergeSpecializeCells.value) {
+    return [1, 1];
+  }
+
+  // 原来的合并逻辑保持不变，仅在按specialize排序时生效
   if (columnIndex === 0) {
     if (rowIndex % tableResonanceRowHeaderTw.length === 0) {
       return [tableResonanceRowHeaderTw.length, 1];
@@ -714,7 +760,7 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
   return a.row - b.row;
 };
 
-const sortDominantTw = (a: TableResonanceRow, b: TableResonanceRow) => {
+const sortTableTw = (a: TableResonanceRow, b: TableResonanceRow) => {
   // 提取数值部分进行比较，去掉 's' 后缀
   const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
   const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
@@ -770,6 +816,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
   });
 
   // 遍历技能表数据，根据specialize和skill.tw分配到对应的单元格
+  // Resonance表里，一条原始数据最多分配到一个单元格
   data.forEach((item: CgssCardSkillTableItem) => {
     // 检查稀有度，如果不是SSR则直接返回，不执行后续操作
     if (item.rarity !== 'ssr') {
@@ -777,7 +824,16 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     }
 
     // 根据specialize确定行的前半部分索引
-    const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(item.specialize);
+    const getSpecializeByStats = (stats: { vocal: any; visual: any; dance: any }) => {
+      const { vocal, dance, visual } = stats;
+      if (vocal >= dance && vocal >= visual) return 'vocal';
+      if (dance >= vocal && dance >= visual) return 'dance';
+      return 'visual';
+    };
+
+    const actualSpecialize = getSpecializeByStats(item.stats);
+    const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(actualSpecialize);
+    // const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(item.specialize);
     if (specializeIndex === -1) {
       // 如果specialize不在预定义范围内，跳过该数据
       return;
@@ -860,6 +916,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
   });
 
   // 遍历技能表数据，根据leaderSkill.params和skill.params分配到对应的单元格
+  // Dominant表里，一条原始数据可能分配到多个单元格
   data.forEach((item: CgssCardSkillTableItem) => {
     // 检查稀有度，如果不是SSR则直接返回，不执行后续操作
     if (item.rarity !== 'ssr') {
@@ -1494,7 +1551,6 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   .skill-dominant,
   .skill-mutual,
   .skill-overdrive,
-  .skill-magic,
   .skill-cboost {
     background-color: hsl(0, 0%, 95%);
   }
@@ -1517,17 +1573,16 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
 }
 
 .unit-viewer-config {
-  margin-bottom: 1em;
   > div {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 0.5em 0;
+    margin: 1em 0;
   }
 }
 
-.unit-table {
-  padding: 1em 0;
+.unit-title {
+  margin: 1em 0;
 }
 
 .el-table {
