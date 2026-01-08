@@ -119,7 +119,7 @@
                       'cgss-icon': true,
                       [`id_${icon.cid}`]: true,
                       dark: switchToggleCardStatus && !icon.isBrightness,
-                      'icon-small': headerItem.extraColumn,
+                      'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match':
                         switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
                       'icon-filter-match':
@@ -141,6 +141,7 @@
       <div>
         <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
         <el-switch v-model="switchShowOverloadOverdrive" active-text="显示过载/超载列" />
+        <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
       </div>
     </div>
     <div class="unit-table">
@@ -237,20 +238,38 @@
                   :is-visual-underlined="isDominantParamBold(headerItem, scope.row, 'visual')"
                 >
                   <div
+                    v-show="
+                      !isSpecializeNotMatch(headerItem, scope.row, icon) ||
+                      switchShowSpecializeNotMatch
+                    "
                     :class="{
                       'cgss-icon': true,
                       [`id_${icon.cid}`]: true,
                       dark: !icon.isBrightness && switchToggleCardStatus,
-                      'icon-small': headerItem.extraColumn,
+                      'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match':
                         switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
                       'icon-filter-match':
                         switchNameFilter && isNameMatched(icon.title, inputNameFilter),
+                      'icon-specialize-not-match': isSpecializeNotMatch(
+                        headerItem,
+                        scope.row,
+                        icon,
+                      ),
                     }"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
                 </CgssUnitViewerCardTooltip>
-                <div v-if="scope.row[headerItem.prop].length === 0">x</div>
+                <div
+                  v-if="
+                    !switchShowSpecializeNotMatch &&
+                    (scope.row[headerItem.prop].length === 0 ||
+                      scope.row[headerItem.prop][0][scope.row[headerItem.param ?? '']] <=
+                        DOMINANT_PARAM_THRESHOLD_SPECIALIZE)
+                  "
+                >
+                  x
+                </div>
               </div>
             </template>
           </el-table-column>
@@ -533,13 +552,14 @@ interface TableResonanceRow {
 }
 
 // 模式切换
-const switchToggleCardStatus = ref(true);
+const switchToggleCardStatus = ref(false);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraTableConfig = ref(true);
 const switchShowExtraColumns = ref(false);
 const switchShowOverloadOverdrive = ref(true);
+const switchShowSpecializeNotMatch = ref(false);
 
 const inputNameFilter = ref(
   `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
@@ -581,6 +601,10 @@ onUnmounted(() => {
 
 // 添加响应式变量跟踪当前排序字段
 const currentSortField = ref('specialize'); // 默认按specialize排序
+
+// 添加常量来控制dominant表中目标数值的限制
+const DOMINANT_PARAM_THRESHOLD_ADD = 0;
+const DOMINANT_PARAM_THRESHOLD_SPECIALIZE = 5000;
 
 // 添加handleResonanceSortChange函数
 const handleResonanceSortChange = ({ column, prop, order }: any) => {
@@ -984,24 +1008,26 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
         // }
 
         // 处理 alternate 类型：匹配 skill.type 是 alternate，attribute 与当前行 target_attribute 相同，
-        // row.target_param 的值大于5000，且skill.tw与当前行tw相同
+        // row.target_param 的值大于阈值，且skill.tw与当前行tw相同
         if (
           item.skill.type === 'alternate' &&
           item.attribute.toLowerCase() === row.target_attribute &&
           row.target_param &&
-          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000 &&
+          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
+            DOMINANT_PARAM_THRESHOLD_ADD &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
           (result[rowIndex]?.alternate as CellItem[]).push(createCardDataItem(item));
         }
 
         // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
-        // row.target_param_2 的值大于5000，且skill.tw与当前行tw相同
+        // row.target_param_2 的值大于阈值，且skill.tw与当前行tw相同
         if (
           item.skill.type === 'mutual' &&
           item.attribute.toLowerCase() === row.target_attribute_2 &&
           row.target_param_2 &&
-          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000 &&
+          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
+            DOMINANT_PARAM_THRESHOLD_ADD &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
           (result[rowIndex]?.mutual as CellItem[]).push(createCardDataItem(item));
@@ -1019,21 +1045,23 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           if (colDef.skill === item.skill.type) {
             // 检查tw是否匹配
             if (colDef.tw === String(item.skill.params.tw)) {
-              // overload: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于5000
+              // overload: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于阈值
               if (
                 item.skill.type === 'overload' &&
                 item.attribute.toLowerCase() === row.target_attribute &&
                 row.target_param &&
-                item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
+                item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
+                  DOMINANT_PARAM_THRESHOLD_ADD
               ) {
                 (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
-              // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
+              // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
               else if (
                 item.skill.type === 'overdrive' &&
                 item.attribute.toLowerCase() === row.target_attribute_2 &&
                 row.target_param_2 &&
-                item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
+                item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
+                  DOMINANT_PARAM_THRESHOLD_ADD
               ) {
                 (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
@@ -1047,11 +1075,12 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (item.skill.type.startsWith('psb_')) {
       // 遍历结果数组，找到所有符合条件的行
       result.forEach((row, rowIndex) => {
-        // act: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于5000
+        // act: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于阈值
         if (
           item.attribute.toLowerCase() === row.target_attribute &&
           row.target_param &&
-          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
+          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
+            DOMINANT_PARAM_THRESHOLD_SPECIALIZE
         ) {
           (result[rowIndex]?.act as CellItem[]).push(createCardDataItem(item));
         }
@@ -1062,11 +1091,12 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (item.skill.type.startsWith('cboost')) {
       // 遍历结果数组，找到所有符合条件的行
       result.forEach((row, rowIndex) => {
-        // combo: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
+        // combo: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
         if (
           item.attribute.toLowerCase() === row.target_attribute_2 &&
           row.target_param_2 &&
-          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
+          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
+            DOMINANT_PARAM_THRESHOLD_SPECIALIZE
         ) {
           (result[rowIndex]?.combo as CellItem[]).push(createCardDataItem(item));
         }
@@ -1310,6 +1340,36 @@ const isNameMatched = (title: string | undefined, filter: string) => {
   return names.some((name) => title.toLowerCase().includes(name.toLowerCase().trim()));
 };
 
+const isSpecializeNotMatch = (
+  headerItem: (typeof tableDominantColumnHeader)[number],
+  row: TableResonanceRow,
+  icon: CellItem,
+) => {
+  // 不检查dominant列
+  if (headerItem.prop === 'dominant') {
+    return false;
+  }
+
+  // 获取要检查的参数字段
+  const paramField = headerItem.param;
+  if (!paramField) {
+    return false;
+  }
+
+  // 获取要检查的属性值
+  let valueToCheck: number | undefined;
+  if (paramField === 'target_param' || paramField === 'target_param_2') {
+    const paramKey = row[paramField] as keyof CellItem;
+    valueToCheck = icon[paramKey] as number;
+  } else {
+    // 如果param字段不是target_param或target_param_2，则不检查
+    return false;
+  }
+
+  // 检查值是否小于阈值
+  return valueToCheck !== undefined && valueToCheck < DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+};
+
 // 切换所有图片的亮度
 const toggleAllImagesBrightness = () => {
   allImagesBright.value = !allImagesBright.value;
@@ -1331,10 +1391,8 @@ const toggleAllImagesBrightness = () => {
   tableDataDominant.value.forEach((dataRow) => {
     Object.keys(dataRow).forEach((colKey) => {
       const colValue = dataRow[colKey];
-      // 验证列值是否为数组
       if (Array.isArray(colValue)) {
         colValue.forEach((img) => {
-          // 验证图片对象是否有效
           if (img) {
             img.isBrightness = allImagesBright.value;
           }
@@ -1485,13 +1543,28 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     margin: 0;
   }
 
-  .icon-small {
+  .icon-specialize-not-match {
+    scale: 0.625;
+    margin: -6px;
+
+    &.icon-filter-not-match {
+      scale: 0.375;
+      margin: -12px;
+    }
+  }
+
+  .icon-extra {
     scale: 0.75;
     margin: -6px;
 
     &.icon-filter-match {
       scale: 1;
       margin: 0;
+    }
+
+    &.icon-specialize-not-match {
+      scale: 0.375;
+      margin: -12px;
     }
 
     &.icon-filter-not-match {
