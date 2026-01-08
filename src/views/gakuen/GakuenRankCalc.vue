@@ -183,7 +183,7 @@ function calculateFinalTestTarget(
   });
 
   return auditionPointsCurrentInFinal ==
-    finalTestResultToRankPointList[finalTestResultToRankPointList.length - 1].max
+    finalTestResultToRankPointList[finalTestResultToRankPointList.length - 1]?.max
     ? '过大'
     : auditionPointsCurrentInFinal;
 }

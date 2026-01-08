@@ -9,6 +9,7 @@
       <div v-if="switchNameFilter" style="margin-bottom: 1em">
         <el-input
           v-model="inputNameFilter"
+          class="font-jp"
           placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
           type="textarea"
           :rows="3"
@@ -20,33 +21,19 @@
         <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
         <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
       </div>
-      <div v-if="switchToggleCardStatus">
-        <div>
-          <el-button @click="toggleAllImagesBrightness" type="primary" size="default">
-            切换所有状态
-          </el-button>
-        </div>
-        <div>
-          <el-button @click="exportCidsToClipboard" type="success" size="default">
-            导出当前状态到剪切板
-          </el-button>
-        </div>
-        <div>
-          <el-button @click="importCidsFromToClipboard" type="warning" size="default">
-            从剪切板导入
-          </el-button>
-        </div>
-        <div>
-          <el-button @click="exportCidsToLocalStorage" type="success" size="default">
-            导出当前状态到浏览器
-          </el-button>
-        </div>
-        <div>
-          <el-button @click="importCidsFromLocalStorage" type="warning" size="default">
-            从浏览器导入
-          </el-button>
-        </div>
-      </div>
+      <cgss-unit-viewer-state-manager
+        v-if="switchToggleCardStatus"
+        :table-data="[...tableDataResonance, ...tableDataDominant]"
+        @update-card-status="updateCardBrightnessByCids"
+      >
+        <template #prefix>
+          <div>
+            <el-button @click="toggleAllImagesBrightness" type="primary" size="default">
+              切换所有状态
+            </el-button>
+          </div>
+        </template>
+      </cgss-unit-viewer-state-manager>
       <div>
         <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
         <el-switch v-model="switchShowExtraTableConfig" active-text="更多表格控制" />
@@ -103,56 +90,45 @@
           </template>
         </el-table-column>
         <!-- 后续列：根据tableResonanceColumnHeader动态生成 -->
-        <template v-for="colIndex in tableResonanceColumnHeader.length" :key="colIndex">
+        <template
+          v-for="(headerItem, headerIndex) in tableResonanceColumnHeader"
+          :key="headerItem.prop"
+        >
           <el-table-column
-            v-if="!tableResonanceColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
-            :prop="tableResonanceColumnHeader[colIndex - 1].prop"
+            v-if="!headerItem.extraColumn || switchShowExtraColumns"
+            :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
-                ? tableResonanceColumnHeader[colIndex - 1].labelCn
-                : `${tableResonanceColumnHeader[colIndex - 1].labelCn} ${tableResonanceColumnHeader[colIndex - 1].labelEn}`
+                ? headerItem.labelCn
+                : `${headerItem.labelCn} ${headerItem.labelEn}`
             "
-            :class-name="`icons skill-${tableResonanceColumnHeader[colIndex - 1].prop}`"
-            :min-width="
-              isSmallScreen
-                ? tableResonanceColumnHeader[colIndex - 1].minWidthSmallScreen
-                : tableResonanceColumnHeader[colIndex - 1].minWidth
-            "
+            :class-name="`icons skill-${headerItem.prop}`"
+            :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
           >
             <template #default="scope">
               <div class="table-icons-resonance">
                 <cgss-unit-viewer-card-tooltip
-                  v-for="(img, imgIndex) in scope.row[
-                    tableResonanceColumnHeader[colIndex - 1].prop
-                  ]"
-                  :key="imgIndex"
-                  :card="img"
-                  :is-vocal-bold="scope.row.specialize === 'vocal'"
-                  :is-dance-bold="scope.row.specialize === 'dance'"
-                  :is-visual-bold="scope.row.specialize === 'visual'"
+                  v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
+                  :key="iconIndex"
+                  :card="icon"
+                  :is-vocal-underlined="scope.row.specialize === 'vocal'"
+                  :is-dance-underlined="scope.row.specialize === 'dance'"
+                  :is-visual-underlined="scope.row.specialize === 'visual'"
                 >
                   <div
                     :class="{
                       'cgss-icon': true,
-                      [`id_${img.cid}`]: true,
-                      dark: switchToggleCardStatus && !img.isBrightness,
-                      'icon-small': tableResonanceColumnHeader[colIndex - 1].extraColumn,
+                      [`id_${icon.cid}`]: true,
+                      dark: switchToggleCardStatus && !icon.isBrightness,
+                      'icon-small': headerItem.extraColumn,
                       'icon-not-match':
-                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
-                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
+                        switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(icon.title, inputNameFilter),
                     }"
-                    @click="
-                      handleIconClick(
-                        scope.row,
-                        tableResonanceColumnHeader[colIndex - 1].prop,
-                        Number(imgIndex),
-                      )
-                    "
+                    @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
                 </cgss-unit-viewer-card-tooltip>
-                <div v-if="scope.row[tableResonanceColumnHeader[colIndex - 1].prop].length === 0">
-                  x
-                </div>
+                <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
             </template>
           </el-table-column>
@@ -229,55 +205,46 @@
         </el-table-column>
 
         <!-- 后续列：根据tableDominantColumnHeader动态生成 -->
-        <template v-for="colIndex in tableDominantColumnHeader.length" :key="colIndex">
+        <template
+          v-for="(headerItem, headerIndex) in tableDominantColumnHeader"
+          :key="headerItem.prop"
+        >
           <el-table-column
-            v-if="!tableDominantColumnHeader[colIndex - 1].extraColumn || switchShowExtraColumns"
-            :prop="tableDominantColumnHeader[colIndex - 1].prop"
+            v-if="!headerItem.extraColumn || switchShowExtraColumns"
+            :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
-                ? tableDominantColumnHeader[colIndex - 1].labelCn
-                : `${tableDominantColumnHeader[colIndex - 1].labelCn} ${tableDominantColumnHeader[colIndex - 1].labelEn}`
+                ? headerItem.labelCn
+                : `${headerItem.labelCn} ${headerItem.labelEn}`
             "
-            :class-name="`icons skill-${tableDominantColumnHeader[colIndex - 1].skill ?? tableDominantColumnHeader[colIndex - 1].prop}`"
-            :min-width="
-              isSmallScreen
-                ? tableDominantColumnHeader[colIndex - 1].minWidthSmallScreen
-                : tableDominantColumnHeader[colIndex - 1].minWidth
-            "
-            :width="isSmallScreen ? undefined : tableDominantColumnHeader[colIndex - 1].width"
+            :class-name="`icons skill-${headerItem.skill ?? headerItem.prop}`"
+            :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
+            :width="isSmallScreen ? undefined : headerItem.width"
           >
             <template #default="scope">
               <div class="table-icons-container">
                 <CgssUnitViewerCardTooltip
-                  v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
-                  :key="imgIndex"
-                  :card="img"
-                  :is-vocal-bold="isParamBold(colIndex - 1, scope.row, 'vocal')"
-                  :is-dance-bold="isParamBold(colIndex - 1, scope.row, 'dance')"
-                  :is-visual-bold="isParamBold(colIndex - 1, scope.row, 'visual')"
+                  v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
+                  :key="iconIndex"
+                  :card="icon"
+                  :is-vocal-underlined="isDominantParamBold(headerItem, scope.row, 'vocal')"
+                  :is-dance-underlined="isDominantParamBold(headerItem, scope.row, 'dance')"
+                  :is-visual-underlined="isDominantParamBold(headerItem, scope.row, 'visual')"
                 >
                   <div
                     :class="{
                       'cgss-icon': true,
-                      [`id_${img.cid}`]: true,
-                      dark: !img.isBrightness && switchToggleCardStatus,
-                      'icon-small': tableDominantColumnHeader[colIndex - 1].extraColumn,
+                      [`id_${icon.cid}`]: true,
+                      dark: !icon.isBrightness && switchToggleCardStatus,
+                      'icon-small': headerItem.extraColumn,
                       'icon-not-match':
-                        switchNameFilter && !isNameMatched(img.title, inputNameFilter),
-                      'icon-match': switchNameFilter && isNameMatched(img.title, inputNameFilter),
+                        switchNameFilter && !isNameMatched(icon.title, inputNameFilter),
+                      'icon-match': switchNameFilter && isNameMatched(icon.title, inputNameFilter),
                     }"
-                    @click="
-                      handleIconClick(
-                        scope.row,
-                        tableDominantColumnHeader[colIndex - 1].prop,
-                        Number(imgIndex),
-                      )
-                    "
+                    @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
                   ></div>
                 </CgssUnitViewerCardTooltip>
-                <div v-if="scope.row[tableDominantColumnHeader[colIndex - 1].prop].length === 0">
-                  x
-                </div>
+                <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
             </template>
           </el-table-column>
@@ -307,8 +274,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
-import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
+import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
+import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
 const env = import.meta.env;
 
@@ -391,6 +359,14 @@ const tableResonanceColumnHeader = [
     labelCn: '闪耀',
     labelEn: 'sparkle',
     skill: 'sparkle',
+    minWidth: 150,
+    extraColumn: true,
+  },
+  {
+    prop: 'combo',
+    labelCn: '连击',
+    labelEn: 'combo',
+    skill: 'cboost',
     minWidth: 150,
     extraColumn: true,
   },
@@ -863,7 +839,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     let colName = columnInfo.prop;
 
     // 将数据添加到对应单元格
-    if (Array.isArray(result[rowIndex][colName])) {
+    if (Array.isArray(result[rowIndex]?.[colName])) {
       result[rowIndex][colName].push(createCardDataItem(item));
     }
   });
@@ -994,6 +970,11 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     if (item.skill.type === 'alternate' || item.skill.type === 'mutual') {
       // 遍历结果数组，找到所有符合条件的行
       result.forEach((row, rowIndex) => {
+        // // 检查行是否存在
+        // if (!result[rowIndex]) {
+        //   return;
+        // }
+
         // 处理 alternate 类型：匹配 skill.type 是 alternate，attribute 与当前行 target_attribute 相同，
         // row.target_param 的值大于5000，且skill.tw与当前行tw相同
         if (
@@ -1003,7 +984,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].alternate as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.alternate as CellItem[]).push(createCardDataItem(item));
         }
 
         // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
@@ -1015,7 +996,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000 &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex].mutual as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.mutual as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1037,7 +1018,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param &&
                 item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
+                (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
               // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于5000
               else if (
@@ -1046,7 +1027,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
                 row.target_param_2 &&
                 item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
               ) {
-                (result[rowIndex][colDef.prop] as CellItem[]).push(createCardDataItem(item));
+                (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
               }
             }
           }
@@ -1064,7 +1045,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           row.target_param &&
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] > 5000
         ) {
-          (result[rowIndex].act as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.act as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1079,7 +1060,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
           row.target_param_2 &&
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] > 5000
         ) {
-          (result[rowIndex].combo as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.combo as CellItem[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1274,28 +1255,30 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
 };
 
 // 添加一个函数来判断参数是否需要加粗
-const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) => {
-  const columnHeader = tableDominantColumnHeader[colIndex];
-
+const isDominantParamBold = (
+  headerItem: (typeof tableDominantColumnHeader)[number],
+  row: TableResonanceRow,
+  param: string,
+) => {
   // 如果是dominant列，需要检查target_param或target_param_2
-  if (columnHeader.skill === 'dominant') {
+  if (headerItem.skill === 'dominant') {
     return row.target_param === param || row.target_param_2 === param;
   }
 
   // 如果是alternate或者overload列，需要检查target_param
   if (
-    columnHeader.skill === 'alternate' ||
-    columnHeader.skill === 'overload' ||
-    columnHeader.skill.startsWith('psb_')
+    headerItem.skill === 'alternate' ||
+    headerItem.skill === 'overload' ||
+    headerItem.skill.startsWith('psb_')
   ) {
     return row.target_param === param;
   }
 
   // 如果是mutual或者overdrive列，需要检查target_param_2
   if (
-    columnHeader.skill === 'mutual' ||
-    columnHeader.skill === 'overdrive' ||
-    columnHeader.skill.startsWith('cboost')
+    headerItem.skill === 'mutual' ||
+    headerItem.skill === 'overdrive' ||
+    headerItem.skill.startsWith('cboost')
   ) {
     return row.target_param_2 === param;
   }
@@ -1351,151 +1334,6 @@ const toggleAllImagesBrightness = () => {
       }
     });
   });
-};
-
-const exportCidsToString = () => {
-  // 收集所有未点亮的卡片CID
-  const darkCids: string[] = [];
-
-  // 遍历Resonance表
-  tableDataResonance.value.forEach((dataRow) => {
-    Object.keys(dataRow).forEach((colKey) => {
-      const colValue = dataRow[colKey];
-      if (Array.isArray(colValue)) {
-        colValue.forEach((img) => {
-          if (img && !img.isBrightness) {
-            darkCids.push(img.cid);
-          }
-        });
-      }
-    });
-  });
-
-  // 遍历Dominant表
-  tableDataDominant.value.forEach((dataRow) => {
-    Object.keys(dataRow).forEach((colKey) => {
-      const colValue = dataRow[colKey];
-      if (Array.isArray(colValue)) {
-        colValue.forEach((img) => {
-          if (img && !img.isBrightness) {
-            darkCids.push(img.cid);
-          }
-        });
-      }
-    });
-  });
-
-  // 去重
-  const uniqueCids = [...new Set(darkCids)];
-
-  // 创建包含disabled数组的对象
-  const exportData = { disabled: uniqueCids };
-
-  return exportData;
-};
-
-// 从字符串导入CIDs
-const importCidsFromString = (jsonString: string) => {
-  try {
-    // 解析JSON
-    let importedData: { disabled: string[] };
-    try {
-      importedData = JSON.parse(jsonString);
-
-      // 验证数据结构
-      if (
-        !Array.isArray(importedData.disabled) ||
-        !importedData.disabled.every((item) => typeof item === 'string')
-      ) {
-        throw new Error('内容不是有效的 {disabled: []} 格式');
-      }
-    } catch (error) {
-      throw new Error('内容不是有效的 {disabled: []} 格式JSON');
-    }
-
-    // 获取disabled数组
-    const disabledCids = importedData.disabled;
-
-    // 更新所有表格中的卡片状态
-    updateCardBrightnessByCids(disabledCids);
-
-    // 更新allImagesBright状态
-    allImagesBright.value = disabledCids.length === 0;
-
-    return true;
-  } catch (error) {
-    console.error('导入失败:', error);
-    throw error;
-  }
-};
-
-// 导出当前状态到剪切板
-const exportCidsToClipboard = async () => {
-  try {
-    // 获取当前状态
-    const jsonStr = JSON.stringify(exportCidsToString());
-
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(jsonStr);
-
-    // 显示成功提示
-    ElMessage.success('已导出到剪切板！');
-  } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出失败，请重试');
-  }
-};
-
-// 从剪切板导入
-const importCidsFromToClipboard = async () => {
-  try {
-    // 从剪贴板读取数据
-    const clipboardText = await navigator.clipboard.readText();
-
-    importCidsFromString(clipboardText);
-
-    ElMessage.success('从剪切板导入成功！');
-  } catch (error) {
-    console.error('导入失败:', error);
-    ElMessage.error('导入失败，请确保剪贴板中有有效的 {disabled: []} 格式JSON');
-  }
-};
-
-// 导出当前状态到浏览器本地存储
-const exportCidsToLocalStorage = () => {
-  try {
-    // 获取当前状态
-    const jsonStr = JSON.stringify(exportCidsToString());
-
-    // 存储到localStorage
-    localStorage.setItem('cgss-unit-viewer-status', jsonStr);
-
-    // 显示成功提示
-    ElMessage.success('已导出到浏览器存储！');
-  } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出到浏览器存储失败');
-  }
-};
-
-// 从浏览器本地存储导入
-const importCidsFromLocalStorage = () => {
-  try {
-    // 从localStorage读取数据
-    const storedDataStr = localStorage.getItem('cgss-unit-viewer-status');
-
-    if (!storedDataStr) {
-      ElMessage.warning('没有找到存储的卡片状态数据');
-      return;
-    }
-
-    importCidsFromString(storedDataStr);
-
-    ElMessage.success('从浏览器存储导入成功！');
-  } catch (error) {
-    console.error('导入失败:', error);
-    ElMessage.error('导入失败，存储的卡片状态数据格式不正确');
-  }
 };
 
 // 根据CID列表更新卡片亮度状态的辅助函数

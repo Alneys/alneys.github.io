@@ -112,14 +112,17 @@ function calcParkingTheater(
         return;
       }
       // Check anniversary only choice
+      // @ts-expect-error
       if (!isAnniversary && each.anniversaryOnly === true) {
         continue;
       }
       // enough token
+      // @ts-expect-error
       if (token >= -each.token) {
         // record in result
         record[i] = (record[i] ?? 0) + 1;
         // DFS
+        // @ts-expect-error
         dfs(pt + each.pt, token + each.token);
         // if failed, recover result
         if (!flag) {
@@ -137,7 +140,9 @@ function calcParkingTheater(
     Object.entries(record).forEach(([key, value]) => {
       if (value > 0) {
         result.push({
+          // @ts-expect-error
           name: eventTheaterChoices[Number(key)].name,
+          // @ts-expect-error
           multiplier: eventTheaterChoices[Number(key)].multiplier,
           value,
         });
