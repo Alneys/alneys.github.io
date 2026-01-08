@@ -18,6 +18,7 @@
       </div>
       <div>
         <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
+        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
       </div>
       <div v-if="switchToggleCardStatus">
         <div>
@@ -47,14 +48,18 @@
         </div>
       </div>
       <div>
-        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
         <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
-        <el-switch v-model="switchShowExtraColumns" active-text="展示额外的列" />
+        <el-switch v-model="switchShowExtraTableConfig" active-text="更多表格控制" />
       </div>
     </div>
 
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
+    <div v-if="switchShowExtraTableConfig" class="unit-viewer-config">
+      <div>
+        <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
+      </div>
+    </div>
     <div class="unit-table">
       <el-table
         :data="tableDataResonance"
@@ -151,6 +156,11 @@
     </div>
     <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
+    <div v-if="switchShowExtraTableConfig" class="unit-viewer-config">
+      <div>
+        <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
+      </div>
+    </div>
     <div class="unit-table">
       <el-table
         :data="filteredTableDataDominant"
@@ -338,6 +348,14 @@ const tableResonanceRowHeaderSpecialize = ['vocal', 'dance', 'visual'];
 const tableResonanceRowHeaderTw = ['7', '9', '11'];
 const tableResonanceColumnHeader = [
   {
+    prop: 'magic',
+    labelCn: '魔法',
+    labelEn: 'magic',
+    skill: 'magic',
+    minWidth: 200,
+    extraColumn: true,
+  },
+  {
     prop: 'motif',
     labelCn: '共鸣',
     labelEn: 'resonance motif',
@@ -360,15 +378,7 @@ const tableResonanceColumnHeader = [
     labelCn: '协调',
     labelEn: 'coordinate',
     skill: 'focus_flat',
-    minWidth: 250,
-    extraColumn: true,
-  },
-  {
-    prop: 'magic',
-    labelCn: '魔法',
-    labelEn: 'magic',
-    skill: 'magic',
-    minWidth: 300,
+    minWidth: 200,
     extraColumn: true,
   },
 ];
@@ -405,9 +415,9 @@ const tableDominantColumnHeader = [
     skill: 'mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
-    width: 150,
-    minWidth: 150,
-    minWidthSmallScreen: 100,
+    width: 152,
+    minWidth: 152,
+    minWidthSmallScreen: 108,
   },
   {
     prop: 'overload_4',
@@ -532,6 +542,7 @@ const switchToggleCardStatus = ref(true);
 const switchViewCardInfo = ref(false);
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
+const switchShowExtraTableConfig = ref(true);
 const switchShowExtraColumns = ref(false);
 const inputNameFilter = ref(
   `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
@@ -1495,7 +1506,6 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   .skill-dominant,
   .skill-mutual,
   .skill-overdrive,
-  .skill-magic,
   .skill-cboost {
     background-color: hsl(0, 0%, 95%);
   }
@@ -1518,17 +1528,16 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
 }
 
 .unit-viewer-config {
-  margin-bottom: 1em;
   > div {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 0.5em 0;
+    margin: 1em 0;
   }
 }
 
-.unit-table {
-  padding: 1em 0;
+.unit-title {
+  margin: 1em 0;
 }
 
 .el-table {
