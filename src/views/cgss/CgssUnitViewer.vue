@@ -252,9 +252,9 @@
                   v-for="(img, imgIndex) in scope.row[tableDominantColumnHeader[colIndex - 1].prop]"
                   :key="imgIndex"
                   :card="img"
-                  :is-vocal-bold="isParamBold(colIndex - 1, scope.row, 'vocal')"
-                  :is-dance-bold="isParamBold(colIndex - 1, scope.row, 'dance')"
-                  :is-visual-bold="isParamBold(colIndex - 1, scope.row, 'visual')"
+                  :is-vocal-bold="isDominantParamBold(colIndex - 1, scope.row, 'vocal')"
+                  :is-dance-bold="isDominantParamBold(colIndex - 1, scope.row, 'dance')"
+                  :is-visual-bold="isDominantParamBold(colIndex - 1, scope.row, 'visual')"
                 >
                   <div
                     :class="{
@@ -391,6 +391,14 @@ const tableResonanceColumnHeader = [
     labelCn: '闪耀',
     labelEn: 'sparkle',
     skill: 'sparkle',
+    minWidth: 150,
+    extraColumn: true,
+  },
+  {
+    prop: 'combo',
+    labelCn: '连击',
+    labelEn: 'combo',
+    skill: 'cboost',
     minWidth: 150,
     extraColumn: true,
   },
@@ -1274,7 +1282,7 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
 };
 
 // 添加一个函数来判断参数是否需要加粗
-const isParamBold = (colIndex: number, row: TableResonanceRow, param: string) => {
+const isDominantParamBold = (colIndex: number, row: TableResonanceRow, param: string) => {
   const columnHeader = tableDominantColumnHeader[colIndex];
 
   // 如果是dominant列，需要检查target_param或target_param_2
