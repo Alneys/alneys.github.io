@@ -381,6 +381,14 @@ const tableResonanceColumnHeader = [
     minWidth: 200,
     extraColumn: true,
   },
+  {
+    prop: 'sparkle',
+    labelCn: '闪耀',
+    labelEn: 'sparkle',
+    skill: 'sparkle',
+    minWidth: 150,
+    extraColumn: true,
+  },
 ];
 
 // Dominant table
