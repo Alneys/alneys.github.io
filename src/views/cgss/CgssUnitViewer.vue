@@ -9,6 +9,7 @@
       <div v-if="switchNameFilter" style="margin-bottom: 1em">
         <el-input
           v-model="inputNameFilter"
+          class="font-jp"
           placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
           type="textarea"
           :rows="3"

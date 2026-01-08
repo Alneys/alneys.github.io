@@ -1,28 +1,34 @@
 <template>
   <el-tooltip placement="top" :show-after="640">
     <template #content>
-      <div style="font-size: 14px">
-        <span v-if="card.title">{{ card.title }}</span>
+      <div class="tooltip-card font-jp">
+        <span v-if="card.title">{{ card.title || '?' }}</span>
         <br />
         <span v-if="card.attribute" :class="`color-cg-${card.attribute.toLowerCase()} is-bold`">
-          {{ card.attribute }}
+          {{ card.attribute || '?' }}
         </span>
         <br />
-        <span :class="`color-cg-vocal ${isVocalBold ? 'is-bold' : ''} ${props.isVocalUnderlined ? 'is-underline' : ''}`">
-          {{ card.vocal || 0 }}
+        <span
+          :class="`color-cg-vocal ${isVocalBold ? 'is-bold' : ''} ${props.isVocalUnderlined ? 'is-underline' : ''}`"
+        >
+          {{ card.vocal || '?' }}
         </span>
         &nbsp;
-        <span :class="`color-cg-dance ${isDanceBold ? 'is-bold' : ''} ${props.isDanceUnderlined ? 'is-underline' : ''}`">
-          {{ card.dance || 0 }}
+        <span
+          :class="`color-cg-dance ${isDanceBold ? 'is-bold' : ''} ${props.isDanceUnderlined ? 'is-underline' : ''}`"
+        >
+          {{ card.dance || '?' }}
         </span>
         &nbsp;
-        <span :class="`color-cg-visual ${isVisualBold ? 'is-bold' : ''} ${props.isVisualUnderlined ? 'is-underline' : ''}`">
-          {{ card.visual || 0 }}
+        <span
+          :class="`color-cg-visual ${isVisualBold ? 'is-bold' : ''} ${props.isVisualUnderlined ? 'is-underline' : ''}`"
+        >
+          {{ card.visual || '?' }}
         </span>
         <br />
-        <span class="is-bold">{{ card.skill || 0 }}</span>
+        <span class="is-bold">{{ card.skill || '' }}</span>
         &nbsp;
-        <span class="is-bold">{{ card.tw || 0 }}</span>
+        <span class="is-bold">{{ card.tw || '' }}</span>
       </div>
     </template>
     <slot></slot>
@@ -72,7 +78,10 @@ const isVisualBold = computed(() =>
 );
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.tooltip-card {
+  font-size: 14px;
+}
 .is-bold {
   font-weight: bold;
 }
