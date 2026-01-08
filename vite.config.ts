@@ -10,6 +10,9 @@ import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 
+// unplugin-fonts
+import Unfonts from 'unplugin-fonts/vite';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -29,6 +32,11 @@ export default defineConfig({
           importStyle: 'sass',
         }),
       ],
+    }),
+    Unfonts({
+      fontsource: {
+        families: ['Noto Sans SC Variable', 'Noto Sans JP Variable', 'Inconsolata Variable'],
+      },
     }),
   ],
   resolve: {

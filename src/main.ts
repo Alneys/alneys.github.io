@@ -11,12 +11,12 @@ import router from './router';
 
 import inputmodeDirective from './utils/directives/inputmode';
 
-// @ts-ignore
-import '@fontsource-variable/inconsolata';
-// @ts-ignore
-import '@fontsource-variable/noto-sans-jp';
-// @ts-ignore
-import '@fontsource-variable/noto-sans-sc';
+// self-host fonts
+import 'unfonts.css';
+// import '@fontsource-variable/inconsolata';
+// import '@fontsource-variable/noto-sans-jp';
+// import '@fontsource-variable/noto-sans-sc';
+
 
 import '@/assets/styles/main.scss';
 
