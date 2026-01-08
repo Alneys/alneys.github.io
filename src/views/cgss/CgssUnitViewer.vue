@@ -67,6 +67,7 @@
         :max-height="isMobile ? 560 : 9999"
         border
         :span-method="tableResonanceSpanMethod"
+        @sort-change="handleResonanceSortChange"
       >
         <!-- 第一列：属性 -->
         <el-table-column
@@ -75,7 +76,7 @@
           :width="80"
           :fixed="!isSmallScreen ? 'left' : undefined"
           sortable
-          :sort-orders="['descending', 'ascending']"
+          :sort-orders="['ascending', 'descending']"
           :sort-method="sortResonanceSpecialize"
         >
           <template #default="scope">
@@ -89,7 +90,11 @@
           prop="tw"
           label="间隔"
           :width="60"
+          sortable
+          :sort-method="sortTableTw"
+          :sort-orders="['ascending', 'descending']"
           :fixed="!isSmallScreen ? 'left' : undefined"
+          @sort-change="handleResonanceSortChange"
         >
           <template #default="scope">
             <span style="font-weight: bold">
@@ -216,7 +221,7 @@
           :width="60"
           sortable
           :sort-orders="['ascending', 'descending', null]"
-          :sort-method="sortDominantTw"
+          :sort-method="sortTableTw"
         >
           <template #default="scope">
             <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
@@ -590,8 +595,29 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
 
+// 添加响应式变量跟踪当前排序字段
+const currentSortField = ref('specialize'); // 默认按specialize排序
+
+// 添加handleResonanceSortChange函数
+const handleResonanceSortChange = ({ column, prop, order }: any) => {
+  if (prop) {
+    currentSortField.value = prop;
+  }
+};
+
+// 使用计算属性来确定是否需要合并单元格
+const shouldMergeSpecializeCells = computed(() => {
+  return currentSortField.value === 'specialize';
+});
+
 // 合并单元格
 const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+  // 如果不是按specialize排序，则不合并单元格
+  if (!shouldMergeSpecializeCells.value) {
+    return [1, 1];
+  }
+
+  // 原来的合并逻辑保持不变，仅在按specialize排序时生效
   if (columnIndex === 0) {
     if (rowIndex % tableResonanceRowHeaderTw.length === 0) {
       return [tableResonanceRowHeaderTw.length, 1];
@@ -734,7 +760,7 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
   return a.row - b.row;
 };
 
-const sortDominantTw = (a: TableResonanceRow, b: TableResonanceRow) => {
+const sortTableTw = (a: TableResonanceRow, b: TableResonanceRow) => {
   // 提取数值部分进行比较，去掉 's' 后缀
   const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
   const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
@@ -790,6 +816,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
   });
 
   // 遍历技能表数据，根据specialize和skill.tw分配到对应的单元格
+  // Resonance表里，一条原始数据最多分配到一个单元格
   data.forEach((item: CgssCardSkillTableItem) => {
     // 检查稀有度，如果不是SSR则直接返回，不执行后续操作
     if (item.rarity !== 'ssr') {
@@ -797,7 +824,16 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     }
 
     // 根据specialize确定行的前半部分索引
-    const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(item.specialize);
+    const getSpecializeByStats = (stats: { vocal: any; visual: any; dance: any }) => {
+      const { vocal, dance, visual } = stats;
+      if (vocal >= dance && vocal >= visual) return 'vocal';
+      if (dance >= vocal && dance >= visual) return 'dance';
+      return 'visual';
+    };
+
+    const actualSpecialize = getSpecializeByStats(item.stats);
+    const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(actualSpecialize);
+    // const specializeIndex = tableResonanceRowHeaderSpecialize.indexOf(item.specialize);
     if (specializeIndex === -1) {
       // 如果specialize不在预定义范围内，跳过该数据
       return;
@@ -880,6 +916,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
   });
 
   // 遍历技能表数据，根据leaderSkill.params和skill.params分配到对应的单元格
+  // Dominant表里，一条原始数据可能分配到多个单元格
   data.forEach((item: CgssCardSkillTableItem) => {
     // 检查稀有度，如果不是SSR则直接返回，不执行后续操作
     if (item.rarity !== 'ssr') {
