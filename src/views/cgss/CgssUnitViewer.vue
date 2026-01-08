@@ -6,10 +6,9 @@
       <div>
         <el-switch v-model="switchNameFilter" active-text="筛选名字" />
       </div>
-      <div v-if="switchNameFilter" style="margin-bottom: 1em">
+      <div v-if="switchNameFilter" class="config-name-filter">
         <el-input
           v-model="inputNameFilter"
-          class="font-jp"
           placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
           type="textarea"
           :rows="3"
@@ -1414,12 +1413,27 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   > div {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 1em 0;
+    gap: 0.5em;
+    margin: 0.5em 0;
+  }
+
+  .config-name-filter {
+    &,
+    & * {
+      font-family: var(--al-font-family-jp);
+    }
+
+    :deep() {
+      input::placeholder,
+      textarea::placeholder {
+        font-family: var(--al-font-family);
+      }
+    }
   }
 }
 
-.unit-title {
+.unit-title,
+.unit-table {
   margin: 1em 0;
 }
 
