@@ -14,7 +14,7 @@
           :rows="3"
           clearable
         ></el-input>
-        <div>当前默认数据：LIVE Carnival 2026 Spring</div>
+        <div v-if="inputNameFilterDefaultInformation">{{ inputNameFilterDefaultInformation }}</div>
       </div>
       <div>
         <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换亮度" />
@@ -534,8 +534,9 @@ const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraColumns = ref(false);
 const inputNameFilter = ref(
-  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
+  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美 本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
 );
+const inputNameFilterDefaultInformation = ref('当前默认数据：LIVE Carnival 2026 Spring');
 
 const allImagesBright = ref(true);
 
