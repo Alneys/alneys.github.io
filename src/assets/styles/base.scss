@@ -2,16 +2,16 @@
 
 // font-family
 :root {
-  --al-font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft Yahei', -apple-system,
+  --al-font-family: 'Noto Sans SC Variable', 'Source Han Sans SC', 'Microsoft Yahei', -apple-system,
     BlinkMacSystemFont, sans-serif;
-  --al-font-family-mono: 'Inconsolata Medium', 'Consolas', 'Noto Sans SC', 'Source Han Sans SC',
+  --al-font-family-mono: 'Inconsolata Variable', 'Consolas', 'Noto Sans SC Variable', 'Source Han Sans SC',
     'Microsoft Yahei', -apple-system, BlinkMacSystemFont, sans-serif;
-  --al-font-family-jp: 'Noto Sans JP', 'Yu Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  --al-font-family-jp: 'Noto Sans JP Variable', 'Yu Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .font-normal {
   font-family:
-    'Noto Sans SC',
+    'Noto Sans SC Variable',
     'Source Han Sans SC',
     'Microsoft Yahei',
     -apple-system,
@@ -20,9 +20,9 @@
 }
 .font-mono {
   font-family:
-    'Inconsolata Medium',
+    'Inconsolata Variable',
     'Consolas',
-    'Noto Sans SC',
+    'Noto Sans SC Variable',
     'Source Han Sans SC',
     'Microsoft Yahei',
     -apple-system,
@@ -31,7 +31,7 @@
 }
 .font-jp {
   font-family:
-    'Noto Sans JP',
+    'Noto Sans JP Variable',
     'Yu Gothic',
     -apple-system,
     BlinkMacSystemFont,
@@ -98,7 +98,7 @@ samp {
   font-family:
     'Consolas',
     monospace,
-    'Noto Sans SC',
+    'Noto Sans SC Variable',
     'Source Han Sans SC',
     'Microsoft Yahei',
     -apple-system,

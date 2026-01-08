@@ -11,6 +11,13 @@ import router from './router';
 
 import inputmodeDirective from './utils/directives/inputmode';
 
+// @ts-ignore
+import '@fontsource-variable/inconsolata';
+// @ts-ignore
+import '@fontsource-variable/noto-sans-jp';
+// @ts-ignore
+import '@fontsource-variable/noto-sans-sc';
+
 import '@/assets/styles/main.scss';
 
 const app = createApp(App);
