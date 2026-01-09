@@ -115,17 +115,17 @@
                   :is-dance-underlined="scope.row.specialize === 'dance'"
                   :is-visual-underlined="scope.row.specialize === 'visual'"
                 >
-                  <div
+                  <img
                     :class="{
                       'cgss-icon': true,
-                      [`id_${icon.card.cid}`]: true,
                       'icon-dark': switchToggleCardStatus && !icon.isBrightness,
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': switchNameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': switchNameFilter && isNameMatched(icon.card.name),
                     }"
+                    :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
-                  ></div>
+                  />
                 </CgssUnitViewerCardTooltip>
                 <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
@@ -235,14 +235,13 @@
                   :is-dance-underlined="isDominantParamUnderline(headerItem, scope.row, 'dance')"
                   :is-visual-underlined="isDominantParamUnderline(headerItem, scope.row, 'visual')"
                 >
-                  <div
+                  <img
                     v-show="
                       !isDominantSpecializeNotMatch(headerItem, scope.row, icon.card) ||
                       switchShowSpecializeNotMatch
                     "
                     :class="{
                       'cgss-icon': true,
-                      [`id_${icon.card.cid}`]: true,
                       'icon-dark': !icon.isBrightness && switchToggleCardStatus,
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': switchNameFilter && !isNameMatched(icon.card.name),
@@ -253,8 +252,9 @@
                         icon.card,
                       ),
                     }"
+                    :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
-                  ></div>
+                  />
                 </CgssUnitViewerCardTooltip>
                 <div
                   v-if="
@@ -1356,7 +1356,6 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/assets/styles/im/im-cgss-icons.css';
 .el-table {
   --el-table-header-text-color: var(--el-text-color-regular);
 }
