@@ -2,7 +2,7 @@
   <el-tooltip placement="top" :show-after="640">
     <template #content>
       <div class="tooltip-card font-jp">
-        <span v-if="card.title">{{ card.title || '?' }}</span>
+        <span v-if="card.title">{{ `[${card.title}] ${card.name}` || '?' }}</span>
         <br />
         <span v-if="card.attribute" :class="`color-cg-${card.attribute.toLowerCase()} is-bold`">
           {{ card.attribute || '?' }}
@@ -11,24 +11,26 @@
         <span
           :class="`color-cg-vocal ${isVocalBold ? 'is-bold' : ''} ${props.isVocalUnderlined ? 'is-underline' : ''}`"
         >
-          {{ card.vocal || '?' }}
+          {{ card.stats?.vocal || '?' }}
         </span>
         &nbsp;
         <span
           :class="`color-cg-dance ${isDanceBold ? 'is-bold' : ''} ${props.isDanceUnderlined ? 'is-underline' : ''}`"
         >
-          {{ card.dance || '?' }}
+          {{ card.stats?.dance || '?' }}
         </span>
         &nbsp;
         <span
           :class="`color-cg-visual ${isVisualBold ? 'is-bold' : ''} ${props.isVisualUnderlined ? 'is-underline' : ''}`"
         >
-          {{ card.visual || '?' }}
+          {{ card.stats?.visual || '?' }}
         </span>
         <br />
-        <span class="is-bold">{{ card.skill || '' }}</span>
+        <span class="is-bold">{{
+          card.skill ? (SKILL_NAME_MAPPING[card.skill.type] ?? card.skill.type) : ''
+        }}</span>
         &nbsp;
-        <span class="is-bold">{{ card.tw || '' }}</span>
+        <span class="is-bold">{{ card.skill?.params?.tw || '' }}s</span>
       </div>
     </template>
     <slot></slot>
@@ -37,27 +39,23 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-
-interface CardData {
-  title?: string;
-  attribute?: string;
-  vocal?: number;
-  dance?: number;
-  visual?: number;
-  skill?: number;
-  tw?: number;
-}
+import type { CgssCardSkillTableItem } from './CgssUnitViewer.vue';
 
 const props = defineProps<{
-  card: CardData;
+  card: CgssCardSkillTableItem;
   isVocalUnderlined?: boolean;
   isDanceUnderlined?: boolean;
   isVisualUnderlined?: boolean;
 }>();
 
+const SKILL_NAME_MAPPING: Record<string, string> = {
+  focus_flat: 'coordinate',
+  cboost: 'combo',
+};
+
 // 使用计算属性来计算总和和判断加粗状态
 const totalStats = computed(() => {
-  const { vocal, dance, visual } = props.card;
+  const { vocal, dance, visual } = props.card.stats || { vocal: 0, dance: 0, visual: 0 };
   // 检查是否所有值都是有效的数字
   if (typeof vocal !== 'number' || typeof dance !== 'number' || typeof visual !== 'number') {
     return 0;
@@ -66,15 +64,21 @@ const totalStats = computed(() => {
 });
 
 const isVocalBold = computed(() =>
-  props.card.vocal && totalStats.value > 0 ? props.card.vocal / totalStats.value > 0.35 : false,
+  props.card.stats?.vocal && totalStats.value > 0
+    ? props.card.stats.vocal / totalStats.value > 0.35
+    : false,
 );
 
 const isDanceBold = computed(() =>
-  props.card.dance && totalStats.value > 0 ? props.card.dance / totalStats.value > 0.35 : false,
+  props.card.stats?.dance && totalStats.value > 0
+    ? props.card.stats.dance / totalStats.value > 0.35
+    : false,
 );
 
 const isVisualBold = computed(() =>
-  props.card.visual && totalStats.value > 0 ? props.card.visual / totalStats.value > 0.35 : false,
+  props.card.stats?.visual && totalStats.value > 0
+    ? props.card.stats.visual / totalStats.value > 0.35
+    : false,
 );
 </script>
 
