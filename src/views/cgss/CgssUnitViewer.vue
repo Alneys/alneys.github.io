@@ -1154,59 +1154,21 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
 
   // 对列的数据进行排序
   result.forEach((row) => {
-    // 对alternate列进行排序：根据对应行的target_param数值
-    if (Array.isArray(row.alternate) && row.alternate.length > 0) {
-      row.alternate = sortCardsByParam(row.alternate, row.target_param, data);
-    }
+    // 遍历tableDominantColumnHeader中的每一列，检查是否需要排序
+    tableDominantColumnHeader.forEach((colDef) => {
+      const prop = colDef.prop;
+      const param = colDef.param;
 
-    // 对mutual列进行排序：根据对应行的target_param_2数值
-    if (Array.isArray(row.mutual) && row.mutual.length > 0) {
-      row.mutual = sortCardsByParam(row.mutual, row.target_param_2, data);
-    }
-
-    // 对overload列进行排序：根据对应行的target_param数值
-    if (Array.isArray(row.overload_4) && row.overload_4.length > 0) {
-      row.overload_4 = sortCardsByParam(row.overload_4, row.target_param, data);
-    }
-
-    if (Array.isArray(row.overload_6) && row.overload_6.length > 0) {
-      row.overload_6 = sortCardsByParam(row.overload_6, row.target_param, data);
-    }
-
-    if (Array.isArray(row.overload_7) && row.overload_7.length > 0) {
-      row.overload_7 = sortCardsByParam(row.overload_7, row.target_param, data);
-    }
-
-    if (Array.isArray(row.overload_9) && row.overload_9.length > 0) {
-      row.overload_9 = sortCardsByParam(row.overload_9, row.target_param, data);
-    }
-
-    // 对overdrive列进行排序：根据对应行的target_param_2数值
-    if (Array.isArray(row.overdrive_4) && row.overdrive_4.length > 0) {
-      row.overdrive_4 = sortCardsByParam(row.overdrive_4, row.target_param_2, data);
-    }
-
-    if (Array.isArray(row.overdrive_6) && row.overdrive_6.length > 0) {
-      row.overdrive_6 = sortCardsByParam(row.overdrive_6, row.target_param_2, data);
-    }
-
-    if (Array.isArray(row.overdrive_7) && row.overdrive_7.length > 0) {
-      row.overdrive_7 = sortCardsByParam(row.overdrive_7, row.target_param_2, data);
-    }
-
-    if (Array.isArray(row.overdrive_9) && row.overdrive_9.length > 0) {
-      row.overdrive_9 = sortCardsByParam(row.overdrive_9, row.target_param_2, data);
-    }
-
-    // 对act列进行排序：根据对应行的target_param数值
-    if (Array.isArray(row.act) && row.act.length > 0) {
-      row.act = sortCardsByParam(row.act, row.target_param, data);
-    }
-
-    // 对combo列进行排序：根据对应行的target_param_2数值
-    if (Array.isArray(row.combo) && row.combo.length > 0) {
-      row.combo = sortCardsByParam(row.combo, row.target_param_2, data);
-    }
+      // 检查行中是否存在对应列且该列有数据
+      if (Array.isArray(row[prop]) && row[prop].length > 0) {
+        // 使用对应的param值进行排序
+        row[prop] = sortCardsByParam(
+          row[prop],
+          param === 'target_param_2' ? row.target_param_2 : row.target_param,
+          data,
+        );
+      }
+    });
   });
 
   return result;
