@@ -46,9 +46,9 @@ const exportCidsToString = () => {
     Object.keys(dataRow).forEach((colKey) => {
       const colValue = dataRow[colKey];
       if (Array.isArray(colValue)) {
-        colValue.forEach((card) => {
-          if (card && !card.isBrightness) {
-            darkCids.push(card.cid);
+        colValue.forEach((icon) => {
+          if (icon && !icon.isBrightness) {
+            darkCids.push(icon.card.cid);
           }
         });
       }
