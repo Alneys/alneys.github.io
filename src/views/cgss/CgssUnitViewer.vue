@@ -306,7 +306,7 @@ import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
 const env = import.meta.env;
 
-interface CgssCardSkillTableItem {
+export interface CgssCardSkillTableItem {
   cid: string;
   name: string;
   title: string;
@@ -528,7 +528,7 @@ const tableDominantColumnHeader = [
 ];
 
 // Cell item
-interface CellItem {
+export interface CardData {
   cid: string;
   name: string;
   title?: string;
@@ -536,11 +536,13 @@ interface CellItem {
   vocal?: number;
   dance?: number;
   visual?: number;
+  skill?: string;
+  tw?: string;
   isBrightness?: boolean;
   link?: string;
 }
 
-// Resonance table
+// Resonance, dominant table
 interface TableDataRow {
   tw: string;
   specialize?: string;
@@ -549,7 +551,7 @@ interface TableDataRow {
   target_param_2?: string;
   target_param?: string;
   row: number;
-  [key: string]: CellItem[] | string | number | undefined;
+  [key: string]: CardData[] | string | number | undefined;
 }
 
 // 模式切换
@@ -783,25 +785,25 @@ const sortTableTw = (a: TableDataRow, b: TableDataRow) => {
 };
 
 // 创建一个函数来生成卡片数据对象
-const createCardDataItem = (item: CgssCardSkillTableItem) => {
+const createCardDataItem = (item: CgssCardSkillTableItem): CardData => {
   return {
     cid: item.cid,
     name: item.name,
     title: `[${item.title}] ${item.name}`,
-    link: item.link,
-    isBrightness: true,
     attribute: item.attribute,
     vocal: item.stats.vocal,
     visual: item.stats.visual,
     dance: item.stats.dance,
     skill: item.skill.type,
     tw: `${item.skill.params.tw}s`,
+    link: item.link,
+    isBrightness: true,
   };
 };
 
 // 定义排序函数
 const sortCardsByParam = (
-  cards: CellItem[],
+  cards: CardData[],
   targetParam: string | undefined,
   data: CgssCardSkillTableItem[],
 ) => {
@@ -1039,7 +1041,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           Array.isArray(result[rowIndex].dominant)
         ) {
           // typescript bug
-          (result[rowIndex].dominant as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex].dominant as CardData[]).push(createCardDataItem(item));
         } else {
           console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
@@ -1065,7 +1067,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
             DOMINANT_PARAM_THRESHOLD_ADD &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex]?.alternate as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.alternate as CardData[]).push(createCardDataItem(item));
         }
 
         // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
@@ -1078,7 +1080,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
             DOMINANT_PARAM_THRESHOLD_ADD &&
           String(item.skill.params.tw) + 's' === row.tw
         ) {
-          (result[rowIndex]?.mutual as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.mutual as CardData[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1101,7 +1103,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
                 item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
                   DOMINANT_PARAM_THRESHOLD_ADD
               ) {
-                (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
+                (result[rowIndex]?.[colDef.prop] as CardData[]).push(createCardDataItem(item));
               }
               // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
               else if (
@@ -1111,7 +1113,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
                 item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
                   DOMINANT_PARAM_THRESHOLD_ADD
               ) {
-                (result[rowIndex]?.[colDef.prop] as CellItem[]).push(createCardDataItem(item));
+                (result[rowIndex]?.[colDef.prop] as CardData[]).push(createCardDataItem(item));
               }
             }
           }
@@ -1130,7 +1132,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
             DOMINANT_PARAM_THRESHOLD_SPECIALIZE
         ) {
-          (result[rowIndex]?.act as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.act as CardData[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1146,7 +1148,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
             DOMINANT_PARAM_THRESHOLD_SPECIALIZE
         ) {
-          (result[rowIndex]?.combo as CellItem[]).push(createCardDataItem(item));
+          (result[rowIndex]?.combo as CardData[]).push(createCardDataItem(item));
         }
       });
     }
@@ -1325,7 +1327,7 @@ const isNameMatched = (title: string | undefined, filter: string) => {
 const isSpecializeNotMatch = (
   headerItem: (typeof tableDominantColumnHeader)[number],
   row: TableDataRow,
-  icon: CellItem,
+  icon: CardData,
 ) => {
   // 不检查dominant列
   if (headerItem.prop === 'dominant') {
@@ -1341,7 +1343,7 @@ const isSpecializeNotMatch = (
   // 获取要检查的属性值
   let valueToCheck: number | undefined;
   if (paramField === 'target_param' || paramField === 'target_param_2') {
-    const paramKey = row[paramField] as keyof CellItem;
+    const paramKey = row[paramField] as keyof CardData;
     valueToCheck = icon[paramKey] as number;
   } else {
     // 如果param字段不是target_param或target_param_2，则不检查

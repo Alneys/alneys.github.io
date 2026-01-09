@@ -26,7 +26,10 @@
           {{ card.visual || '?' }}
         </span>
         <br />
-        <span class="is-bold">{{ card.skill || '' }}</span>
+        <span class="is-bold">{{
+          card.skill ? (SKILL_NAME_MAPPING[card.skill] ?? card.skill) : ''
+        }}</span>
+
         &nbsp;
         <span class="is-bold">{{ card.tw || '' }}</span>
       </div>
@@ -37,16 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-
-interface CardData {
-  title?: string;
-  attribute?: string;
-  vocal?: number;
-  dance?: number;
-  visual?: number;
-  skill?: number;
-  tw?: number;
-}
+import type { CardData } from './CgssUnitViewer.vue';
 
 const props = defineProps<{
   card: CardData;
@@ -54,6 +48,11 @@ const props = defineProps<{
   isDanceUnderlined?: boolean;
   isVisualUnderlined?: boolean;
 }>();
+
+const SKILL_NAME_MAPPING: Record<string, string> = {
+  focus_flat: 'coordinate',
+  cboost: 'combo',
+};
 
 // 使用计算属性来计算总和和判断加粗状态
 const totalStats = computed(() => {
