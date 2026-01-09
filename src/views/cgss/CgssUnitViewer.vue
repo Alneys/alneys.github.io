@@ -226,7 +226,6 @@
             "
             :class-name="`icons skill-${headerItem.skill ?? headerItem.prop}`"
             :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
-            :width="isSmallScreen ? undefined : headerItem.width"
           >
             <template #default="scope">
               <div class="table-icons-container">
@@ -437,7 +436,6 @@ const tableDominantColumnHeader = [
     skill: 'alternate',
     attribute: 'target_attribute',
     param: 'target_param',
-    width: 108,
     minWidth: 108,
     minWidthSmallScreen: 108,
   },
@@ -448,7 +446,6 @@ const tableDominantColumnHeader = [
     skill: 'mutual',
     attribute: 'target_attribute_2',
     param: 'target_param_2',
-    width: 152,
     minWidth: 152,
     minWidthSmallScreen: 108,
   },
@@ -579,12 +576,12 @@ watch(switchViewCardInfo, (newValue) => {
 
 // 响应式属性用于判断屏幕宽度是否足够
 const isMobile = ref(window.innerWidth < 768);
-const isSmallScreen = ref(window.innerWidth < 1528);
+const isSmallScreen = ref(window.innerWidth < 1600);
 
 // 监听窗口大小变化
 const handleResize = () => {
   isMobile.value = window.innerWidth < 768;
-  isSmallScreen.value = window.innerWidth < 1528;
+  isSmallScreen.value = window.innerWidth < 1600;
 };
 
 onMounted(() => {
