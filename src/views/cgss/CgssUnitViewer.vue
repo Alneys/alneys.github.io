@@ -541,7 +541,7 @@ interface CellItem {
 }
 
 // Resonance table
-interface TableResonanceRow {
+interface TableDataRow {
   tw: string;
   specialize?: string;
   target_attribute_2?: string;
@@ -638,10 +638,10 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
 
 // 创建一个用于处理单个参数排序的通用函数
 const sortAttributeHelper = (
-  getter: (item: TableResonanceRow) => string | undefined,
+  getter: (item: TableDataRow) => string | undefined,
   order: string[],
 ) => {
-  return (a: TableResonanceRow, b: TableResonanceRow) => {
+  return (a: TableDataRow, b: TableDataRow) => {
     const indexA = order.indexOf(getter(a) || '');
     const indexB = order.indexOf(getter(b) || '');
 
@@ -675,7 +675,7 @@ const sortAttributeHelper = (
 };
 
 // 使用通用函数创建排序方法 - 需要单独处理多级排序
-const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
+const sortDominantAttribute = (a: TableDataRow, b: TableDataRow) => {
   // 首先按 target_attribute 排序
   const attrCompare = sortAttributeHelper(
     (item) => item.target_attribute,
@@ -704,7 +704,7 @@ const sortDominantAttribute = (a: TableResonanceRow, b: TableResonanceRow) => {
   return a.row - b.row;
 };
 
-const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
+const sortDominantAttribute2 = (a: TableDataRow, b: TableDataRow) => {
   // 首先按 target_attribute_2 排序
   const attr2Compare = sortAttributeHelper(
     (item) => item.target_attribute_2,
@@ -734,7 +734,7 @@ const sortDominantAttribute2 = (a: TableResonanceRow, b: TableResonanceRow) => {
 };
 
 // 添加Resonance表的排序方法
-const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => {
+const sortResonanceSpecialize = (a: TableDataRow, b: TableDataRow) => {
   const order = tableResonanceRowHeaderSpecialize;
   const indexA = order.indexOf(a.specialize || '');
   const indexB = order.indexOf(b.specialize || '');
@@ -769,7 +769,7 @@ const sortResonanceSpecialize = (a: TableResonanceRow, b: TableResonanceRow) => 
   return a.row - b.row;
 };
 
-const sortTableTw = (a: TableResonanceRow, b: TableResonanceRow) => {
+const sortTableTw = (a: TableDataRow, b: TableDataRow) => {
   // 提取数值部分进行比较，去掉 's' 后缀
   const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
   const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
@@ -799,17 +799,44 @@ const createCardDataItem = (item: CgssCardSkillTableItem) => {
   };
 };
 
+// 定义排序函数
+const sortCardsByParam = (
+  cards: CellItem[],
+  targetParam: string | undefined,
+  data: CgssCardSkillTableItem[],
+) => {
+  if (!targetParam) return cards;
+
+  return cards.sort((a, b) => {
+    // 找到a卡片的数值
+    const cardA = data.find((item) => item.cid === a.cid);
+    // 找到b卡片的数值
+    const cardB = data.find((item) => item.cid === b.cid);
+
+    if (!cardA || !cardB) return 0;
+
+    // 根据target_param或target_param_2获取对应数值
+    const paramKey = targetParam as keyof CgssCardSkillTableItem['stats'];
+
+    const aValue = cardA.stats[paramKey] || 0;
+    const bValue = cardB.stats[paramKey] || 0;
+
+    // 从大到小排序
+    return bValue - aValue;
+  });
+};
+
 // 初始化Resonance表格数据
-const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
+const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
   // 创建表格数据结构
-  const result: TableResonanceRow[] = [];
+  const result: TableDataRow[] = [];
 
   // 为每个specialize和tw的组合创建数据行
   // 使用tableResonanceColumnHeader的prop来动态生成初始数据
   tableResonanceRowHeaderSpecialize.forEach((specialize) => {
     tableResonanceRowHeaderTw.forEach((tw) => {
       // 动态创建列数据，使用tableResonanceColumnHeader的prop
-      const row: TableResonanceRow = {
+      const row: TableDataRow = {
         specialize: specialize, // 添加属性信息
         tw: tw + 's', // 添加间隔信息
         row: result.length, // 添加行号
@@ -877,13 +904,33 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableResonance
     }
   });
 
+  // 对resonance表中的extraColumn列进行排序
+  result.forEach((row) => {
+    // 获取与当前行specialize相关的stat字段
+    const statKey = row.specialize as keyof CgssCardSkillTableItem['stats'];
+
+    // 找到所有的extraColumn列
+    const extraColumnHeaders = tableResonanceColumnHeader.filter((header) => header.extraColumn);
+
+    // 对每个extraColumn列进行排序
+    extraColumnHeaders.forEach((header) => {
+      const columnName = header.prop;
+      const cardsInColumn = row[columnName];
+
+      if (Array.isArray(cardsInColumn) && cardsInColumn.length > 0) {
+        // 使用统一的排序函数
+        row[columnName] = sortCardsByParam(cardsInColumn, statKey, data);
+      }
+    });
+  });
+
   return result;
 };
 
 // 初始化Dominant表格数据
-const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceRow[] => {
+const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
   // 创建表格数据结构，包含144种情况 (3*2*3*2*4 = 144)
-  const result: TableResonanceRow[] = [];
+  const result: TableDataRow[] = [];
 
   // 遍历所有可能的组合
   tableDominantRowHeaderAttribute.forEach((attr2) => {
@@ -901,7 +948,7 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
               if (param !== param2) {
                 // 确保param !== param2 (3*2 = 6种组合)
                 // 动态创建列数据，使用tableDominantColumnHeader的prop
-                const row: TableResonanceRow = {
+                const row: TableDataRow = {
                   target_attribute_2: attr2, // 第一列: target_attribute_2
                   target_attribute: attr, // 第二列: target_attribute
                   tw: tw + 's', // 第三列: tw
@@ -1105,34 +1152,6 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
     }
   });
 
-  // 定义排序函数
-  const sortCardsByParam = (
-    cards: CellItem[],
-    targetParam: string | undefined,
-
-    data: CgssCardSkillTableItem[],
-  ) => {
-    if (!targetParam) return cards;
-
-    return cards.sort((a, b) => {
-      // 找到a卡片的数值
-      const cardA = data.find((item) => item.cid === a.cid);
-      // 找到b卡片的数值
-      const cardB = data.find((item) => item.cid === b.cid);
-
-      if (!cardA || !cardB) return 0;
-
-      // 根据target_param或target_param_2获取对应数值
-      const paramKey = targetParam as keyof CgssCardSkillTableItem['stats'];
-
-      const aValue = cardA.stats[paramKey] || 0;
-      const bValue = cardB.stats[paramKey] || 0;
-
-      // 从大到小排序
-      return bValue - aValue;
-    });
-  };
-
   // 对列的数据进行排序
   result.forEach((row) => {
     // 对alternate列进行排序：根据对应行的target_param数值
@@ -1194,12 +1213,12 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableResonanceR
 };
 
 // Resonance表格数据
-const tableDataResonance = ref<TableResonanceRow[]>(
+const tableDataResonance = ref<TableDataRow[]>(
   initializeDataResonance(CgssCardSkillTable as CgssCardSkillTableItem[]),
 );
 
 // Dominant表格数据
-const tableDataDominant = ref<TableResonanceRow[]>(
+const tableDataDominant = ref<TableDataRow[]>(
   initializeDataDominant(CgssCardSkillTable as CgssCardSkillTableItem[]),
 );
 
@@ -1212,7 +1231,7 @@ const filteredTableDataDominant = computed(() => {
 });
 
 // 处理图片点击事件
-const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) => {
+const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
   // 验证输入参数
   if (!row || !colKey || index < 0) {
     console.warn('Invalid parameters for handleIconClick');
@@ -1296,7 +1315,7 @@ const handleIconClick = (row: TableResonanceRow, colKey: string, index: number) 
 // 添加一个函数来判断参数是否需要加粗
 const isDominantParamBold = (
   headerItem: (typeof tableDominantColumnHeader)[number],
-  row: TableResonanceRow,
+  row: TableDataRow,
   param: string,
 ) => {
   // 如果是dominant列，需要检查target_param或target_param_2
@@ -1343,7 +1362,7 @@ const isNameMatched = (title: string | undefined, filter: string) => {
 
 const isSpecializeNotMatch = (
   headerItem: (typeof tableDominantColumnHeader)[number],
-  row: TableResonanceRow,
+  row: TableDataRow,
   icon: CellItem,
 ) => {
   // 不检查dominant列
