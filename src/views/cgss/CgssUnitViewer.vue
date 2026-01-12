@@ -141,6 +141,7 @@
         <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
         <el-switch v-model="switchShowOverloadOverdrive" active-text="显示过载/超载列" />
         <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
+        <el-switch v-model="switchShowAllAttributeSpecializePairs" active-text="显示所有属性组合" />
       </div>
     </div>
     <div class="unit-table">
@@ -414,6 +415,20 @@ const tableResonanceColumnHeader = [
 // Dominant table
 const tableDominantRowHeaderAttribute = tableResonanceRowHeaderAttribute;
 const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
+const tableDominantRowHeaderAttributeSpecializePairs = [
+  {
+    target_param_2: 'vocal',
+    target_param: 'visual',
+  },
+  {
+    target_param_2: 'dance',
+    target_param: 'vocal',
+  },
+  {
+    target_param_2: 'visual',
+    target_param: 'dance',
+  },
+];
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
 const tableDominantColumnHeader = [
@@ -547,6 +562,7 @@ const switchShowExtraTableConfig = ref(true);
 const switchShowExtraColumns = ref(false);
 const switchShowOverloadOverdrive = ref(true);
 const switchShowSpecializeNotMatch = ref(false);
+const switchShowAllAttributeSpecializePairs = ref(false);
 
 // 名字过滤输入
 const inputNameFilter = ref(
@@ -1191,6 +1207,15 @@ const tableDataDominant = ref<TableDataRow[]>(
 
 // 使用计算属性过滤dominant表中dominant列为空的行
 const filteredTableDataDominant = computed(() => {
+  if (switchShowAllAttributeSpecializePairs.value) {
+    // 只显示符合tableDominantRowHeaderSpecializePairs中指定的target_param和target_param_2组合的行
+    return tableDataDominant.value.filter((row) =>
+      tableDominantRowHeaderAttributeSpecializePairs.some(
+        (pair) =>
+          pair.target_param_2 === row.target_param_2 && pair.target_param === row.target_param,
+      ),
+    );
+  }
   return tableDataDominant.value.filter(
     (row) => Array.isArray(row.dominant) && row.dominant.length > 0,
   );
