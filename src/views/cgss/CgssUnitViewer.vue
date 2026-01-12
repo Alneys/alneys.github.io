@@ -140,6 +140,11 @@
       <div>
         <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
         <el-switch v-model="switchShowOverloadOverdrive" active-text="显示过载/超载列" />
+
+        <el-switch
+          v-model="switchShowSortRelatedSkillsOnly"
+          active-text="只显示当前排序项目相关技能"
+        />
         <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
         <el-switch v-model="switchShowAllAttributeSpecializePairs" active-text="显示所有属性组合" />
       </div>
@@ -217,8 +222,13 @@
             v-if="
               (!headerItem.extraColumn || switchShowExtraColumns) &&
               ((headerItem.skill !== 'overload' && headerItem.skill !== 'overdrive') ||
-                switchShowOverloadOverdrive)
+                switchShowOverloadOverdrive) &&
+              (!switchShowSortRelatedSkillsOnly ||
+                currentDominantSortField === 'tw' ||
+                !headerItem.attribute ||
+                headerItem.attribute === currentDominantSortField)
             "
+            :key="`column-${headerItem.prop}`"
             :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
@@ -539,6 +549,7 @@ const tableDominantColumnHeader = [
     labelCn: '演技',
     labelEn: 'act',
     skill: 'psb_',
+    attribute: 'target_attribute',
     param: 'target_param',
     minWidth: 116,
     minWidthSmallScreen: 116,
@@ -550,6 +561,7 @@ const tableDominantColumnHeader = [
     labelEn: 'combo',
     skill: 'cboost',
     minWidth: 80,
+    attribute: 'target_attribute_2',
     param: 'target_param_2',
     extraColumn: true,
   },
@@ -565,6 +577,7 @@ const switchShowExtraColumns = ref(false);
 const switchShowOverloadOverdrive = ref(true);
 const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
+const switchShowSortRelatedSkillsOnly = ref(false);
 
 // 名字过滤输入
 const inputNameFilter = ref(
