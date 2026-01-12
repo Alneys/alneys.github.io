@@ -151,6 +151,8 @@
         :max-height="isMobile ? 560 : 9999"
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
+        :span-method="tableDominantSpanMethod"
+        @sort-change="handleDominantSortChange"
       >
         <!-- 第一列：target_attribute_2 target_param_2 -->
         <el-table-column
@@ -611,12 +613,20 @@ onUnmounted(() => {
 });
 
 // 添加响应式变量跟踪当前排序字段
-const currentResonanceSortField = ref('specialize'); // 默认按specialize排序
+const currentResonanceSortField = ref('specialize');
+const currentDominantSortField = ref('target_attribute_2');
 
 // 监听Resonance表排序事件
 const handleResonanceSortChange = ({ column, prop, order }: any) => {
   if (prop) {
     currentResonanceSortField.value = prop;
+  }
+};
+
+// 监听Dominant表排序事件
+const handleDominantSortChange = ({ column, prop, order }: any) => {
+  if (prop) {
+    currentDominantSortField.value = prop;
   }
 };
 // Resonance表合并单元格方法
@@ -626,14 +636,41 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
     return [1, 1];
   }
 
-  // 原来的合并逻辑保持不变，仅在按specialize排序时生效
   if (columnIndex === 0) {
     if (rowIndex % tableResonanceRowHeaderTw.length === 0) {
       return [tableResonanceRowHeaderTw.length, 1];
     } else {
     }
     return [0, 0];
+  } else {
+    return [1, 1];
   }
+};
+
+// Dominant表合并单元格方法
+const tableDominantSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+  // 如果未显示所有属性组合，或者不是按target_attribute或者target_attribute_2排序，则不合并单元格
+  if (
+    !switchShowAllAttributeSpecializePairs.value ||
+    !currentDominantSortField.value.startsWith('target_attribute')
+  ) {
+    return [1, 1];
+  }
+
+  const rowSpan = tableDominantRowHeaderTw.length * (tableResonanceRowHeaderAttribute.length - 1);
+
+  // 检查当前列是否需要合并（第一列或第二列）
+  if (
+    (columnIndex === 0 || columnIndex === 1) &&
+    currentDominantSortField.value === column.property
+  ) {
+    if (rowIndex % rowSpan === 0) {
+      return [rowSpan, 1];
+    }
+    return [0, 0];
+  }
+
+  return [1, 1];
 };
 
 // 处理单个参数排序的通用函数
