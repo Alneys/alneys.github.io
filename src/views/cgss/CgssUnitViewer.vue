@@ -140,7 +140,13 @@
       <div>
         <el-switch v-model="switchShowExtraColumns" active-text="额外技能" />
         <el-switch v-model="switchShowOverloadOverdrive" active-text="显示过载/超载列" />
+
+        <el-switch
+          v-model="switchShowSortRelatedSkillsOnly"
+          active-text="只显示当前排序项目相关技能"
+        />
         <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
+        <el-switch v-model="switchShowAllAttributeSpecializePairs" active-text="显示所有属性组合" />
       </div>
     </div>
     <div class="unit-table">
@@ -150,6 +156,8 @@
         :max-height="isMobile ? 560 : 9999"
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
+        :span-method="tableDominantSpanMethod"
+        @sort-change="handleDominantSortChange"
       >
         <!-- 第一列：target_attribute_2 target_param_2 -->
         <el-table-column
@@ -214,8 +222,13 @@
             v-if="
               (!headerItem.extraColumn || switchShowExtraColumns) &&
               ((headerItem.skill !== 'overload' && headerItem.skill !== 'overdrive') ||
-                switchShowOverloadOverdrive)
+                switchShowOverloadOverdrive) &&
+              (!switchShowSortRelatedSkillsOnly ||
+                currentDominantSortField === 'tw' ||
+                !headerItem.attribute ||
+                headerItem.attribute === currentDominantSortField)
             "
+            :key="`column-${headerItem.prop}`"
             :prop="headerItem.prop"
             :label="
               switchShowSimpleLabels
@@ -414,6 +427,20 @@ const tableResonanceColumnHeader = [
 // Dominant table
 const tableDominantRowHeaderAttribute = tableResonanceRowHeaderAttribute;
 const tableDominantRowHeaderSpecialize = tableResonanceRowHeaderSpecialize;
+const tableDominantRowHeaderAttributeSpecializePairs = [
+  {
+    target_param_2: 'vocal',
+    target_param: 'visual',
+  },
+  {
+    target_param_2: 'dance',
+    target_param: 'vocal',
+  },
+  {
+    target_param_2: 'visual',
+    target_param: 'dance',
+  },
+];
 const tableDominantRowHeaderTw = ['6', '9', '11', '13'];
 
 const tableDominantColumnHeader = [
@@ -522,6 +549,7 @@ const tableDominantColumnHeader = [
     labelCn: '演技',
     labelEn: 'act',
     skill: 'psb_',
+    attribute: 'target_attribute',
     param: 'target_param',
     minWidth: 116,
     minWidthSmallScreen: 116,
@@ -533,6 +561,7 @@ const tableDominantColumnHeader = [
     labelEn: 'combo',
     skill: 'cboost',
     minWidth: 80,
+    attribute: 'target_attribute_2',
     param: 'target_param_2',
     extraColumn: true,
   },
@@ -547,6 +576,8 @@ const switchShowExtraTableConfig = ref(true);
 const switchShowExtraColumns = ref(false);
 const switchShowOverloadOverdrive = ref(true);
 const switchShowSpecializeNotMatch = ref(false);
+const switchShowAllAttributeSpecializePairs = ref(false);
+const switchShowSortRelatedSkillsOnly = ref(false);
 
 // 名字过滤输入
 const inputNameFilter = ref(
@@ -595,12 +626,20 @@ onUnmounted(() => {
 });
 
 // 添加响应式变量跟踪当前排序字段
-const currentResonanceSortField = ref('specialize'); // 默认按specialize排序
+const currentResonanceSortField = ref('specialize');
+const currentDominantSortField = ref('target_attribute_2');
 
 // 监听Resonance表排序事件
 const handleResonanceSortChange = ({ column, prop, order }: any) => {
   if (prop) {
     currentResonanceSortField.value = prop;
+  }
+};
+
+// 监听Dominant表排序事件
+const handleDominantSortChange = ({ column, prop, order }: any) => {
+  if (prop) {
+    currentDominantSortField.value = prop;
   }
 };
 // Resonance表合并单元格方法
@@ -610,14 +649,41 @@ const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =
     return [1, 1];
   }
 
-  // 原来的合并逻辑保持不变，仅在按specialize排序时生效
   if (columnIndex === 0) {
     if (rowIndex % tableResonanceRowHeaderTw.length === 0) {
       return [tableResonanceRowHeaderTw.length, 1];
     } else {
     }
     return [0, 0];
+  } else {
+    return [1, 1];
   }
+};
+
+// Dominant表合并单元格方法
+const tableDominantSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+  // 如果未显示所有属性组合，或者不是按target_attribute或者target_attribute_2排序，则不合并单元格
+  if (
+    !switchShowAllAttributeSpecializePairs.value ||
+    !currentDominantSortField.value.startsWith('target_attribute')
+  ) {
+    return [1, 1];
+  }
+
+  const rowSpan = tableDominantRowHeaderTw.length * (tableResonanceRowHeaderAttribute.length - 1);
+
+  // 检查当前列是否需要合并（第一列或第二列）
+  if (
+    (columnIndex === 0 || columnIndex === 1) &&
+    currentDominantSortField.value === column.property
+  ) {
+    if (rowIndex % rowSpan === 0) {
+      return [rowSpan, 1];
+    }
+    return [0, 0];
+  }
+
+  return [1, 1];
 };
 
 // 处理单个参数排序的通用函数
@@ -1191,6 +1257,15 @@ const tableDataDominant = ref<TableDataRow[]>(
 
 // 使用计算属性过滤dominant表中dominant列为空的行
 const filteredTableDataDominant = computed(() => {
+  if (switchShowAllAttributeSpecializePairs.value) {
+    // 只显示符合tableDominantRowHeaderSpecializePairs中指定的target_param和target_param_2组合的行
+    return tableDataDominant.value.filter((row) =>
+      tableDominantRowHeaderAttributeSpecializePairs.some(
+        (pair) =>
+          pair.target_param_2 === row.target_param_2 && pair.target_param === row.target_param,
+      ),
+    );
+  }
   return tableDataDominant.value.filter(
     (row) => Array.isArray(row.dominant) && row.dominant.length > 0,
   );
