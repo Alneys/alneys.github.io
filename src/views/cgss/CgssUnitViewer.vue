@@ -976,21 +976,17 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableDataRow[]
     }
   });
 
-  // 对resonance表中的extraColumn列进行排序
+  // 对Resonance表中的单元格进行排序
   result.forEach((row) => {
-    // 获取与当前行specialize相关的stat字段
+    // 获取当前行排序对应的特化属性
     const statKey = row.specialize as keyof CgssCardSkillTableItem['stats'];
 
-    // 找到所有的extraColumn列
-    const extraColumnHeaders = tableResonanceColumnHeader.filter((header) => header.extraColumn);
-
-    // 对每个extraColumn列进行排序
-    extraColumnHeaders.forEach((header) => {
+    // 对当前行每个列对应的单元格进行排序
+    tableResonanceColumnHeader.forEach((header) => {
       const columnName = header.prop;
       const cardsInColumn = row[columnName];
 
       if (Array.isArray(cardsInColumn) && cardsInColumn.length > 0) {
-        // 使用统一的排序函数
         row[columnName] = sortCardsByParam(cardsInColumn, statKey, data);
       }
     });
@@ -1223,9 +1219,9 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
     }
   });
 
-  // 对列的数据进行排序
+  // 对Dominant表中的单元格进行排序
   result.forEach((row) => {
-    // 遍历tableDominantColumnHeader中的每一列，检查是否需要排序
+    // 遍历tableDominantColumnHeader中的每一行，检查排序项目与对应的特化属性
     tableDominantColumnHeader.forEach((colDef) => {
       const prop = colDef.prop;
       const param = colDef.param;
