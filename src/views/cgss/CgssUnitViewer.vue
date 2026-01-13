@@ -18,11 +18,18 @@
         <div v-if="inputNameFilterDefaultInformation">{{ inputNameFilterDefaultInformation }}</div>
       </div>
       <div>
-        <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换状态" />
-        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
+        <span class="el-switch__label">点击图标操作</span>
+        <el-segmented
+          v-model="switchClickIconAction"
+          :options="[
+            { label: '无', value: 'None' },
+            { label: '切换卡片状态', value: 'ToggleCardStatus' },
+            { label: '在346lab查看卡片详情', value: 'ViewCardInfo' },
+          ]"
+        ></el-segmented>
       </div>
       <CgssUnitViewerStateManager
-        v-if="switchToggleCardStatus"
+        v-if="switchClickIconAction === 'ToggleCardStatus'"
         :table-data="[...tableDataResonance, ...tableDataDominant]"
         @update-card-status="updateCardBrightnessByCids"
       >
@@ -118,7 +125,8 @@
                   <img
                     :class="{
                       'cgss-icon': true,
-                      'icon-dark': switchToggleCardStatus && !icon.isBrightness,
+                      'icon-dark':
+                        switchClickIconAction === 'ToggleCardStatus' && !icon.isBrightness,
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': switchNameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': switchNameFilter && isNameMatched(icon.card.name),
@@ -255,7 +263,8 @@
                     "
                     :class="{
                       'cgss-icon': true,
-                      'icon-dark': !icon.isBrightness && switchToggleCardStatus,
+                      'icon-dark':
+                        switchClickIconAction === 'ToggleCardStatus' && !icon.isBrightness,
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': switchNameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': switchNameFilter && isNameMatched(icon.card.name),
@@ -570,8 +579,8 @@ const tableDominantColumnHeader = [
 ];
 
 // 模式切换
-const switchToggleCardStatus = ref(false);
-const switchViewCardInfo = ref(false);
+
+const switchClickIconAction = ref('None');
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraTableConfig = ref(true);
@@ -595,19 +604,6 @@ const allIconsBright = ref(true);
 // 添加常量来控制dominant表中目标数值的限制
 const DOMINANT_PARAM_THRESHOLD_ADD = 0;
 const DOMINANT_PARAM_THRESHOLD_SPECIALIZE = 5000;
-
-// 添加监听器实现互斥逻辑
-watch(switchToggleCardStatus, (newValue) => {
-  if (newValue && switchViewCardInfo.value) {
-    switchViewCardInfo.value = false;
-  }
-});
-
-watch(switchViewCardInfo, (newValue) => {
-  if (newValue && switchToggleCardStatus.value) {
-    switchToggleCardStatus.value = false;
-  }
-});
 
 // 响应式属性用于判断屏幕宽度是否足够
 const isMobile = ref(window.innerWidth < 768);
@@ -1235,13 +1231,8 @@ const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
     return;
   }
 
-  // 如果两个开关都关闭，则不执行任何操作
-  if (!switchToggleCardStatus.value && !switchViewCardInfo.value) {
-    return;
-  }
-
-  // 如果只开启查看卡片信息开关
-  if (switchViewCardInfo.value) {
+  // 根据switchClickIconAction的值来决定行为
+  if (switchClickIconAction.value === 'ViewCardInfo') {
     if (icon.card.link) {
       // 提取链接中的数字并减1
       const modifiedLink = icon.card.link.replace(/c_(\d+)_/, (match, num) => {
@@ -1255,8 +1246,8 @@ const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
     return;
   }
 
-  // 否则，判断是否开启切换卡片状态开关
-  else if (switchToggleCardStatus.value) {
+  // 如果是切换卡片状态
+  else if (switchClickIconAction.value === 'ToggleCardStatus') {
     const targetName = icon.card.title;
     const newState = !icon.isBrightness;
 
@@ -1403,6 +1394,7 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   > div {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
     gap: 0.5em;
     margin: 0.5em 0;
   }
