@@ -449,6 +449,8 @@ const tableDominantColumnHeader = [
     labelCn: '双色',
     labelEn: 'dominant',
     skill: 'dominant',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
     minWidth: 64,
     extraColumn: false,
   },
@@ -1105,116 +1107,60 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           result[rowIndex].dominant &&
           Array.isArray(result[rowIndex].dominant)
         ) {
-          // typescript bug
-          (result[rowIndex].dominant as CardData[]).push(createCardDataItem(item));
+          result[rowIndex].dominant.push(createCardDataItem(item));
         } else {
           console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
       }
-    }
-
-    // 处理 alternate 和 mutual 类型的技能
-    if (item.skill.type === 'alternate' || item.skill.type === 'mutual') {
-      // 遍历结果数组，找到所有符合条件的行
+    } else {
+      // 统一处理所有其他技能，注意数据可以被分配进多行
       result.forEach((row, rowIndex) => {
-        // // 检查行是否存在
-        // if (!result[rowIndex]) {
-        //   return;
-        // }
-
-        // 处理 alternate 类型：匹配 skill.type 是 alternate，attribute 与当前行 target_attribute 相同，
-        // row.target_param 的值大于阈值，且skill.tw与当前行tw相同
-        if (
-          item.skill.type === 'alternate' &&
-          item.attribute.toLowerCase() === row.target_attribute &&
-          row.target_param &&
-          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_ADD &&
-          String(item.skill.params.tw) + 's' === row.tw
-        ) {
-          (result[rowIndex]?.alternate as CardData[]).push(createCardDataItem(item));
-        }
-
-        // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
-        // row.target_param_2 的值大于阈值，且skill.tw与当前行tw相同
-        if (
-          item.skill.type === 'mutual' &&
-          item.attribute.toLowerCase() === row.target_attribute_2 &&
-          row.target_param_2 &&
-          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_ADD &&
-          String(item.skill.params.tw) + 's' === row.tw
-        ) {
-          (result[rowIndex]?.mutual as CardData[]).push(createCardDataItem(item));
-        }
-      });
-    }
-
-    // 处理 overload 和 overdrive 类型的技能
-    if (item.skill.type === 'overload' || item.skill.type === 'overdrive') {
-      // 遍历结果数组，找到所有符合条件的行
-      result.forEach((row, rowIndex) => {
-        // 遍历所有列定义，查找匹配的overload和overdrive列
         tableDominantColumnHeader.forEach((colDef) => {
-          // 检查是否为overload或overdrive类型的列
-          if (colDef.skill === item.skill.type) {
-            // 检查tw是否匹配
-            if (colDef.tw === String(item.skill.params.tw)) {
-              // overload: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于阈值
-              if (
-                item.skill.type === 'overload' &&
-                item.attribute.toLowerCase() === row.target_attribute &&
-                row.target_param &&
-                item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
-                  DOMINANT_PARAM_THRESHOLD_ADD
-              ) {
-                (result[rowIndex]?.[colDef.prop] as CardData[]).push(createCardDataItem(item));
-              }
-              // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
-              else if (
-                item.skill.type === 'overdrive' &&
-                item.attribute.toLowerCase() === row.target_attribute_2 &&
-                row.target_param_2 &&
-                item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
-                  DOMINANT_PARAM_THRESHOLD_ADD
-              ) {
-                (result[rowIndex]?.[colDef.prop] as CardData[]).push(createCardDataItem(item));
-              }
-            }
+          // 跳过dominant列
+          if (colDef.skill === 'dominant') return;
+
+          // 检查技能类型是否匹配
+          if (colDef.skill === 'psb_') {
+            if (!item.skill.type.startsWith(colDef.skill)) return;
+          } else {
+            if (colDef.skill !== item.skill.type) return;
+          }
+
+          // 检查 tw
+          if (colDef.tw !== undefined) {
+            if (String(item.skill.params.tw) !== colDef.tw) return;
+          } else {
+            if (String(item.skill.params.tw) + 's' !== row.tw && !colDef.extraColumn) return;
+          }
+
+          // 获取属性和参数字段名
+          const attrField = colDef.attribute; // e.g., 'target_attribute'
+          const paramField = colDef.param; // e.g., 'target_param'
+
+          if (!attrField || !paramField) return;
+
+          const targetAttr = row[attrField as keyof typeof row];
+          const targetParam = row[paramField as keyof typeof row];
+
+          // 属性匹配
+          if (item.attribute.toLowerCase() !== targetAttr) return;
+
+          // 参数字段存在性检查
+          if (!targetParam) return;
+
+          // 阈值检查
+          const threshold = ['overload', 'overdrive', 'alternate', 'mutual'].includes(colDef.skill)
+            ? DOMINANT_PARAM_THRESHOLD_ADD
+            : DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+          const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
+          if (statValue < threshold) return;
+
+          // 推入对应 prop 的数组
+          const targetArray = result[rowIndex]?.[colDef.prop];
+          if (Array.isArray(targetArray)) {
+            targetArray.push(createCardDataItem(item));
           }
         });
-      });
-    }
-
-    // 处理 act 类型的技能 (演技技能，如 psb_ 开头的技能)
-    if (item.skill.type.startsWith('psb_')) {
-      // 遍历结果数组，找到所有符合条件的行
-      result.forEach((row, rowIndex) => {
-        // act: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于阈值
-        if (
-          item.attribute.toLowerCase() === row.target_attribute &&
-          row.target_param &&
-          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_SPECIALIZE
-        ) {
-          (result[rowIndex]?.act as CardData[]).push(createCardDataItem(item));
-        }
-      });
-    }
-
-    // 处理 combo 类型的技能 (连击技能，如 cboost 开头的技能)
-    if (item.skill.type.startsWith('cboost')) {
-      // 遍历结果数组，找到所有符合条件的行
-      result.forEach((row, rowIndex) => {
-        // combo: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
-        if (
-          item.attribute.toLowerCase() === row.target_attribute_2 &&
-          row.target_param_2 &&
-          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_SPECIALIZE
-        ) {
-          (result[rowIndex]?.combo as CardData[]).push(createCardDataItem(item));
-        }
       });
     }
   });
