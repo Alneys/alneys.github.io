@@ -23,6 +23,9 @@ const env = import.meta.env;
       <router-link to="/gakuen-imas/rank-calc">
         <el-card shadow="hover">（已过时）学园偶像大师 评级计算器</el-card>
       </router-link>
+      <router-link v-if="false" to="/endfield/gacha">
+        <el-card shadow="hover">Endfield gacha info</el-card>
+      </router-link>
       <router-link to="/tools/password-generator">
         <el-card shadow="hover">[小工具] 密码生成器</el-card>
       </router-link>
