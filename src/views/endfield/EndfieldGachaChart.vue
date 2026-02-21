@@ -150,9 +150,14 @@ import * as echarts from 'echarts';
 
 type GachaStrategy = 'single' | 'batch' | 'smart';
 
+interface GachaSimulationResult {
+  result: string[];
+  actualDraws: number;
+}
+
 const chartCharacterRef = useTemplateRef('chartCharacterRef');
 const chartWeaponRef = useTemplateRef('chartWeaponRef');
-const frequencyList = ref<any[]>([]);
+const frequencyList = ref<GachaSimulationResult[]>([]);
 const weaponFrequencyList = ref<any[]>([]);
 const characterAverageDraws = ref<number>(0);
 const weaponAverageDraws = ref<number>(0);
@@ -281,7 +286,7 @@ function simulateCharacterGachaSingle(
  * @param currentSpecific6StarCount 当前已拥有的特定6星数量，默认0
  * @param currentDrawCount 当前已抽取次数，默认0
  * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底，默认false
- * @returns 返回本次模拟的所有抽取结果的字符串列表
+ * @returns 返回本次模拟的所有抽取结果的对象，包含result字段，值为字符串列表，以及actualDraws字段表示实际抽取次数
  */
 function simulateCharacterGachaToTarget(
   initialNoSpecific6StarCount: number = 0,
@@ -292,7 +297,7 @@ function simulateCharacterGachaToTarget(
   currentSpecific6StarCount: number = 0,
   currentDrawCount: number = 0,
   hasUsedSpecific6StarGuarantee: boolean = false,
-): string[] {
+): GachaSimulationResult {
   let drawCount = currentDrawCount;
   let no6StarCount = initialNo6StarCount;
   let no5Or6StarCount = initialNo5Or6StarCount;
@@ -384,7 +389,50 @@ function simulateCharacterGachaToTarget(
     }
   }
 
-  return currentSimulationResults;
+  // 计算实际抽数：总长度减去免费10抽（如果有的话）
+  let actualDraws = currentSimulationResults.length;
+  if (currentSimulationResults.length + currentDrawCount > 30 && currentDrawCount < 30) {
+    actualDraws -= 10;
+  }
+
+  // 如果总抽取次数达到60次，获得下个卡池的免费十连，模拟抽取
+  if (drawCount >= 60) {
+    // 使用最后的未抽到6星和5星计数，但不包括未抽到特定6星计数
+    let freeNo6StarCount = no6StarCount;
+    let freeNo5Or6StarCount = no5Or6StarCount;
+
+    // 下个卡池继承未抽到6星和5星的计数，但不继承未抽到特定6星的计数
+    for (let j = 0; j < 10; j++) {
+      let freeResult = simulateCharacterGachaSingle(
+        freeNo6StarCount,
+        freeNo5Or6StarCount,
+        0, // 不继承未抽到特定6星的计数，此处简单处理，因为下个卡池的特定角色与当前的不同
+        hasUsedSpecific6StarGuarantee,
+      );
+
+      currentSimulationResults.push(freeResult);
+
+      // 更新计数器，注意不更新noSpecific6StarCount
+      if (freeResult === '6_up') {
+        freeResult = '6_other'; // 此处简单处理
+        specific6StarCount++;
+        hasUsedSpecific6StarGuarantee = true;
+        freeNo6StarCount = 0;
+        freeNo5Or6StarCount = 0;
+      } else if (freeResult === '6_other') {
+        freeNo6StarCount = 0;
+        freeNo5Or6StarCount = 0;
+      } else if (freeResult === '5') {
+        freeNo6StarCount++;
+        freeNo5Or6StarCount = 0;
+      } else {
+        freeNo6StarCount++;
+        freeNo5Or6StarCount++;
+      }
+    }
+  }
+
+  return { result: currentSimulationResults, actualDraws };
 }
 
 /**
@@ -398,7 +446,7 @@ function simulateCharacterGachaToTarget(
  * @param currentSpecific6StarCount 当前已拥有的特定6星数量，默认0
  * @param currentDrawCount 当前已抽取次数，默认0
  * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底，默认false
- * @returns 返回一个列表，每个元素是一次模拟的所有抽取结果的字符串列表
+ * @returns 返回一个列表，每个元素是一次模拟的所有抽取结果的对象，包含result字段，值为字符串列表，以及actualDraws字段表示实际抽取次数
  */
 function simulateCharacterGachaToTargetMultipleTimes(
   simulationCount: number = 10000,
@@ -410,8 +458,8 @@ function simulateCharacterGachaToTargetMultipleTimes(
   currentSpecific6StarCount: number = 0,
   currentDrawCount: number = 0,
   hasUsedSpecific6StarGuarantee: boolean = false,
-): string[][] {
-  const allSimulationResults: string[][] = [];
+): GachaSimulationResult[] {
+  const allSimulationResults: GachaSimulationResult[] = [];
 
   if (hasUsedSpecific6StarGuarantee && currentSpecific6StarCount <= 1) {
     currentSpecific6StarCount = 1;
@@ -634,27 +682,21 @@ function simulateWeaponGachaToTargetMultipleTimes(
 
 /**
  * 将原始数据转换为ECharts可用的格式（角色）
- * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的字符串列表
+ * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的对象，包含result字段，值为字符串列表，以及actualDraws字段表示实际抽取次数
  * @returns {Object} 包含概率密度、互补累计分布和平均武库配额的数据对象
  */
-function processDataForCharacterChart(data: string[][]): any {
+function processDataForCharacterChart(data: GachaSimulationResult[]): any {
   // 统计抽取次数分布
   const countMap: Map<number, number> = new Map(); // 记录每个抽取次数出现的频率
   const tokenSumMap: Map<number, number> = new Map(); // 记录每个抽取次数对应的武库配额总和
 
   for (const simulation of data) {
-    // 计算实际抽数：总长度减去免费10抽（如果有的话）
-    let actualDraws = simulation.length;
-
-    // 判断是否包含了免费十连，如果包含则减去10实际抽数
-    if (simulation.length + formModel.currentDrawCount > 30 && formModel.currentDrawCount < 30) {
-      actualDraws -= 10;
-    }
-
+    // 直接使用 simulation.actualDraws 而不是计算
+    const actualDraws = simulation.actualDraws;
     countMap.set(actualDraws, (countMap.get(actualDraws) || 0) + 1);
 
     // 计算该次模拟的武库配额数量
-    const tokenCount = calculateWeaponTokens(simulation);
+    const tokenCount = calculateWeaponTokens(simulation.result);
     tokenSumMap.set(actualDraws, (tokenSumMap.get(actualDraws) || 0) + tokenCount);
   }
 
@@ -809,11 +851,8 @@ async function redrawCharacterChart() {
   let totalDraws = 0;
   const actualDrawsList: number[] = [];
   for (const simulation of frequencyList.value) {
-    let actualDraws = simulation.length;
-    // 判断是否包含了免费十连，如果包含则减去10实际抽数
-    if (simulation.length + formModel.currentDrawCount > 30 && formModel.currentDrawCount < 30) {
-      actualDraws -= 10;
-    }
+    // 直接使用 simulation.actualDraws 而不是计算
+    const actualDraws = simulation.actualDraws;
     totalDraws += actualDraws;
     actualDrawsList.push(actualDraws);
   }
@@ -1142,8 +1181,9 @@ onMounted(async () => {
 
   :deep(.el-form-item) {
     .el-input-number,
-    .el-select {
-      width: 150px;
+    .el-select,
+    .el-segmented {
+      width: 144px;
     }
   }
 }
