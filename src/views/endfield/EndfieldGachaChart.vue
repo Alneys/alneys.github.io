@@ -10,7 +10,7 @@
         <el-input-number
           v-model="formModel.simulationCount"
           :min="10000"
-          :max="500000"
+          :max="1000000"
           :step="10000"
           controls-position="right"
         />
@@ -102,9 +102,13 @@
     <div ref="chartCharacterRef" style="width: 100%; height: 800px"></div>
   </div>
   <div class="endfield-gacha-result gacha-character">
-    <div class="simulation-summary">平均抽取次数：{{ characterAverageDraws.toFixed(2) }}</div>
-    <div class="simulation-summary">中位数抽取次数：{{ characterMedianDraws }}</div>
-    <div class="simulation-summary">注：“平均获得武库配额”为对应抽取数达成设定目标时的平均配额</div>
+    <div class="simulation-summary">
+      平均抽取次数：{{ characterAverageDraws.toFixed(2) }} / 中位数抽取次数：{{
+        characterMedianDraws
+      }}
+    </div>
+    <div class="simulation-summary">平均获得配额：{{ characterAverageTokens.toFixed(0) }}</div>
+    <div class="simulation-summary">注：“平均获得配额”为对应抽取数达成设定目标时的平均配额</div>
   </div>
   <div class="al-divider"></div>
   <div class="endfield-gacha-title" id="endfield-gacha-weapon" style="font-weight: bold">武器</div>
@@ -163,6 +167,8 @@ const characterAverageDraws = ref<number>(0);
 const weaponAverageDraws = ref<number>(0);
 const weaponAverageTokens = ref<number>(0);
 const characterMedianDraws = ref<number>(0);
+// 新增：计算平均获取配额数量
+const characterAverageTokens = ref<number>(0);
 
 const formModel = reactive({
   simulationCount: 100000,
@@ -683,19 +689,19 @@ function simulateWeaponGachaToTargetMultipleTimes(
 /**
  * 将原始数据转换为ECharts可用的格式（角色）
  * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的对象，包含result字段，值为字符串列表，以及actualDraws字段表示实际抽取次数
- * @returns {Object} 包含概率密度、互补累计分布和平均武库配额的数据对象
+ * @returns {Object} 包含概率密度、互补累计分布和平均配额的数据对象
  */
 function processDataForCharacterChart(data: GachaSimulationResult[]): any {
   // 统计抽取次数分布
   const countMap: Map<number, number> = new Map(); // 记录每个抽取次数出现的频率
-  const tokenSumMap: Map<number, number> = new Map(); // 记录每个抽取次数对应的武库配额总和
+  const tokenSumMap: Map<number, number> = new Map(); // 记录每个抽取次数对应的配额总和
 
   for (const simulation of data) {
     // 直接使用 simulation.actualDraws 而不是计算
     const actualDraws = simulation.actualDraws;
     countMap.set(actualDraws, (countMap.get(actualDraws) || 0) + 1);
 
-    // 计算该次模拟的武库配额数量
+    // 计算该次模拟的配额数量
     const tokenCount = calculateWeaponTokens(simulation.result);
     tokenSumMap.set(actualDraws, (tokenSumMap.get(actualDraws) || 0) + tokenCount);
   }
@@ -740,7 +746,7 @@ function processDataForCharacterChart(data: GachaSimulationResult[]): any {
       return [draws, probability];
     });
 
-  // 平均武库配额数据 - 取整，并过滤掉配额为0的项目
+  // 平均配额数据 - 取整，并过滤掉配额为0的项目
   const avgTokenData = uniqueDraws
     .filter((draws) => countMap.has(draws)) // 只处理存在的数据
     .map((draws) => {
@@ -753,10 +759,28 @@ function processDataForCharacterChart(data: GachaSimulationResult[]): any {
       return tokens && tokens > 0;
     }); // 过滤掉配额为0的项目
 
+  // 每1配额换算为玉数据
+  let jadePerTokenData: [number, number][] = [];
+
+  jadePerTokenData = uniqueDraws
+    .filter((draws) => countMap.has(draws) && tokenSumMap.get(draws)! > 0) // 只处理存在的数据且配额大于0
+    .map((draws) => {
+      const totalCount = countMap.get(draws) || 0;
+      const totalTokens = tokenSumMap.get(draws) || 0;
+      const avgTokens = totalCount > 0 ? totalTokens / totalCount : 0;
+
+      // 计算玉的消耗：每次实际抽取消耗500玉
+      const totalJadeConsumed = draws * 500;
+      const avgJadePerToken = avgTokens > 0 ? totalJadeConsumed / avgTokens : 0;
+
+      return [draws, avgJadePerToken];
+    });
+
   return {
     pdfData,
     ccdfData,
     avgTokenData,
+    jadePerTokenData, // 新增每1配额换算为玉数据
   };
 }
 
@@ -805,9 +829,9 @@ function processDataForWeaponChart(data: string[][]): any {
 }
 
 /**
- * 根据角色抽取结果列表计算可获得的武库配额数量
+ * 根据角色抽取结果列表计算可获得的配额数量
  * @param results 抽取结果列表
- * @returns 返回武库配额总数
+ * @returns 返回配额总数
  */
 function calculateWeaponTokens(results: string[]): number {
   let tokenCount = 0;
@@ -849,14 +873,22 @@ async function redrawCharacterChart() {
 
   // 计算平均抽取次数
   let totalDraws = 0;
+  let totalTokens = 0; // 新增：统计总配额
   const actualDrawsList: number[] = [];
   for (const simulation of frequencyList.value) {
     // 直接使用 simulation.actualDraws 而不是计算
     const actualDraws = simulation.actualDraws;
     totalDraws += actualDraws;
     actualDrawsList.push(actualDraws);
+
+    // 计算此次模拟的配额并累加
+    const tokenCount = calculateWeaponTokens(simulation.result);
+    totalTokens += tokenCount;
   }
   characterAverageDraws.value = totalDraws / frequencyList.value.length;
+
+  // 计算平均配额
+  characterAverageTokens.value = totalTokens / frequencyList.value.length;
 
   // 计算中位数抽取次数
   actualDrawsList.sort((a, b) => a - b);
@@ -883,8 +915,10 @@ async function redrawCharacterChart() {
           // 从第一个系列的数据中获取抽取次数
           let result = params[0].value[0] + '次抽取<br/>';
           params.forEach((item: any) => {
-            if (item.seriesName === '平均获得武库配额') {
+            if (item.seriesName === '平均获得配额') {
               result += item.seriesName + ': ' + Math.round(item.value[1]) + '<br/>';
+            } else if (item.seriesName === '每1配额换算为玉') {
+              result += item.seriesName + ': ' + item.value[1].toFixed(2) + '<br/>';
             } else {
               result += item.seriesName + ': ' + item.value[1].toFixed(3) + '%<br/>';
             }
@@ -893,7 +927,7 @@ async function redrawCharacterChart() {
         },
       },
       legend: {
-        data: ['概率密度', '互补累计分布', '平均获得武库配额'],
+        data: ['概率密度', '互补累计分布', '平均获得配额', '每1配额换算为玉'], // 添加新系列到图例
         top: 40,
         right: 0,
       },
@@ -946,7 +980,22 @@ async function redrawCharacterChart() {
         {
           gridIndex: 1,
           type: 'value',
-          name: '平均获得武库配额',
+          name: '平均获得配额',
+          axisLabel: {
+            formatter: '{value}',
+          },
+        },
+        {
+          gridIndex: 1,
+          type: 'value',
+          name: '每1配额换算为玉',
+          position: 'right', // Y轴位于右侧
+          splitLine: {
+            show: true,
+            lineStyle: {
+              type: 'dashed',
+            },
+          },
           axisLabel: {
             formatter: '{value}',
           },
@@ -990,13 +1039,22 @@ async function redrawCharacterChart() {
           showSymbol: false,
         },
         {
-          name: '平均获得武库配额',
+          name: '平均获得配额',
           type: 'line',
           data: processedData.avgTokenData,
           smooth: true,
           showSymbol: false,
           xAxisIndex: 1,
           yAxisIndex: 1,
+        },
+        {
+          name: '每1配额换算为玉',
+          type: 'line',
+          data: processedData.jadePerTokenData,
+          smooth: true,
+          showSymbol: false,
+          xAxisIndex: 1,
+          yAxisIndex: 2, // 使用右侧Y轴
         },
       ],
     };
