@@ -151,13 +151,11 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, nextTick, useTemplateRef } from 'vue';
 import * as echarts from 'echarts';
-
-type GachaStrategy = 'single' | 'batch' | 'smart';
-
-interface GachaSimulationResult {
-  result: string[];
-  actualDraws: number;
-}
+import {
+  type GachaStrategy,
+  type GachaSimulationResult,
+  simulateCharacterGachaToTargetMultipleTimes,
+} from './EndfieldGachaUtils';
 
 const chartCharacterRef = useTemplateRef('chartCharacterRef');
 const chartWeaponRef = useTemplateRef('chartWeaponRef');
@@ -439,53 +437,6 @@ function simulateCharacterGachaToTarget(
   }
 
   return { result: currentSimulationResults, actualDraws };
-}
-
-/**
- * 模拟多次角色抽卡过程，获得达到目标时的各种抽取情况
- * @param simulationCount 模拟次数，默认10000
- * @param initialNoSpecific6StarCount 继承的未抽取特定6星次数，默认0
- * @param initialNo6StarCount 继承的未抽取6星次数，默认0
- * @param initialNo5Or6StarCount 继承的未抽取5星次数，默认0
- * @param targetRank 目标突破等级，默认0
- * @param gachaStrategy 抽卡策略，默认单抽
- * @param currentSpecific6StarCount 当前已拥有的特定6星数量，默认0
- * @param currentDrawCount 当前已抽取次数，默认0
- * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底，默认false
- * @returns 返回一个列表，每个元素是一次模拟的所有抽取结果的对象，包含result字段，值为字符串列表，以及actualDraws字段表示实际抽取次数
- */
-function simulateCharacterGachaToTargetMultipleTimes(
-  simulationCount: number = 10000,
-  initialNoSpecific6StarCount: number = 0,
-  initialNo6StarCount: number = 0,
-  initialNo5Or6StarCount: number = 0,
-  targetRank: number = 0,
-  gachaStrategy: GachaStrategy = 'single',
-  currentSpecific6StarCount: number = 0,
-  currentDrawCount: number = 0,
-  hasUsedSpecific6StarGuarantee: boolean = false,
-): GachaSimulationResult[] {
-  const allSimulationResults: GachaSimulationResult[] = [];
-
-  if (hasUsedSpecific6StarGuarantee && currentSpecific6StarCount <= 1) {
-    currentSpecific6StarCount = 1;
-  }
-
-  for (let i = 0; i < simulationCount; i++) {
-    const currentSimulationResult = simulateCharacterGachaToTarget(
-      initialNoSpecific6StarCount,
-      initialNo6StarCount,
-      initialNo5Or6StarCount,
-      targetRank,
-      gachaStrategy,
-      currentSpecific6StarCount,
-      currentDrawCount,
-      hasUsedSpecific6StarGuarantee,
-    );
-    allSimulationResults.push(currentSimulationResult);
-  }
-
-  return allSimulationResults;
 }
 
 /**
