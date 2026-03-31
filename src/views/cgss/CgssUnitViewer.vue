@@ -155,6 +155,7 @@
         />
         <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
         <el-switch v-model="switchShowAllAttributeSpecializePairs" active-text="显示所有属性组合" />
+        <el-switch v-model="switchHighlightSeasonLimited" active-text="高亮月初卡池角色" />
       </div>
     </div>
     <div class="unit-table">
@@ -273,6 +274,11 @@
                         scope.row,
                         icon.card,
                       ),
+                      'icon-season-limited':
+                        switchHighlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                      [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
+                        switchHighlightSeasonLimited &&
+                        isSeasonLimitedCard(icon.card.cid),
                     }"
                     :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
@@ -318,6 +324,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
+import CgssSeasonLimitedGashaList from './cgss_season_limited_gacha_list.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
@@ -589,6 +596,7 @@ const switchShowOverloadOverdrive = ref(true);
 const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
+const switchHighlightSeasonLimited = ref(false);
 
 // 名字过滤输入
 const inputNameFilter = ref(
@@ -1309,6 +1317,20 @@ const isNameMatched = (name: string | undefined) => {
   return splitNameFilter.value.some((name2) => name.toLowerCase().includes(name2));
 };
 
+// 判断是否为月初卡池角色（检查 cid 或 cid-1 是否在列表中）
+const isSeasonLimitedCard = (cid: string): boolean => {
+  const cidNum = parseInt(cid, 10);
+  return (
+    CgssSeasonLimitedGashaList.includes(cidNum) ||
+    CgssSeasonLimitedGashaList.includes(cidNum - 1)
+  );
+};
+
+// 获取月初卡池角色的 CSS 类名后缀（小写属性名）
+const getSeasonLimitedClass = (card: CgssCardSkillTableItem): string => {
+  return card.attribute.toLowerCase();
+};
+
 // 切换所有图标的亮度
 const toggleAllIconsBrightness = () => {
   allIconsBright.value = !allIconsBright.value;
@@ -1469,6 +1491,21 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   }
   html.icon-dark .cgss-icon.icon-dark {
     filter: brightness(0.25);
+  }
+  .cgss-icon.icon-season-limited-cute {
+    outline: 4px solid var(--im-color-cg-cute);
+    outline-offset: -4px;
+    box-shadow: 0 0 12px 8px rgba(251, 7, 116, 0.8);
+  }
+  .cgss-icon.icon-season-limited-cool {
+    outline: 4px solid var(--im-color-cg-cool);
+    outline-offset: -4px;
+    box-shadow: 0 0 12px 8px rgba(35, 109, 251, 0.8);
+  }
+  .cgss-icon.icon-season-limited-passion {
+    outline: 4px solid var(--im-color-cg-passion);
+    outline-offset: -4px;
+    box-shadow: 0 0 12px 8px rgba(252, 169, 38, 0.8);
   }
 }
 </style>
