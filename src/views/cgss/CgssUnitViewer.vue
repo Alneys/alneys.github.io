@@ -18,11 +18,18 @@
         <div v-if="inputNameFilterDefaultInformation">{{ inputNameFilterDefaultInformation }}</div>
       </div>
       <div>
-        <el-switch v-model="switchToggleCardStatus" active-text="点击图标后切换状态" />
-        <el-switch v-model="switchViewCardInfo" active-text="点击图标后在346lab查看卡片详情" />
+        <span class="el-switch__label">点击图标操作</span>
+        <el-segmented
+          v-model="switchClickIconAction"
+          :options="[
+            { label: '无', value: 'None' },
+            { label: '切换卡片状态', value: 'ToggleCardStatus' },
+            { label: '在346lab查看卡片详情', value: 'ViewCardInfo' },
+          ]"
+        ></el-segmented>
       </div>
       <CgssUnitViewerStateManager
-        v-if="switchToggleCardStatus"
+        v-if="switchClickIconAction === 'ToggleCardStatus'"
         :table-data="[...tableDataResonance, ...tableDataDominant]"
         @update-card-status="updateCardBrightnessByCids"
       >
@@ -118,7 +125,8 @@
                   <img
                     :class="{
                       'cgss-icon': true,
-                      'icon-dark': switchToggleCardStatus && !icon.isBrightness,
+                      'icon-dark':
+                        switchClickIconAction === 'ToggleCardStatus' && !icon.isBrightness,
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': switchNameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': switchNameFilter && isNameMatched(icon.card.name),
@@ -147,6 +155,7 @@
         />
         <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
         <el-switch v-model="switchShowAllAttributeSpecializePairs" active-text="显示所有属性组合" />
+        <el-switch v-model="switchHighlightSeasonLimited" active-text="高亮月初卡池角色" />
       </div>
     </div>
     <div class="unit-table">
@@ -255,7 +264,8 @@
                     "
                     :class="{
                       'cgss-icon': true,
-                      'icon-dark': !icon.isBrightness && switchToggleCardStatus,
+                      'icon-dark':
+                        switchClickIconAction === 'ToggleCardStatus' && !icon.isBrightness,
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': switchNameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': switchNameFilter && isNameMatched(icon.card.name),
@@ -264,6 +274,11 @@
                         scope.row,
                         icon.card,
                       ),
+                      'icon-season-limited':
+                        switchHighlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                      [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
+                        switchHighlightSeasonLimited &&
+                        isSeasonLimitedCard(icon.card.cid),
                     }"
                     :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
@@ -309,6 +324,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
+import CgssSeasonLimitedGashaList from './cgss_season_limited_gacha_list.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
@@ -449,6 +465,8 @@ const tableDominantColumnHeader = [
     labelCn: '双色',
     labelEn: 'dominant',
     skill: 'dominant',
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
     minWidth: 64,
     extraColumn: false,
   },
@@ -568,8 +586,8 @@ const tableDominantColumnHeader = [
 ];
 
 // 模式切换
-const switchToggleCardStatus = ref(false);
-const switchViewCardInfo = ref(false);
+
+const switchClickIconAction = ref('None');
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraTableConfig = ref(true);
@@ -578,6 +596,7 @@ const switchShowOverloadOverdrive = ref(true);
 const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
+const switchHighlightSeasonLimited = ref(false);
 
 // 名字过滤输入
 const inputNameFilter = ref(
@@ -593,19 +612,6 @@ const allIconsBright = ref(true);
 // 添加常量来控制dominant表中目标数值的限制
 const DOMINANT_PARAM_THRESHOLD_ADD = 0;
 const DOMINANT_PARAM_THRESHOLD_SPECIALIZE = 5000;
-
-// 添加监听器实现互斥逻辑
-watch(switchToggleCardStatus, (newValue) => {
-  if (newValue && switchViewCardInfo.value) {
-    switchViewCardInfo.value = false;
-  }
-});
-
-watch(switchViewCardInfo, (newValue) => {
-  if (newValue && switchToggleCardStatus.value) {
-    switchToggleCardStatus.value = false;
-  }
-});
 
 // 响应式属性用于判断屏幕宽度是否足够
 const isMobile = ref(window.innerWidth < 768);
@@ -976,21 +982,17 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableDataRow[]
     }
   });
 
-  // 对resonance表中的extraColumn列进行排序
+  // 对Resonance表中的单元格进行排序
   result.forEach((row) => {
-    // 获取与当前行specialize相关的stat字段
+    // 获取当前行排序对应的特化属性
     const statKey = row.specialize as keyof CgssCardSkillTableItem['stats'];
 
-    // 找到所有的extraColumn列
-    const extraColumnHeaders = tableResonanceColumnHeader.filter((header) => header.extraColumn);
-
-    // 对每个extraColumn列进行排序
-    extraColumnHeaders.forEach((header) => {
+    // 对当前行每个列对应的单元格进行排序
+    tableResonanceColumnHeader.forEach((header) => {
       const columnName = header.prop;
       const cardsInColumn = row[columnName];
 
       if (Array.isArray(cardsInColumn) && cardsInColumn.length > 0) {
-        // 使用统一的排序函数
         row[columnName] = sortCardsByParam(cardsInColumn, statKey, data);
       }
     });
@@ -1109,123 +1111,67 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           result[rowIndex].dominant &&
           Array.isArray(result[rowIndex].dominant)
         ) {
-          // typescript bug
-          (result[rowIndex].dominant as CardData[]).push(createCardDataItem(item));
+          result[rowIndex].dominant.push(createCardDataItem(item));
         } else {
           console.warn(`Target column dominant not found or not an array at rowIndex ${rowIndex}`);
         }
       }
-    }
-
-    // 处理 alternate 和 mutual 类型的技能
-    if (item.skill.type === 'alternate' || item.skill.type === 'mutual') {
-      // 遍历结果数组，找到所有符合条件的行
+    } else {
+      // 统一处理所有其他技能，注意数据可以被分配进多行
       result.forEach((row, rowIndex) => {
-        // // 检查行是否存在
-        // if (!result[rowIndex]) {
-        //   return;
-        // }
-
-        // 处理 alternate 类型：匹配 skill.type 是 alternate，attribute 与当前行 target_attribute 相同，
-        // row.target_param 的值大于阈值，且skill.tw与当前行tw相同
-        if (
-          item.skill.type === 'alternate' &&
-          item.attribute.toLowerCase() === row.target_attribute &&
-          row.target_param &&
-          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_ADD &&
-          String(item.skill.params.tw) + 's' === row.tw
-        ) {
-          (result[rowIndex]?.alternate as CardData[]).push(createCardDataItem(item));
-        }
-
-        // 处理 mutual 类型：匹配 skill.type 是 mutual，attribute 与当前行 target_attribute_2 相同，
-        // row.target_param_2 的值大于阈值，且skill.tw与当前行tw相同
-        if (
-          item.skill.type === 'mutual' &&
-          item.attribute.toLowerCase() === row.target_attribute_2 &&
-          row.target_param_2 &&
-          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_ADD &&
-          String(item.skill.params.tw) + 's' === row.tw
-        ) {
-          (result[rowIndex]?.mutual as CardData[]).push(createCardDataItem(item));
-        }
-      });
-    }
-
-    // 处理 overload 和 overdrive 类型的技能
-    if (item.skill.type === 'overload' || item.skill.type === 'overdrive') {
-      // 遍历结果数组，找到所有符合条件的行
-      result.forEach((row, rowIndex) => {
-        // 遍历所有列定义，查找匹配的overload和overdrive列
         tableDominantColumnHeader.forEach((colDef) => {
-          // 检查是否为overload或overdrive类型的列
-          if (colDef.skill === item.skill.type) {
-            // 检查tw是否匹配
-            if (colDef.tw === String(item.skill.params.tw)) {
-              // overload: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于阈值
-              if (
-                item.skill.type === 'overload' &&
-                item.attribute.toLowerCase() === row.target_attribute &&
-                row.target_param &&
-                item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
-                  DOMINANT_PARAM_THRESHOLD_ADD
-              ) {
-                (result[rowIndex]?.[colDef.prop] as CardData[]).push(createCardDataItem(item));
-              }
-              // overdrive: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
-              else if (
-                item.skill.type === 'overdrive' &&
-                item.attribute.toLowerCase() === row.target_attribute_2 &&
-                row.target_param_2 &&
-                item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
-                  DOMINANT_PARAM_THRESHOLD_ADD
-              ) {
-                (result[rowIndex]?.[colDef.prop] as CardData[]).push(createCardDataItem(item));
-              }
-            }
+          // 跳过dominant列
+          if (colDef.skill === 'dominant') return;
+
+          // 检查技能类型是否匹配
+          if (colDef.skill === 'psb_') {
+            if (!item.skill.type.startsWith(colDef.skill)) return;
+          } else {
+            if (colDef.skill !== item.skill.type) return;
+          }
+
+          // 检查 tw
+          if (colDef.tw !== undefined) {
+            if (String(item.skill.params.tw) !== colDef.tw) return;
+          } else {
+            if (String(item.skill.params.tw) + 's' !== row.tw && !colDef.extraColumn) return;
+          }
+
+          // 获取属性和参数字段名
+          const attrField = colDef.attribute; // e.g., 'target_attribute'
+          const paramField = colDef.param; // e.g., 'target_param'
+
+          if (!attrField || !paramField) return;
+
+          const targetAttr = row[attrField as keyof typeof row];
+          const targetParam = row[paramField as keyof typeof row];
+
+          // 属性匹配
+          if (item.attribute.toLowerCase() !== targetAttr) return;
+
+          // 参数字段存在性检查
+          if (!targetParam) return;
+
+          // 阈值检查
+          const threshold = ['overload', 'overdrive', 'alternate', 'mutual'].includes(colDef.skill)
+            ? DOMINANT_PARAM_THRESHOLD_ADD
+            : DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+          const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
+          if (statValue < threshold) return;
+
+          // 推入对应 prop 的数组
+          const targetArray = result[rowIndex]?.[colDef.prop];
+          if (Array.isArray(targetArray)) {
+            targetArray.push(createCardDataItem(item));
           }
         });
       });
     }
-
-    // 处理 act 类型的技能 (演技技能，如 psb_ 开头的技能)
-    if (item.skill.type.startsWith('psb_')) {
-      // 遍历结果数组，找到所有符合条件的行
-      result.forEach((row, rowIndex) => {
-        // act: 匹配attribute与行的target_attribute相同，且stats[target_param]的值大于阈值
-        if (
-          item.attribute.toLowerCase() === row.target_attribute &&
-          row.target_param &&
-          item.stats[row.target_param as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_SPECIALIZE
-        ) {
-          (result[rowIndex]?.act as CardData[]).push(createCardDataItem(item));
-        }
-      });
-    }
-
-    // 处理 combo 类型的技能 (连击技能，如 cboost 开头的技能)
-    if (item.skill.type.startsWith('cboost')) {
-      // 遍历结果数组，找到所有符合条件的行
-      result.forEach((row, rowIndex) => {
-        // combo: 匹配attribute与行的target_attribute_2相同，且stats[target_param_2]的值大于阈值
-        if (
-          item.attribute.toLowerCase() === row.target_attribute_2 &&
-          row.target_param_2 &&
-          item.stats[row.target_param_2 as keyof CgssCardSkillTableItem['stats']] >=
-            DOMINANT_PARAM_THRESHOLD_SPECIALIZE
-        ) {
-          (result[rowIndex]?.combo as CardData[]).push(createCardDataItem(item));
-        }
-      });
-    }
   });
 
-  // 对列的数据进行排序
+  // 对Dominant表中的单元格进行排序
   result.forEach((row) => {
-    // 遍历tableDominantColumnHeader中的每一列，检查是否需要排序
+    // 遍历tableDominantColumnHeader中的每一行，检查排序项目与对应的特化属性
     tableDominantColumnHeader.forEach((colDef) => {
       const prop = colDef.prop;
       const param = colDef.param;
@@ -1293,13 +1239,8 @@ const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
     return;
   }
 
-  // 如果两个开关都关闭，则不执行任何操作
-  if (!switchToggleCardStatus.value && !switchViewCardInfo.value) {
-    return;
-  }
-
-  // 如果只开启查看卡片信息开关
-  if (switchViewCardInfo.value) {
+  // 根据switchClickIconAction的值来决定行为
+  if (switchClickIconAction.value === 'ViewCardInfo') {
     if (icon.card.link) {
       // 提取链接中的数字并减1
       const modifiedLink = icon.card.link.replace(/c_(\d+)_/, (match, num) => {
@@ -1313,8 +1254,8 @@ const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
     return;
   }
 
-  // 否则，判断是否开启切换卡片状态开关
-  else if (switchToggleCardStatus.value) {
+  // 如果是切换卡片状态
+  else if (switchClickIconAction.value === 'ToggleCardStatus') {
     const targetName = icon.card.title;
     const newState = !icon.isBrightness;
 
@@ -1374,6 +1315,20 @@ const isNameMatched = (name: string | undefined) => {
 
   // 检查标题是否包含任何一个名字（不区分大小写）
   return splitNameFilter.value.some((name2) => name.toLowerCase().includes(name2));
+};
+
+// 判断是否为月初卡池角色（检查 cid 或 cid-1 是否在列表中）
+const isSeasonLimitedCard = (cid: string): boolean => {
+  const cidNum = parseInt(cid, 10);
+  return (
+    CgssSeasonLimitedGashaList.includes(cidNum) ||
+    CgssSeasonLimitedGashaList.includes(cidNum - 1)
+  );
+};
+
+// 获取月初卡池角色的 CSS 类名后缀（小写属性名）
+const getSeasonLimitedClass = (card: CgssCardSkillTableItem): string => {
+  return card.attribute.toLowerCase();
 };
 
 // 切换所有图标的亮度
@@ -1461,6 +1416,7 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   > div {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
     gap: 0.5em;
     margin: 0.5em 0;
   }
@@ -1535,6 +1491,21 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
   }
   html.icon-dark .cgss-icon.icon-dark {
     filter: brightness(0.25);
+  }
+  .cgss-icon.icon-season-limited-cute {
+    outline: 4px solid var(--im-color-cg-cute);
+    outline-offset: -4px;
+    box-shadow: 0 0 12px 8px rgba(251, 7, 116, 0.8);
+  }
+  .cgss-icon.icon-season-limited-cool {
+    outline: 4px solid var(--im-color-cg-cool);
+    outline-offset: -4px;
+    box-shadow: 0 0 12px 8px rgba(35, 109, 251, 0.8);
+  }
+  .cgss-icon.icon-season-limited-passion {
+    outline: 4px solid var(--im-color-cg-passion);
+    outline-offset: -4px;
+    box-shadow: 0 0 12px 8px rgba(252, 169, 38, 0.8);
   }
 }
 </style>

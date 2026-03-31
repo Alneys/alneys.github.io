@@ -46,6 +46,16 @@ const router = createRouter({
           ],
         },
         {
+          path: '/endfield',
+          children: [
+            {
+              path: 'gacha',
+              name: 'endfield-gacha',
+              component: () => import('@/views/endfield/EndfieldGachaChart.vue'),
+            },
+          ],
+        },
+        {
           path: '/tools',
           children: [
             {
