@@ -155,7 +155,7 @@
         />
         <el-switch v-model="switchShowSpecializeNotMatch" active-text="显示所有偏科" />
         <el-switch v-model="switchShowAllAttributeSpecializePairs" active-text="显示所有属性组合" />
-        <el-switch v-model="switchHighlightSeasonLimited" active-text="高亮月初卡池角色" />
+        <el-switch v-model="switchHighlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
       </div>
     </div>
     <div class="unit-table">
@@ -277,8 +277,7 @@
                       'icon-season-limited':
                         switchHighlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
                       [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
-                        switchHighlightSeasonLimited &&
-                        isSeasonLimitedCard(icon.card.cid),
+                        switchHighlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
                     }"
                     :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                     @click="handleIconClick(scope.row, headerItem.prop, Number(iconIndex))"
@@ -1321,8 +1320,7 @@ const isNameMatched = (name: string | undefined) => {
 const isSeasonLimitedCard = (cid: string): boolean => {
   const cidNum = parseInt(cid, 10);
   return (
-    CgssSeasonLimitedGashaList.includes(cidNum) ||
-    CgssSeasonLimitedGashaList.includes(cidNum - 1)
+    CgssSeasonLimitedGashaList.includes(cidNum) || CgssSeasonLimitedGashaList.includes(cidNum - 1)
   );
 };
 
@@ -1450,6 +1448,15 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     width: 48px;
     height: 48px;
   }
+  .icon-season-limited-cute {
+    box-shadow: 0 0 12px 8px var(--im-color-cg-cute);
+  }
+  .icon-season-limited-cool {
+    box-shadow: 0 0 12px 8px var(--im-color-cg-cool);
+  }
+  .icon-season-limited-passion {
+    box-shadow: 0 0 12px 8px var(--im-color-cg-passion);
+  }
   .icon-filter-match {
     scale: 1;
     margin: 0;
@@ -1486,26 +1493,16 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
       margin: -12px;
     }
   }
-  .cgss-icon.icon-dark {
-    filter: brightness(0.4);
-  }
+
   html.icon-dark .cgss-icon.icon-dark {
     filter: brightness(0.25);
   }
-  .cgss-icon.icon-season-limited-cute {
-    outline: 4px solid var(--im-color-cg-cute);
-    outline-offset: -4px;
-    box-shadow: 0 0 12px 8px rgba(251, 7, 116, 0.8);
-  }
-  .cgss-icon.icon-season-limited-cool {
-    outline: 4px solid var(--im-color-cg-cool);
-    outline-offset: -4px;
-    box-shadow: 0 0 12px 8px rgba(35, 109, 251, 0.8);
-  }
-  .cgss-icon.icon-season-limited-passion {
-    outline: 4px solid var(--im-color-cg-passion);
-    outline-offset: -4px;
-    box-shadow: 0 0 12px 8px rgba(252, 169, 38, 0.8);
+
+  .cgss-icon.icon-dark {
+    filter: brightness(0.4);
+    &.icon-season-limited {
+      filter: brightness(0.675);
+    }
   }
 }
 </style>
