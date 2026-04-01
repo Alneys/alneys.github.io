@@ -1152,9 +1152,11 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           if (!targetParam) return;
 
           // 阈值检查
-          const threshold = ['overload', 'overdrive', 'alternate', 'mutual'].includes(colDef.skill)
-            ? DOMINANT_PARAM_THRESHOLD_ADD
-            : DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+          // const threshold = ['overload', 'overdrive', 'alternate', 'mutual'].includes(colDef.skill)
+          //   ? DOMINANT_PARAM_THRESHOLD_ADD
+          //   : DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+          const threshold = DOMINANT_PARAM_THRESHOLD_ADD;
+
           const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
           if (statValue < threshold) return;
 
@@ -1469,7 +1471,7 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     scale: 0.625;
     margin: -6px;
     &.icon-filter-match {
-      scale: 0.75;
+      scale: 0.85;
       margin: 0px;
     }
     &.icon-filter-not-match {
@@ -1487,6 +1489,10 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     &.icon-specialize-not-match {
       scale: 0.375;
       margin: -12px;
+      &.icon-filter-match {
+        scale: 0.85;
+        margin: 0;
+      }
     }
     &.icon-filter-not-match {
       scale: 0.375;
