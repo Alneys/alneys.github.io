@@ -1,0 +1,143 @@
+/**
+ * CGSS Unit Viewer 表格共享样式 mixin
+ * 使用时需在 scoped 样式的根选择器内调用
+ */
+
+@mixin cgss-table-styles {
+  .el-table {
+    --el-table-header-text-color: var(--el-text-color-regular);
+
+    .skill-motif,
+    .skill-symphony,
+    .skill-refrain,
+    .skill-dominant,
+    .skill-mutual,
+    .skill-overdrive,
+    .skill-cboost {
+      background-color: hsl(0, 0%, 95%);
+    }
+
+    .el-table__cell {
+      padding: 2px 0;
+    }
+
+    thead .el-table__cell.icons .cell {
+      padding: 8px 8px;
+    }
+
+    tbody .el-table__cell.icons .cell {
+      padding: 0 2px;
+    }
+
+    .table-row-info {
+      font-weight: bold;
+    }
+
+    .table-icons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .cgss-icon {
+      display: inline-block;
+      scale: 1;
+      cursor: pointer;
+      margin: 0;
+      border-radius: 4px;
+      width: 48px;
+      height: 48px;
+    }
+
+    .icon-filter-match {
+      scale: 1;
+      margin: 0;
+    }
+
+    .icon-filter-not-match {
+      scale: 0.375;
+      margin: 0;
+    }
+
+    .icon-specialize-not-match {
+      scale: 0.625;
+      margin: -6px;
+
+      &.icon-filter-match {
+        scale: 0.85;
+        margin: 0;
+      }
+
+      &.icon-filter-not-match {
+        scale: 0.375;
+        margin: 0;
+      }
+    }
+
+    .icon-extra {
+      scale: 0.75;
+      margin: -6px;
+
+      &.icon-filter-match {
+        scale: 1;
+        margin: 0;
+      }
+
+      &.icon-specialize-not-match {
+        scale: 0.375;
+        margin: -12px;
+
+        &.icon-filter-match {
+          scale: 0.85;
+          margin: 0;
+        }
+      }
+
+      &.icon-filter-not-match {
+        scale: 0.375;
+        margin: -12px;
+      }
+    }
+
+    .cgss-icon.icon-dark {
+      filter: brightness(0.4);
+
+      &.icon-season-limited {
+        filter: brightness(0.675);
+      }
+    }
+
+    .icon-season-limited-cute {
+      box-shadow: 0 0 12px 8px var(--im-color-cg-cute);
+    }
+
+    .icon-season-limited-cool {
+      box-shadow: 0 0 12px 8px var(--im-color-cg-cool);
+    }
+
+    .icon-season-limited-passion {
+      box-shadow: 0 0 12px 8px var(--im-color-cg-passion);
+    }
+  }
+}
+
+/**
+ * 子组件容器基础布局样式
+ */
+@mixin cgss-table-container-base {
+  .unit-title,
+  .unit-table {
+    margin: 1em 0;
+  }
+
+  .unit-viewer-config {
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.5em;
+      margin: 0.5em 0;
+    }
+  }
+}
