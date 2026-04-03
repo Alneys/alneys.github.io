@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { CgssCardSkillTableItem } from './CgssUnitViewer.vue';
+import type { CgssCardSkillTableItem } from './CgssUnitViewerTypes';
 
 const props = defineProps<{
   card: CgssCardSkillTableItem;
