@@ -345,6 +345,15 @@ import {
 import { useResponsive } from './composables/useResponsive';
 import { useCardFilter } from './composables/useCardFilter';
 import { useSeasonLimited } from './composables/useSeasonLimited';
+import { useIconActions } from './composables/useIconActions';
+import {
+  sortTableTw,
+  createCardDataItem,
+  sortCardsByParam,
+  sortResonanceSpecialize,
+  sortDominantAttribute,
+  sortDominantAttribute2,
+} from './composables/useTableUtils';
 
 // 模式切换
 
@@ -367,9 +376,6 @@ const { inputNameFilter, inputNameFilterDefaultInformation, isNameMatched } = us
 
 // 季节限定卡池判断
 const { isSeasonLimitedCard } = useSeasonLimited();
-
-// 添加图标亮度控制
-const allIconsBright = ref(true);
 
 // 添加响应式变量跟踪当前排序字段
 const currentResonanceSortField = ref('specialize');
@@ -432,130 +438,6 @@ const tableDominantSpanMethod = ({ row, column, rowIndex, columnIndex }: any) =>
   return [1, 1];
 };
 
-// 处理单个参数排序的通用函数
-const sortAttributeHelper = (
-  getter: (item: TableDataRow) => string | undefined,
-  order: string[],
-) => {
-  return (a: TableDataRow, b: TableDataRow) => {
-    const indexA = order.indexOf(getter(a) || '');
-    const indexB = order.indexOf(getter(b) || '');
-
-    // 如果值在预定义顺序中，则按预定义顺序排序
-    if (indexA !== -1 && indexB !== -1) {
-      if (indexA !== indexB) {
-        return indexA - indexB;
-      }
-    } else {
-      // 如果其中一个值不在预定义顺序中，则将预定义顺序中的值排在前面
-      if (indexA !== -1) {
-        return -1;
-      }
-      if (indexB !== -1) {
-        return 1;
-      }
-      // 如果都不在预定义顺序中，则按字母顺序排序
-      const aValue = getter(a);
-      const bValue = getter(b);
-      if (aValue && bValue) {
-        const compareResult = aValue.localeCompare(bValue);
-        if (compareResult !== 0) {
-          return compareResult;
-        }
-      }
-    }
-
-    // 如果两个值相等，则返回 0
-    return 0;
-  };
-};
-
-// Resonance表和Dominant表tw列排序方法
-const sortTableTw = (a: TableDataRow, b: TableDataRow) => {
-  // 提取数值部分进行比较，去掉 's' 后缀
-  const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
-  const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
-
-  // 按数值大小排序
-  if (numA !== numB) {
-    return numA - numB;
-  }
-  // 如果tw相同，按行号排序
-  return a.row - b.row;
-};
-// Resonance表specialize列排序方法
-const sortResonanceSpecialize = (a: TableDataRow, b: TableDataRow) => {
-  const specializeCompare = sortAttributeHelper(
-    (item) => item.specialize,
-    tableResonanceRowHeaderSpecialize,
-  )(a, b);
-
-  if (specializeCompare !== 0) return specializeCompare;
-
-  // 按行号排序
-  return a.row - b.row;
-};
-
-// Dominant表target_attribute列排序方法
-const sortDominantAttribute = (a: TableDataRow, b: TableDataRow) => {
-  // 首先按 target_attribute 排序
-  const attrCompare = sortAttributeHelper(
-    (item) => item.target_attribute,
-    tableDominantRowHeaderAttribute,
-  )(a, b);
-
-  if (attrCompare !== 0) return attrCompare;
-
-  // 如果 target_attribute 相同，按 target_param 排序
-  const paramCompare = sortAttributeHelper(
-    (item) => item.target_param,
-    tableDominantRowHeaderSpecialize,
-  )(a, b);
-
-  if (paramCompare !== 0) return paramCompare;
-
-  // 如果 target_param 也相同，按 target_attribute_2 排序
-  const attr2Compare = sortAttributeHelper(
-    (item) => item.target_attribute_2,
-    tableDominantRowHeaderAttribute,
-  )(a, b);
-
-  if (attr2Compare !== 0) return attr2Compare;
-
-  // 按行号排序
-  return a.row - b.row;
-};
-
-// Dominant表target_attribute_2列排序方法
-const sortDominantAttribute2 = (a: TableDataRow, b: TableDataRow) => {
-  // 首先按 target_attribute_2 排序
-  const attr2Compare = sortAttributeHelper(
-    (item) => item.target_attribute_2,
-    tableDominantRowHeaderAttribute,
-  )(a, b);
-
-  if (attr2Compare !== 0) return attr2Compare;
-
-  // 如果 target_attribute_2 相同，按 target_param_2 排序
-  const param2Compare = sortAttributeHelper(
-    (item) => item.target_param_2,
-    tableDominantRowHeaderSpecialize,
-  )(a, b);
-
-  if (param2Compare !== 0) return param2Compare;
-
-  // 如果 target_param_2 也相同，按 target_attribute 排序
-  const attrCompare = sortAttributeHelper(
-    (item) => item.target_attribute,
-    tableDominantRowHeaderAttribute,
-  )(a, b);
-
-  if (attrCompare !== 0) return attrCompare;
-
-  // 按行号排序
-  return a.row - b.row;
-};
-
 // 判断Dominant表内参数的特化值
 const isDominantSpecializeNotMatch = (
   headerItem: (typeof tableDominantColumnHeader)[number],
@@ -608,41 +490,6 @@ const isDominantParamUnderline = (
   }
 
   return false;
-};
-
-// 生成卡片数据对象
-const createCardDataItem = (item: CgssCardSkillTableItem): CardData => {
-  return {
-    card: item,
-    isBrightness: true,
-  };
-};
-
-// 定义卡片排序函数
-const sortCardsByParam = (
-  cards: CardData[],
-  targetParam: string | undefined,
-  data: CgssCardSkillTableItem[],
-) => {
-  if (!targetParam) return cards;
-
-  return cards.sort((a, b) => {
-    // 找到a卡片的数值
-    const cardA = a.card;
-    // 找到b卡片的数值
-    const cardB = b.card;
-
-    if (!cardA || !cardB) return 0;
-
-    // 根据target_param或target_param_2获取对应数值
-    const paramKey = targetParam as keyof CgssCardSkillTableItem['stats'];
-
-    const aValue = cardA.stats[paramKey] || 0;
-    const bValue = cardB.stats[paramKey] || 0;
-
-    // 从大到小排序
-    return bValue - aValue;
-  });
 };
 
 // 初始化Resonance表格数据
@@ -733,7 +580,7 @@ const initializeDataResonance = (data: CgssCardSkillTableItem[]): TableDataRow[]
       const cardsInColumn = row[columnName];
 
       if (Array.isArray(cardsInColumn) && cardsInColumn.length > 0) {
-        row[columnName] = sortCardsByParam(cardsInColumn, statKey, data);
+        row[columnName] = sortCardsByParam(cardsInColumn, statKey);
       }
     });
   });
@@ -924,7 +771,6 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
         row[prop] = sortCardsByParam(
           row[prop],
           param === 'target_param_2' ? row.target_param_2 : row.target_param,
-          data,
         );
       }
     });
@@ -959,135 +805,9 @@ const filteredTableDataDominant = computed(() => {
   );
 });
 
-// 处理图标点击事件
-const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
-  // 验证输入参数
-  if (!row || !colKey || index < 0) {
-    console.warn('Invalid parameters for handleIconClick');
-    return;
-  }
-
-  // 验证列数据是否为数组
-  const colData = row[colKey];
-  if (!Array.isArray(colData) || index >= colData.length) {
-    console.warn('Invalid column data or index out of bounds');
-    return;
-  }
-
-  const icon = colData[index];
-  // 验证图标对象是否有效
-  if (!icon || !icon.card) {
-    console.warn('Invalid icon object');
-    return;
-  }
-
-  // 根据switchClickIconAction的值来决定行为
-  if (switchClickIconAction.value === 'ViewCardInfo') {
-    if (icon.card.link) {
-      // 提取链接中的数字并减1
-      const modifiedLink = icon.card.link.replace(/c_(\d+)_/, (match, num) => {
-        const newNum = parseInt(num) - 1;
-        return `c_${newNum}_`;
-      });
-      window.open('https://starlight.346lab.org' + modifiedLink, '_blank');
-    } else {
-      console.warn(`No link found for card with cid: ${icon.card.cid}`);
-    }
-    return;
-  }
-
-  // 如果是切换卡片状态
-  else if (switchClickIconAction.value === 'ToggleCardStatus') {
-    const targetName = icon.card.title;
-    const newState = !icon.isBrightness;
-
-    // 更新所有名称相同的图标的状态 - resonance表
-    tableDataResonance.value.forEach((dataRow) => {
-      Object.keys(dataRow).forEach((colKey) => {
-        const colValue = dataRow[colKey];
-        // 验证列值是否为数组
-        if (Array.isArray(colValue)) {
-          colValue.forEach((icon) => {
-            // 验证图标对象是否有效
-            if (icon && icon.card && icon.card.title === targetName) {
-              icon.isBrightness = newState;
-            }
-          });
-        }
-      });
-    });
-
-    // 更新所有名称相同的图标的状态 - dominant表
-    tableDataDominant.value.forEach((dataRow) => {
-      Object.keys(dataRow).forEach((colKey) => {
-        const colValue = dataRow[colKey];
-        // 验证列值是否为数组
-        if (Array.isArray(colValue)) {
-          colValue.forEach((icon) => {
-            // 验证图标对象是否有效
-            if (icon && icon.card && icon.card.title === targetName) {
-              icon.isBrightness = newState;
-            }
-          });
-        }
-      });
-    });
-    return;
-  }
-};
-
-// 切换所有图标的亮度
-const toggleAllIconsBrightness = () => {
-  allIconsBright.value = !allIconsBright.value;
-  tableDataResonance.value.forEach((dataRow) => {
-    Object.keys(dataRow).forEach((colKey) => {
-      const colValue = dataRow[colKey];
-      // 验证列值是否为数组
-      if (Array.isArray(colValue)) {
-        colValue.forEach((icon) => {
-          // 验证图标对象是否有效
-          if (icon) {
-            icon.isBrightness = allIconsBright.value;
-          }
-        });
-      }
-    });
-  });
-
-  tableDataDominant.value.forEach((dataRow) => {
-    Object.keys(dataRow).forEach((colKey) => {
-      const colValue = dataRow[colKey];
-      if (Array.isArray(colValue)) {
-        colValue.forEach((icon) => {
-          if (icon) {
-            icon.isBrightness = allIconsBright.value;
-          }
-        });
-      }
-    });
-  });
-};
-
-// 根据CID列表更新卡片亮度状态
-const updateCardBrightnessByCids = (disabledCids: string[]) => {
-  // 更新所有表格中的卡片状态
-  [...tableDataResonance.value, ...tableDataDominant.value].forEach((dataRow) => {
-    Object.keys(dataRow).forEach((colKey) => {
-      const colValue = dataRow[colKey];
-      if (Array.isArray(colValue)) {
-        colValue.forEach((data) => {
-          if (data) {
-            if (disabledCids.includes(data.card.cid)) {
-              data.isBrightness = false; // 在disabled列表中的卡片设为暗
-            } else {
-              data.isBrightness = true; // 不在disabled列表中的卡片设为亮
-            }
-          }
-        });
-      }
-    });
-  });
-};
+// 图标操作
+const { allIconsBright, handleIconClick, toggleAllIconsBrightness, updateCardBrightnessByCids } =
+  useIconActions([tableDataResonance, tableDataDominant], switchClickIconAction);
 </script>
 
 <style lang="scss" scoped>
