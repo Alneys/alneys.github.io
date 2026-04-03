@@ -321,7 +321,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
 import CgssSeasonLimitedGashaList from './cgss_season_limited_gacha_list.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
@@ -343,6 +343,9 @@ import {
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
 } from './CgssUnitViewerTypes';
 
+import { useResponsive } from './composables/useResponsive';
+import { useCardFilter } from './composables/useCardFilter';
+
 // 模式切换
 
 const switchClickIconAction = ref('None');
@@ -356,34 +359,14 @@ const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
 
-// 名字过滤输入
-const inputNameFilter = ref(
-  `中野有香 持田亜里沙 三村かな子 江上椿 棟方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり
-上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美
-本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
-);
-const inputNameFilterDefaultInformation = ref('当前默认数据：LIVE Carnival 2026 Spring');
+// 响应式布局
+const { isMobile, isSmallScreen } = useResponsive();
+
+// 名字筛选
+const { inputNameFilter, inputNameFilterDefaultInformation, isNameMatched } = useCardFilter();
 
 // 添加图标亮度控制
 const allIconsBright = ref(true);
-
-// 响应式属性用于判断屏幕宽度是否足够
-const isMobile = ref(window.innerWidth < 768);
-const isSmallScreen = ref(window.innerWidth < 1600);
-
-// 监听窗口大小变化
-const handleResize = () => {
-  isMobile.value = window.innerWidth < 768;
-  isSmallScreen.value = window.innerWidth < 1600;
-};
-
-onMounted(() => {
-  window.addEventListener('resize', handleResize);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-});
 
 // 添加响应式变量跟踪当前排序字段
 const currentResonanceSortField = ref('specialize');
@@ -1048,29 +1031,6 @@ const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
     });
     return;
   }
-};
-
-// 名字过滤器列表，使用计算属性
-const splitNameFilter = computed(() => {
-  if (!inputNameFilter.value) return [];
-
-  // 将过滤器按空格、换行、半角逗号或全角顿号分割，并移除空字符串
-  return inputNameFilter.value
-    .split(/[ ,、\n]+/)
-    .filter((name) => name.trim() !== '')
-    .map((name) => name.toLowerCase().trim());
-});
-
-// 名字过滤器
-const isNameMatched = (name: string | undefined) => {
-  // 如果没有名字，返回true
-  if (!name) return true;
-
-  // 如果过滤列表为空，返回true
-  if (splitNameFilter.value.length === 0) return true;
-
-  // 检查标题是否包含任何一个名字（不区分大小写）
-  return splitNameFilter.value.some((name2) => name.toLowerCase().includes(name2));
 };
 
 // 判断是否为月初卡池角色（检查 cid 或 cid-1 是否在列表中）
