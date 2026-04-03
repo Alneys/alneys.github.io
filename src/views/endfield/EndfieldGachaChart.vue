@@ -214,8 +214,8 @@ function resetWeaponForm() {
 }
 
 // 防抖定时器
-let debounceTimer: number | null = null;
-let weaponDebounceTimer: number | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let weaponDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * 单次角色抽卡模拟函数
