@@ -322,7 +322,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue';
-import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
+import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 import {

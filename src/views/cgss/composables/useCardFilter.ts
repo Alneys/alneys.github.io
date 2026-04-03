@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import defaultFilterData from '../cgss_default_name_filter.json';
+import defaultFilterData from '../data/cgss_default_name_filter.json';
 
 /**
  * 名字筛选功能
