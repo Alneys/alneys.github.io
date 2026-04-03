@@ -323,7 +323,6 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue';
 import CgssCardSkillTable from './cgss_extracted_card_skill_table_ssr.json';
-import CgssSeasonLimitedGashaList from './cgss_season_limited_gacha_list.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 import {
@@ -345,6 +344,7 @@ import {
 
 import { useResponsive } from './composables/useResponsive';
 import { useCardFilter } from './composables/useCardFilter';
+import { useSeasonLimited } from './composables/useSeasonLimited';
 
 // 模式切换
 
@@ -364,6 +364,9 @@ const { isMobile, isSmallScreen } = useResponsive();
 
 // 名字筛选
 const { inputNameFilter, inputNameFilterDefaultInformation, isNameMatched } = useCardFilter();
+
+// 季节限定卡池判断
+const { isSeasonLimitedCard } = useSeasonLimited();
 
 // 添加图标亮度控制
 const allIconsBright = ref(true);
@@ -1031,19 +1034,6 @@ const handleIconClick = (row: TableDataRow, colKey: string, index: number) => {
     });
     return;
   }
-};
-
-// 判断是否为月初卡池角色（检查 cid 或 cid-1 是否在列表中）
-const isSeasonLimitedCard = (cid: string): boolean => {
-  const cidNum = parseInt(cid, 10);
-  return (
-    CgssSeasonLimitedGashaList.includes(cidNum) || CgssSeasonLimitedGashaList.includes(cidNum - 1)
-  );
-};
-
-// 获取月初卡池角色的 CSS 类名后缀（小写属性名）
-const getSeasonLimitedClass = (card: CgssCardSkillTableItem): string => {
-  return card.attribute.toLowerCase();
 };
 
 // 切换所有图标的亮度
