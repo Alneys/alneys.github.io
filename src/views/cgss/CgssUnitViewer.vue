@@ -599,7 +599,7 @@ const switchHighlightSeasonLimited = ref(false);
 
 // 名字过滤输入
 const inputNameFilter = ref(
-  `中野有香 持田亜里沙 三村かな子 江上椿 棣方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり
+  `中野有香 持田亜里沙 三村かな子 江上椿 棟方愛海 藤本里奈 遊佐こずえ 赤西瑛梨華 小早川紗枝 楊菲菲 道明寺歌鈴 浅野風香 大西由里子 栗原ネネ 村松さくら 有浦柑奈 辻野あかり
 上条春菜 荒木比奈 東郷あい 多田李衣菜 佐々木千枝 服部瞳子 古澤頼子 八神マキノ ケイト 岸部彩華 成宮由愛 藤居朋 二宮飛鳥 桐生つかさ 望月聖 小室千奈美
 本田未央 龍崎薫 松山久美子 愛野渚 野々村そら 若林智香 日野茜 十時愛梨 相馬夏美 市原仁奈 小松伊吹 難波笑美 浜口あやめ 佐藤心`,
 );
@@ -1152,9 +1152,11 @@ const initializeDataDominant = (data: CgssCardSkillTableItem[]): TableDataRow[] 
           if (!targetParam) return;
 
           // 阈值检查
-          const threshold = ['overload', 'overdrive', 'alternate', 'mutual'].includes(colDef.skill)
-            ? DOMINANT_PARAM_THRESHOLD_ADD
-            : DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+          // const threshold = ['overload', 'overdrive', 'alternate', 'mutual'].includes(colDef.skill)
+          //   ? DOMINANT_PARAM_THRESHOLD_ADD
+          //   : DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+          const threshold = DOMINANT_PARAM_THRESHOLD_ADD;
+
           const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
           if (statValue < threshold) return;
 
@@ -1469,7 +1471,7 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     scale: 0.625;
     margin: -6px;
     &.icon-filter-match {
-      scale: 0.75;
+      scale: 0.85;
       margin: 0px;
     }
     &.icon-filter-not-match {
@@ -1487,6 +1489,10 @@ const updateCardBrightnessByCids = (disabledCids: string[]) => {
     &.icon-specialize-not-match {
       scale: 0.375;
       margin: -12px;
+      &.icon-filter-match {
+        scale: 0.85;
+        margin: 0;
+      }
     }
     &.icon-filter-not-match {
       scale: 0.375;
