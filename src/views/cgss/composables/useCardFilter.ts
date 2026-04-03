@@ -8,7 +8,9 @@ import defaultFilterData from '../cgss_default_name_filter.json';
 export function useCardFilter(nameFilter?: string, information?: string) {
   // 名字过滤输入（使用传入参数或 JSON 文件中的默认值）
   const inputNameFilter = ref(nameFilter ?? defaultFilterData.defaultNameFilter);
-  const inputNameFilterDefaultInformation = ref(information ?? defaultFilterData.defaultInformation);
+  const inputNameFilterDefaultInformation = ref(
+    information ?? defaultFilterData.defaultInformation,
+  );
 
   // 分割后的名字列表
   const splitNameFilter = computed(() => {
@@ -30,9 +32,7 @@ export function useCardFilter(nameFilter?: string, information?: string) {
     if (splitNameFilter.value.length === 0) return true;
 
     // 检查名字是否包含任何一个过滤词（不区分大小写）
-    return splitNameFilter.value.some((filterName) =>
-      name.toLowerCase().includes(filterName),
-    );
+    return splitNameFilter.value.some((filterName) => name.toLowerCase().includes(filterName));
   };
 
   return {

@@ -1,5 +1,4 @@
 import CgssSeasonLimitedGashaList from '../cgss_season_limited_gasha_list.json';
-import type { CgssCardSkillTableItem } from '../CgssUnitViewerTypes';
 
 /**
  * 季节限定卡池相关功能
