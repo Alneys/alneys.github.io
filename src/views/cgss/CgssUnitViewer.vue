@@ -73,7 +73,6 @@
       :highlight-season-limited="switchHighlightSeasonLimited"
       @icon-click="handleIconClick"
     />
-
     <div class="al-divider"></div>
     <div class="unit-information">
       <p>建议在1080P或以上分辨率屏幕上使用，针对移动端做了少许优化</p>

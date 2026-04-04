@@ -283,3 +283,14 @@ export const tableDominantColumnHeader: ColumnHeader[] = [
 export const DOMINANT_PARAM_THRESHOLD_ADD = 0;
 /** Dominant 表参数阈值 - 特化  */
 export const DOMINANT_PARAM_THRESHOLD_SPECIALIZE = 5000;
+
+/** 属性值占比阈值（超过此比例显示加粗） */
+export const STATS_BOLD_THRESHOLD = 0.35;
+
+// ---------- 技能名称映射 ----------
+
+/** 技能名称映射 */
+export const SKILL_NAME_MAPPING: Record<string, string> = {
+  focus_flat: 'coordinate',
+  cboost: 'combo',
+};

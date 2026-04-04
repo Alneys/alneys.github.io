@@ -95,6 +95,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import type { TableColumnCtx } from 'element-plus';
 import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import {
@@ -248,14 +249,32 @@ defineExpose({
 });
 
 // 排序事件处理
-const handleResonanceSortChange = ({ column, prop, order }: any) => {
+const handleResonanceSortChange = ({
+  column,
+  prop,
+  order,
+}: {
+  column: TableColumnCtx<TableDataRow>;
+  prop: string;
+  order: 'ascending' | 'descending' | null;
+}) => {
   if (prop) {
     currentSortField.value = prop;
   }
 };
 
 // 合并单元格方法
-const tableResonanceSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+const tableResonanceSpanMethod = ({
+  row,
+  column,
+  rowIndex,
+  columnIndex,
+}: {
+  row: TableDataRow;
+  column: TableColumnCtx<TableDataRow>;
+  rowIndex: number;
+  columnIndex: number;
+}) => {
   if (currentSortField.value !== 'specialize') {
     return [1, 1];
   }

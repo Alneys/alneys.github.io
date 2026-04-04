@@ -1,6 +1,5 @@
 <template>
   <div class="cgss-unit-viewer-dominant-table">
-    <div class="al-divider"></div>
     <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
@@ -161,6 +160,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import type { TableColumnCtx } from 'element-plus';
 import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import {
@@ -401,14 +401,32 @@ const filteredTableData = computed(() => {
 });
 
 // 排序事件处理
-const handleDominantSortChange = ({ column, prop, order }: any) => {
+const handleDominantSortChange = ({
+  column,
+  prop,
+  order,
+}: {
+  column: TableColumnCtx<TableDataRow>;
+  prop: string;
+  order: 'ascending' | 'descending' | null;
+}) => {
   if (prop) {
     currentSortField.value = prop;
   }
 };
 
 // 合并单元格方法
-const tableDominantSpanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
+const tableDominantSpanMethod = ({
+  row,
+  column,
+  rowIndex,
+  columnIndex,
+}: {
+  row: TableDataRow;
+  column: TableColumnCtx<TableDataRow>;
+  rowIndex: number;
+  columnIndex: number;
+}) => {
   if (
     !internalShowAllAttributeSpecializePairs.value ||
     !currentSortField.value.startsWith('target_attribute')

@@ -25,9 +25,11 @@
 </template>
 
 <script setup lang="ts">
+import { type TableDataRow } from './CgssUnitViewerTypes';
+
 // 定义组件 props
 interface Props {
-  tableData: any[];
+  tableData: TableDataRow[];
 }
 
 const props = defineProps<Props>();
