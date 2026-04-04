@@ -3,18 +3,12 @@
     <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
-        <el-switch v-model="internalShowExtraColumns" active-text="额外技能" />
-        <el-switch v-model="internalShowOverloadOverdrive" active-text="显示过载/超载列" />
-        <el-switch
-          v-model="internalShowSortRelatedSkillsOnly"
-          active-text="只显示当前排序项目相关技能"
-        />
-        <el-switch v-model="internalShowSpecializeNotMatch" active-text="显示所有偏科" />
-        <el-switch
-          v-model="internalShowAllAttributeSpecializePairs"
-          active-text="显示所有属性组合"
-        />
-        <el-switch v-model="internalHighlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
+        <el-switch v-model="showExtraColumns" active-text="额外技能" />
+        <el-switch v-model="showOverloadOverdrive" active-text="显示过载/超载列" />
+        <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
+        <el-switch v-model="showSpecializeNotMatch" active-text="显示所有偏科" />
+        <el-switch v-model="showAllAttributePairs" active-text="显示所有属性组合" />
+        <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
       </div>
     </div>
     <div class="unit-table">
@@ -88,10 +82,10 @@
         >
           <el-table-column
             v-if="
-              (!headerItem.extraColumn || internalShowExtraColumns) &&
+              (!headerItem.extraColumn || showExtraColumns) &&
               ((headerItem.skill !== 'overload' && headerItem.skill !== 'overdrive') ||
-                internalShowOverloadOverdrive) &&
-              (!internalShowSortRelatedSkillsOnly ||
+                showOverloadOverdrive) &&
+              (!showSortRelatedSkillsOnly ||
                 currentSortField === 'tw' ||
                 !headerItem.attribute ||
                 headerItem.attribute === currentSortField)
@@ -117,7 +111,7 @@
                   <img
                     v-show="
                       !isDominantSpecializeNotMatch(headerItem, scope.row, icon.card) ||
-                      internalShowSpecializeNotMatch
+                      showSpecializeNotMatch
                     "
                     :class="{
                       'cgss-icon': true,
@@ -131,9 +125,9 @@
                         icon.card,
                       ),
                       'icon-season-limited':
-                        internalHighlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                        highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
                       [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
-                        internalHighlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                        highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
                     }"
                     :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                     @click="onIconClick(scope.row, headerItem.prop, Number(iconIndex))"
@@ -141,7 +135,7 @@
                 </CgssUnitViewerCardTooltip>
                 <div
                   v-if="
-                    !internalShowSpecializeNotMatch &&
+                    !showSpecializeNotMatch &&
                     (scope.row[headerItem.prop].length === 0 ||
                       scope.row[headerItem.prop][0].card.stats[scope.row[headerItem.param ?? '']] <=
                         DOMINANT_PARAM_THRESHOLD_SPECIALIZE)
@@ -192,18 +186,22 @@ const props = defineProps<{
   clickIconAction: string;
   nameFilter: string;
   showExtraTableConfig: boolean;
-  showExtraColumns: boolean;
-  showOverloadOverdrive: boolean;
-  showSpecializeNotMatch: boolean;
-  showAllAttributePairs: boolean;
-  showSortRelatedSkillsOnly: boolean;
-  highlightSeasonLimited: boolean;
 }>();
 
 // Emits
 const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
 }>();
+
+// v-model：表格配置开关
+const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
+const showOverloadOverdrive = defineModel<boolean>('showOverloadOverdrive', { default: false });
+const showSpecializeNotMatch = defineModel<boolean>('showSpecializeNotMatch', { default: false });
+const showAllAttributePairs = defineModel<boolean>('showAllAttributePairs', { default: false });
+const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnly', {
+  default: false,
+});
+const highlightSeasonLimited = defineModel<boolean>('highlightSeasonLimited', { default: false });
 
 // 响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
@@ -213,14 +211,6 @@ const { isNameMatched } = useCardFilter();
 
 // 季节限定卡池判断
 const { isSeasonLimitedCard } = useSeasonLimited();
-
-// 内部状态：表格配置开关
-const internalShowExtraColumns = ref(props.showExtraColumns);
-const internalShowOverloadOverdrive = ref(props.showOverloadOverdrive);
-const internalShowSpecializeNotMatch = ref(props.showSpecializeNotMatch);
-const internalShowAllAttributeSpecializePairs = ref(props.showAllAttributePairs);
-const internalShowSortRelatedSkillsOnly = ref(props.showSortRelatedSkillsOnly);
-const internalHighlightSeasonLimited = ref(props.highlightSeasonLimited);
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
@@ -389,7 +379,7 @@ defineExpose({
 
 // 过滤表格数据
 const filteredTableData = computed(() => {
-  if (internalShowAllAttributeSpecializePairs.value) {
+  if (showAllAttributePairs.value) {
     return tableData.value.filter((row) =>
       tableDominantRowHeaderAttributeSpecializePairs.some(
         (pair) =>
@@ -427,10 +417,7 @@ const tableDominantSpanMethod = ({
   rowIndex: number;
   columnIndex: number;
 }) => {
-  if (
-    !internalShowAllAttributeSpecializePairs.value ||
-    !currentSortField.value.startsWith('target_attribute')
-  ) {
+  if (!showAllAttributePairs.value || !currentSortField.value.startsWith('target_attribute')) {
     return [1, 1];
   }
 

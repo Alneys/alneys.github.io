@@ -35,7 +35,7 @@
       >
         <template #prefix>
           <div>
-            <el-button @click="toggleAllBrightness" type="primary" size="default">
+            <el-button type="primary" size="default" @click="toggleAllBrightness">
               切换所有状态
             </el-button>
           </div>
@@ -50,27 +50,27 @@
     <!-- Resonance 子组件 -->
     <CgssUnitViewerResonanceTable
       ref="resonanceTableRef"
+      v-model:show-extra-columns="switchShowExtraColumns"
       :show-simple-labels="switchShowSimpleLabels"
       :click-icon-action="switchClickIconAction"
       :name-filter="switchNameFilter ? inputNameFilter : ''"
       :show-extra-table-config="switchShowExtraTableConfig"
-      :show-extra-columns="switchShowExtraColumns"
       @icon-click="handleIconClick"
     />
     <div class="al-divider"></div>
     <!-- Dominant 子组件 -->
     <CgssUnitViewerDominantTable
       ref="dominantTableRef"
+      v-model:show-extra-columns="switchShowExtraColumns"
+      v-model:show-overload-overdrive="switchShowOverloadOverdrive"
+      v-model:show-specialize-not-match="switchShowSpecializeNotMatch"
+      v-model:show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
+      v-model:show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
+      v-model:highlight-season-limited="switchHighlightSeasonLimited"
       :show-simple-labels="switchShowSimpleLabels"
       :click-icon-action="switchClickIconAction"
       :name-filter="switchNameFilter ? inputNameFilter : ''"
       :show-extra-table-config="switchShowExtraTableConfig"
-      :show-extra-columns="switchShowExtraColumns"
-      :show-overload-overdrive="switchShowOverloadOverdrive"
-      :show-specialize-not-match="switchShowSpecializeNotMatch"
-      :show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
-      :show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
-      :highlight-season-limited="switchHighlightSeasonLimited"
       @icon-click="handleIconClick"
     />
     <div class="al-divider"></div>

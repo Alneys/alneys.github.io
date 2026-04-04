@@ -3,7 +3,7 @@
     <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
-        <el-switch v-model="internalShowExtraColumns" active-text="额外技能" />
+        <el-switch v-model="showExtraColumns" active-text="额外技能" />
       </div>
     </div>
     <div class="unit-table">
@@ -53,7 +53,7 @@
           :key="headerItem.prop"
         >
           <el-table-column
-            v-if="!headerItem.extraColumn || internalShowExtraColumns"
+            v-if="!headerItem.extraColumn || showExtraColumns"
             :prop="headerItem.prop"
             :label="
               showSimpleLabels ? headerItem.labelCn : `${headerItem.labelCn} ${headerItem.labelEn}`
@@ -122,7 +122,6 @@ const props = defineProps<{
   clickIconAction: string;
   nameFilter: string;
   showExtraTableConfig: boolean;
-  showExtraColumns: boolean;
 }>();
 
 // Emits
@@ -130,14 +129,14 @@ const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
 }>();
 
+// v-model：表格配置开关
+const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
+
 // 响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
 
 // 名字筛选
 const { isNameMatched } = useCardFilter();
-
-// 内部状态：额外技能开关
-const internalShowExtraColumns = ref(props.showExtraColumns);
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('specialize');
