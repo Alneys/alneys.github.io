@@ -2,50 +2,18 @@
   <div class="cgss-unit-viewer">
     <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
     <div class="al-divider"></div>
-    <div class="unit-viewer-config">
-      <div>
-        <el-switch v-model="switchNameFilter" active-text="筛选名字" />
-      </div>
-      <div v-if="switchNameFilter">
-        <el-input
-          v-model="inputNameFilter"
-          class="config-name-filter-input"
-          placeholder="请输入名字，分割符号可以使用空格，换行，半角逗号或者全角顿号里面的任何符号，名字里面请不要输入空格"
-          type="textarea"
-          :rows="3"
-          clearable
-        ></el-input>
-        <div v-if="inputNameFilterDefaultInformation">{{ inputNameFilterDefaultInformation }}</div>
-      </div>
-      <div>
-        <span class="el-switch__label">点击图标操作</span>
-        <el-segmented
-          v-model="switchClickIconAction"
-          :options="[
-            { label: '无', value: 'None' },
-            { label: '切换卡片状态', value: 'ToggleCardStatus' },
-            { label: '在346lab查看卡片详情', value: 'ViewCardInfo' },
-          ]"
-        ></el-segmented>
-      </div>
-      <CgssUnitViewerStateManager
-        v-if="switchClickIconAction === 'ToggleCardStatus'"
-        :table-data="combinedTableData"
-        @update-card-status="handleUpdateCardStatus"
-      >
-        <template #prefix>
-          <div>
-            <el-button type="primary" size="default" @click="toggleAllBrightness">
-              切换所有状态
-            </el-button>
-          </div>
-        </template>
-      </CgssUnitViewerStateManager>
-      <div>
-        <el-switch v-model="switchShowSimpleLabels" active-text="简单标题" />
-        <el-switch v-model="switchShowExtraTableConfig" active-text="更多表格选项" />
-      </div>
-    </div>
+    <!-- 配置面板 -->
+    <CgssUnitViewerConfigPanel
+      v-model:name-filter-enabled="switchNameFilter"
+      v-model:name-filter="inputNameFilter"
+      v-model:click-icon-action="switchClickIconAction"
+      v-model:show-simple-labels="switchShowSimpleLabels"
+      v-model:show-extra-table-config="switchShowExtraTableConfig"
+      :name-filter-default-information="inputNameFilterDefaultInformation"
+      :table-data="combinedTableData"
+      @toggle-all-brightness="toggleAllBrightness"
+      @update-card-status="handleUpdateCardStatus"
+    />
     <div class="al-divider"></div>
     <!-- Resonance 子组件 -->
     <CgssUnitViewerResonanceTable
@@ -93,7 +61,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
+import CgssUnitViewerConfigPanel from './CgssUnitViewerConfigPanel.vue';
 import CgssUnitViewerResonanceTable from './CgssUnitViewerResonanceTable.vue';
 import CgssUnitViewerDominantTable from './CgssUnitViewerDominantTable.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
@@ -147,21 +115,6 @@ const handleIconClick = (payload: { row: TableDataRow; column: string; index: nu
 <style lang="scss" scoped>
 .el-link {
   vertical-align: inherit;
-}
-.unit-viewer-config {
-  > div {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.5em;
-    margin: 0.5em 0;
-  }
-  .config-name-filter-input {
-    font-family: var(--al-font-family-jp);
-    ::placeholder {
-      font-family: var(--al-font-family);
-    }
-  }
 }
 .unit-information {
   margin: 1em 0;
