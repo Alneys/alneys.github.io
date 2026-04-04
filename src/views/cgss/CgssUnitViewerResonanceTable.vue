@@ -132,6 +132,9 @@ const emit = defineEmits<{
 // v-model：表格配置开关
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
 
+// v-model：表格数据（双向绑定到父组件）
+const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
+
 // 响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
 
@@ -140,9 +143,6 @@ const { isNameMatched } = useCardFilter();
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('specialize');
-
-// 数据所有权：子组件内部 ref
-const tableData = ref<TableDataRow[]>([]);
 
 // 初始化函数
 const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
@@ -235,12 +235,8 @@ const {
   setAllIconsBrightness,
 } = useIconActions([tableData], clickIconActionRef);
 
-// 获取数据（供父组件使用）
-const getData = () => tableData.value;
-
-// Expose 方法
+// Expose 方法（无需 getData，数据通过 v-model 暴露）
 defineExpose({
-  getData,
   toggleAllBrightness: toggleAllIconsBrightness,
   updateBrightnessByCids: updateCardBrightnessByCids,
   updateCardBrightnessByName,

@@ -215,8 +215,8 @@ const { isSeasonLimitedCard } = useSeasonLimited();
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
 
-// 数据所有权：子组件内部 ref
-const tableData = ref<TableDataRow[]>([]);
+// v-model：表格数据（双向绑定到父组件）
+const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
 
 // 初始化函数
 const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
@@ -365,12 +365,8 @@ const {
   setAllIconsBrightness,
 } = useIconActions([tableData], clickIconActionRef);
 
-// 获取数据（供父组件使用）
-const getData = () => tableData.value;
-
-// Expose 方法
+// Expose 方法（无需 getData，数据通过 v-model 暴露）
 defineExpose({
-  getData,
   toggleAllBrightness: toggleAllIconsBrightness,
   updateBrightnessByCids: updateCardBrightnessByCids,
   updateCardBrightnessByName,

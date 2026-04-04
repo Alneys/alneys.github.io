@@ -18,6 +18,7 @@
     <!-- Resonance 子组件 -->
     <CgssUnitViewerResonanceTable
       ref="resonanceTableRef"
+      v-model:table-data="resonanceTableData"
       v-model:show-extra-columns="switchShowExtraColumns"
       :show-simple-labels="switchShowSimpleLabels"
       :click-icon-action="switchClickIconAction"
@@ -29,6 +30,7 @@
     <!-- Dominant 子组件 -->
     <CgssUnitViewerDominantTable
       ref="dominantTableRef"
+      v-model:table-data="dominantTableData"
       v-model:show-extra-columns="switchShowExtraColumns"
       v-model:show-overload-overdrive="switchShowOverloadOverdrive"
       v-model:show-specialize-not-match="switchShowSpecializeNotMatch"
@@ -83,16 +85,18 @@ const switchHighlightSeasonLimited = ref(false);
 // 名字筛选
 const { inputNameFilter, inputNameFilterDefaultInformation } = useCardFilter();
 
+// 表格数据（通过 v-model 从子组件接收）
+const resonanceTableData = ref<TableDataRow[]>([]);
+const dominantTableData = ref<TableDataRow[]>([]);
+
+// 合并表格数据（用于 StateManager）
+const combinedTableData = computed<TableDataRow[]>(() => {
+  return [...resonanceTableData.value, ...dominantTableData.value];
+});
+
 // 子组件引用
 const resonanceTableRef = ref<InstanceType<typeof CgssUnitViewerResonanceTable>>();
 const dominantTableRef = ref<InstanceType<typeof CgssUnitViewerDominantTable>>();
-
-// 合并子组件数据（用于 StateManager）
-const combinedTableData = computed<TableDataRow[]>(() => {
-  const resonanceData = resonanceTableRef.value?.getData() ?? [];
-  const dominantData = dominantTableRef.value?.getData() ?? [];
-  return [...resonanceData, ...dominantData];
-});
 
 // 切换所有亮度
 const toggleAllBrightness = () => {
