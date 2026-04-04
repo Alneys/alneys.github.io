@@ -71,7 +71,7 @@ const emit = defineEmits<{
 // 点击操作选项（静态数据）
 const clickActionOptions = [
   { label: '无', value: 'None' },
-  { label: '切换卡片状态', value: 'ToggleCardStatus' },
+  { label: '切换卡片亮度', value: 'ToggleCardStatus' },
   { label: '在346lab查看卡片详情', value: 'ViewCardInfo' },
 ];
 </script>
