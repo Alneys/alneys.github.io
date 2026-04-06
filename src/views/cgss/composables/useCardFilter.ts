@@ -1,13 +1,14 @@
-import { ref, computed } from 'vue';
+import { ref, computed, type Ref } from 'vue';
 import nameFilterData from '../data/cgss_name_filter.json';
 
 /**
  * 名字筛选功能
  * 提供名字输入、分割和匹配判断
+ * @param nameFilterRef - 可选的外部 ref，用于双向绑定筛选内容
  */
-export function useCardFilter(nameFilter?: string) {
-  // 名字过滤输入（使用传入参数或 JSON 文件中的默认值）
-  const inputNameFilter = ref(nameFilter ?? nameFilterData[0].nameFilter);
+export function useCardFilter(nameFilterRef?: Ref<string>) {
+  // 名字过滤输入（使用传入的 ref 或创建新的 ref）
+  const inputNameFilter = nameFilterRef ?? ref(nameFilterData[0].nameFilter);
 
   // 分割后的名字列表
   const splitNameFilter = computed(() => {

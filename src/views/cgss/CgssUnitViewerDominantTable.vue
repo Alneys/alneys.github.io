@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, toRef } from 'vue';
 import type { TableColumnCtx } from 'element-plus';
 import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
@@ -208,8 +208,8 @@ const highlightSeasonLimited = defineModel<boolean>('highlightSeasonLimited', { 
 // 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
 
-// 组合式函数：名字筛选
-const { isNameMatched } = useCardFilter();
+// 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
+const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
 // 组合式函数：季节限定卡池判断
 const { isSeasonLimitedCard } = useSeasonLimited();
