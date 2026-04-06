@@ -22,7 +22,7 @@
       <el-segmented v-model="clickIconAction" :options="clickActionOptions" />
     </div>
 
-    <!-- StateManager -->
+    <!-- 状态管理 -->
     <CgssUnitViewerStateManager
       v-if="clickIconAction === 'ToggleCardStatus'"
       :table-data="tableData"
@@ -37,7 +37,7 @@
       </template>
     </CgssUnitViewerStateManager>
 
-    <!-- 通用开关 -->
+    <!-- 全局控制 -->
     <div>
       <el-switch v-model="showSimpleLabels" active-text="简单标题" />
       <el-switch v-model="showExtraTableConfig" active-text="更多表格选项" />
@@ -49,26 +49,25 @@
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
 
-// Props
+// 传入属性
 const props = defineProps<{
   nameFilterDefaultInformation: string;
   tableData: TableDataRow[];
 }>();
 
-// v-model 双向绑定
+// 自定义事件
+const emit = defineEmits<{
+  toggleAllBrightness: [];
+  updateCardStatus: [disabledCids: string[]];
+}>();
+
+// 双向绑定
 const nameFilterEnabled = defineModel<boolean>('nameFilterEnabled', { default: false });
 const nameFilter = defineModel<string>('nameFilter', { default: '' });
 const clickIconAction = defineModel<string>('clickIconAction', { default: 'None' });
 const showSimpleLabels = defineModel<boolean>('showSimpleLabels', { default: false });
 const showExtraTableConfig = defineModel<boolean>('showExtraTableConfig', { default: true });
 
-// Emits
-const emit = defineEmits<{
-  toggleAllBrightness: [];
-  updateCardStatus: [disabledCids: string[]];
-}>();
-
-// 点击操作选项（静态数据）
 const clickActionOptions = [
   { label: '无', value: 'None' },
   { label: '切换卡片亮度', value: 'ToggleCardStatus' },

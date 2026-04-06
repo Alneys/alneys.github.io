@@ -116,7 +116,7 @@ import {
   sortResonanceSpecialize,
 } from './composables/useTableUtils';
 
-// Props：只接收配置开关
+// 传入属性
 const props = defineProps<{
   showSimpleLabels: boolean;
   clickIconAction: string;
@@ -124,21 +124,20 @@ const props = defineProps<{
   showExtraTableConfig: boolean;
 }>();
 
-// Emits
+// 自定义事件
 const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
 }>();
 
-// v-model：表格配置开关
-const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
-
-// v-model：表格数据（双向绑定到父组件）
+// 双向绑定
 const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
 
-// 响应式布局
+const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
+
+// 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
 
-// 名字筛选
+// 组合式函数：名字筛选
 const { isNameMatched } = useCardFilter();
 
 // 排序状态：子组件内部维护
@@ -224,7 +223,7 @@ onMounted(() => {
   tableData.value = initializeData(CgssCardSkillTable as CgssCardSkillTableItem[]);
 });
 
-// useIconActions：独立实例
+// 组合式函数：图标操作
 const clickIconActionRef = computed(() => props.clickIconAction);
 const {
   allIconsBright,
@@ -235,7 +234,7 @@ const {
   setAllIconsBrightness,
 } = useIconActions([tableData], clickIconActionRef);
 
-// Expose 方法（无需 getData，数据通过 v-model 暴露）
+// 暴露属性
 defineExpose({
   toggleAllBrightness: toggleAllIconsBrightness,
   updateBrightnessByCids: updateCardBrightnessByCids,

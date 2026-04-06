@@ -45,6 +45,7 @@ import {
   STATS_BOLD_THRESHOLD,
 } from './CgssUnitViewerTypes';
 
+// 传入属性
 const props = defineProps<{
   card: CgssCardSkillTableItem;
   isVocalUnderlined?: boolean;
@@ -52,10 +53,8 @@ const props = defineProps<{
   isVisualUnderlined?: boolean;
 }>();
 
-// 使用计算属性来计算总和和判断加粗状态
 const totalStats = computed(() => {
   const { vocal, dance, visual } = props.card.stats || { vocal: 0, dance: 0, visual: 0 };
-  // 检查是否所有值都是有效的数字
   if (typeof vocal !== 'number' || typeof dance !== 'number' || typeof visual !== 'number') {
     return 0;
   }
