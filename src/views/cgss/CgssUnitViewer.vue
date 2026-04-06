@@ -8,7 +8,6 @@
       v-model:click-icon-action="switchClickIconAction"
       v-model:show-simple-labels="switchShowSimpleLabels"
       v-model:show-extra-table-config="switchShowExtraTableConfig"
-      :name-filter-default-information="inputNameFilterDefaultInformation"
       :table-data="combinedTableData"
       @toggle-all-brightness="toggleAllBrightness"
       @update-card-status="handleUpdateCardStatus"
@@ -68,7 +67,7 @@ import { type TableDataRow } from './CgssUnitViewerTypes';
 import { useCardFilter } from './composables/useCardFilter';
 
 // 组合式函数：名字筛选
-const { inputNameFilter, inputNameFilterDefaultInformation } = useCardFilter();
+const { inputNameFilter } = useCardFilter();
 
 // 配置开关
 const switchClickIconAction = ref('None');
