@@ -8,7 +8,7 @@ import nameFilterData from '../data/cgss_name_filter.json';
  */
 export function useCardFilter(nameFilterRef?: Ref<string>) {
   // 名字过滤输入（使用传入的 ref 或创建新的 ref）
-  const inputNameFilter = nameFilterRef ?? ref(nameFilterData[0].nameFilter);
+  const inputNameFilter = nameFilterRef ?? ref(nameFilterData[0]!.nameFilter);
 
   // 分割后的名字列表
   const splitNameFilter = computed(() => {
@@ -30,7 +30,7 @@ export function useCardFilter(nameFilterRef?: Ref<string>) {
     if (splitNameFilter.value.length === 0) return true;
 
     // 检查名字是否包含任何一个过滤词（不区分大小写）
-    return splitNameFilter.value.some((filterName) => name.toLowerCase().includes(filterName));
+    return splitNameFilter.value.some((filterName) => name.toLowerCase() === filterName);
   };
 
   // 获取名字筛选数据列表

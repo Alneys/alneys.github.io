@@ -1,13 +1,13 @@
 <template>
   <div class="unit-viewer-config">
     <!-- 名字筛选 -->
-    <div>
+    <div style="display: flex; align-items: center">
       <el-switch v-model="nameFilterEnabled" active-text="筛选名字" />
       <el-select
         v-if="nameFilterEnabled"
         v-model="selectedFilterIndex"
         placeholder="选择预设筛选"
-        style="width: 260px"
+        style="width: 18em; margin-left: 1em;"
       >
         <el-option
           v-for="(item, index) in nameFilterDataList"
@@ -88,7 +88,7 @@ const selectedFilterIndex = ref<number>();
 // 监听下拉选择变化，更新筛选内容
 watch(selectedFilterIndex, (newIndex) => {
   if (newIndex !== undefined && newIndex >= 0) {
-    nameFilter.value = nameFilterDataList[newIndex].nameFilter;
+    nameFilter.value = nameFilterDataList[newIndex]!.nameFilter;
   }
 });
 
