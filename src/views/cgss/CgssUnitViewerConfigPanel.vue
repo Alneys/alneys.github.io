@@ -1,8 +1,21 @@
 <template>
   <div class="unit-viewer-config">
     <!-- 名字筛选 -->
-    <div>
+    <div style="display: flex; align-items: center">
       <el-switch v-model="nameFilterEnabled" active-text="筛选名字" />
+      <el-select
+        v-if="nameFilterEnabled"
+        v-model="selectedFilterIndex"
+        placeholder="选择预设筛选"
+        style="width: 18em; margin-left: 1em;"
+      >
+        <el-option
+          v-for="(item, index) in nameFilterDataList"
+          :key="index"
+          :label="item.information"
+          :value="index"
+        />
+      </el-select>
     </div>
     <div v-if="nameFilterEnabled">
       <el-input
@@ -13,7 +26,6 @@
         :rows="3"
         clearable
       />
-      <div v-if="nameFilterDefaultInformation">{{ nameFilterDefaultInformation }}</div>
     </div>
 
     <!-- 点击图标操作 -->
@@ -22,7 +34,7 @@
       <el-segmented v-model="clickIconAction" :options="clickActionOptions" />
     </div>
 
-    <!-- StateManager -->
+    <!-- 状态管理 -->
     <CgssUnitViewerStateManager
       v-if="clickIconAction === 'ToggleCardStatus'"
       :table-data="tableData"
@@ -37,7 +49,7 @@
       </template>
     </CgssUnitViewerStateManager>
 
-    <!-- 通用开关 -->
+    <!-- 全局控制 -->
     <div>
       <el-switch v-model="showSimpleLabels" active-text="简单标题" />
       <el-switch v-model="showExtraTableConfig" active-text="更多表格选项" />
@@ -46,29 +58,40 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
+import nameFilterData from './data/cgss_name_filter.json';
 
-// Props
+// 传入属性
 const props = defineProps<{
-  nameFilterDefaultInformation: string;
   tableData: TableDataRow[];
 }>();
 
-// v-model 双向绑定
+// 自定义事件
+const emit = defineEmits<{
+  toggleAllBrightness: [];
+  updateCardStatus: [disabledCids: string[]];
+}>();
+
+// 双向绑定
 const nameFilterEnabled = defineModel<boolean>('nameFilterEnabled', { default: false });
 const nameFilter = defineModel<string>('nameFilter', { default: '' });
 const clickIconAction = defineModel<string>('clickIconAction', { default: 'None' });
 const showSimpleLabels = defineModel<boolean>('showSimpleLabels', { default: false });
 const showExtraTableConfig = defineModel<boolean>('showExtraTableConfig', { default: true });
 
-// Emits
-const emit = defineEmits<{
-  toggleAllBrightness: [];
-  updateCardStatus: [disabledCids: string[]];
-}>();
+// 名字筛选数据
+const nameFilterDataList = nameFilterData;
+const selectedFilterIndex = ref<number>();
 
-// 点击操作选项（静态数据）
+// 监听下拉选择变化，更新筛选内容
+watch(selectedFilterIndex, (newIndex) => {
+  if (newIndex !== undefined && newIndex >= 0) {
+    nameFilter.value = nameFilterDataList[newIndex]!.nameFilter;
+  }
+});
+
 const clickActionOptions = [
   { label: '无', value: 'None' },
   { label: '切换卡片亮度', value: 'ToggleCardStatus' },

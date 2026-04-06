@@ -2,20 +2,17 @@
   <div class="cgss-unit-viewer">
     <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
     <div class="al-divider"></div>
-    <!-- 配置面板 -->
     <CgssUnitViewerConfigPanel
       v-model:name-filter-enabled="switchNameFilter"
       v-model:name-filter="inputNameFilter"
       v-model:click-icon-action="switchClickIconAction"
       v-model:show-simple-labels="switchShowSimpleLabels"
       v-model:show-extra-table-config="switchShowExtraTableConfig"
-      :name-filter-default-information="inputNameFilterDefaultInformation"
       :table-data="combinedTableData"
       @toggle-all-brightness="toggleAllBrightness"
       @update-card-status="handleUpdateCardStatus"
     />
     <div class="al-divider"></div>
-    <!-- Resonance 子组件 -->
     <CgssUnitViewerResonanceTable
       ref="resonanceTableRef"
       v-model:table-data="resonanceTableData"
@@ -27,7 +24,6 @@
       @icon-click="handleIconClick"
     />
     <div class="al-divider"></div>
-    <!-- Dominant 子组件 -->
     <CgssUnitViewerDominantTable
       ref="dominantTableRef"
       v-model:table-data="dominantTableData"
@@ -63,12 +59,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, useTemplateRef } from 'vue';
 import CgssUnitViewerConfigPanel from './CgssUnitViewerConfigPanel.vue';
 import CgssUnitViewerResonanceTable from './CgssUnitViewerResonanceTable.vue';
 import CgssUnitViewerDominantTable from './CgssUnitViewerDominantTable.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
 import { useCardFilter } from './composables/useCardFilter';
+
+// 组合式函数：名字筛选
+const { inputNameFilter } = useCardFilter();
 
 // 配置开关
 const switchClickIconAction = ref('None');
@@ -82,21 +81,18 @@ const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
 
-// 名字筛选
-const { inputNameFilter, inputNameFilterDefaultInformation } = useCardFilter();
-
 // 表格数据（通过 v-model 从子组件接收）
 const resonanceTableData = ref<TableDataRow[]>([]);
 const dominantTableData = ref<TableDataRow[]>([]);
 
-// 合并表格数据（用于 StateManager）
 const combinedTableData = computed<TableDataRow[]>(() => {
   return [...resonanceTableData.value, ...dominantTableData.value];
 });
 
-// 子组件引用
-const resonanceTableRef = ref<InstanceType<typeof CgssUnitViewerResonanceTable>>();
-const dominantTableRef = ref<InstanceType<typeof CgssUnitViewerDominantTable>>();
+const resonanceTableRef =
+  useTemplateRef<InstanceType<typeof CgssUnitViewerResonanceTable>>('resonanceTableRef');
+const dominantTableRef =
+  useTemplateRef<InstanceType<typeof CgssUnitViewerDominantTable>>('dominantTableRef');
 
 // 切换所有亮度
 const toggleAllBrightness = () => {
@@ -104,7 +100,7 @@ const toggleAllBrightness = () => {
   dominantTableRef.value?.toggleAllBrightness();
 };
 
-// 更新卡片状态（从 StateManager 接收）
+// 更新卡片状态
 const handleUpdateCardStatus = (disabledCids: string[]) => {
   resonanceTableRef.value?.updateBrightnessByCids(disabledCids);
   dominantTableRef.value?.updateBrightnessByCids(disabledCids);

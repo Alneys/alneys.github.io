@@ -27,19 +27,19 @@
 <script setup lang="ts">
 import { type TableDataRow } from './CgssUnitViewerTypes';
 
-// 定义组件 props
 interface Props {
   tableData: TableDataRow[];
 }
 
+// 传入属性
 const props = defineProps<Props>();
 
-// 定义事件发射器
+// 自定义事件
 const emit = defineEmits<{
   'update-card-status': [disabledCids: string[]];
 }>();
 
-// 导出功能：收集所有未点亮的卡片CID
+// 收集所有未点亮的卡片CID
 const exportCidsToString = () => {
   const darkCids: string[] = [];
 

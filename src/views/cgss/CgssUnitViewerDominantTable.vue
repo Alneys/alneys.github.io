@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, toRef } from 'vue';
 import type { TableColumnCtx } from 'element-plus';
 import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
@@ -180,7 +180,7 @@ import {
   sortDominantAttribute2,
 } from './composables/useTableUtils';
 
-// Props：只接收配置开关
+// 传入属性
 const props = defineProps<{
   showSimpleLabels: boolean;
   clickIconAction: string;
@@ -188,12 +188,14 @@ const props = defineProps<{
   showExtraTableConfig: boolean;
 }>();
 
-// Emits
+// 自定义事件
 const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
 }>();
 
-// v-model：表格配置开关
+// 双向绑定
+const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
+
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
 const showOverloadOverdrive = defineModel<boolean>('showOverloadOverdrive', { default: false });
 const showSpecializeNotMatch = defineModel<boolean>('showSpecializeNotMatch', { default: false });
@@ -203,20 +205,30 @@ const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnl
 });
 const highlightSeasonLimited = defineModel<boolean>('highlightSeasonLimited', { default: false });
 
-// 响应式布局
+// 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
 
-// 名字筛选
-const { isNameMatched } = useCardFilter();
+// 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
+const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
-// 季节限定卡池判断
+// 组合式函数：季节限定卡池判断
 const { isSeasonLimitedCard } = useSeasonLimited();
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
 
-// v-model：表格数据（双向绑定到父组件）
-const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
+// 过滤表格数据
+const filteredTableData = computed(() => {
+  if (showAllAttributePairs.value) {
+    return tableData.value.filter((row) =>
+      tableDominantRowHeaderAttributeSpecializePairs.some(
+        (pair) =>
+          pair.target_param_2 === row.target_param_2 && pair.target_param === row.target_param,
+      ),
+    );
+  }
+  return tableData.value.filter((row) => Array.isArray(row.dominant) && row.dominant.length > 0);
+});
 
 // 初始化函数
 const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
@@ -349,12 +361,11 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
   return result;
 };
 
-// 初始化：onMounted 内部初始化
 onMounted(() => {
   tableData.value = initializeData(CgssCardSkillTable as CgssCardSkillTableItem[]);
 });
 
-// useIconActions：独立实例
+// 组合式函数：图标操作
 const clickIconActionRef = computed(() => props.clickIconAction);
 const {
   allIconsBright,
@@ -365,25 +376,12 @@ const {
   setAllIconsBrightness,
 } = useIconActions([tableData], clickIconActionRef);
 
-// Expose 方法（无需 getData，数据通过 v-model 暴露）
+// 暴露属性
 defineExpose({
   toggleAllBrightness: toggleAllIconsBrightness,
   updateBrightnessByCids: updateCardBrightnessByCids,
   updateCardBrightnessByName,
   setAllIconsBrightness,
-});
-
-// 过滤表格数据
-const filteredTableData = computed(() => {
-  if (showAllAttributePairs.value) {
-    return tableData.value.filter((row) =>
-      tableDominantRowHeaderAttributeSpecializePairs.some(
-        (pair) =>
-          pair.target_param_2 === row.target_param_2 && pair.target_param === row.target_param,
-      ),
-    );
-  }
-  return tableData.value.filter((row) => Array.isArray(row.dominant) && row.dominant.length > 0);
 });
 
 // 排序事件处理

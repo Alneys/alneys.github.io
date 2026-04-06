@@ -1,16 +1,14 @@
-import { ref, computed } from 'vue';
-import defaultFilterData from '../data/cgss_default_name_filter.json';
+import { ref, computed, type Ref } from 'vue';
+import nameFilterData from '../data/cgss_name_filter.json';
 
 /**
  * 名字筛选功能
  * 提供名字输入、分割和匹配判断
+ * @param nameFilterRef - 可选的外部 ref，用于双向绑定筛选内容
  */
-export function useCardFilter(nameFilter?: string, information?: string) {
-  // 名字过滤输入（使用传入参数或 JSON 文件中的默认值）
-  const inputNameFilter = ref(nameFilter ?? defaultFilterData.defaultNameFilter);
-  const inputNameFilterDefaultInformation = ref(
-    information ?? defaultFilterData.defaultInformation,
-  );
+export function useCardFilter(nameFilterRef?: Ref<string>) {
+  // 名字过滤输入（使用传入的 ref 或创建新的 ref）
+  const inputNameFilter = nameFilterRef ?? ref(nameFilterData[0]!.nameFilter);
 
   // 分割后的名字列表
   const splitNameFilter = computed(() => {
@@ -32,16 +30,19 @@ export function useCardFilter(nameFilter?: string, information?: string) {
     if (splitNameFilter.value.length === 0) return true;
 
     // 检查名字是否包含任何一个过滤词（不区分大小写）
-    return splitNameFilter.value.some((filterName) => name.toLowerCase().includes(filterName));
+    return splitNameFilter.value.some((filterName) => name.toLowerCase() === filterName);
   };
+
+  // 获取名字筛选数据列表
+  const getNameFilterDataList = () => nameFilterData;
 
   return {
     // 状态
     inputNameFilter,
-    inputNameFilterDefaultInformation,
     // 计算属性
     splitNameFilter,
     // 方法
     isNameMatched,
+    getNameFilterDataList,
   };
 }
