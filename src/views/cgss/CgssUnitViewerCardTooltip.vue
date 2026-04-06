@@ -39,7 +39,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { CgssCardSkillTableItem } from './CgssUnitViewer.vue';
+import {
+  type CgssCardSkillTableItem,
+  SKILL_NAME_MAPPING,
+  STATS_BOLD_THRESHOLD,
+} from './CgssUnitViewerTypes';
 
 const props = defineProps<{
   card: CgssCardSkillTableItem;
@@ -47,11 +51,6 @@ const props = defineProps<{
   isDanceUnderlined?: boolean;
   isVisualUnderlined?: boolean;
 }>();
-
-const SKILL_NAME_MAPPING: Record<string, string> = {
-  focus_flat: 'coordinate',
-  cboost: 'combo',
-};
 
 // 使用计算属性来计算总和和判断加粗状态
 const totalStats = computed(() => {
@@ -65,19 +64,19 @@ const totalStats = computed(() => {
 
 const isVocalBold = computed(() =>
   props.card.stats?.vocal && totalStats.value > 0
-    ? props.card.stats.vocal / totalStats.value > 0.35
+    ? props.card.stats.vocal / totalStats.value > STATS_BOLD_THRESHOLD
     : false,
 );
 
 const isDanceBold = computed(() =>
   props.card.stats?.dance && totalStats.value > 0
-    ? props.card.stats.dance / totalStats.value > 0.35
+    ? props.card.stats.dance / totalStats.value > STATS_BOLD_THRESHOLD
     : false,
 );
 
 const isVisualBold = computed(() =>
   props.card.stats?.visual && totalStats.value > 0
-    ? props.card.stats.visual / totalStats.value > 0.35
+    ? props.card.stats.visual / totalStats.value > STATS_BOLD_THRESHOLD
     : false,
 );
 </script>
