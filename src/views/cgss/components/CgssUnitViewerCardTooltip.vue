@@ -43,7 +43,7 @@ import {
   type CgssCardSkillTableItem,
   SKILL_NAME_MAPPING,
   STATS_BOLD_THRESHOLD,
-} from './CgssUnitViewerTypes';
+} from '../CgssUnitViewerTypes';
 
 // 传入属性
 const props = defineProps<{

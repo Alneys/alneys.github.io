@@ -60,9 +60,9 @@
 
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from 'vue';
-import CgssUnitViewerConfigPanel from './CgssUnitViewerConfigPanel.vue';
-import CgssUnitViewerResonanceTable from './CgssUnitViewerResonanceTable.vue';
-import CgssUnitViewerDominantTable from './CgssUnitViewerDominantTable.vue';
+import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
+import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
+import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
 import { useCardFilter } from './composables/useCardFilter';
 

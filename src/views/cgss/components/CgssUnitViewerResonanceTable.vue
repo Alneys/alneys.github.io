@@ -96,7 +96,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, toRef } from 'vue';
 import type { TableColumnCtx } from 'element-plus';
-import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
+import CgssCardSkillTable from '../data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import {
   type CgssCardSkillTableItem,
@@ -105,16 +105,16 @@ import {
   tableResonanceRowHeaderSpecialize,
   tableResonanceRowHeaderTw,
   tableResonanceColumnHeader,
-} from './CgssUnitViewerTypes';
-import { useResponsive } from './composables/useResponsive';
-import { useCardFilter } from './composables/useCardFilter';
-import { useIconActions } from './composables/useIconActions';
+} from '../CgssUnitViewerTypes';
+import { useResponsive } from '../composables/useResponsive';
+import { useCardFilter } from '../composables/useCardFilter';
+import { useIconActions } from '../composables/useIconActions';
 import {
   sortTableTw,
   createCardDataItem,
   sortCardsByParam,
   sortResonanceSpecialize,
-} from './composables/useTableUtils';
+} from '../composables/useTableUtils';
 
 // 传入属性
 const props = defineProps<{
@@ -292,7 +292,7 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 </script>
 
 <style lang="scss" scoped>
-@use './styles/CgssUnitViewerTable.scss' as table;
+@use '../styles/CgssUnitViewerTable.scss' as table;
 
 .cgss-unit-viewer-resonance-table {
   @include table.cgss-table-container-base;

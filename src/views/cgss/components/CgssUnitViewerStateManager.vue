@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { type TableDataRow } from './CgssUnitViewerTypes';
+import { type TableDataRow } from '../CgssUnitViewerTypes';
 
 interface Props {
   tableData: TableDataRow[];

@@ -7,7 +7,7 @@
         v-if="nameFilterEnabled"
         v-model="selectedFilterIndex"
         placeholder="选择预设筛选"
-        style="width: 18em; margin-left: 1em;"
+        style="width: 18em; margin-left: 1em"
       >
         <el-option
           v-for="(item, index) in nameFilterDataList"
@@ -60,8 +60,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
-import { type TableDataRow } from './CgssUnitViewerTypes';
-import nameFilterData from './data/cgss_name_filter.json';
+import { type TableDataRow } from '../CgssUnitViewerTypes';
+import nameFilterData from '../data/cgss_name_filter.json';
 
 // 传入属性
 const props = defineProps<{
