@@ -40,14 +40,8 @@
       v-if="clickIconAction === 'ToggleCardStatus'"
       :table-data="tableData"
       @update-card-status="(cids) => emit('updateCardStatus', cids)"
+      @toggle-all-brightness="emit('toggleAllBrightness')"
     >
-      <template #prefix>
-        <div>
-          <el-button type="primary" size="default" @click="emit('toggleAllBrightness')">
-            切换所有状态
-          </el-button>
-        </div>
-      </template>
     </CgssUnitViewerStateManager>
 
     <!-- 全局控制 -->

@@ -2,6 +2,11 @@
   <div class="unit-state-manager">
     <slot name="prefix"></slot>
     <div>
+      <el-button type="primary" size="default" @click="toggleAllBrightness">
+        切换所有状态
+      </el-button>
+    </div>
+    <div>
       <el-button @click="exportCidsToClipboard" type="success" size="default">
         导出当前状态到剪切板
       </el-button>
@@ -25,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from 'element-plus';
 import { type TableDataRow } from '../CgssUnitViewerTypes';
 
 interface Props {
@@ -37,6 +43,7 @@ const props = defineProps<Props>();
 // 自定义事件
 const emit = defineEmits<{
   'update-card-status': [disabledCids: string[]];
+  'toggle-all-brightness': [];
 }>();
 
 // 收集所有未点亮的卡片CID
@@ -64,6 +71,11 @@ const exportCidsToString = () => {
   const exportData = { disabled: uniqueCids };
 
   return exportData;
+};
+
+// 切换所有状态
+const toggleAllBrightness = () => {
+  emit('toggle-all-brightness');
 };
 
 // 从字符串导入CIDs
@@ -118,7 +130,7 @@ const exportCidsToClipboard = async () => {
 // 从剪切板导入
 const importCidsFromToClipboard = async () => {
   try {
-    // 从剪贴板读取数据
+    // 从剪切板读取数据
     const clipboardText = await navigator.clipboard.readText();
 
     await importCidsFromString(clipboardText);
