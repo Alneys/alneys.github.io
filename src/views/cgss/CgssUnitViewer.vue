@@ -106,10 +106,32 @@ const handleUpdateCardStatus = (disabledCids: string[]) => {
   dominantTableRef.value?.updateBrightnessByCids(disabledCids);
 };
 
-// 处理图标点击（用于状态同步，如需要）
+// 处理图标点击 - 跨组件同步
 const handleIconClick = (payload: { row: TableDataRow; column: string; index: number }) => {
-  // 如果需要跨组件同步，可以在这里处理
-  // 当前设计下，每个子组件独立管理自己的状态
+  // 只在 ToggleCardStatus 模式下进行跨组件同步
+  if (switchClickIconAction.value !== 'ToggleCardStatus') {
+    return;
+  }
+
+  // 获取被点击的卡片信息
+  const cellData = payload.row[payload.column];
+  if (!Array.isArray(cellData) || payload.index >= cellData.length) {
+    return;
+  }
+
+  const clickedIcon = cellData[payload.index];
+  if (!clickedIcon?.card) {
+    return;
+  }
+
+  const cardTitle = clickedIcon.card.title;
+  // 注意：子组件的 handleIconClick 已经在 emit 之前执行，
+  // 所以此时 isBrightness 已经是更新后的状态
+  const newBrightness = clickedIcon.isBrightness;
+
+  // 同步更新所有表格中相同卡片的亮度状态
+  resonanceTableRef.value?.updateCardBrightnessByName(cardTitle, newBrightness);
+  dominantTableRef.value?.updateCardBrightnessByName(cardTitle, newBrightness);
 };
 </script>
 
