@@ -13,12 +13,12 @@
     </div>
     <div>
       <el-button @click="exportCidsToLocalStorage" type="success" size="default">
-        导出当前状态到浏览器
+        保存当前状态到浏览器
       </el-button>
     </div>
     <div>
       <el-button @click="importCidsFromLocalStorage" type="warning" size="default">
-        从浏览器导入
+        从浏览器读取
       </el-button>
     </div>
   </div>
@@ -130,7 +130,7 @@ const importCidsFromToClipboard = async () => {
   }
 };
 
-// 导出当前状态到浏览器本地存储
+// 保存当前状态到浏览器本地存储
 const exportCidsToLocalStorage = () => {
   try {
     // 获取当前状态
@@ -140,14 +140,14 @@ const exportCidsToLocalStorage = () => {
     localStorage.setItem('cgss-unit-viewer-status', jsonStr);
 
     // 显示成功提示
-    ElMessage.success('已导出到浏览器存储！');
+    ElMessage.success('已保存到浏览器存储！');
   } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出到浏览器存储失败');
+    console.error('保存失败:', error);
+    ElMessage.error('保存到浏览器存储失败');
   }
 };
 
-// 从浏览器本地存储导入
+// 从浏览器本地存储读取
 const importCidsFromLocalStorage = () => {
   try {
     // 从localStorage读取数据
@@ -160,10 +160,10 @@ const importCidsFromLocalStorage = () => {
 
     importCidsFromString(storedDataStr);
 
-    ElMessage.success('从浏览器存储导入成功！');
+    ElMessage.success('从浏览器存储读取成功！');
   } catch (error) {
-    console.error('导入失败:', error);
-    ElMessage.error('导入失败，存储的卡片状态数据格式不正确');
+    console.error('读取失败:', error);
+    ElMessage.error('读取失败，存储的卡片状态数据格式不正确');
   }
 };
 </script>
