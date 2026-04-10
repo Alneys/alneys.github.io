@@ -56,7 +56,6 @@ import { ref, watch, onMounted } from 'vue';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 import nameFilterData from '../data/cgss_name_filter.json';
 
-
 // 自定义事件
 const emit = defineEmits<{
   toggleAllBrightness: [];
