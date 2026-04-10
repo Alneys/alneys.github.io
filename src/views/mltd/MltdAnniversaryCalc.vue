@@ -1,184 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive, nextTick, onMounted, computed } from 'vue';
-import type { FormInstance } from 'element-plus';
-
-import * as mltd from './mltd-utils';
-
-const formRef = ref<FormInstance | null>();
-
-const form = ref({
-  eventEndTime: new Date('2025-07-13 00:00:00+0900'),
-  targetPt: undefined as number | undefined,
-
-  plv: undefined as number | undefined,
-  maxStamina: undefined as number | undefined,
-  pt: undefined as number | undefined,
-  token: undefined as number | undefined,
-
-  boostCount: 0 as number | undefined,
-  freeTokenCount: 0 as number | undefined,
-
-  staminaMaxCount: 0,
-  stamina30Count: 0,
-  stamina20Count: 0,
-  stamina10Count: 0,
-
-  gainTokenTime: 6.5,
-  burnTokenTime: 3,
-  remainingTime: 0,
-});
-
-const result = reactive({
-  ptFromBoost: computed(
-    () => Math.floor(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
-  ),
-  ptFromFreeToken: computed(
-    () => Math.floor(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
-  ),
-  ptFromRemainingToken: computed(() => Math.floor(form.value.token! * (2148 / 720)) || 0),
-
-  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
-  staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
-  staminaRecover: computed(() => Math.floor(form.value.remainingTime * 24 * 12) || 0),
-  staminaFromBottles: computed(
-    (): number =>
-      (form.value.staminaMaxCount || 0) * result.currentMaxStamina +
-      (form.value.stamina30Count || 0) * 30 +
-      (form.value.stamina20Count || 0) * 20 +
-      (form.value.stamina10Count || 0) * 10,
-  ),
-  staminaFromDaily: computed(
-    (): number => (2 * result.currentMaxStamina + 10 * 30) * (form.value.freeTokenCount || 0),
-  ),
-
-  ptNeeded: computed((): number => {
-    const needed =
-      (form.value.targetPt || 0) -
-      (form.value.pt || 0) -
-      (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
-    return needed && needed > 0 ? needed : 0;
-  }),
-  staminaNeeded: computed((): number => {
-    return Math.ceil(result.ptNeeded * (450 / (1071 + (1071 / 720) * 2148)));
-  }),
-  tokenNeeded: computed((): number => {
-    return Math.ceil((result.staminaNeeded / 450) * 1071);
-  }),
-
-  jewelNeeded: computed((): number => {
-    const res = Math.ceil(
-      ((result.staminaNeeded +
-        result.staminaForBoost -
-        result.staminaRecover -
-        result.staminaFromBottles -
-        result.staminaFromDaily) /
-        result.currentMaxStamina) *
-        50,
-    );
-    return res > 0 ? res : 0;
-  }),
-  boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
-  gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
-  burnTokenPlays: computed(
-    (): number =>
-      Math.ceil(
-        ((form.value.token ?? 0) +
-          (form.value.boostCount ?? 0) * 1071 * 2 * 10 +
-          (form.value.freeTokenCount ?? 0) * 4540 +
-          result.tokenNeeded) /
-          720,
-      ) || 0,
-  ),
-  boostTimeSpend: computed((): number => result.boostPlays * form.value.gainTokenTime),
-  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.value.gainTokenTime),
-  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.value.burnTokenTime),
-  totalTimeSpend: computed(
-    (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
-  ),
-});
-
-// const calculatedFlag = ref(false);
-// const calculatedForm = ref(form);
-
-onMounted(() => {
-  resetCurrentRemainingTime();
-  setBoostFromRemainingTime();
-});
-
-function resetCurrentRemainingTime() {
-  const remainingTime = Number(
-    ((form.value.eventEndTime.getTime() - new Date().getTime()) / (1000 * 3600 * 24)).toFixed(3),
-  );
-  form.value.remainingTime = remainingTime;
-  form.value.remainingTime = form.value.remainingTime > 0 ? form.value.remainingTime : 0;
-  form.value.remainingTime = form.value.remainingTime > 13 ? 13 : form.value.remainingTime;
-  return form.value.remainingTime;
-}
-
-function setBoostFromRemainingTime() {
-  if (form.value.remainingTime > 0) {
-    form.value.boostCount = Math.floor(form.value.remainingTime);
-    form.value.freeTokenCount = form.value.boostCount;
-  }
-}
-
-function handleClear() {
-  formRef.value?.resetFields();
-  resetCurrentRemainingTime();
-
-  nextTick(() => {
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
-}
-
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem('mltd-anni', JSON.stringify(form.value));
-    ElMessage.success('保存成功');
-  } catch (error) {
-    ElMessage.error('保存失败');
-    throw error;
-  }
-}
-
-function loadFromLocalStorage() {
-  try {
-    const formFromLocal = localStorage.getItem('mltd-anni');
-    if (!formFromLocal) {
-      ElMessage.error('读取失败：没有数据');
-      return;
-    }
-    form.value = JSON.parse(formFromLocal || '{}');
-    form.value.eventEndTime = new Date(form.value.eventEndTime);
-    ElMessage.success('读取成功');
-  } catch (error) {
-    ElMessage.error('读取失败');
-    throw error;
-  }
-}
-
-function clearLocalStorage() {
-  try {
-    localStorage.removeItem('mltd-anni');
-    ElMessage.success('清除成功');
-  } catch (error) {
-    ElMessage.error('清除失败');
-    throw error;
-  }
-}
-
-// function handleSubmit() {
-//   calculatedForm.value.value = { ...form };
-//   calculatedFlag.value = true;
-
-//   nextTick(() => {
-//     document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
-//   });
-// }
-</script>
-
 <template>
   <div id="view-mltd-anni-calc">
     <h1 class="view-title">偶像大师百万现场 周年活动计算器</h1>
@@ -628,6 +447,187 @@ function clearLocalStorage() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive, nextTick, onMounted, computed } from 'vue';
+import type { FormInstance } from 'element-plus';
+
+import * as mltd from './mltd-utils';
+
+const formRef = ref<FormInstance | null>();
+
+const form = ref({
+  eventEndTime: new Date('2025-07-13 00:00:00+0900'),
+  targetPt: undefined as number | undefined,
+
+  plv: undefined as number | undefined,
+  maxStamina: undefined as number | undefined,
+  pt: undefined as number | undefined,
+  token: undefined as number | undefined,
+
+  boostCount: 0 as number | undefined,
+  freeTokenCount: 0 as number | undefined,
+
+  staminaMaxCount: 0,
+  stamina30Count: 0,
+  stamina20Count: 0,
+  stamina10Count: 0,
+
+  gainTokenTime: 6.5,
+  burnTokenTime: 3,
+  remainingTime: 0,
+});
+
+const result = reactive({
+  ptFromBoost: computed(
+    () => Math.floor(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
+  ),
+  ptFromFreeToken: computed(
+    () => Math.floor(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
+  ),
+  ptFromRemainingToken: computed(() => Math.floor(form.value.token! * (2148 / 720)) || 0),
+
+  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
+  staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
+  staminaRecover: computed(() => Math.floor(form.value.remainingTime * 24 * 12) || 0),
+  staminaFromBottles: computed(
+    (): number =>
+      (form.value.staminaMaxCount || 0) * result.currentMaxStamina +
+      (form.value.stamina30Count || 0) * 30 +
+      (form.value.stamina20Count || 0) * 20 +
+      (form.value.stamina10Count || 0) * 10,
+  ),
+  staminaFromDaily: computed(
+    (): number => (2 * result.currentMaxStamina + 10 * 30) * (form.value.freeTokenCount || 0),
+  ),
+
+  ptNeeded: computed((): number => {
+    const needed =
+      (form.value.targetPt || 0) -
+      (form.value.pt || 0) -
+      (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
+    return needed && needed > 0 ? needed : 0;
+  }),
+  staminaNeeded: computed((): number => {
+    return Math.ceil(result.ptNeeded * (450 / (1071 + (1071 / 720) * 2148)));
+  }),
+  tokenNeeded: computed((): number => {
+    return Math.ceil((result.staminaNeeded / 450) * 1071);
+  }),
+
+  jewelNeeded: computed((): number => {
+    const res = Math.ceil(
+      ((result.staminaNeeded +
+        result.staminaForBoost -
+        result.staminaRecover -
+        result.staminaFromBottles -
+        result.staminaFromDaily) /
+        result.currentMaxStamina) *
+        50,
+    );
+    return res > 0 ? res : 0;
+  }),
+  boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
+  gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
+  burnTokenPlays: computed(
+    (): number =>
+      Math.ceil(
+        ((form.value.token ?? 0) +
+          (form.value.boostCount ?? 0) * 1071 * 2 * 10 +
+          (form.value.freeTokenCount ?? 0) * 4540 +
+          result.tokenNeeded) /
+          720,
+      ) || 0,
+  ),
+  boostTimeSpend: computed((): number => result.boostPlays * form.value.gainTokenTime),
+  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.value.gainTokenTime),
+  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.value.burnTokenTime),
+  totalTimeSpend: computed(
+    (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
+  ),
+});
+
+// const calculatedFlag = ref(false);
+// const calculatedForm = ref(form);
+
+onMounted(() => {
+  resetCurrentRemainingTime();
+  setBoostFromRemainingTime();
+});
+
+function resetCurrentRemainingTime() {
+  const remainingTime = Number(
+    ((form.value.eventEndTime.getTime() - new Date().getTime()) / (1000 * 3600 * 24)).toFixed(3),
+  );
+  form.value.remainingTime = remainingTime;
+  form.value.remainingTime = form.value.remainingTime > 0 ? form.value.remainingTime : 0;
+  form.value.remainingTime = form.value.remainingTime > 13 ? 13 : form.value.remainingTime;
+  return form.value.remainingTime;
+}
+
+function setBoostFromRemainingTime() {
+  if (form.value.remainingTime > 0) {
+    form.value.boostCount = Math.floor(form.value.remainingTime);
+    form.value.freeTokenCount = form.value.boostCount;
+  }
+}
+
+function handleClear() {
+  formRef.value?.resetFields();
+  resetCurrentRemainingTime();
+
+  nextTick(() => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('mltd-anni', JSON.stringify(form.value));
+    ElMessage.success('保存成功');
+  } catch (error) {
+    ElMessage.error('保存失败');
+    throw error;
+  }
+}
+
+function loadFromLocalStorage() {
+  try {
+    const formFromLocal = localStorage.getItem('mltd-anni');
+    if (!formFromLocal) {
+      ElMessage.error('读取失败：没有数据');
+      return;
+    }
+    form.value = JSON.parse(formFromLocal || '{}');
+    form.value.eventEndTime = new Date(form.value.eventEndTime);
+    ElMessage.success('读取成功');
+  } catch (error) {
+    ElMessage.error('读取失败');
+    throw error;
+  }
+}
+
+function clearLocalStorage() {
+  try {
+    localStorage.removeItem('mltd-anni');
+    ElMessage.success('清除成功');
+  } catch (error) {
+    ElMessage.error('清除失败');
+    throw error;
+  }
+}
+
+// function handleSubmit() {
+//   calculatedForm.value.value = { ...form };
+//   calculatedFlag.value = true;
+
+//   nextTick(() => {
+//     document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
+//   });
+// }
+</script>
 
 <style lang="scss" scoped>
 @use 'sass:map';
