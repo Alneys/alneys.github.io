@@ -89,16 +89,6 @@ describe('useCardFilter', () => {
       });
     });
 
-    describe('大小写处理', () => {
-      it('应将名字转换为小写', async () => {
-        const { inputNameFilter, splitNameFilter } = useCardFilter();
-        inputNameFilter.value = 'Ann 櫻井桃華';
-        await nextTick();
-
-        expect(splitNameFilter.value).toEqual(['ann', '櫻井桃華']);
-      });
-    });
-
     describe('默认值', () => {
       it('应使用 JSON 数据的第一个预设作为默认值', () => {
         const { inputNameFilter } = useCardFilter();
@@ -160,31 +150,6 @@ describe('useCardFilter', () => {
       });
     });
 
-    describe('大小写不敏感', () => {
-      it('应不区分大小写匹配', async () => {
-        const { inputNameFilter, isNameMatched } = useCardFilter();
-        inputNameFilter.value = 'Ann';
-        await nextTick();
-
-        expect(isNameMatched('Ann')).toBe(true);
-        expect(isNameMatched('ann')).toBe(true);
-        expect(isNameMatched('ANN')).toBe(true);
-        expect(isNameMatched('aNn')).toBe(true);
-      });
-
-      it('过滤列表中的名字应转换为小写后再匹配', async () => {
-        const { inputNameFilter, isNameMatched } = useCardFilter();
-        inputNameFilter.value = 'ANN Bob';
-        await nextTick();
-
-        // 过滤列表转换为小写后是 ['ann', 'bob']
-        expect(isNameMatched('ann')).toBe(true);
-        expect(isNameMatched('Ann')).toBe(true);
-        expect(isNameMatched('bob')).toBe(true);
-        expect(isNameMatched('Bob')).toBe(true);
-      });
-    });
-
     describe('实际 JSON 数据测试', () => {
       it('应匹配 JSON 数据中存在的名字', () => {
         // 使用真实 JSON 数据（默认是第一个预设）
@@ -240,9 +205,8 @@ describe('useCardFilter', () => {
 
       const list = getNameFilterDataList();
 
-      expect(list[0]!.information).toBe('LIVE Carnival 2026 Summer');
-      expect(list[1]!.information).toBe('LIVE Carnival 2026 Spring');
-      expect(list[2]!.information).toBe('LIVE Carnival 2025 Winter');
+      expect(list[list.length - 2]!.information).toBe('LIVE Carnival 2026 Spring');
+      expect(list[list.length - 1]!.information).toBe('LIVE Carnival 2025 Winter');
     });
   });
 

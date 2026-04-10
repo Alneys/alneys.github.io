@@ -18,7 +18,7 @@ export function useCardFilter(nameFilterRef?: Ref<string>) {
     return inputNameFilter.value
       .split(/[ ,、\n]+/)
       .filter((name) => name.trim() !== '')
-      .map((name) => name.toLowerCase().trim());
+      .map((name) => name.trim());
   });
 
   // 判断名字是否匹配筛选条件
@@ -29,8 +29,8 @@ export function useCardFilter(nameFilterRef?: Ref<string>) {
     // 如果过滤列表为空，返回 true
     if (splitNameFilter.value.length === 0) return true;
 
-    // 检查名字是否包含任何一个过滤词（不区分大小写）
-    return splitNameFilter.value.some((filterName) => name.toLowerCase() === filterName);
+    // 检查名字是否精确匹配任何一个过滤词
+    return splitNameFilter.value.some((filterName) => name === filterName);
   };
 
   // 获取名字筛选数据列表
