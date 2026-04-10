@@ -8,7 +8,6 @@
       v-model:click-icon-action="switchClickIconAction"
       v-model:show-simple-labels="switchShowSimpleLabels"
       v-model:show-extra-table-config="switchShowExtraTableConfig"
-      :table-data="combinedTableData"
       @toggle-all-brightness="toggleAllBrightness"
       @update-card-status="handleUpdateCardStatus"
     />
@@ -65,9 +64,13 @@ import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTa
 import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
 import { useCardFilter } from './composables/useCardFilter';
+import { useCardBrightness } from './composables/useCardBrightness';
 
 // 组合式函数：名字筛选
 const { inputNameFilter } = useCardFilter();
+
+// 组合式函数：亮度状态
+const { toggleAllBrightness: toggleAll, setBrightnessByCids } = useCardBrightness();
 
 // 配置开关
 const switchClickIconAction = ref('None');
@@ -81,14 +84,11 @@ const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
 
-// 表格数据（通过 v-model 从子组件接收）
+// 表格数据（通过 v-model 从子组件接收，独立存放）
 const resonanceTableData = ref<TableDataRow[]>([]);
 const dominantTableData = ref<TableDataRow[]>([]);
 
-const combinedTableData = computed<TableDataRow[]>(() => {
-  return [...resonanceTableData.value, ...dominantTableData.value];
-});
-
+// 表格组件引用
 const resonanceTableRef =
   useTemplateRef<InstanceType<typeof CgssUnitViewerResonanceTable>>('resonanceTableRef');
 const dominantTableRef =
@@ -96,42 +96,17 @@ const dominantTableRef =
 
 // 切换所有亮度
 const toggleAllBrightness = () => {
-  resonanceTableRef.value?.toggleAllBrightness();
-  dominantTableRef.value?.toggleAllBrightness();
+  toggleAll([resonanceTableData, dominantTableData]);
 };
 
 // 更新卡片状态
 const handleUpdateCardStatus = (disabledCids: string[]) => {
-  resonanceTableRef.value?.updateBrightnessByCids(disabledCids);
-  dominantTableRef.value?.updateBrightnessByCids(disabledCids);
+  setBrightnessByCids(disabledCids);
 };
 
-// 处理图标点击 - 跨组件同步
+// 处理图标点击
 const handleIconClick = (payload: { row: TableDataRow; column: string; index: number }) => {
-  // 只在 ToggleCardStatus 模式下进行跨组件同步
-  if (switchClickIconAction.value !== 'ToggleCardStatus') {
-    return;
-  }
-
-  // 获取被点击的卡片信息
-  const cellData = payload.row[payload.column];
-  if (!Array.isArray(cellData) || payload.index >= cellData.length) {
-    return;
-  }
-
-  const clickedIcon = cellData[payload.index];
-  if (!clickedIcon?.card) {
-    return;
-  }
-
-  const cardTitle = clickedIcon.card.title;
-  // 注意：子组件的 handleIconClick 已经在 emit 之前执行，
-  // 所以此时 isBrightness 已经是更新后的状态
-  const newBrightness = clickedIcon.isBrightness;
-
-  // 同步更新所有表格中相同卡片的亮度状态
-  resonanceTableRef.value?.updateCardBrightnessByName(cardTitle, newBrightness);
-  dominantTableRef.value?.updateCardBrightnessByName(cardTitle, newBrightness);
+  // 没有操作
 };
 </script>
 

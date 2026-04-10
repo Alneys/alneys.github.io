@@ -1,11 +1,11 @@
 /**
  * 图标操作组合式函数
  * 处理表格中图标的点击、亮度切换等操作
- * 支持任意数量的表格
  */
 
-import { ref, type Ref } from 'vue';
+import { type Ref } from 'vue';
 import type { TableDataRow, CardData } from '../CgssUnitViewerTypes';
+import { useCardBrightness } from './useCardBrightness';
 
 /**
  * 图标操作组合式函数
@@ -13,8 +13,15 @@ import type { TableDataRow, CardData } from '../CgssUnitViewerTypes';
  * @param clickIconAction - 点击图标的行为模式 ('None' | 'ToggleCardStatus' | 'ViewCardInfo')
  */
 export function useIconActions(tableDataRefs: Ref<TableDataRow[]>[], clickIconAction: Ref<string>) {
-  // 所有图标的亮度状态
-  const allIconsBright = ref(true);
+  // 组合式函数：亮度状态
+  const {
+    isCardBright,
+    toggleCardBrightnessByTitle,
+    toggleAllBrightness,
+    setAllBrightness,
+    setBrightnessByCids,
+    setCardBrightnessByTitle,
+  } = useCardBrightness();
 
   /**
    * 遍历所有表格的所有单元格执行操作
@@ -34,53 +41,6 @@ export function useIconActions(tableDataRefs: Ref<TableDataRow[]>[], clickIconAc
           }
         });
       });
-    });
-  };
-
-  /**
-   * 根据卡片名称更新所有表格中的图标亮度
-   * @param cardTitle - 卡片标题
-   * @param newState - 新的亮度状态
-   */
-  const updateCardBrightnessByName = (cardTitle: string, newState: boolean) => {
-    forEachIcon((icon) => {
-      if (icon.card && icon.card.title === cardTitle) {
-        icon.isBrightness = newState;
-      }
-    });
-  };
-
-  /**
-   * 根据 CID 列表更新卡片亮度状态
-   * @param disabledCids - 需要禁用（变暗）的卡片 CID 列表
-   */
-  const updateCardBrightnessByCids = (disabledCids: string[]) => {
-    const disabledSet = new Set(disabledCids);
-    forEachIcon((icon) => {
-      if (icon.card) {
-        icon.isBrightness = !disabledSet.has(icon.card.cid);
-      }
-    });
-  };
-
-  /**
-   * 切换所有图标的亮度
-   */
-  const toggleAllIconsBrightness = () => {
-    allIconsBright.value = !allIconsBright.value;
-    forEachIcon((icon) => {
-      icon.isBrightness = allIconsBright.value;
-    });
-  };
-
-  /**
-   * 设置所有图标的亮度
-   * @param brightness - 亮度状态
-   */
-  const setAllIconsBrightness = (brightness: boolean) => {
-    allIconsBright.value = brightness;
-    forEachIcon((icon) => {
-      icon.isBrightness = brightness;
     });
   };
 
@@ -132,16 +92,46 @@ export function useIconActions(tableDataRefs: Ref<TableDataRow[]>[], clickIconAc
     }
 
     if (clickIconAction.value === 'ToggleCardStatus') {
-      const targetName = icon.card.title;
-      const newState = !icon.isBrightness;
-
-      // 更新所有表格中相同名称的图标亮度
-      updateCardBrightnessByName(targetName, newState);
+      const targetTitle = icon.card.title;
+      // 切换同名卡片亮度
+      const newState = toggleCardBrightnessByTitle(targetTitle, tableDataRefs);
 
       return { handled: true, card: icon.card, newState };
     }
 
     return { handled: false };
+  };
+
+  /**
+   * 切换所有图标的亮度
+   */
+  const toggleAllIconsBrightness = () => {
+    toggleAllBrightness(tableDataRefs);
+  };
+
+  /**
+   * 设置所有图标的亮度
+   * @param brightness - 亮度状态
+   */
+  const setAllIconsBrightness = (brightness: boolean) => {
+    setAllBrightness(brightness, tableDataRefs);
+  };
+
+  /**
+   * 根据卡片名称更新所有表格中的图标亮度
+   * @param cardTitle - 卡片标题
+   * @param newState - 新的亮度状态
+   */
+  const updateCardBrightnessByName = (cardTitle: string, newState: boolean) => {
+    setCardBrightnessByTitle(cardTitle, newState, tableDataRefs);
+  };
+
+  /**
+   * 根据 CID 列表更新卡片亮度状态
+   * @param disabledCids - 需要禁用（变暗）的卡片 CID 列表
+   */
+  const updateCardBrightnessByCids = (disabledCids: string[]) => {
+    setBrightnessByCids(disabledCids);
   };
 
   /**
@@ -162,7 +152,7 @@ export function useIconActions(tableDataRefs: Ref<TableDataRow[]>[], clickIconAc
   const getCardsByBrightness = (brightness: boolean): CardData[] => {
     const cards: CardData[] = [];
     forEachIcon((icon) => {
-      if (icon.isBrightness === brightness) {
+      if (isCardBright(icon.card.cid) === brightness) {
         cards.push(icon);
       }
     });
@@ -170,8 +160,6 @@ export function useIconActions(tableDataRefs: Ref<TableDataRow[]>[], clickIconAc
   };
 
   return {
-    // 状态
-    allIconsBright,
     // 操作方法
     handleIconClick,
     toggleAllIconsBrightness,
@@ -181,5 +169,7 @@ export function useIconActions(tableDataRefs: Ref<TableDataRow[]>[], clickIconAc
     // 工具方法
     getAllCards,
     getCardsByBrightness,
+    // 亮度判断（用于模板）
+    isCardBright,
   };
 }

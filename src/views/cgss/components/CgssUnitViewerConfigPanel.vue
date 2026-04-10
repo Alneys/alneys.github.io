@@ -38,7 +38,6 @@
     <!-- 状态管理 -->
     <CgssUnitViewerStateManager
       v-if="clickIconAction === 'ToggleCardStatus'"
-      :table-data="tableData"
       @update-card-status="(cids) => emit('updateCardStatus', cids)"
       @toggle-all-brightness="emit('toggleAllBrightness')"
     >
@@ -54,15 +53,9 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
-import { type TableDataRow } from '../CgssUnitViewerTypes';
 import nameFilterData from '../data/cgss_name_filter.json';
 
-// 传入属性
-const props = defineProps<{
-  tableData: TableDataRow[];
-}>();
 
 // 自定义事件
 const emit = defineEmits<{

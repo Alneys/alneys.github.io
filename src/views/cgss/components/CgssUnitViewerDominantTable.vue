@@ -115,7 +115,8 @@
                     "
                     :class="{
                       'cgss-icon': true,
-                      'icon-dark': clickIconAction === 'ToggleCardStatus' && !icon.isBrightness,
+                      'icon-dark':
+                        clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
@@ -367,13 +368,15 @@ onMounted(() => {
 
 // 组合式函数：图标操作
 const clickIconActionRef = computed(() => props.clickIconAction);
+
+// 组合式函数：亮度状态
 const {
-  allIconsBright,
   handleIconClick,
   toggleAllIconsBrightness,
   updateCardBrightnessByCids,
   updateCardBrightnessByName,
   setAllIconsBrightness,
+  isCardBright,
 } = useIconActions([tableData], clickIconActionRef);
 
 // 暴露属性
