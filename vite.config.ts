@@ -46,7 +46,7 @@ export default defineConfig({
   },
   base: '/',
   server: {
-    port: 2563,
+    port: 8563,
     host: '0.0.0.0',
   },
   css: {

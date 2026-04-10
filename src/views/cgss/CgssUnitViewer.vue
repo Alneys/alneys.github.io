@@ -8,7 +8,6 @@
       v-model:click-icon-action="switchClickIconAction"
       v-model:show-simple-labels="switchShowSimpleLabels"
       v-model:show-extra-table-config="switchShowExtraTableConfig"
-      :table-data="combinedTableData"
       @toggle-all-brightness="toggleAllBrightness"
       @update-card-status="handleUpdateCardStatus"
     />
@@ -60,14 +59,18 @@
 
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from 'vue';
-import CgssUnitViewerConfigPanel from './CgssUnitViewerConfigPanel.vue';
-import CgssUnitViewerResonanceTable from './CgssUnitViewerResonanceTable.vue';
-import CgssUnitViewerDominantTable from './CgssUnitViewerDominantTable.vue';
+import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
+import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
+import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
 import { type TableDataRow } from './CgssUnitViewerTypes';
 import { useCardFilter } from './composables/useCardFilter';
+import { useCardBrightness } from './composables/useCardBrightness';
 
 // 组合式函数：名字筛选
 const { inputNameFilter } = useCardFilter();
+
+// 组合式函数：亮度状态
+const { toggleAllBrightness: toggleAll, setBrightnessByCids } = useCardBrightness();
 
 // 配置开关
 const switchClickIconAction = ref('None');
@@ -81,14 +84,11 @@ const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
 
-// 表格数据（通过 v-model 从子组件接收）
+// 表格数据（通过 v-model 从子组件接收，独立存放）
 const resonanceTableData = ref<TableDataRow[]>([]);
 const dominantTableData = ref<TableDataRow[]>([]);
 
-const combinedTableData = computed<TableDataRow[]>(() => {
-  return [...resonanceTableData.value, ...dominantTableData.value];
-});
-
+// 表格组件引用
 const resonanceTableRef =
   useTemplateRef<InstanceType<typeof CgssUnitViewerResonanceTable>>('resonanceTableRef');
 const dominantTableRef =
@@ -96,20 +96,17 @@ const dominantTableRef =
 
 // 切换所有亮度
 const toggleAllBrightness = () => {
-  resonanceTableRef.value?.toggleAllBrightness();
-  dominantTableRef.value?.toggleAllBrightness();
+  toggleAll([resonanceTableData, dominantTableData]);
 };
 
 // 更新卡片状态
 const handleUpdateCardStatus = (disabledCids: string[]) => {
-  resonanceTableRef.value?.updateBrightnessByCids(disabledCids);
-  dominantTableRef.value?.updateBrightnessByCids(disabledCids);
+  setBrightnessByCids(disabledCids);
 };
 
-// 处理图标点击（用于状态同步，如需要）
+// 处理图标点击
 const handleIconClick = (payload: { row: TableDataRow; column: string; index: number }) => {
-  // 如果需要跨组件同步，可以在这里处理
-  // 当前设计下，每个子组件独立管理自己的状态
+  // 没有操作
 };
 </script>
 

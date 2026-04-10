@@ -40,10 +40,9 @@ export interface CgssCardSkillTableItem {
   };
 }
 
-/** 卡片数据（包含亮度状态） */
+/** 卡片数据 */
 export interface CardData {
   card: CgssCardSkillTableItem;
-  isBrightness: boolean;
 }
 
 /** 表格行数据 */

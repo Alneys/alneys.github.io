@@ -115,7 +115,8 @@
                     "
                     :class="{
                       'cgss-icon': true,
-                      'icon-dark': clickIconAction === 'ToggleCardStatus' && !icon.isBrightness,
+                      'icon-dark':
+                        clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
                       'icon-extra': headerItem.extraColumn,
                       'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
                       'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
@@ -155,7 +156,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, toRef } from 'vue';
 import type { TableColumnCtx } from 'element-plus';
-import CgssCardSkillTable from './data/cgss_extracted_card_skill_table_ssr.json';
+import CgssCardSkillTable from '../data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import {
   type CgssCardSkillTableItem,
@@ -167,18 +168,18 @@ import {
   tableDominantColumnHeader,
   DOMINANT_PARAM_THRESHOLD_ADD,
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
-} from './CgssUnitViewerTypes';
-import { useResponsive } from './composables/useResponsive';
-import { useCardFilter } from './composables/useCardFilter';
-import { useSeasonLimited } from './composables/useSeasonLimited';
-import { useIconActions } from './composables/useIconActions';
+} from '../CgssUnitViewerTypes';
+import { useResponsive } from '../composables/useResponsive';
+import { useCardFilter } from '../composables/useCardFilter';
+import { useSeasonLimited } from '../composables/useSeasonLimited';
+import { useIconActions } from '../composables/useIconActions';
 import {
   sortTableTw,
   createCardDataItem,
   sortCardsByParam,
   sortDominantAttribute,
   sortDominantAttribute2,
-} from './composables/useTableUtils';
+} from '../composables/useTableUtils';
 
 // 传入属性
 const props = defineProps<{
@@ -367,13 +368,15 @@ onMounted(() => {
 
 // 组合式函数：图标操作
 const clickIconActionRef = computed(() => props.clickIconAction);
+
+// 组合式函数：亮度状态
 const {
-  allIconsBright,
   handleIconClick,
   toggleAllIconsBrightness,
   updateCardBrightnessByCids,
   updateCardBrightnessByName,
   setAllIconsBrightness,
+  isCardBright,
 } = useIconActions([tableData], clickIconActionRef);
 
 // 暴露属性
@@ -478,7 +481,7 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 </script>
 
 <style lang="scss" scoped>
-@use './styles/CgssUnitViewerTable.scss' as table;
+@use '../styles/CgssUnitViewerTable.scss' as table;
 
 .cgss-unit-viewer-dominant-table {
   @include table.cgss-table-container-base;

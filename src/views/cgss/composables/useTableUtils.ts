@@ -125,7 +125,6 @@ export const sortDominantAttribute2 = createMultiFieldSorter([
 export const createCardDataItem = (item: CgssCardSkillTableItem): CardData => {
   return {
     card: item,
-    isBrightness: true,
   };
 };
 
