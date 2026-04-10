@@ -20,8 +20,8 @@
                     v-model.number="form.targetPt"
                     :min="0"
                     :max="99999999"
-                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    maxlength="8"
+                    type="number"
                     inputmode="numeric"
                     placeholder="0"
                   >
@@ -86,8 +86,8 @@
                     v-model.number="form.pt"
                     :min="0"
                     :max="99999999"
-                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    maxlength="8"
+                    type="number"
                     inputmode="numeric"
                     placeholder="0"
                   >
@@ -100,9 +100,9 @@
                   <el-input
                     v-model.number="form.token"
                     :min="0"
-                    :max="999999"
-                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    :max="9999999"
+                    maxlength="7"
+                    type="number"
                     inputmode="numeric"
                     placeholder="0"
                   >
