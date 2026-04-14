@@ -579,7 +579,10 @@ const result = reactive({
     () => Math.floor((form.value.token ?? 0) * ANNIVERSARY_CONSTANTS.TOKEN_TO_PT_RATIO) || 0,
   ),
 
-  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
+  currentMaxStamina: computed(() => {
+    if (!form.value.plv) return 60;
+    return mltd.levelToMaxStamina(form.value.plv) || 60;
+  }),
   staminaForBoost: computed(
     () => (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_COST_PER_BOOST || 0,
   ),
