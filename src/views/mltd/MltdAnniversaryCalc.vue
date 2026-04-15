@@ -44,22 +44,7 @@
                 </el-form-item>
                 <div style="margin-left: 12px">
                   <span style="display: inline-block; width: 24px">→</span>
-                  <span>
-                    {{
-                      new Intl.DateTimeFormat('ja-JP', {
-                        // dateStyle: 'short',
-                        // timeStyle: 'long',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        timeZoneName: 'short',
-                        timeZone: 'Japan',
-                      }).format(form.eventEndTime)
-                    }}</span
-                  >
+                  <span>{{ formattedEventEndTime }}</span>
                 </div>
               </el-col>
             </el-row>
@@ -533,6 +518,19 @@ const ANNIVERSARY_CONSTANTS = {
 } as const;
 
 const formRef = ref<FormInstance | null>();
+
+const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  timeZoneName: 'short',
+  timeZone: 'Japan',
+});
+
+const formattedEventEndTime = computed(() => dateTimeFormatter.format(form.value.eventEndTime));
 
 const form = ref({
   eventEndTime: new Date(`${new Date().getFullYear()}-07-13 00:00:00+0900`),
