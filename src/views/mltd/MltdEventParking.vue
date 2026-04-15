@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
-import { eventTheaterChoices } from './mltd-data';
+import { useMltdUtils } from './composables/useMltdUtils';
+
+const { eventTheaterChoices } = useMltdUtils();
 
 const formRef = ref<FormInstance | null>();
 
@@ -105,8 +107,8 @@ function calcParkingTheater(
     }
     // DFS start
     // Order: token to pt, ticket to token, stamina to token
-    for (let i = 0; i < eventTheaterChoices.length; i++) {
-      const each = eventTheaterChoices[i];
+    for (let i = 0; i < eventTheaterChoices.value.length; i++) {
+      const each = eventTheaterChoices.value[i];
       // result already found
       if (flag) {
         return;
@@ -141,9 +143,9 @@ function calcParkingTheater(
       if (value > 0) {
         result.push({
           // @ts-expect-error
-          name: eventTheaterChoices[Number(key)].name,
+          name: eventTheaterChoices.value[Number(key)].name,
           // @ts-expect-error
-          multiplier: eventTheaterChoices[Number(key)].multiplier,
+          multiplier: eventTheaterChoices.value[Number(key)].multiplier,
           value,
         });
       }

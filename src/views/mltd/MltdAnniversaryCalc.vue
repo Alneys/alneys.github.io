@@ -325,9 +325,9 @@
                 <tr>
                   <td>平均每日所需时间</td>
                   <td colspan="2" style="text-align: center">
-                    <template v-if="form.remainingTime >= 1">
-                      {{ (result.totalTimeSpend / form.remainingTime).toFixed(2) }}分钟 /
-                      {{ (result.totalTimeSpend / form.remainingTime / 60).toFixed(2) }}小时
+                    <template v-if="(form.remainingTime ?? 0) >= 1">
+                      {{ (result.totalTimeSpend / (form.remainingTime ?? 1)).toFixed(2) }}分钟 /
+                      {{ (result.totalTimeSpend / (form.remainingTime ?? 1) / 60).toFixed(2) }}小时
                     </template>
                     <template v-else>-</template>
                   </td>
@@ -436,11 +436,8 @@ import { ref, nextTick, onMounted, computed } from 'vue';
 import type { FormInstance } from 'element-plus';
 
 import { ANNIVERSARY_CONSTANTS } from './MltdConstant';
-import {
-  useAnniversaryCalc,
-  createDefaultForm,
-  type AnniversaryForm,
-} from './composables/useAnniversaryCalc';
+import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
+import type { AnniversaryForm } from './MltdTypes';
 import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';
 
 const form = ref<AnniversaryForm>(createDefaultForm());
@@ -452,7 +449,7 @@ const {
   saveToLocalStorage,
   loadFromLocalStorage,
   clearLocalStorage,
-} = useAnniversaryCalc(form);
+} = useMltdAnniversaryCalc(form);
 
 const formRef = ref<FormInstance | null>();
 

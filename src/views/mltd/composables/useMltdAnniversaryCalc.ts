@@ -4,48 +4,9 @@
  */
 
 import { reactive, computed, type Ref } from 'vue';
-import * as mltd from '../mltd-utils';
+import { useMltdUtils } from './useMltdUtils';
 import { ANNIVERSARY_CONSTANTS } from '../MltdConstant';
-
-export interface AnniversaryForm {
-  eventEndTime: Date;
-  targetPt: number | undefined;
-  plv: number | undefined;
-  maxStamina: number | undefined;
-  pt: number | undefined;
-  token: number | undefined;
-  boostCount: number | undefined;
-  freeTokenCount: number | undefined;
-  staminaMaxCount: number;
-  stamina30Count: number;
-  stamina20Count: number;
-  stamina10Count: number;
-  gainTokenTime: number;
-  burnTokenTime: number;
-  remainingTime: number;
-}
-
-export interface AnniversaryResult {
-  ptFromBoost: number;
-  ptFromFreeToken: number;
-  ptFromRemainingToken: number;
-  currentMaxStamina: number;
-  staminaForBoost: number;
-  staminaRecover: number;
-  staminaFromBottles: number;
-  staminaFromDaily: number;
-  ptNeeded: number;
-  staminaNeeded: number;
-  tokenNeeded: number;
-  jewelNeeded: number;
-  boostPlays: number;
-  gainTokenPlays: number;
-  burnTokenPlays: number;
-  boostTimeSpend: number;
-  gainTokenTimeSpend: number;
-  burnTokenTimeSpend: number;
-  totalTimeSpend: number;
-}
+import type { AnniversaryForm, AnniversaryResult } from '../MltdTypes';
 
 const STORAGE_KEY = 'mltd-anni';
 
@@ -67,7 +28,7 @@ export const createDefaultForm = (): AnniversaryForm => ({
   remainingTime: 0,
 });
 
-export function useAnniversaryCalc(form: Ref<AnniversaryForm>) {
+export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
   const result = reactive({
     ptFromBoost: computed(
       () =>
@@ -94,7 +55,8 @@ export function useAnniversaryCalc(form: Ref<AnniversaryForm>) {
 
     currentMaxStamina: computed(() => {
       if (!form.value.plv) return 60;
-      return mltd.levelToMaxStamina(form.value.plv) || 60;
+      const { levelToMaxStamina } = useMltdUtils();
+      return levelToMaxStamina(form.value.plv) || 60;
     }),
     staminaForBoost: computed(
       () => (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_COST_PER_BOOST || 0,
@@ -107,22 +69,22 @@ export function useAnniversaryCalc(form: Ref<AnniversaryForm>) {
     ),
     staminaFromBottles: computed(
       (): number =>
-        (form.value.staminaMaxCount || 0) * result.currentMaxStamina +
-        (form.value.stamina30Count || 0) * 30 +
-        (form.value.stamina20Count || 0) * 20 +
-        (form.value.stamina10Count || 0) * 10,
+        (form.value.staminaMaxCount ?? 0) * result.currentMaxStamina +
+        (form.value.stamina30Count ?? 0) * 30 +
+        (form.value.stamina20Count ?? 0) * 20 +
+        (form.value.stamina10Count ?? 0) * 10,
     ),
     staminaFromDaily: computed(
       (): number =>
         (ANNIVERSARY_CONSTANTS.DAILY_MAX_STAMINA_BONUS_COUNT * result.currentMaxStamina +
           ANNIVERSARY_CONSTANTS.DAILY_STAMINA_30_COUNT * 30) *
-        (form.value.freeTokenCount || 0),
+        (form.value.freeTokenCount ?? 0),
     ),
 
     ptNeeded: computed((): number => {
       const needed =
-        (form.value.targetPt || 0) -
-        (form.value.pt || 0) -
+        (form.value.targetPt ?? 0) -
+        (form.value.pt ?? 0) -
         (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
       return needed && needed > 0 ? needed : 0;
     }),
@@ -175,9 +137,13 @@ export function useAnniversaryCalc(form: Ref<AnniversaryForm>) {
             ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY,
         ) || 0,
     ),
-    boostTimeSpend: computed((): number => result.boostPlays * form.value.gainTokenTime),
-    gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.value.gainTokenTime),
-    burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.value.burnTokenTime),
+    boostTimeSpend: computed((): number => result.boostPlays * (form.value.gainTokenTime ?? 0)),
+    gainTokenTimeSpend: computed(
+      (): number => result.gainTokenPlays * (form.value.gainTokenTime ?? 0),
+    ),
+    burnTokenTimeSpend: computed(
+      (): number => result.burnTokenPlays * (form.value.burnTokenTime ?? 0),
+    ),
     totalTimeSpend: computed(
       (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
     ),
@@ -197,7 +163,7 @@ export function useAnniversaryCalc(form: Ref<AnniversaryForm>) {
   };
 
   const setBoostFromRemainingTime = () => {
-    if (form.value.remainingTime > 0) {
+    if (form.value.remainingTime && form.value.remainingTime > 0) {
       form.value.boostCount = Math.floor(form.value.remainingTime);
       form.value.freeTokenCount = form.value.boostCount;
     }
