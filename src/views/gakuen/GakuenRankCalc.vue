@@ -104,9 +104,9 @@ function handleClear() {
 function handleSubmit() {
   const maxSingleStat: number = maxStatsDict[form.difficulty] || maxStatsDict.PRO;
 
-  let vocal = Math.floor(Number(form.vocal)) || 0;
-  let dance = Math.floor(Number(form.dance)) || 0;
-  let visual = Math.floor(Number(form.visual)) || 0;
+  const vocal = Math.floor(Number(form.vocal)) || 0;
+  const dance = Math.floor(Number(form.dance)) || 0;
+  const visual = Math.floor(Number(form.visual)) || 0;
 
   form.vocal = Math.min(maxSingleStat, vocal);
   form.dance = Math.min(maxSingleStat, dance);
