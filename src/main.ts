@@ -17,7 +17,6 @@ import 'unfonts.css';
 // import '@fontsource-variable/noto-sans-jp';
 // import '@fontsource-variable/noto-sans-sc';
 
-
 import '@/assets/styles/main.scss';
 
 const app = createApp(App);
