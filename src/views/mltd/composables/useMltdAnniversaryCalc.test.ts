@@ -231,7 +231,7 @@ describe('useMltdAnniversaryCalc', () => {
       expect(result.currentMaxStamina).toBe(103);
     });
 
-    it('等级超限时返回默认值60', async () => {
+    it('等级超限时返回最大值240', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         plv: 1000,
@@ -240,7 +240,7 @@ describe('useMltdAnniversaryCalc', () => {
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.currentMaxStamina).toBe(60);
+      expect(result.currentMaxStamina).toBe(240);
     });
   });
 

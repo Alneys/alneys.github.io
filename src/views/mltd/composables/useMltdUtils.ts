@@ -138,8 +138,11 @@ const levelToMaxStaminaTable = computed<number[]>(() => [
  */
 const levelToMaxStamina = (level: number): number => {
   const table = levelToMaxStaminaTable.value;
-  if (level < 0 || level >= table.length) {
+  if (level < 0) {
     return table[0] ?? 60;
+  }
+  if (level >= table.length) {
+    return table[table.length - 1] ?? 240;
   }
   return table[level] ?? table[0] ?? 60;
 };
