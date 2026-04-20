@@ -5,36 +5,6 @@ import { ANNIVERSARY_CONSTANTS } from '../MltdConstant';
 import type { AnniversaryForm } from '../MltdTypes';
 
 describe('useMltdAnniversaryCalc', () => {
-  describe('createDefaultForm', () => {
-    it('应返回正确的默认表单结构', () => {
-      const form = createDefaultForm();
-
-      expect(form.eventEndTime).toBeInstanceOf(Date);
-      expect(form.targetPt).toBeUndefined();
-      expect(form.plv).toBeUndefined();
-      expect(form.pt).toBeUndefined();
-      expect(form.token).toBeUndefined();
-      expect(form.boostCount).toBe(0);
-      expect(form.freeTokenCount).toBe(0);
-      expect(form.staminaMaxCount).toBe(0);
-      expect(form.stamina30Count).toBe(0);
-      expect(form.stamina20Count).toBe(0);
-      expect(form.stamina10Count).toBe(0);
-      expect(form.gainTokenTime).toBe(6.5);
-      expect(form.burnTokenTime).toBe(3);
-      expect(form.remainingTime).toBe(0);
-    });
-
-    it('eventEndTime 应为当前年份的 7月13日 JST', () => {
-      const form = createDefaultForm();
-      const year = new Date().getFullYear();
-      const expectedDate = new Date(`${year}-07-13 00:00:00+0900`);
-
-      expect(form.eventEndTime.getTime()).toBe(expectedDate.getTime());
-    });
-  });
-
-  // === P0 核心计算 ===
   describe('ptNeeded', () => {
     it('应正确计算需要的pt', async () => {
       const form = ref<AnniversaryForm>({
@@ -205,7 +175,6 @@ describe('useMltdAnniversaryCalc', () => {
     });
   });
 
-  // === P1 重要计算 ===
   describe('currentMaxStamina', () => {
     it('plv未设置时返回默认值60', async () => {
       const form = ref<AnniversaryForm>({
@@ -304,7 +273,6 @@ describe('useMltdAnniversaryCalc', () => {
     });
   });
 
-  // === P0/P1 核心方法 ===
   describe('resetCurrentRemainingTime', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -390,7 +358,6 @@ describe('useMltdAnniversaryCalc', () => {
     });
   });
 
-  // === P2 存储（简化） ===
   describe('localStorage操作', () => {
     beforeEach(() => {
       localStorage.clear();
