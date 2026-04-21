@@ -21,12 +21,19 @@ export const ANNIVERSARY_CONSTANTS = {
     return this.PT_PER_CONSUME_PLAY / this.TOKENS_PER_CONSUME_PLAY;
   },
 
-  /** 火模式 - 每次火消耗体力（10次×450） */
-  STAMINA_COST_PER_BOOST: 4500,
-  /** 火模式 - 每个火可游玩次数 */
-  BOOST_PLAYS_PER_BOOST_ITEM: 10,
-  /** 火模式 - 每次获得道具数（双倍：1071×2） */
-  TOKENS_PER_BOOST_PLAY: 1071 * 2,
+  /** 火攒道具模式 - 每次火消耗体力（10次×450） */
+  STAMINA_COST_PER_BOOST_ACCUMULATE: 4500,
+  /** 火攒道具模式 - 每个火可游玩次数 */
+  BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM: 10,
+  /** 火攒道具模式 - 每次获得道具数（双倍：1071×2） */
+  TOKENS_PER_BOOST_ACCUMULATE_PLAY: 1071 * 2,
+
+  /** 火清道具模式 - 每个火可游玩次数 */
+  BOOST_CONSUME_PLAYS_PER_BOOST_ITEM: 10,
+  /** 火清道具模式 - 每次消耗道具数（双倍：720×2） */
+  TOKENS_PER_BOOST_CONSUME_PLAY: 720 * 2,
+  /** 火清道具模式 - 每次获得pt数（双倍：2148×2） */
+  PT_PER_BOOST_CONSUME_PLAY: 2148 * 2,
 
   /** 白给道具 - 每日登录活动界面获得 */
   DAILY_LOGIN_TOKENS: 540,

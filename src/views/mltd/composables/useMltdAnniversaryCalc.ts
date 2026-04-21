@@ -64,11 +64,11 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
       () =>
         Math.floor(
           (form.value.boostCount ?? 0) *
-            (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY +
-              (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY *
+            (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_ACCUMULATE_PLAY +
+              (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_ACCUMULATE_PLAY *
                 ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
                 ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
-            ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM,
+            ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM,
         ) || 0,
     ),
 
@@ -111,7 +111,8 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 火数量 × 每次火消耗
      */
     staminaForBoost: computed(
-      () => (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_COST_PER_BOOST || 0,
+      () =>
+        (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_COST_PER_BOOST_ACCUMULATE || 0,
     ),
 
     /**
@@ -214,7 +215,8 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     boostPlays: computed(
       (): number =>
-        (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM || 0,
+        (form.value.boostCount ?? 0) *
+          ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM || 0,
     ),
 
     /**
@@ -239,7 +241,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
             (form.value.boostCount ?? 0) *
               ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY *
               2 *
-              ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM +
+              ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM +
             (form.value.freeTokenClaimCount ?? 0) * ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS +
             result.tokensNeeded) /
             ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY,
