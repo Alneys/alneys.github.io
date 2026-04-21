@@ -36,15 +36,15 @@ export const createDefaultForm = (): AnniversaryForm => ({
   plv: undefined,
   maxStamina: undefined,
   pt: undefined,
-  token: undefined,
+  tokens: undefined,
   boostCount: 0,
-  freeTokenCount: 0,
-  staminaMaxCount: 0,
-  stamina30Count: 0,
-  stamina20Count: 0,
-  stamina10Count: 0,
-  gainTokenTime: 6.5,
-  burnTokenTime: 3,
+  freeTokenClaimCount: 0,
+  staminaMaxBottleCount: 0,
+  stamina30BottleCount: 0,
+  stamina20BottleCount: 0,
+  stamina10BottleCount: 0,
+  tokenAccumulateTime: 6.5,
+  tokenConsumeTime: 3,
   remainingTime: 0,
 });
 
@@ -66,33 +66,33 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
           (form.value.boostCount ?? 0) *
             (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY +
               (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY *
-                ANNIVERSARY_CONSTANTS.PT_PER_BURN_PLAY) /
-                ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY) *
-            ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_FIRE,
+                ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
+                ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
+            ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM,
         ) || 0,
     ),
 
     /**
      * 步骤1-2：白给道具带来的pt
-     * @formula freeTokenCount × 4540 × (2148/720)
+     * @formula freeTokenClaimCount × 4540 × (2148/720)
      * @description 白给次数 × 每日白给道具 × 转换率
      */
-    ptFromFreeToken: computed(
+    ptFromFreeTokens: computed(
       () =>
         Math.floor(
-          (form.value.freeTokenCount ?? 0) *
-            ((ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS * ANNIVERSARY_CONSTANTS.PT_PER_BURN_PLAY) /
-              ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY),
+          (form.value.freeTokenClaimCount ?? 0) *
+            ((ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS * ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
+              ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY),
         ) || 0,
     ),
 
     /**
      * 步骤1-3：现有道具带来的pt
-     * @formula token × (2148/720)
+     * @formula tokens × (2148/720)
      * @description 当前道具数 × 转换率
      */
-    ptFromRemainingToken: computed(
-      () => Math.floor((form.value.token ?? 0) * ANNIVERSARY_CONSTANTS.TOKEN_TO_PT_RATIO) || 0,
+    ptFromRemainingTokens: computed(
+      () => Math.floor((form.value.tokens ?? 0) * ANNIVERSARY_CONSTANTS.TOKEN_TO_PT_RATIO) || 0,
     ),
 
     /**
@@ -119,7 +119,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula remainingTime × 288
      * @description 剩余天数 × 每日回复
      */
-    staminaRecover: computed(
+    staminaRecovered: computed(
       () =>
         Math.floor(
           (form.value.remainingTime ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_RECOVER_PER_DAY,
@@ -132,10 +132,10 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     staminaFromBottles: computed(
       (): number =>
-        (form.value.staminaMaxCount ?? 0) * result.currentMaxStamina +
-        (form.value.stamina30Count ?? 0) * 30 +
-        (form.value.stamina20Count ?? 0) * 20 +
-        (form.value.stamina10Count ?? 0) * 10,
+        (form.value.staminaMaxBottleCount ?? 0) * result.currentMaxStamina +
+        (form.value.stamina30BottleCount ?? 0) * 30 +
+        (form.value.stamina20BottleCount ?? 0) * 20 +
+        (form.value.stamina10BottleCount ?? 0) * 10,
     ),
 
     /**
@@ -146,20 +146,20 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     staminaFromDaily: computed(
       (): number =>
         (ANNIVERSARY_CONSTANTS.DAILY_MAX_STAMINA_BONUS_COUNT * result.currentMaxStamina +
-          ANNIVERSARY_CONSTANTS.DAILY_STAMINA_30_COUNT * 30) *
-        (form.value.freeTokenCount ?? 0),
+          ANNIVERSARY_CONSTANTS.DAILY_STAMINA_30_BOTTLE_COUNT * 30) *
+        (form.value.freeTokenClaimCount ?? 0),
     ),
 
     /**
      * 步骤2：还需要获得的pt
-     * @formula targetPt - currentPt - ptFromBoost - ptFromFreeToken - ptFromRemainingToken
+     * @formula targetPt - currentPt - ptFromBoost - ptFromFreeTokens - ptFromRemainingTokens
      * @description 目标pt - 当前pt - 火贡献pt - 白给pt - 现有道具pt
      */
     ptNeeded: computed((): number => {
       const needed =
         (form.value.targetPt ?? 0) -
         (form.value.pt ?? 0) -
-        (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
+        (result.ptFromBoost + result.ptFromFreeTokens + result.ptFromRemainingTokens);
       return needed && needed > 0 ? needed : 0;
     }),
 
@@ -171,11 +171,11 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     staminaNeeded: computed((): number => {
       return Math.ceil(
         result.ptNeeded *
-          (ANNIVERSARY_CONSTANTS.STAMINA_COST_GAIN_TOKEN /
-            (ANNIVERSARY_CONSTANTS.TOKENS_PER_GAIN_PLAY +
-              (ANNIVERSARY_CONSTANTS.TOKENS_PER_GAIN_PLAY /
-                ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY) *
-                ANNIVERSARY_CONSTANTS.PT_PER_BURN_PLAY)),
+          (ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE /
+            (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY +
+              (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY /
+                ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
+                ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY)),
       );
     }),
 
@@ -183,23 +183,23 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * 步骤3-2：还需要获取道具
      * @formula staminaNeeded / 450 × 1071
      */
-    tokenNeeded: computed((): number => {
+    tokensNeeded: computed((): number => {
       return Math.ceil(
-        (result.staminaNeeded / ANNIVERSARY_CONSTANTS.STAMINA_COST_GAIN_TOKEN) *
-          ANNIVERSARY_CONSTANTS.TOKENS_PER_GAIN_PLAY,
+        (result.staminaNeeded / ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE) *
+          ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY,
       );
     }),
 
     /**
      * 步骤5：需要钻石数
-     * @formula (staminaNeeded + staminaForBoost - staminaRecover - staminaFromBottles - staminaFromDaily) / maxStamina × 50
+     * @formula (staminaNeeded + staminaForBoost - staminaRecovered - staminaFromBottles - staminaFromDaily) / maxStamina × 50
      * @description (总需求体力 + 火消耗体力 - 自然恢复 - 体力瓶 - 每日任务) / 最大体力 × 50
      */
     jewelNeeded: computed((): number => {
       const res = Math.ceil(
         ((result.staminaNeeded +
           result.staminaForBoost -
-          result.staminaRecover -
+          result.staminaRecovered -
           result.staminaFromBottles -
           result.staminaFromDaily) /
           result.currentMaxStamina) *
@@ -213,65 +213,70 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula boostCount × 10
      */
     boostPlays: computed(
-      (): number => (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_FIRE || 0,
+      (): number =>
+        (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM || 0,
     ),
 
     /**
      * 步骤6-2：普通攒道具次数
      * @formula staminaNeeded / 450
      */
-    gainTokenPlays: computed(
+    tokenAccumulatePlays: computed(
       (): number =>
-        Math.ceil(result.staminaNeeded / ANNIVERSARY_CONSTANTS.STAMINA_COST_GAIN_TOKEN) || 0,
+        Math.ceil(result.staminaNeeded / ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE) ||
+        0,
     ),
 
     /**
      * 步骤6-3：清道具次数
-     * @formula (token + boostCount×2142×10 + freeTokenCount×4540 + tokenNeeded) / 720
+     * @formula (tokens + boostCount×2142×10 + freeTokenClaimCount×4540 + tokensNeeded) / 720
      * @description (现有道具 + 火获得道具 + 白给道具 + 还需道具) / 720
      */
-    burnTokenPlays: computed(
+    tokenConsumePlays: computed(
       (): number =>
         Math.ceil(
-          ((form.value.token ?? 0) +
+          ((form.value.tokens ?? 0) +
             (form.value.boostCount ?? 0) *
-              ANNIVERSARY_CONSTANTS.TOKENS_PER_GAIN_PLAY *
+              ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY *
               2 *
-              ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_FIRE +
-            (form.value.freeTokenCount ?? 0) * ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS +
-            result.tokenNeeded) /
-            ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY,
+              ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM +
+            (form.value.freeTokenClaimCount ?? 0) * ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS +
+            result.tokensNeeded) /
+            ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY,
         ) || 0,
     ),
 
     /**
      * 步骤6-4：火模式时间
-     * @formula boostPlays × gainTokenTime
+     * @formula boostPlays × tokenAccumulateTime
      */
-    boostTimeSpend: computed((): number => result.boostPlays * (form.value.gainTokenTime ?? 0)),
+    boostTimeSpent: computed(
+      (): number => result.boostPlays * (form.value.tokenAccumulateTime ?? 0),
+    ),
 
     /**
      * 步骤6-4：普通攒道具时间
-     * @formula gainTokenPlays × gainTokenTime
+     * @formula tokenAccumulatePlays × tokenAccumulateTime
      */
-    gainTokenTimeSpend: computed(
-      (): number => result.gainTokenPlays * (form.value.gainTokenTime ?? 0),
+    tokenAccumulateTimeSpent: computed(
+      (): number => result.tokenAccumulatePlays * (form.value.tokenAccumulateTime ?? 0),
     ),
 
     /**
      * 步骤6-4：清道具时间
-     * @formula burnTokenPlays × burnTokenTime
+     * @formula tokenConsumePlays × tokenConsumeTime
      */
-    burnTokenTimeSpend: computed(
-      (): number => result.burnTokenPlays * (form.value.burnTokenTime ?? 0),
+    tokenConsumeTimeSpent: computed(
+      (): number => result.tokenConsumePlays * (form.value.tokenConsumeTime ?? 0),
     ),
 
     /**
      * 步骤6-4：总时间
-     * @formula boostTimeSpend + gainTokenTimeSpend + burnTokenTimeSpend
+     * @formula boostTimeSpent + tokenAccumulateTimeSpent + tokenConsumeTimeSpent
      */
-    totalTimeSpend: computed(
-      (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
+    totalTimeSpent: computed(
+      (): number =>
+        result.boostTimeSpent + result.tokenAccumulateTimeSpent + result.tokenConsumeTimeSpent,
     ),
   });
 
@@ -300,7 +305,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
   const setBoostFromRemainingTime = () => {
     if (form.value.remainingTime && form.value.remainingTime > 0) {
       form.value.boostCount = Math.floor(form.value.remainingTime);
-      form.value.freeTokenCount = form.value.boostCount;
+      form.value.freeTokenClaimCount = form.value.boostCount;
     }
   };
 

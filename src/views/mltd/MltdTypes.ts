@@ -8,36 +8,36 @@ export interface AnniversaryForm {
   plv?: number;
   maxStamina?: number;
   pt?: number;
-  token?: number;
+  tokens?: number;
   boostCount?: number;
-  freeTokenCount?: number;
-  staminaMaxCount?: number;
-  stamina30Count?: number;
-  stamina20Count?: number;
-  stamina10Count?: number;
-  gainTokenTime?: number;
-  burnTokenTime?: number;
+  freeTokenClaimCount?: number;
+  staminaMaxBottleCount?: number;
+  stamina30BottleCount?: number;
+  stamina20BottleCount?: number;
+  stamina10BottleCount?: number;
+  tokenAccumulateTime?: number;
+  tokenConsumeTime?: number;
   remainingTime?: number;
 }
 
 export interface AnniversaryResult {
   ptFromBoost: number;
-  ptFromFreeToken: number;
-  ptFromRemainingToken: number;
+  ptFromFreeTokens: number;
+  ptFromRemainingTokens: number;
   currentMaxStamina: number;
   staminaForBoost: number;
-  staminaRecover: number;
+  staminaRecovered: number;
   staminaFromBottles: number;
   staminaFromDaily: number;
   ptNeeded: number;
   staminaNeeded: number;
-  tokenNeeded: number;
+  tokensNeeded: number;
   jewelNeeded: number;
   boostPlays: number;
-  gainTokenPlays: number;
-  burnTokenPlays: number;
-  boostTimeSpend: number;
-  gainTokenTimeSpend: number;
-  burnTokenTimeSpend: number;
-  totalTimeSpend: number;
+  tokenAccumulatePlays: number;
+  tokenConsumePlays: number;
+  boostTimeSpent: number;
+  tokenAccumulateTimeSpent: number;
+  tokenConsumeTimeSpent: number;
+  totalTimeSpent: number;
 }

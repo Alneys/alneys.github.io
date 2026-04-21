@@ -10,7 +10,8 @@
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
-    "lint": "eslint . --fix",
+    "lint": "eslint . --fix && prettier --write src/",
+    "lint-only": "eslint . --fix",
     "format": "prettier --write src/"
   },
   "dependencies": {

@@ -8,23 +8,23 @@
  */
 export const ANNIVERSARY_CONSTANTS = {
   /** 攒道具阶段 - 每次消耗体力 */
-  STAMINA_COST_GAIN_TOKEN: 450,
+  STAMINA_COST_FOR_TOKEN_ACCUMULATE: 450,
   /** 攒道具阶段 - 每次获得道具数 */
-  TOKENS_PER_GAIN_PLAY: 1071,
+  TOKENS_PER_ACCUMULATE_PLAY: 1071,
 
   /** 清道具阶段 - 每次消耗道具数 */
-  TOKENS_PER_BURN_PLAY: 720,
+  TOKENS_PER_CONSUME_PLAY: 720,
   /** 清道具阶段 - 每次获得pt数 */
-  PT_PER_BURN_PLAY: 2148,
+  PT_PER_CONSUME_PLAY: 2148,
   /** 道具转pt比例：2148/720 ≈ 2.983 */
   get TOKEN_TO_PT_RATIO() {
-    return this.PT_PER_BURN_PLAY / this.TOKENS_PER_BURN_PLAY;
+    return this.PT_PER_CONSUME_PLAY / this.TOKENS_PER_CONSUME_PLAY;
   },
 
   /** 火模式 - 每次火消耗体力（10次×450） */
   STAMINA_COST_PER_BOOST: 4500,
   /** 火模式 - 每个火可游玩次数 */
-  BOOST_PLAYS_PER_FIRE: 10,
+  BOOST_PLAYS_PER_BOOST_ITEM: 10,
   /** 火模式 - 每次获得道具数（双倍：1071×2） */
   TOKENS_PER_BOOST_PLAY: 1071 * 2,
 
@@ -43,7 +43,7 @@ export const ANNIVERSARY_CONSTANTS = {
   /** 每日任务奖励 - 回满体力次数 */
   DAILY_MAX_STAMINA_BONUS_COUNT: 2,
   /** 每日任务奖励 - 30体力瓶数量 */
-  DAILY_STAMINA_30_COUNT: 10,
+  DAILY_STAMINA_30_BOTTLE_COUNT: 10,
 
   /** 钻石回满体力 - 每次消耗钻石数 */
   JEWEL_PER_FULL_STAMINA: 50,

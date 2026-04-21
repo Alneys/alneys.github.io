@@ -12,22 +12,22 @@ describe('useMltdAnniversaryCalc', () => {
         targetPt: 500000,
         pt: 0,
         boostCount: 1,
-        freeTokenCount: 1,
-        token: 1000,
+        freeTokenClaimCount: 1,
+        tokens: 1000,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
       const ptFromBoost = result.ptFromBoost;
-      const ptFromFreeToken = result.ptFromFreeToken;
-      const ptFromRemainingToken = result.ptFromRemainingToken;
+      const ptFromFreeTokens = result.ptFromFreeTokens;
+      const ptFromRemainingTokens = result.ptFromRemainingTokens;
 
       expect(ptFromBoost).toBeGreaterThan(0);
-      expect(ptFromFreeToken).toBeGreaterThan(0);
-      expect(ptFromRemainingToken).toBeGreaterThan(0);
+      expect(ptFromFreeTokens).toBeGreaterThan(0);
+      expect(ptFromRemainingTokens).toBeGreaterThan(0);
 
-      const expectedNeeded = 500000 - 0 - ptFromBoost - ptFromFreeToken - ptFromRemainingToken;
+      const expectedNeeded = 500000 - 0 - ptFromBoost - ptFromFreeTokens - ptFromRemainingTokens;
       expect(result.ptNeeded).toBe(expectedNeeded);
     });
 
@@ -52,14 +52,14 @@ describe('useMltdAnniversaryCalc', () => {
         targetPt: 100000,
         pt: 0,
         boostCount: 0,
-        freeTokenCount: 0,
-        token: 0,
+        freeTokenClaimCount: 0,
+        tokens: 0,
         plv: 100,
         remainingTime: 0,
-        staminaMaxCount: 0,
-        stamina30Count: 0,
-        stamina20Count: 0,
-        stamina10Count: 0,
+        staminaMaxBottleCount: 0,
+        stamina30BottleCount: 0,
+        stamina20BottleCount: 0,
+        stamina10BottleCount: 0,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
@@ -74,25 +74,25 @@ describe('useMltdAnniversaryCalc', () => {
         targetPt: 1000,
         pt: 500,
         boostCount: 0,
-        freeTokenCount: 1,
-        token: 0,
+        freeTokenClaimCount: 1,
+        tokens: 0,
         plv: 100,
         remainingTime: 10,
-        staminaMaxCount: 100,
-        stamina30Count: 100,
-        stamina20Count: 100,
-        stamina10Count: 100,
+        staminaMaxBottleCount: 100,
+        stamina30BottleCount: 100,
+        stamina20BottleCount: 100,
+        stamina10BottleCount: 100,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      const staminaRecover = result.staminaRecover;
+      const staminaRecovered = result.staminaRecovered;
       const staminaFromBottles = result.staminaFromBottles;
       const staminaFromDaily = result.staminaFromDaily;
 
       expect(result.staminaNeeded + result.staminaForBoost).toBeLessThan(
-        staminaRecover + staminaFromBottles + staminaFromDaily,
+        staminaRecovered + staminaFromBottles + staminaFromDaily,
       );
       expect(result.jewelNeeded).toBe(0);
     });
@@ -136,31 +136,32 @@ describe('useMltdAnniversaryCalc', () => {
       const expected =
         5 *
         (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY +
-          (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY * ANNIVERSARY_CONSTANTS.PT_PER_BURN_PLAY) /
-            ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY) *
-        ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_FIRE;
+          (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_PLAY *
+            ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
+            ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
+        ANNIVERSARY_CONSTANTS.BOOST_PLAYS_PER_BOOST_ITEM;
 
       expect(result.ptFromBoost).toBe(Math.floor(expected));
     });
   });
 
-  describe('ptFromFreeToken', () => {
+  describe('ptFromFreeTokens', () => {
     it('freeTokenCount为0时返回0', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
-        freeTokenCount: 0,
+        freeTokenClaimCount: 0,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.ptFromFreeToken).toBe(0);
+      expect(result.ptFromFreeTokens).toBe(0);
     });
 
     it('应正确计算白给道具获得的pt', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
-        freeTokenCount: 10,
+        freeTokenClaimCount: 10,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
@@ -168,10 +169,10 @@ describe('useMltdAnniversaryCalc', () => {
 
       const expected =
         10 *
-        ((ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS * ANNIVERSARY_CONSTANTS.PT_PER_BURN_PLAY) /
-          ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY);
+        ((ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS * ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
+          ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY);
 
-      expect(result.ptFromFreeToken).toBe(Math.floor(expected));
+      expect(result.ptFromFreeTokens).toBe(Math.floor(expected));
     });
   });
 
@@ -233,8 +234,8 @@ describe('useMltdAnniversaryCalc', () => {
         targetPt: 100000,
         pt: 0,
         boostCount: 0,
-        freeTokenCount: 0,
-        token: 0,
+        freeTokenClaimCount: 0,
+        tokens: 0,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
@@ -243,11 +244,11 @@ describe('useMltdAnniversaryCalc', () => {
       expect(result.staminaNeeded).toBeGreaterThan(0);
 
       const expectedRate =
-        ANNIVERSARY_CONSTANTS.STAMINA_COST_GAIN_TOKEN /
-        (ANNIVERSARY_CONSTANTS.TOKENS_PER_GAIN_PLAY +
-          (ANNIVERSARY_CONSTANTS.TOKENS_PER_GAIN_PLAY /
-            ANNIVERSARY_CONSTANTS.TOKENS_PER_BURN_PLAY) *
-            ANNIVERSARY_CONSTANTS.PT_PER_BURN_PLAY);
+        ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE /
+        (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY +
+          (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY /
+            ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
+            ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY);
 
       expect(result.staminaNeeded).toBe(Math.ceil(result.ptNeeded * expectedRate));
     });
@@ -258,10 +259,10 @@ describe('useMltdAnniversaryCalc', () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         plv: 103,
-        staminaMaxCount: 2,
-        stamina30Count: 3,
-        stamina20Count: 4,
-        stamina10Count: 5,
+        staminaMaxBottleCount: 2,
+        stamina30BottleCount: 3,
+        stamina20BottleCount: 4,
+        stamina10BottleCount: 5,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
@@ -334,17 +335,17 @@ describe('useMltdAnniversaryCalc', () => {
         ...createDefaultForm(),
         remainingTime: 0,
         boostCount: 5,
-        freeTokenCount: 5,
+        freeTokenClaimCount: 5,
       });
 
       const { setBoostFromRemainingTime } = useMltdAnniversaryCalc(form);
       setBoostFromRemainingTime();
 
       expect(form.value.boostCount).toBe(5);
-      expect(form.value.freeTokenCount).toBe(5);
+      expect(form.value.freeTokenClaimCount).toBe(5);
     });
 
-    it('应根据remainingTime正确设置boostCount和freeTokenCount', async () => {
+    it('应根据remainingTime正确设置boostCount和freeTokenClaimCount', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         remainingTime: 7.5,
@@ -354,7 +355,7 @@ describe('useMltdAnniversaryCalc', () => {
       setBoostFromRemainingTime();
 
       expect(form.value.boostCount).toBe(7);
-      expect(form.value.freeTokenCount).toBe(7);
+      expect(form.value.freeTokenClaimCount).toBe(7);
     });
   });
 

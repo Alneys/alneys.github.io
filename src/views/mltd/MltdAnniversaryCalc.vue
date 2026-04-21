@@ -81,9 +81,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="当前道具数" prop="token">
+                <el-form-item label="当前道具数" prop="tokens">
                   <el-input
-                    v-model.number="form.token"
+                    v-model.number="form.tokens"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_TOKENS"
                     maxlength="7"
@@ -115,9 +115,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="白给道具剩余次数" prop="freeTokenCount">
+                <el-form-item label="白给道具剩余次数" prop="freeTokenClaimCount">
                   <el-input
-                    v-model.number="form.freeTokenCount"
+                    v-model.number="form.freeTokenClaimCount"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS"
                     type="number"
@@ -129,9 +129,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="MAX体力瓶数量" prop="staminaMaxCount">
+                <el-form-item label="MAX体力瓶数量" prop="staminaMaxBottleCount">
                   <el-input
-                    v-model.number="form.staminaMaxCount"
+                    v-model.number="form.staminaMaxBottleCount"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
                     type="number"
@@ -143,9 +143,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="30体力瓶数量" prop="stamina30Count">
+                <el-form-item label="30体力瓶数量" prop="stamina30BottleCount">
                   <el-input
-                    v-model.number="form.stamina30Count"
+                    v-model.number="form.stamina30BottleCount"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
                     type="number"
@@ -157,9 +157,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="20体力瓶数量" prop="stamina20Count">
+                <el-form-item label="20体力瓶数量" prop="stamina20BottleCount">
                   <el-input
-                    v-model.number="form.stamina20Count"
+                    v-model.number="form.stamina20BottleCount"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
                     type="number"
@@ -171,9 +171,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="10体力瓶数量" prop="stamina10Count">
+                <el-form-item label="10体力瓶数量" prop="stamina10BottleCount">
                   <el-input
-                    v-model.number="form.stamina10Count"
+                    v-model.number="form.stamina10BottleCount"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
                     type="number"
@@ -197,9 +197,9 @@
             <h2>时间设置</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenGainTime">
+                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenAccumulateTime">
                   <el-input
-                    v-model.number="form.gainTokenTime"
+                    v-model.number="form.tokenAccumulateTime"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_TIME_MINUTES"
                     :step="0.1"
@@ -212,9 +212,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮清道具时间" prop="tokenBurnTime">
+                <el-form-item label="单轮清道具时间" prop="tokenConsumeTime">
                   <el-input
-                    v-model.number="form.burnTokenTime"
+                    v-model.number="form.tokenConsumeTime"
                     :min="0"
                     :max="ANNIVERSARY_CONSTANTS.MAX_TIME_MINUTES"
                     :step="0.1"
@@ -298,36 +298,36 @@
                   <td>火攒道具次数</td>
                   <td>{{ result.boostPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.boostTimeSpend.toFixed(2) ?? '?' }}分钟
+                    {{ result.boostTimeSpent.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
-                  <td>{{ result.gainTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
+                  <td>{{ result.tokenAccumulatePlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.gainTokenTimeSpend.toFixed(2) ?? '?' }}分钟
+                    {{ result.tokenAccumulateTimeSpent.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
-                  <td>{{ result.burnTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
+                  <td>{{ result.tokenConsumePlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.burnTokenTimeSpend.toFixed(2) ?? '?' }}分钟
+                    {{ result.tokenConsumeTimeSpent.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>所有项目总时间</td>
                   <td colspan="2" style="text-align: center">
-                    {{ result.totalTimeSpend.toFixed(2) }}分钟 /
-                    {{ (result.totalTimeSpend / 60).toFixed(2) }}小时
+                    {{ result.totalTimeSpent.toFixed(2) }}分钟 /
+                    {{ (result.totalTimeSpent / 60).toFixed(2) }}小时
                   </td>
                 </tr>
                 <tr>
                   <td>平均每日所需时间</td>
                   <td colspan="2" style="text-align: center">
                     <template v-if="(form.remainingTime ?? 0) >= 1">
-                      {{ (result.totalTimeSpend / (form.remainingTime ?? 1)).toFixed(2) }}分钟 /
-                      {{ (result.totalTimeSpend / (form.remainingTime ?? 1) / 60).toFixed(2) }}小时
+                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1)).toFixed(2) }}分钟 /
+                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1) / 60).toFixed(2) }}小时
                     </template>
                     <template v-else>-</template>
                   </td>
@@ -351,11 +351,11 @@
                 </tr>
                 <tr>
                   <td>来自于白给道具的pt</td>
-                  <td>{{ result.ptFromFreeToken.toLocaleString('en-US') }}</td>
+                  <td>{{ result.ptFromFreeTokens.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>来自于剩余道具的pt</td>
-                  <td>{{ result.ptFromRemainingToken.toLocaleString('en-US') }}</td>
+                  <td>{{ result.ptFromRemainingTokens.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr style="color: red">
                   <td>还需要获得pt</td>
@@ -386,7 +386,7 @@
                 </tr>
                 <tr>
                   <td>还需要获取道具</td>
-                  <td>{{ result.tokenNeeded.toLocaleString('en-US') }}</td>
+                  <td>{{ result.tokensNeeded.toLocaleString('en-US') }}</td>
                   <td>上面体力转化的道具</td>
                 </tr>
               </tbody>
@@ -412,7 +412,7 @@
                 </tr>
                 <tr>
                   <td>自然回复体力</td>
-                  <td>{{ result.staminaRecover.toLocaleString('en-US') ?? '?' }}</td>
+                  <td>{{ result.staminaRecovered.toLocaleString('en-US') ?? '?' }}</td>
                 </tr>
                 <tr>
                   <td>每日任务回复体力</td>
