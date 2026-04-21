@@ -1,184 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive, nextTick, onMounted, computed } from 'vue';
-import type { FormInstance } from 'element-plus';
-
-import * as mltd from './mltd-utils';
-
-const formRef = ref<FormInstance | null>();
-
-const form = ref({
-  eventEndTime: new Date('2025-07-13 00:00:00+0900'),
-  targetPt: undefined as number | undefined,
-
-  plv: undefined as number | undefined,
-  maxStamina: undefined as number | undefined,
-  pt: undefined as number | undefined,
-  token: undefined as number | undefined,
-
-  boostCount: 0 as number | undefined,
-  freeTokenCount: 0 as number | undefined,
-
-  staminaMaxCount: 0,
-  stamina30Count: 0,
-  stamina20Count: 0,
-  stamina10Count: 0,
-
-  gainTokenTime: 6.5,
-  burnTokenTime: 3,
-  remainingTime: 0,
-});
-
-const result = reactive({
-  ptFromBoost: computed(
-    () => Math.floor(form.value.boostCount! * (2142 + (2142 * 2148) / 720) * 10) || 0,
-  ),
-  ptFromFreeToken: computed(
-    () => Math.floor(form.value.freeTokenCount! * ((4540 * 2148) / 720)) || 0,
-  ),
-  ptFromRemainingToken: computed(() => Math.floor(form.value.token! * (2148 / 720)) || 0),
-
-  currentMaxStamina: computed(() => mltd.levelToMaxStamina(form.value.plv!) || 0),
-  staminaForBoost: computed(() => form.value.boostCount! * 4500 || 0),
-  staminaRecover: computed(() => Math.floor(form.value.remainingTime * 24 * 12) || 0),
-  staminaFromBottles: computed(
-    (): number =>
-      (form.value.staminaMaxCount || 0) * result.currentMaxStamina +
-      (form.value.stamina30Count || 0) * 30 +
-      (form.value.stamina20Count || 0) * 20 +
-      (form.value.stamina10Count || 0) * 10,
-  ),
-  staminaFromDaily: computed(
-    (): number => (2 * result.currentMaxStamina + 10 * 30) * (form.value.freeTokenCount || 0),
-  ),
-
-  ptNeeded: computed((): number => {
-    const needed =
-      (form.value.targetPt || 0) -
-      (form.value.pt || 0) -
-      (result.ptFromBoost + result.ptFromFreeToken + result.ptFromRemainingToken);
-    return needed && needed > 0 ? needed : 0;
-  }),
-  staminaNeeded: computed((): number => {
-    return Math.ceil(result.ptNeeded * (450 / (1071 + (1071 / 720) * 2148)));
-  }),
-  tokenNeeded: computed((): number => {
-    return Math.ceil((result.staminaNeeded / 450) * 1071);
-  }),
-
-  jewelNeeded: computed((): number => {
-    const res = Math.ceil(
-      ((result.staminaNeeded +
-        result.staminaForBoost -
-        result.staminaRecover -
-        result.staminaFromBottles -
-        result.staminaFromDaily) /
-        result.currentMaxStamina) *
-        50,
-    );
-    return res > 0 ? res : 0;
-  }),
-  boostPlays: computed((): number => form.value.boostCount! * 10 || 0),
-  gainTokenPlays: computed((): number => Math.ceil(result.staminaNeeded / 450) || 0),
-  burnTokenPlays: computed(
-    (): number =>
-      Math.ceil(
-        ((form.value.token ?? 0) +
-          (form.value.boostCount ?? 0) * 1071 * 2 * 10 +
-          (form.value.freeTokenCount ?? 0) * 4540 +
-          result.tokenNeeded) /
-          720,
-      ) || 0,
-  ),
-  boostTimeSpend: computed((): number => result.boostPlays * form.value.gainTokenTime),
-  gainTokenTimeSpend: computed((): number => result.gainTokenPlays * form.value.gainTokenTime),
-  burnTokenTimeSpend: computed((): number => result.burnTokenPlays * form.value.burnTokenTime),
-  totalTimeSpend: computed(
-    (): number => result.boostTimeSpend + result.gainTokenTimeSpend + result.burnTokenTimeSpend,
-  ),
-});
-
-// const calculatedFlag = ref(false);
-// const calculatedForm = ref(form);
-
-onMounted(() => {
-  resetCurrentRemainingTime();
-  setBoostFromRemainingTime();
-});
-
-function resetCurrentRemainingTime() {
-  const remainingTime = Number(
-    ((form.value.eventEndTime.getTime() - new Date().getTime()) / (1000 * 3600 * 24)).toFixed(3),
-  );
-  form.value.remainingTime = remainingTime;
-  form.value.remainingTime = form.value.remainingTime > 0 ? form.value.remainingTime : 0;
-  form.value.remainingTime = form.value.remainingTime > 13 ? 13 : form.value.remainingTime;
-  return form.value.remainingTime;
-}
-
-function setBoostFromRemainingTime() {
-  if (form.value.remainingTime > 0) {
-    form.value.boostCount = Math.floor(form.value.remainingTime);
-    form.value.freeTokenCount = form.value.boostCount;
-  }
-}
-
-function handleClear() {
-  formRef.value?.resetFields();
-  resetCurrentRemainingTime();
-
-  nextTick(() => {
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
-}
-
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem('mltd-anni', JSON.stringify(form.value));
-    ElMessage.success('保存成功');
-  } catch (error) {
-    ElMessage.error('保存失败');
-    throw error;
-  }
-}
-
-function loadFromLocalStorage() {
-  try {
-    const formFromLocal = localStorage.getItem('mltd-anni');
-    if (!formFromLocal) {
-      ElMessage.error('读取失败：没有数据');
-      return;
-    }
-    form.value = JSON.parse(formFromLocal || '{}');
-    form.value.eventEndTime = new Date(form.value.eventEndTime);
-    ElMessage.success('读取成功');
-  } catch (error) {
-    ElMessage.error('读取失败');
-    throw error;
-  }
-}
-
-function clearLocalStorage() {
-  try {
-    localStorage.removeItem('mltd-anni');
-    ElMessage.success('清除成功');
-  } catch (error) {
-    ElMessage.error('清除失败');
-    throw error;
-  }
-}
-
-// function handleSubmit() {
-//   calculatedForm.value.value = { ...form };
-//   calculatedFlag.value = true;
-
-//   nextTick(() => {
-//     document.getElementById('mltd-anni-calc-result')?.scrollIntoView({ behavior: 'smooth' });
-//   });
-// }
-</script>
-
 <template>
   <div id="view-mltd-anni-calc">
     <h1 class="view-title">偶像大师百万现场 周年活动计算器</h1>
@@ -200,9 +19,9 @@ function clearLocalStorage() {
                   <el-input
                     v-model.number="form.targetPt"
                     :min="0"
-                    :max="99999999"
-                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
+                    maxlength="8"
+                    type="number"
                     inputmode="numeric"
                     placeholder="0"
                   >
@@ -225,22 +44,7 @@ function clearLocalStorage() {
                 </el-form-item>
                 <div style="margin-left: 12px">
                   <span style="display: inline-block; width: 24px">→</span>
-                  <span>
-                    {{
-                      new Intl.DateTimeFormat('ja-JP', {
-                        // dateStyle: 'short',
-                        // timeStyle: 'long',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        timeZoneName: 'short',
-                        timeZone: 'Japan',
-                      }).format(form.eventEndTime)
-                    }}</span
-                  >
+                  <span>{{ formattedEventEndTime }}</span>
                 </div>
               </el-col>
             </el-row>
@@ -252,7 +56,7 @@ function clearLocalStorage() {
                   <el-input
                     v-model.number="form.plv"
                     :min="1"
-                    :max="999"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxLevel"
                     type="number"
                     inputmode="numeric"
                     placeholder="1"
@@ -266,9 +70,9 @@ function clearLocalStorage() {
                   <el-input
                     v-model.number="form.pt"
                     :min="0"
-                    :max="99999999"
-                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
+                    maxlength="8"
+                    type="number"
                     inputmode="numeric"
                     placeholder="0"
                   >
@@ -277,13 +81,13 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="当前道具数" prop="token">
+                <el-form-item label="当前道具数" prop="tokens">
                   <el-input
-                    v-model.number="form.token"
+                    v-model.number="form.tokens"
                     :min="0"
-                    :max="999999"
-                    :formatter="(value: string) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value: string) => value.replace(/\$\s?|(,*)/g, '')"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTokens"
+                    maxlength="7"
+                    type="number"
                     inputmode="numeric"
                     placeholder="0"
                   >
@@ -301,7 +105,7 @@ function clearLocalStorage() {
                   <el-input
                     v-model.number="form.boostCount"
                     :min="0"
-                    :max="13"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalBoosts"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 13"
@@ -311,11 +115,11 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="白给道具剩余次数" prop="freeTokenCount">
+                <el-form-item label="白给道具剩余次数" prop="freeTokenClaimCount">
                   <el-input
-                    v-model.number="form.freeTokenCount"
+                    v-model.number="form.freeTokenClaimCount"
                     :min="0"
-                    :max="13"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalDays"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 13"
@@ -325,11 +129,11 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="MAX体力瓶数量" prop="staminaMaxCount">
+                <el-form-item label="MAX体力瓶数量" prop="staminaMaxBottleCount">
                   <el-input
-                    v-model.number="form.staminaMaxCount"
+                    v-model.number="form.staminaMaxBottleCount"
                     :min="0"
-                    :max="9999"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -339,11 +143,11 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="30体力瓶数量" prop="stamina30Count">
+                <el-form-item label="30体力瓶数量" prop="stamina30BottleCount">
                   <el-input
-                    v-model.number="form.stamina30Count"
+                    v-model.number="form.stamina30BottleCount"
                     :min="0"
-                    :max="9999"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -353,11 +157,11 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="20体力瓶数量" prop="stamina20Count">
+                <el-form-item label="20体力瓶数量" prop="stamina20BottleCount">
                   <el-input
-                    v-model.number="form.stamina20Count"
+                    v-model.number="form.stamina20BottleCount"
                     :min="0"
-                    :max="9999"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -367,11 +171,11 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="0">
-                <el-form-item label="10体力瓶数量" prop="stamina10Count">
+                <el-form-item label="10体力瓶数量" prop="stamina10BottleCount">
                   <el-input
-                    v-model.number="form.stamina10Count"
+                    v-model.number="form.stamina10BottleCount"
                     :min="0"
-                    :max="9999"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -393,11 +197,11 @@ function clearLocalStorage() {
             <h2>时间设置</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenGainTime">
+                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenAccumulateTime">
                   <el-input
-                    v-model.number="form.gainTokenTime"
+                    v-model.number="form.tokenAccumulateTime"
                     :min="0"
-                    :max="30"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTimeMinutes"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -408,11 +212,11 @@ function clearLocalStorage() {
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮清道具时间" prop="tokenBurnTime">
+                <el-form-item label="单轮清道具时间" prop="tokenConsumeTime">
                   <el-input
-                    v-model.number="form.burnTokenTime"
+                    v-model.number="form.tokenConsumeTime"
                     :min="0"
-                    :max="30"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTimeMinutes"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -427,7 +231,7 @@ function clearLocalStorage() {
                   <el-input
                     v-model.number="form.remainingTime"
                     :min="0"
-                    :max="13"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalDays"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -447,13 +251,11 @@ function clearLocalStorage() {
               </el-space>
             </el-form-item>
             <el-form-item label=" ">
-              <el-space wrap>
-                <el-button type="primary" @click="saveToLocalStorage">保存输入到浏览器</el-button>
-                <el-button @click="loadFromLocalStorage"
-                  >读取缓存（需要手动重新获取剩余时间）</el-button
-                >
-                <el-button @click="clearLocalStorage">清除缓存</el-button>
-              </el-space>
+              <MltdAnniversaryCalcStateManager
+                :save-to-local-storage="saveToLocalStorage"
+                :load-from-local-storage="loadFromLocalStorage"
+                :clear-local-storage="clearLocalStorage"
+              />
             </el-form-item>
             <el-alert type="info">
               <p>TODO：</p>
@@ -496,36 +298,36 @@ function clearLocalStorage() {
                   <td>火攒道具次数</td>
                   <td>{{ result.boostPlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.boostTimeSpend.toFixed(2) ?? '?' }}分钟
+                    {{ result.boostTimeSpent.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>普通攒道具次数</td>
-                  <td>{{ result.gainTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
+                  <td>{{ result.tokenAccumulatePlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.gainTokenTimeSpend.toFixed(2) ?? '?' }}分钟
+                    {{ result.tokenAccumulateTimeSpent.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>清道具次数</td>
-                  <td>{{ result.burnTokenPlays.toLocaleString('en-US') ?? '?' }}</td>
+                  <td>{{ result.tokenConsumePlays.toLocaleString('en-US') ?? '?' }}</td>
                   <td style="text-align: right" class="font-mono">
-                    {{ result.burnTokenTimeSpend.toFixed(2) ?? '?' }}分钟
+                    {{ result.tokenConsumeTimeSpent.toFixed(2) ?? '?' }}分钟
                   </td>
                 </tr>
                 <tr>
                   <td>所有项目总时间</td>
                   <td colspan="2" style="text-align: center">
-                    {{ result.totalTimeSpend.toFixed(2) }}分钟 /
-                    {{ (result.totalTimeSpend / 60).toFixed(2) }}小时
+                    {{ result.totalTimeSpent.toFixed(2) }}分钟 /
+                    {{ (result.totalTimeSpent / 60).toFixed(2) }}小时
                   </td>
                 </tr>
                 <tr>
                   <td>平均每日所需时间</td>
                   <td colspan="2" style="text-align: center">
-                    <template v-if="form.remainingTime >= 1">
-                      {{ (result.totalTimeSpend / form.remainingTime).toFixed(2) }}分钟 /
-                      {{ (result.totalTimeSpend / form.remainingTime / 60).toFixed(2) }}小时
+                    <template v-if="(form.remainingTime ?? 0) >= 1">
+                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1)).toFixed(2) }}分钟 /
+                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1) / 60).toFixed(2) }}小时
                     </template>
                     <template v-else>-</template>
                   </td>
@@ -549,11 +351,11 @@ function clearLocalStorage() {
                 </tr>
                 <tr>
                   <td>来自于白给道具的pt</td>
-                  <td>{{ result.ptFromFreeToken.toLocaleString('en-US') }}</td>
+                  <td>{{ result.ptFromFreeTokens.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr>
                   <td>来自于剩余道具的pt</td>
-                  <td>{{ result.ptFromRemainingToken.toLocaleString('en-US') }}</td>
+                  <td>{{ result.ptFromRemainingTokens.toLocaleString('en-US') }}</td>
                 </tr>
                 <tr style="color: red">
                   <td>还需要获得pt</td>
@@ -584,7 +386,7 @@ function clearLocalStorage() {
                 </tr>
                 <tr>
                   <td>还需要获取道具</td>
-                  <td>{{ result.tokenNeeded.toLocaleString('en-US') }}</td>
+                  <td>{{ result.tokensNeeded.toLocaleString('en-US') }}</td>
                   <td>上面体力转化的道具</td>
                 </tr>
               </tbody>
@@ -610,7 +412,7 @@ function clearLocalStorage() {
                 </tr>
                 <tr>
                   <td>自然回复体力</td>
-                  <td>{{ result.staminaRecover.toLocaleString('en-US') ?? '?' }}</td>
+                  <td>{{ result.staminaRecovered.toLocaleString('en-US') ?? '?' }}</td>
                 </tr>
                 <tr>
                   <td>每日任务回复体力</td>
@@ -628,6 +430,58 @@ function clearLocalStorage() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, nextTick, onMounted, computed } from 'vue';
+import type { FormInstance } from 'element-plus';
+
+import { MLTD_ANNIVERSARY_CONSTANTS } from './MltdConstant';
+import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
+import type { AnniversaryForm } from './MltdTypes';
+import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';
+
+const form = ref<AnniversaryForm>(createDefaultForm());
+
+const {
+  result,
+  resetCurrentRemainingTime,
+  setBoostFromRemainingTime,
+  saveToLocalStorage,
+  loadFromLocalStorage,
+  clearLocalStorage,
+} = useMltdAnniversaryCalc(form);
+
+const formRef = ref<FormInstance | null>();
+
+const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  timeZoneName: 'short',
+  timeZone: 'Japan',
+});
+
+const formattedEventEndTime = computed(() => dateTimeFormatter.format(form.value.eventEndTime));
+
+onMounted(() => {
+  resetCurrentRemainingTime();
+  setBoostFromRemainingTime();
+});
+
+function handleClear() {
+  formRef.value?.resetFields();
+  resetCurrentRemainingTime();
+
+  nextTick(() => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+</script>
 
 <style lang="scss" scoped>
 @use 'sass:map';

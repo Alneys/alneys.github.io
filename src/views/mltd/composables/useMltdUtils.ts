@@ -1,4 +1,21 @@
-export const eventTheaterChoices = [
+/**
+ * MLTD 工具函数组合式函数
+ * 提供活动剧场选择数据和等级体力转换功能
+ */
+
+import { computed } from 'vue';
+
+// 定义事件剧场选择项接口
+interface EventTheaterChoice {
+  name: string;
+  multiplier: string;
+  pt: number;
+  token: number;
+  anniversaryOnly?: boolean;
+}
+
+// 活动剧场选择项
+const eventTheaterChoices = computed<EventTheaterChoice[]>(() => [
   {
     name: '活动曲',
     multiplier: '1倍',
@@ -62,9 +79,10 @@ export const eventTheaterChoices = [
     pt: 35,
     token: 35,
   },
-];
+]);
 
-export const levelToMaxStaminaTable = [
+// 等级到最大体力值的映射表
+const levelToMaxStaminaTable = computed<number[]>(() => [
   60, 60, 61, 61, 62, 62, 63, 63, 64, 64, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71,
   72, 72, 73, 73, 74, 74, 75, 75, 76, 76, 77, 77, 78, 78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83,
   84, 84, 85, 85, 86, 86, 87, 87, 88, 88, 89, 89, 90, 90, 90, 91, 91, 91, 92, 92, 92, 93, 93, 93,
@@ -110,11 +128,29 @@ export const levelToMaxStaminaTable = [
   240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
   240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
   240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-  240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-  240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-  240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-  240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-  240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-  240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
   240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,
-] as const;
+]);
+
+/**
+ * 根据等级获取最大体力值
+ * @param level 玩家等级
+ * @returns 对应的最大体力值
+ */
+const levelToMaxStamina = (level: number): number => {
+  const table = levelToMaxStaminaTable.value;
+  if (level < 0) {
+    return table[0] ?? 60;
+  }
+  if (level >= table.length) {
+    return table[table.length - 1] ?? 240;
+  }
+  return table[level] ?? table[0] ?? 60;
+};
+
+export function useMltdUtils() {
+  return {
+    eventTheaterChoices,
+    levelToMaxStaminaTable,
+    levelToMaxStamina,
+  };
+}

@@ -177,8 +177,7 @@ import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
   gap: 8px;
 }
 
-img[src^="https://img.shields.io"]
-{
+img[src^='https://img.shields.io'] {
   height: 24px;
   vertical-align: text-bottom;
 }

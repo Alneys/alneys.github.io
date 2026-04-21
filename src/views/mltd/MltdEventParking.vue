@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
-import { eventTheaterChoices } from './mltd-data';
+import { useMltdUtils } from './composables/useMltdUtils';
+
+const { eventTheaterChoices } = useMltdUtils();
 
 const formRef = ref<FormInstance | null>();
 
@@ -105,24 +107,24 @@ function calcParkingTheater(
     }
     // DFS start
     // Order: token to pt, ticket to token, stamina to token
-    for (let i = 0; i < eventTheaterChoices.length; i++) {
-      const each = eventTheaterChoices[i];
+    for (let i = 0; i < eventTheaterChoices.value.length; i++) {
+      const each = eventTheaterChoices.value[i];
       // result already found
       if (flag) {
         return;
       }
       // Check anniversary only choice
-      // @ts-expect-error
+      // @ts-expect-error dynamic property access
       if (!isAnniversary && each.anniversaryOnly === true) {
         continue;
       }
       // enough token
-      // @ts-expect-error
+      // @ts-expect-error dynamic property access
       if (token >= -each.token) {
         // record in result
         record[i] = (record[i] ?? 0) + 1;
         // DFS
-        // @ts-expect-error
+        // @ts-expect-error dynamic property access
         dfs(pt + each.pt, token + each.token);
         // if failed, recover result
         if (!flag) {
@@ -140,10 +142,10 @@ function calcParkingTheater(
     Object.entries(record).forEach(([key, value]) => {
       if (value > 0) {
         result.push({
-          // @ts-expect-error
-          name: eventTheaterChoices[Number(key)].name,
-          // @ts-expect-error
-          multiplier: eventTheaterChoices[Number(key)].multiplier,
+          // @ts-expect-error dynamic property access
+          name: eventTheaterChoices.value[Number(key)].name,
+          // @ts-expect-error dynamic property access
+          multiplier: eventTheaterChoices.value[Number(key)].multiplier,
           value,
         });
       }

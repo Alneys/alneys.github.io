@@ -10,8 +10,9 @@
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "format": "prettier --write src/"
+    "lint": "eslint . --fix && prettier --write --list-different src/",
+    "lint-only": "eslint . --fix",
+    "format": "prettier --write --list-different src/"
   },
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",

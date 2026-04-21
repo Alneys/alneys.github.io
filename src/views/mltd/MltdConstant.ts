@@ -1,0 +1,73 @@
+/**
+ * MLTD 周年活动相关常量定义
+ *
+ * 周年活动机制：
+ * 1. 攒道具阶段：消耗体力打歌，获得道具
+ * 2. 清道具阶段：消耗道具打活动专属歌曲，获得pt
+ * 3. 火机制：特殊模式，消耗更多体力但获得双倍道具
+ */
+export const MLTD_ANNIVERSARY_CONSTANTS = {
+  /** 攒道具阶段 - 每次消耗体力 */
+  staminaCostForTokenAccumulate: 450,
+  /** 攒道具阶段 - 每次获得道具数 */
+  tokensPerAccumulatePlay: 1071,
+
+  /** 清道具阶段 - 每次消耗道具数 */
+  tokensPerConsumePlay: 720,
+  /** 清道具阶段 - 每次获得pt数 */
+  ptPerConsumePlay: 2148,
+  /** 道具转pt比例：2148/720 ≈ 2.983 */
+  get tokenToPtRatio() {
+    return this.ptPerConsumePlay / this.tokensPerConsumePlay;
+  },
+
+  /** 火攒道具模式 - 每次火消耗体力（10次×450） */
+  staminaCostPerBoostAccumulate: 4500,
+  /** 火攒道具模式 - 每个火可游玩次数 */
+  boostAccumulatePlaysPerBoostItem: 10,
+  /** 火攒道具模式 - 每次获得道具数（双倍：1071×2） */
+  tokensPerBoostAccumulatePlay: 1071 * 2,
+
+  /** 火清道具模式 - 每个火可游玩次数 */
+  boostConsumePlaysPerBoostItem: 10,
+  /** 火清道具模式 - 每次消耗道具数（双倍：720×2） */
+  tokensPerBoostConsumePlay: 720 * 2,
+  /** 火清道具模式 - 每次获得pt数（双倍：2148×2） */
+  ptPerBoostConsumePlay: 2148 * 2,
+
+  /** 白给道具 - 每日登录活动界面获得 */
+  dailyLoginTokens: 540,
+  /** 白给道具 - 每日首次打推荐歌获得 */
+  dailyFirstSongTokens: 4000,
+  /** 白给道具 - 每日合计：540 + 4000 = 4540 */
+  get dailyFreeTokens() {
+    return this.dailyLoginTokens + this.dailyFirstSongTokens;
+  },
+
+  /** 体力资源 - 自然回复：每5分钟1点，每天288点 */
+  staminaRecoverPerDay: 24 * 12,
+
+  /** 每日任务奖励 - 回满体力次数 */
+  dailyMaxStaminaBonusCount: 2,
+  /** 每日任务奖励 - 30体力瓶数量 */
+  dailyStamina30BottleCount: 10,
+
+  /** 钻石回满体力 - 每次消耗钻石数 */
+  jewelPerFullStamina: 50,
+
+  /** 活动限制 - 总天数 */
+  eventTotalDays: 13,
+  /** 活动限制 - 总火数（首日1个，每次强制休息后1个） */
+  eventTotalBoosts: 13,
+
+  /** 输入限制 - 最大目标pt */
+  maxTargetPt: 99999999,
+  /** 输入限制 - 最大等级 */
+  maxLevel: 999,
+  /** 输入限制 - 最大道具数 */
+  maxTokens: 9999999,
+  /** 输入限制 - 最大体力瓶数量 */
+  maxStaminaBottles: 9999,
+  /** 输入限制 - 最大时间（分钟） */
+  maxTimeMinutes: 30,
+} as const;
