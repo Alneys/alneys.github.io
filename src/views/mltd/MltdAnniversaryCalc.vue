@@ -275,155 +275,61 @@
         <el-col :lg="9" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
-            <table class="mltd-anni-result-table">
-              <caption>
-                关键信息
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                  <th scope="col">时间（分钟）</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="color: red; font-size: var(--el-font-size-large)">
-                  <td>需要钻石数量</td>
-                  <td style="font-weight: 700">
-                    {{ result.jewelNeeded.toLocaleString('en-US') ?? '?' }}
-                  </td>
-                  <td style="color: black; text-align: center">/</td>
-                </tr>
-                <tr>
-                  <td>火攒道具次数</td>
-                  <td>{{ result.boostPlays.toLocaleString('en-US') ?? '?' }}</td>
-                  <td style="text-align: right" class="font-mono">
-                    {{ result.boostTimeSpent.toFixed(2) ?? '?' }}分钟
-                  </td>
-                </tr>
-                <tr>
-                  <td>普通攒道具次数</td>
-                  <td>{{ result.tokenAccumulatePlays.toLocaleString('en-US') ?? '?' }}</td>
-                  <td style="text-align: right" class="font-mono">
-                    {{ result.tokenAccumulateTimeSpent.toFixed(2) ?? '?' }}分钟
-                  </td>
-                </tr>
-                <tr>
-                  <td>清道具次数</td>
-                  <td>{{ result.tokenConsumePlays.toLocaleString('en-US') ?? '?' }}</td>
-                  <td style="text-align: right" class="font-mono">
-                    {{ result.tokenConsumeTimeSpent.toFixed(2) ?? '?' }}分钟
-                  </td>
-                </tr>
-                <tr>
-                  <td>所有项目总时间</td>
-                  <td colspan="2" style="text-align: center">
-                    {{ result.totalTimeSpent.toFixed(2) }}分钟 /
-                    {{ (result.totalTimeSpent / 60).toFixed(2) }}小时
-                  </td>
-                </tr>
-                <tr>
-                  <td>平均每日所需时间</td>
-                  <td colspan="2" style="text-align: center">
-                    <template v-if="(form.remainingTime ?? 0) >= 1">
-                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1)).toFixed(2) }}分钟 /
-                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1) / 60).toFixed(2) }}小时
-                    </template>
-                    <template v-else>-</template>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <table class="mltd-anni-result-table">
-              <caption>
-                当前pt情况
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>来自于火🔥的pt<br />（攒道具+清道具）</td>
-                  <td>{{ result.ptFromBoost.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr>
-                  <td>来自于白给道具的pt</td>
-                  <td>{{ result.ptFromFreeTokens.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr>
-                  <td>来自于剩余道具的pt</td>
-                  <td>{{ result.ptFromRemainingTokens.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr style="color: red">
-                  <td>还需要获得pt</td>
-                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <table class="mltd-anni-result-table">
-              <caption>
-                还需要获得pt情况
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                  <th scope="col">备注</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="color: red">
-                  <td>还需要额外pt</td>
-                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr>
-                  <td>还需要体力</td>
-                  <td>{{ result.staminaNeeded.toLocaleString('en-US') }}</td>
-                  <td>不包含火消耗的体力</td>
-                </tr>
-                <tr>
-                  <td>还需要获取道具</td>
-                  <td>{{ result.tokensNeeded.toLocaleString('en-US') }}</td>
-                  <td>上面体力转化的道具</td>
-                </tr>
-              </tbody>
-            </table>
-            <table class="mltd-anni-result-table">
-              <caption>
-                体力情况
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>最大体力</td>
-                  <td>{{ result.currentMaxStamina.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>火攒道具消耗体力</td>
-                  <td>{{ result.staminaForBoost.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>自然回复体力</td>
-                  <td>{{ result.staminaRecovered.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>每日任务回复体力</td>
-                  <td>{{ result.staminaFromDaily.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>体力瓶回复体力</td>
-                  <td>{{ result.staminaFromBottles.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <el-card class="mltd-anni-result-card">
+              <template #header>关键信息</template>
+              <el-table
+                :data="keyInfoTableData"
+                border
+                :span-method="keyInfoSpanMethod"
+                :row-class-name="highlightRowClassName"
+                :cell-class-name="monoCellClassName"
+              >
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right">
+                  <template #default="{ row }">
+                    <span :class="{ 'highlight-value': row.highlight }">{{ row.value }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="time"
+                  label="时间（分钟）"
+                  header-align="center"
+                  align="right"
+                />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>当前pt情况</template>
+              <el-table
+                :data="ptStatusTableData"
+                border
+                :row-class-name="highlightRowClassName"
+                :cell-class-name="monoCellClassName"
+              >
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right" />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>还需要获得pt情况</template>
+              <el-table
+                :data="ptNeededTableData"
+                border
+                :row-class-name="highlightRowClassName"
+                :cell-class-name="monoCellClassName"
+              >
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right" />
+                <el-table-column prop="note" label="备注" header-align="center" align="center" />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>体力情况</template>
+              <el-table :data="staminaTableData" border :cell-class-name="monoCellClassName">
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right" />
+              </el-table>
+            </el-card>
           </div>
         </el-col>
       </el-row>
@@ -466,6 +372,127 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
 
 const formattedEventEndTime = computed(() => dateTimeFormatter.format(form.value.eventEndTime));
 
+const keyInfoTableData = computed(() => [
+  {
+    item: '需要钻石数量',
+    value: result.jewelNeeded?.toLocaleString('en-US') ?? '?',
+    time: '/',
+    highlight: true,
+  },
+  {
+    item: '火攒道具次数',
+    value: result.boostPlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.boostTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '普通攒道具次数',
+    value: result.tokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.tokenAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '清道具次数',
+    value: result.tokenConsumePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.tokenConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '所有项目总时间',
+    value: `${result.totalTimeSpent.toFixed(2)}分钟 / ${(result.totalTimeSpent / 60).toFixed(2)}小时`,
+    time: '',
+    colSpan: true,
+  },
+  {
+    item: '平均每日所需时间',
+    value:
+      (form.value.remainingTime ?? 0) >= 1
+        ? `${(result.totalTimeSpent / (form.value.remainingTime ?? 1)).toFixed(2)}分钟 / ${(result.totalTimeSpent / (form.value.remainingTime ?? 1) / 60).toFixed(2)}小时`
+        : '-',
+    time: '',
+    colSpan: true,
+  },
+]);
+
+const ptStatusTableData = computed(() => [
+  {
+    item: '来自于火🔥的pt（攒道具+清道具）',
+    value: result.ptFromBoost?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '来自于白给道具的pt',
+    value: result.ptFromFreeTokens?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '来自于剩余道具的pt',
+    value: result.ptFromRemainingTokens?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '还需要获得pt',
+    value: result.ptNeeded?.toLocaleString('en-US') ?? '?',
+    highlight: true,
+  },
+]);
+
+const ptNeededTableData = computed(() => [
+  {
+    item: '还需要额外pt',
+    value: result.ptNeeded?.toLocaleString('en-US') ?? '?',
+    note: '',
+    highlight: true,
+  },
+  {
+    item: '还需要体力',
+    value: result.staminaNeeded?.toLocaleString('en-US') ?? '?',
+    note: '不包含火消耗的体力',
+  },
+  {
+    item: '还需要获取道具',
+    value: result.tokensNeeded?.toLocaleString('en-US') ?? '?',
+    note: '上面体力转化的道具',
+  },
+]);
+
+const staminaTableData = computed(() => [
+  {
+    item: '最大体力',
+    value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '火攒道具消耗体力',
+    value: result.staminaForBoost?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '自然回复体力',
+    value: result.staminaRecovered?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '每日任务回复体力',
+    value: result.staminaFromDaily?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '体力瓶回复体力',
+    value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
+  },
+]);
+
+function keyInfoSpanMethod({ row, columnIndex }: { row: any; columnIndex: number }) {
+  if (row.colSpan && columnIndex === 1) {
+    return [1, 2];
+  }
+  if (row.colSpan && columnIndex === 2) {
+    return [0, 0];
+  }
+}
+
+function highlightRowClassName({ row }: { row: any }) {
+  if (row.highlight) return 'highlight-row';
+  return '';
+}
+
+function monoCellClassName({ column }: { column: any }) {
+  const monoColumnProps = ['value', 'time'];
+  if (monoColumnProps.includes(column.property)) return 'font-mono';
+  return '';
+}
+
 onMounted(() => {
   resetCurrentRemainingTime();
   setBoostFromRemainingTime();
@@ -499,47 +526,59 @@ function handleClear() {
 //     appearance: textfield;
 //   }
 // }
-.mltd-anni-result-table {
-  & {
-    border: 2px solid rgb(128 128 128);
-    border-collapse: collapse;
-  }
+.mltd-anni-result-card {
+  margin-bottom: 1em;
+  --border-color: rgb(128 128 128);
 
-  caption {
+  :deep(.el-card__header) {
     padding: 8px;
+    line-height: 23px;
     font-weight: bold;
-  }
-
-  thead,
-  tfoot {
-    background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
-  }
-
-  th,
-  td {
-    border: 1px solid rgb(128 128 128);
-    padding: 8px 10px;
-    min-width: 80px;
-  }
-
-  td:first-of-type {
+    color: black;
     text-align: center;
+    background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    border-bottom: none;
   }
 
-  td:nth-of-type(2) {
-    font-family: var(--al-font-family-mono) !important;
-    text-align: right;
+  :deep(.el-card__body) {
+    padding: 0;
   }
 
-  tbody > tr:nth-of-type(even) {
-    background-color: rgb(237 238 242);
+  :deep(.el-table) {
+    --el-table-border-color: var(--border-color);
+    --el-table-text-color: black;
+    --el-table-header-text-color: black;
+
+    .el-table__header th {
+      background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+    }
+
+    .el-table__row--striped .el-table__cell {
+      background-color: rgb(237 238 242);
+    }
+
+    .el-table__cell {
+      padding: 8px 10px;
+      min-width: 80px;
+    }
+
+    .font-mono {
+      font-family: var(--al-font-family-mono);
+    }
   }
 
-  tfoot th {
-    text-align: right;
+  :deep(.highlight-row) {
+    color: red;
+
+    .el-table__cell {
+      font-weight: bold;
+    }
   }
 
-  tfoot td {
+  :deep(.highlight-value) {
     font-weight: bold;
   }
 }
