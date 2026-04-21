@@ -4,7 +4,9 @@
  * 周年活动机制：
  * 1. 攒道具阶段：消耗体力打歌，获得道具
  * 2. 清道具阶段：消耗道具打活动专属歌曲，获得pt
- * 3. 火机制：特殊模式，消耗更多体力但获得双倍道具
+ * 3. 火机制：
+ *    - 火攒道具：消耗体力获得双倍道具
+ *    - 火清道具：消耗双倍道具获得双倍pt
  */
 export const MLTD_ANNIVERSARY_CONSTANTS = {
   /** 攒道具阶段 - 每次消耗体力 */
@@ -37,11 +39,11 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
 
   /** 白给道具 - 每日登录活动界面获得 */
   dailyLoginTokens: 540,
-  /** 白给道具 - 每日首次打推荐歌获得 */
-  dailyFirstSongTokens: 4000,
+  /** 白给道具 - 每日4首推荐歌首次游玩获得 */
+  dailyRecommendedSongsTokens: 4 * 1000,
   /** 白给道具 - 每日合计：540 + 4000 = 4540 */
   get dailyFreeTokens() {
-    return this.dailyLoginTokens + this.dailyFirstSongTokens;
+    return this.dailyLoginTokens + this.dailyRecommendedSongsTokens;
   },
 
   /** 体力资源 - 自然回复：每5分钟1点，每天288点 */
