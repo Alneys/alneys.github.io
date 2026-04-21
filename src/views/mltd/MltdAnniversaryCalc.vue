@@ -19,7 +19,7 @@
                   <el-input
                     v-model.number="form.targetPt"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_TARGET_PT"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
                     maxlength="8"
                     type="number"
                     inputmode="numeric"
@@ -56,7 +56,7 @@
                   <el-input
                     v-model.number="form.plv"
                     :min="1"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_LEVEL"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxLevel"
                     type="number"
                     inputmode="numeric"
                     placeholder="1"
@@ -70,7 +70,7 @@
                   <el-input
                     v-model.number="form.pt"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_TARGET_PT"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
                     maxlength="8"
                     type="number"
                     inputmode="numeric"
@@ -85,7 +85,7 @@
                   <el-input
                     v-model.number="form.tokens"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_TOKENS"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTokens"
                     maxlength="7"
                     type="number"
                     inputmode="numeric"
@@ -105,7 +105,7 @@
                   <el-input
                     v-model.number="form.boostCount"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.EVENT_TOTAL_BOOSTS"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalBoosts"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 13"
@@ -119,7 +119,7 @@
                   <el-input
                     v-model.number="form.freeTokenClaimCount"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalDays"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 13"
@@ -133,7 +133,7 @@
                   <el-input
                     v-model.number="form.staminaMaxBottleCount"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -147,7 +147,7 @@
                   <el-input
                     v-model.number="form.stamina30BottleCount"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -161,7 +161,7 @@
                   <el-input
                     v-model.number="form.stamina20BottleCount"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -175,7 +175,7 @@
                   <el-input
                     v-model.number="form.stamina10BottleCount"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_STAMINA_BOTTLES"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -201,7 +201,7 @@
                   <el-input
                     v-model.number="form.tokenAccumulateTime"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_TIME_MINUTES"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTimeMinutes"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -216,7 +216,7 @@
                   <el-input
                     v-model.number="form.tokenConsumeTime"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.MAX_TIME_MINUTES"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTimeMinutes"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -231,7 +231,7 @@
                   <el-input
                     v-model.number="form.remainingTime"
                     :min="0"
-                    :max="ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS"
+                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalDays"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -435,7 +435,7 @@
 import { ref, nextTick, onMounted, computed } from 'vue';
 import type { FormInstance } from 'element-plus';
 
-import { ANNIVERSARY_CONSTANTS } from './MltdConstant';
+import { MLTD_ANNIVERSARY_CONSTANTS } from './MltdConstant';
 import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
 import type { AnniversaryForm } from './MltdTypes';
 import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';

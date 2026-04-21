@@ -21,7 +21,7 @@
 
 import { reactive, computed, type Ref } from 'vue';
 import { useMltdUtils } from './useMltdUtils';
-import { ANNIVERSARY_CONSTANTS } from '../MltdConstant';
+import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../MltdConstant';
 import type { AnniversaryForm, AnniversaryResult } from '../MltdTypes';
 
 const STORAGE_KEY = 'mltd-anni';
@@ -64,11 +64,10 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
       () =>
         Math.floor(
           (form.value.boostCount ?? 0) *
-            (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_ACCUMULATE_PLAY +
-              (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_ACCUMULATE_PLAY *
-                ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
-                ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
-            ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM,
+            (MLTD.tokensPerBoostAccumulatePlay +
+              (MLTD.tokensPerBoostAccumulatePlay * MLTD.ptPerConsumePlay) /
+                MLTD.tokensPerConsumePlay) *
+            MLTD.boostAccumulatePlaysPerBoostItem,
         ) || 0,
     ),
 
@@ -81,8 +80,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
       () =>
         Math.floor(
           (form.value.freeTokenClaimCount ?? 0) *
-            ((ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS * ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
-              ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY),
+            ((MLTD.dailyFreeTokens * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay),
         ) || 0,
     ),
 
@@ -92,7 +90,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 当前道具数 × 转换率
      */
     ptFromRemainingTokens: computed(
-      () => Math.floor((form.value.tokens ?? 0) * ANNIVERSARY_CONSTANTS.TOKEN_TO_PT_RATIO) || 0,
+      () => Math.floor((form.value.tokens ?? 0) * MLTD.tokenToPtRatio) || 0,
     ),
 
     /**
@@ -111,8 +109,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 火数量 × 每次火消耗
      */
     staminaForBoost: computed(
-      () =>
-        (form.value.boostCount ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_COST_PER_BOOST_ACCUMULATE || 0,
+      () => (form.value.boostCount ?? 0) * MLTD.staminaCostPerBoostAccumulate || 0,
     ),
 
     /**
@@ -121,10 +118,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 剩余天数 × 每日回复
      */
     staminaRecovered: computed(
-      () =>
-        Math.floor(
-          (form.value.remainingTime ?? 0) * ANNIVERSARY_CONSTANTS.STAMINA_RECOVER_PER_DAY,
-        ) || 0,
+      () => Math.floor((form.value.remainingTime ?? 0) * MLTD.staminaRecoverPerDay) || 0,
     ),
 
     /**
@@ -146,8 +140,8 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     staminaFromDaily: computed(
       (): number =>
-        (ANNIVERSARY_CONSTANTS.DAILY_MAX_STAMINA_BONUS_COUNT * result.currentMaxStamina +
-          ANNIVERSARY_CONSTANTS.DAILY_STAMINA_30_BOTTLE_COUNT * 30) *
+        (MLTD.dailyMaxStaminaBonusCount * result.currentMaxStamina +
+          MLTD.dailyStamina30BottleCount * 30) *
         (form.value.freeTokenClaimCount ?? 0),
     ),
 
@@ -172,11 +166,9 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     staminaNeeded: computed((): number => {
       return Math.ceil(
         result.ptNeeded *
-          (ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE /
-            (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY +
-              (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY /
-                ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
-                ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY)),
+          (MLTD.staminaCostForTokenAccumulate /
+            (MLTD.tokensPerAccumulatePlay +
+              (MLTD.tokensPerAccumulatePlay / MLTD.tokensPerConsumePlay) * MLTD.ptPerConsumePlay)),
       );
     }),
 
@@ -186,8 +178,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     tokensNeeded: computed((): number => {
       return Math.ceil(
-        (result.staminaNeeded / ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE) *
-          ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY,
+        (result.staminaNeeded / MLTD.staminaCostForTokenAccumulate) * MLTD.tokensPerAccumulatePlay,
       );
     }),
 
@@ -204,7 +195,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
           result.staminaFromBottles -
           result.staminaFromDaily) /
           result.currentMaxStamina) *
-          ANNIVERSARY_CONSTANTS.JEWEL_PER_FULL_STAMINA,
+          MLTD.jewelPerFullStamina,
       );
       return res > 0 ? res : 0;
     }),
@@ -214,9 +205,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula boostCount × 10
      */
     boostPlays: computed(
-      (): number =>
-        (form.value.boostCount ?? 0) *
-          ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM || 0,
+      (): number => (form.value.boostCount ?? 0) * MLTD.boostAccumulatePlaysPerBoostItem || 0,
     ),
 
     /**
@@ -224,9 +213,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula staminaNeeded / 450
      */
     tokenAccumulatePlays: computed(
-      (): number =>
-        Math.ceil(result.staminaNeeded / ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE) ||
-        0,
+      (): number => Math.ceil(result.staminaNeeded / MLTD.staminaCostForTokenAccumulate) || 0,
     ),
 
     /**
@@ -239,12 +226,12 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
         Math.ceil(
           ((form.value.tokens ?? 0) +
             (form.value.boostCount ?? 0) *
-              ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY *
+              MLTD.tokensPerAccumulatePlay *
               2 *
-              ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM +
-            (form.value.freeTokenClaimCount ?? 0) * ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS +
+              MLTD.boostAccumulatePlaysPerBoostItem +
+            (form.value.freeTokenClaimCount ?? 0) * MLTD.dailyFreeTokens +
             result.tokensNeeded) /
-            ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY,
+            MLTD.tokensPerConsumePlay,
         ) || 0,
     ),
 
@@ -294,8 +281,8 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     form.value.remainingTime = remainingTime;
     form.value.remainingTime = form.value.remainingTime > 0 ? form.value.remainingTime : 0;
     form.value.remainingTime =
-      form.value.remainingTime > ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS
-        ? ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS
+      form.value.remainingTime > MLTD.eventTotalDays
+        ? MLTD.eventTotalDays
         : form.value.remainingTime;
     return form.value.remainingTime;
   };

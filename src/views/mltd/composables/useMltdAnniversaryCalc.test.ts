@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { useMltdAnniversaryCalc, createDefaultForm } from './useMltdAnniversaryCalc';
-import { ANNIVERSARY_CONSTANTS } from '../MltdConstant';
+import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../MltdConstant';
 import type { AnniversaryForm } from '../MltdTypes';
 
 describe('useMltdAnniversaryCalc', () => {
@@ -135,11 +135,9 @@ describe('useMltdAnniversaryCalc', () => {
 
       const expected =
         5 *
-        (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_ACCUMULATE_PLAY +
-          (ANNIVERSARY_CONSTANTS.TOKENS_PER_BOOST_ACCUMULATE_PLAY *
-            ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
-            ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
-        ANNIVERSARY_CONSTANTS.BOOST_ACCUMULATE_PLAYS_PER_BOOST_ITEM;
+        (MLTD.tokensPerBoostAccumulatePlay +
+          (MLTD.tokensPerBoostAccumulatePlay * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay) *
+        MLTD.boostAccumulatePlaysPerBoostItem;
 
       expect(result.ptFromBoost).toBe(Math.floor(expected));
     });
@@ -168,9 +166,7 @@ describe('useMltdAnniversaryCalc', () => {
       await nextTick();
 
       const expected =
-        10 *
-        ((ANNIVERSARY_CONSTANTS.DAILY_FREE_TOKENS * ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY) /
-          ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY);
+        10 * ((MLTD.dailyFreeTokens * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay);
 
       expect(result.ptFromFreeTokens).toBe(Math.floor(expected));
     });
@@ -244,11 +240,9 @@ describe('useMltdAnniversaryCalc', () => {
       expect(result.staminaNeeded).toBeGreaterThan(0);
 
       const expectedRate =
-        ANNIVERSARY_CONSTANTS.STAMINA_COST_FOR_TOKEN_ACCUMULATE /
-        (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY +
-          (ANNIVERSARY_CONSTANTS.TOKENS_PER_ACCUMULATE_PLAY /
-            ANNIVERSARY_CONSTANTS.TOKENS_PER_CONSUME_PLAY) *
-            ANNIVERSARY_CONSTANTS.PT_PER_CONSUME_PLAY);
+        MLTD.staminaCostForTokenAccumulate /
+        (MLTD.tokensPerAccumulatePlay +
+          (MLTD.tokensPerAccumulatePlay / MLTD.tokensPerConsumePlay) * MLTD.ptPerConsumePlay);
 
       expect(result.staminaNeeded).toBe(Math.ceil(result.ptNeeded * expectedRate));
     });
@@ -324,8 +318,8 @@ describe('useMltdAnniversaryCalc', () => {
       const { resetCurrentRemainingTime } = useMltdAnniversaryCalc(form);
       const result = resetCurrentRemainingTime();
 
-      expect(result).toBe(ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS);
-      expect(form.value.remainingTime).toBe(ANNIVERSARY_CONSTANTS.EVENT_TOTAL_DAYS);
+      expect(result).toBe(MLTD.eventTotalDays);
+      expect(form.value.remainingTime).toBe(MLTD.eventTotalDays);
     });
   });
 
