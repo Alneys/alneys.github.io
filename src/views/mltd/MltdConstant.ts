@@ -39,14 +39,22 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
     return this.tokensPerBoostAccumulatePlay * (1 + this.tokenToPtRatio);
   },
 
-  /** 白给道具 - 每日登录活动界面获得 */
+  /** 赠送道具 - 每日登录活动界面获得 */
   dailyLoginTokens: 540,
-  /** 白给道具 - 每日4首推荐歌首次游玩获得 */
-  dailyRecommendedSongsTokens: 4 * 1000,
-  /** 白给道具 - 每日合计：540 + 4000 = 4540 */
-  get dailyFreeTokens() {
-    return this.dailyLoginTokens + this.dailyRecommendedSongsTokens;
+  /** 赠送道具 - 每首推荐歌曲首次游玩额外奖励 */
+  dailyRecommendedSongBonusTokens: 1000,
+  /** 每日推荐歌曲数量 */
+  dailyRecommendedSongCount: 4,
+  /** 赠送道具 - 每日推荐歌曲赠送奖励合计：4 × 1000 = 4000 */
+  get dailyRecommendedSongsBonusTokens() {
+    return this.dailyRecommendedSongCount * this.dailyRecommendedSongBonusTokens;
   },
+  /** 赠送道具 - 每日合计：540 + 4000 = 4540 */
+  get dailyFreeTokens() {
+    return this.dailyLoginTokens + this.dailyRecommendedSongsBonusTokens;
+  },
+  /** 每个火可用于推荐歌曲的最大次数 */
+  boostPlaysPerBoostItemForRecommendedSongs: 4,
 
   /** 体力资源 - 自然回复：每5分钟1点，每天288点 */
   staminaRecoverPerDay: 24 * 12,

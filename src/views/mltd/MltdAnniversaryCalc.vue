@@ -115,7 +115,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="白给道具剩余次数" prop="freeTokenClaimCount">
+                <el-form-item label="赠送道具剩余次数" prop="freeTokenClaimCount">
                   <el-input
                     v-model.number="form.freeTokenClaimCount"
                     :min="0"
@@ -187,10 +187,13 @@
             </el-row>
             <el-alert type="info" :closable="false">
               <p>
-                🔥火：首日送1个🔥火，每次强制🌙休息后送1个🔥火（最后一天没有强制休息，不给火），整个活动送13个。
+                🔥火：首日赠送1个🔥火，每次强制🌙休息后赠送1个🔥火（最后一天没有强制休息，不赠送火），整个活动送13个。
               </p>
               <p>
-                白给道具：每日登录活动界面给540道具，每日首次打推荐歌给4000道具，总共4540道具。整个活动送13次。
+                赠送道具：每日登录活动界面给540道具，每日游玩4首推荐歌曲各一次额外给4000道具，总共4540道具。整个活动送13次。
+              </p>
+              <p>
+                推荐歌曲：游玩推荐歌曲消耗450体力，获得1071道具+1000赠送道具。用🔥火可获得2142道具+1000赠送道具。每个🔥火最多用于4次推荐歌曲。
               </p>
             </el-alert>
 
@@ -276,7 +279,7 @@
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
             <el-alert type="info" :closable="false" style="margin-bottom: 1em">
-              根据目标pt自动计算最优🔥火使用量，最小化资源浪费。
+              此计算器假定🔥火全部用于攒道具，根据目标pt自动计算最优🔥火使用量，最小化资源浪费。
             </el-alert>
             <el-alert
               v-if="result.ptExceeded > 0"
@@ -397,8 +400,20 @@ const boostTableData = computed(() => [
     value: `${form.value.boostCount ?? 0}个`,
   },
   {
-    item: '🔥火攒道具总次数',
-    value: `${result.optimalBoostPlays}次`,
+    item: '推荐歌曲用🔥火次数',
+    value: `${result.recommendedSongBoostPlays}次`,
+  },
+  {
+    item: '剩余🔥火使用次数',
+    value: `${result.remainingBoostPlays}次`,
+  },
+  {
+    item: '🔥火攒道具次数',
+    value: `${result.optimalBoostAccumulatePlays}次`,
+  },
+  {
+    item: '🔥火使用总次数',
+    value: `${result.boostPlays}次`,
   },
 ]);
 
@@ -416,8 +431,13 @@ const keyInfoTableData = computed(() => [
   },
   {
     item: '普通攒道具次数',
-    value: result.tokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
-    time: `${result.tokenAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
+    value: result.normalAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.normalAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '总攒道具次数',
+    value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${((result.totalTokenAccumulatePlays ?? 0) * (form.value.tokenAccumulateTime ?? 0)).toFixed(2)}分钟`,
   },
   {
     item: '清道具次数',
@@ -443,12 +463,24 @@ const keyInfoTableData = computed(() => [
 
 const ptStatusTableData = computed(() => [
   {
-    item: '来自于最优🔥火使用的pt',
-    value: result.ptFromBoost?.toLocaleString('en-US') ?? '?',
+    item: '来自于登录赠送道具的pt',
+    value: result.ptFromLogin?.toLocaleString('en-US') ?? '?',
   },
   {
-    item: '来自于白给道具的pt',
-    value: result.ptFromFreeTokens?.toLocaleString('en-US') ?? '?',
+    item: '来自于推荐歌曲赠送道具的pt',
+    value: result.ptFromRecommendedBonus?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '来自于推荐歌曲普通道具的pt',
+    value: result.ptFromRecommendedSongs?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '来自于🔥火攒道具的pt',
+    value: result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '来自于普通攒道具的pt',
+    value: result.ptFromNormalAccumulate?.toLocaleString('en-US') ?? '?',
   },
   {
     item: '来自于现有道具的pt',
@@ -469,14 +501,9 @@ const ptNeededTableData = computed(() => [
     highlight: true,
   },
   {
-    item: '还需要体力',
-    value: result.staminaNeeded?.toLocaleString('en-US') ?? '?',
-    note: '不包含🔥火消耗的体力',
-  },
-  {
-    item: '还需要获取道具',
-    value: result.tokensNeeded?.toLocaleString('en-US') ?? '?',
-    note: '上面体力转化的道具',
+    item: '总消耗体力',
+    value: result.totalStaminaNeeded?.toLocaleString('en-US') ?? '?',
+    note: '推荐歌曲+🔥火攒道具+普通攒道具',
   },
 ]);
 
@@ -484,6 +511,18 @@ const staminaTableData = computed(() => [
   {
     item: '最大体力',
     value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '推荐歌曲消耗体力',
+    value: result.staminaForRecommendedSongs?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '🔥火攒道具消耗体力',
+    value: result.staminaForBoostAccumulate?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '普通攒道具消耗体力',
+    value: result.staminaForNormalAccumulate?.toLocaleString('en-US') ?? '?',
   },
   {
     item: '自然回复体力',
@@ -496,10 +535,6 @@ const staminaTableData = computed(() => [
   {
     item: '体力瓶回复体力',
     value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
-  },
-  {
-    item: '🔥火攒道具消耗体力',
-    value: result.staminaForBoost?.toLocaleString('en-US') ?? '?',
   },
 ]);
 
