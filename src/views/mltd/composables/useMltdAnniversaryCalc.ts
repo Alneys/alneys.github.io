@@ -159,6 +159,21 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     }),
 
     /**
+     * 超出目标pt的数量
+     * @formula currentPt + ptFromBoost + ptFromFreeTokens + ptFromRemainingTokens - targetPt
+     * @description 当使用全部"火"道具后实际获得的pt超过目标时的超出数量
+     */
+    ptExceeded: computed((): number => {
+      const total =
+        (form.value.pt ?? 0) +
+        result.ptFromBoost +
+        result.ptFromFreeTokens +
+        result.ptFromRemainingTokens;
+      const exceeded = total - (form.value.targetPt ?? 0);
+      return exceeded > 0 ? exceeded : 0;
+    }),
+
+    /**
      * 步骤3-1：还需要体力
      * @formula ptNeeded / 每体力产出pt效率
      * @description 每体力效率 = (1071 + 1071×2148/720) / 450 ≈ 9.48

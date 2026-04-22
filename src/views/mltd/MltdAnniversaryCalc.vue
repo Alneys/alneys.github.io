@@ -275,8 +275,17 @@
         <el-col :lg="9" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
-            <el-alert type="warning" :closable="false" style="margin-bottom: 1em">
+            <el-alert type="info" :closable="false" style="margin-bottom: 1em">
               本计算器假设🔥火全部用于攒道具，并且🔥火全部使用完毕。
+            </el-alert>
+            <el-alert
+              v-if="result.ptExceeded > 0"
+              type="warning"
+              :closable="false"
+              style="margin-bottom: 1em"
+            >
+              使用全部🔥火后，实际获得的pt将超过目标pt
+              {{ result.ptExceeded.toLocaleString('en-US') }} pt
             </el-alert>
             <el-card class="mltd-anni-result-card">
               <template #header>关键信息</template>
