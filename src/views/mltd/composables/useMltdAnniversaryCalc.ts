@@ -104,11 +104,13 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
 
     /**
      * 步骤1-5：推荐歌曲消耗体力
-     * @formula minTokenAccumulatePlays × 450
-     * @description 推荐歌曲游玩消耗的体力（必须完成）
+     * @formula recommendedSongBoostPlays × staminaCostForBoostAccumulate + recommendedSongNonBoostPlays × staminaCostForTokenAccumulate
+     * @description 推荐歌曲游玩消耗的体力（用火+不用火合计）
      */
     staminaForRecommendedSongs: computed(
-      (): number => result.minTokenAccumulatePlays * MLTD.staminaCostForTokenAccumulate,
+      (): number =>
+        result.recommendedSongBoostPlays * MLTD.staminaCostForBoostAccumulate +
+        result.recommendedSongNonBoostPlays * MLTD.staminaCostForTokenAccumulate,
     ),
 
     /**
@@ -258,10 +260,10 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
 
     /**
      * 步骤4-4：火攒道具消耗体力
-     * @formula optimalBoostAccumulatePlays × 450（每次游玩消耗450体力）
+     * @formula optimalBoostAccumulatePlays × staminaCostForBoostAccumulate
      */
     staminaForBoostAccumulate: computed(
-      (): number => result.optimalBoostAccumulatePlays * MLTD.staminaCostForTokenAccumulate || 0,
+      (): number => result.optimalBoostAccumulatePlays * MLTD.staminaCostForBoostAccumulate || 0,
     ),
 
     /**

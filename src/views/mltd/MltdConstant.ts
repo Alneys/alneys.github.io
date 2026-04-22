@@ -11,6 +11,7 @@
 export const MLTD_ANNIVERSARY_CONSTANTS = {
   /** 攒道具阶段 - 每次消耗体力 */
   staminaCostForTokenAccumulate: 450,
+
   /** 攒道具阶段 - 每次获得道具数 */
   tokensPerAccumulatePlay: 1071,
 
@@ -25,10 +26,12 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
 
   /** 火模式 - 每个火可游玩次数（攒道具和清道具共用） */
   boostPlaysPerBoostItem: 10,
+  /** 火攒道具阶段 - 每次消耗体力（与普通相同：450） */
+  staminaCostForBoostAccumulate: 450,
   /** 火攒道具模式 - 每次获得道具数（双倍：1071×2） */
   tokensPerBoostAccumulatePlay: 1071 * 2,
-  /** 火清道具模式 - 每次消耗道具数（双倍：720×2） */
-  tokensPerBoostConsumePlay: 720 * 2,
+  /** 火清道具模式 - 每次消耗道具数（与普通相同：720） */
+  tokensPerBoostConsumePlay: 720,
   /** 火清道具模式 - 每次获得pt数（双倍：2148×2） */
   ptPerBoostConsumePlay: 2148 * 2,
 
