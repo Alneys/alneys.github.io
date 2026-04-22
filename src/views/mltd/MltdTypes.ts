@@ -21,15 +21,19 @@ export interface AnniversaryForm {
 }
 
 export interface AnniversaryResult {
-  ptFromBoost: number;
   ptFromFreeTokens: number;
   ptFromRemainingTokens: number;
+  ptFromFixedSources: number;
+  ptStillNeeded: number;
+  optimalBoostPlays: number;
+  ptFromBoost: number;
   currentMaxStamina: number;
   staminaForBoost: number;
   staminaRecovered: number;
   staminaFromBottles: number;
   staminaFromDaily: number;
   ptNeeded: number;
+  ptExceeded: number;
   staminaNeeded: number;
   tokensNeeded: number;
   jewelNeeded: number;

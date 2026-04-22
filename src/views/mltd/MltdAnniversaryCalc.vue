@@ -187,7 +187,7 @@
             </el-row>
             <el-alert type="info" :closable="false">
               <p>
-                🔥火：首日送1个火，每次强制休息🌙后送1个火（最后一天没有强制休息，不给火），整个活动送13个。
+                🔥火：首日送1个🔥火，每次强制🌙休息后送1个🔥火（最后一天没有强制休息，不给火），整个活动送13个。
               </p>
               <p>
                 白给道具：每日登录活动界面给540道具，每日首次打推荐歌给4000道具，总共4540道具。整个活动送13次。
@@ -276,7 +276,7 @@
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
             <el-alert type="info" :closable="false" style="margin-bottom: 1em">
-              本计算器假设🔥火全部用于攒道具，并且🔥火全部使用完毕。
+              根据目标pt自动计算最优🔥火使用量，最小化资源浪费。
             </el-alert>
             <el-alert
               v-if="result.ptExceeded > 0"
@@ -284,8 +284,8 @@
               :closable="false"
               style="margin-bottom: 1em"
             >
-              使用全部🔥火后，实际获得的pt将超过目标pt
-              {{ result.ptExceeded.toLocaleString('en-US') }} pt
+              使用最优🔥火数量后，实际获得的pt将超过目标pt
+              {{ result.ptExceeded.toLocaleString('en-US') }} pt（向上取整导致）
             </el-alert>
             <el-card class="mltd-anni-result-card">
               <template #header>关键信息</template>
@@ -308,6 +308,13 @@
                   header-align="center"
                   align="right"
                 />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>🔥火使用建议</template>
+              <el-table :data="boostTableData" border :cell-class-name="monoCellClassName">
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right" />
               </el-table>
             </el-card>
             <el-card class="mltd-anni-result-card">
@@ -384,6 +391,17 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
 
 const formattedEventEndTime = computed(() => dateTimeFormatter.format(form.value.eventEndTime));
 
+const boostTableData = computed(() => [
+  {
+    item: '拥有🔥火数量',
+    value: `${form.value.boostCount ?? 0}个`,
+  },
+  {
+    item: '🔥火攒道具总次数',
+    value: `${result.optimalBoostPlays}次`,
+  },
+]);
+
 const keyInfoTableData = computed(() => [
   {
     item: '需要钻石数量',
@@ -392,7 +410,7 @@ const keyInfoTableData = computed(() => [
     highlight: true,
   },
   {
-    item: '火攒道具次数',
+    item: '🔥火攒道具次数',
     value: result.boostPlays?.toLocaleString('en-US') ?? '?',
     time: `${result.boostTimeSpent?.toFixed(2) ?? '?'}分钟`,
   },
@@ -425,7 +443,7 @@ const keyInfoTableData = computed(() => [
 
 const ptStatusTableData = computed(() => [
   {
-    item: '来自于火🔥的pt（攒道具+清道具）',
+    item: '来自于最优🔥火使用的pt',
     value: result.ptFromBoost?.toLocaleString('en-US') ?? '?',
   },
   {
@@ -433,7 +451,7 @@ const ptStatusTableData = computed(() => [
     value: result.ptFromFreeTokens?.toLocaleString('en-US') ?? '?',
   },
   {
-    item: '来自于剩余道具的pt',
+    item: '来自于现有道具的pt',
     value: result.ptFromRemainingTokens?.toLocaleString('en-US') ?? '?',
   },
   {
@@ -453,7 +471,7 @@ const ptNeededTableData = computed(() => [
   {
     item: '还需要体力',
     value: result.staminaNeeded?.toLocaleString('en-US') ?? '?',
-    note: '不包含火消耗的体力',
+    note: '不包含🔥火消耗的体力',
   },
   {
     item: '还需要获取道具',
@@ -468,10 +486,6 @@ const staminaTableData = computed(() => [
     value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
   },
   {
-    item: '火攒道具消耗体力',
-    value: result.staminaForBoost?.toLocaleString('en-US') ?? '?',
-  },
-  {
     item: '自然回复体力',
     value: result.staminaRecovered?.toLocaleString('en-US') ?? '?',
   },
@@ -482,6 +496,10 @@ const staminaTableData = computed(() => [
   {
     item: '体力瓶回复体力',
     value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '🔥火攒道具消耗体力',
+    value: result.staminaForBoost?.toLocaleString('en-US') ?? '?',
   },
 ]);
 

@@ -137,7 +137,7 @@ describe('useMltdAnniversaryCalc', () => {
         5 *
         (MLTD.tokensPerBoostAccumulatePlay +
           (MLTD.tokensPerBoostAccumulatePlay * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay) *
-        MLTD.boostAccumulatePlaysPerBoostItem;
+        MLTD.boostPlaysPerBoostItem;
 
       expect(result.ptFromBoost).toBe(Math.floor(expected));
     });

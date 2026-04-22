@@ -56,28 +56,12 @@ export const createDefaultForm = (): AnniversaryForm => ({
 export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
   const result = reactive({
     /**
-     * 步骤1-1：火攒道具带来的pt
-     * @formula boostCount × 10 × (1071×2双倍道具 + 双倍道具×转换率)
-     * @description 火攒道具次数 × 10次 × (每次获得双倍道具 + 双倍道具转pt)
-     */
-    ptFromBoost: computed(
-      () =>
-        Math.floor(
-          (form.value.boostCount ?? 0) *
-            (MLTD.tokensPerBoostAccumulatePlay +
-              (MLTD.tokensPerBoostAccumulatePlay * MLTD.ptPerConsumePlay) /
-                MLTD.tokensPerConsumePlay) *
-            MLTD.boostAccumulatePlaysPerBoostItem,
-        ) || 0,
-    ),
-
-    /**
-     * 步骤1-2：白给道具带来的pt
+     * 步骤1-1：白给道具带来的pt
      * @formula freeTokenClaimCount × 4540 × (2148/720)
      * @description 白给次数 × 每日白给道具 × 转换率
      */
     ptFromFreeTokens: computed(
-      () =>
+      (): number =>
         Math.floor(
           (form.value.freeTokenClaimCount ?? 0) *
             ((MLTD.dailyFreeTokens * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay),
@@ -85,31 +69,65 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     ),
 
     /**
-     * 步骤1-3：现有道具带来的pt
+     * 步骤1-2：现有道具带来的pt
      * @formula tokens × (2148/720)
      * @description 当前道具数 × 转换率
      */
     ptFromRemainingTokens: computed(
-      () => Math.floor((form.value.tokens ?? 0) * MLTD.tokenToPtRatio) || 0,
+      (): number => Math.floor((form.value.tokens ?? 0) * MLTD.tokenToPtRatio) || 0,
+    ),
+
+    /**
+     * 步骤1-3：固定来源的pt（白给道具 + 现有道具）
+     */
+    ptFromFixedSources: computed(
+      (): number => result.ptFromFreeTokens + result.ptFromRemainingTokens,
+    ),
+
+    /**
+     * 步骤1-4：还需要获得的pt（目标 - 当前 - 固定来源）
+     */
+    ptStillNeeded: computed((): number => {
+      const needed = (form.value.targetPt ?? 0) - (form.value.pt ?? 0) - result.ptFromFixedSources;
+      return needed > 0 ? needed : 0;
+    }),
+
+    /**
+     * 步骤1-5：最优火攒道具次数
+     * @formula ceil(ptStillNeeded / ptPerBoostPlay)
+     * @description 最少需要多少次火攒道具才能达到目标
+     */
+    optimalBoostPlays: computed((): number => {
+      if (result.ptStillNeeded <= 0) return 0;
+      const maxBoostPlays = (form.value.boostCount ?? 0) * MLTD.boostPlaysPerBoostItem;
+      const neededPlays = Math.ceil(result.ptStillNeeded / MLTD.ptPerBoostPlay);
+      return Math.min(neededPlays, maxBoostPlays);
+    }),
+
+    /**
+     * 步骤1-6：火攒道具带来的pt（基于最优使用次数）
+     * @formula optimalBoostPlays × ptPerBoostPlay
+     */
+    ptFromBoost: computed(
+      (): number => Math.floor(result.optimalBoostPlays * MLTD.ptPerBoostPlay) || 0,
     ),
 
     /**
      * 辅助计算：根据等级计算最大体力
      * @description 默认返回60
      */
-    currentMaxStamina: computed(() => {
+    currentMaxStamina: computed((): number => {
       if (!form.value.plv) return 60;
       const { levelToMaxStamina } = useMltdUtils();
       return levelToMaxStamina(form.value.plv) || 60;
     }),
 
     /**
-     * 步骤4-预备：火攒道具消耗的体力
-     * @formula boostCount × 4500
-     * @description 火攒道具次数 × 每次火攒道具消耗体力（与普通攒道具相同，无双倍效果）
+     * 步骤4-预备：火攒道具消耗的体力（基于最优使用次数）
+     * @formula optimalBoostPlays × 450
      */
     staminaForBoost: computed(
-      () => (form.value.boostCount ?? 0) * MLTD.staminaCostPerBoostAccumulate || 0,
+      (): number => result.optimalBoostPlays * MLTD.staminaCostForTokenAccumulate || 0,
     ),
 
     /**
@@ -118,7 +136,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 剩余天数 × 每日回复
      */
     staminaRecovered: computed(
-      () => Math.floor((form.value.remainingTime ?? 0) * MLTD.staminaRecoverPerDay) || 0,
+      (): number => Math.floor((form.value.remainingTime ?? 0) * MLTD.staminaRecoverPerDay) || 0,
     ),
 
     /**
@@ -159,9 +177,9 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     }),
 
     /**
-     * 超出目标pt的数量
+     * 超出目标pt的数量（基于最优火使用）
      * @formula currentPt + ptFromBoost + ptFromFreeTokens + ptFromRemainingTokens - targetPt
-     * @description 当使用全部"火"道具后实际获得的pt超过目标时的超出数量
+     * @description 使用最优火数量后，实际获得pt超过目标时的超出数量
      */
     ptExceeded: computed((): number => {
       const total =
@@ -216,13 +234,9 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     }),
 
     /**
-     * 步骤6-1：火攒道具游玩次数
-     * @formula boostCount × 10
-     * @description 每个火可进行10次双倍道具攒取
+     * 步骤6-1：火攒道具游玩次数（基于最优使用）
      */
-    boostPlays: computed(
-      (): number => (form.value.boostCount ?? 0) * MLTD.boostAccumulatePlaysPerBoostItem || 0,
-    ),
+    boostPlays: computed((): number => result.optimalBoostPlays),
 
     /**
      * 步骤6-2：普通攒道具次数
@@ -234,17 +248,14 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
 
     /**
      * 步骤6-3：清道具次数
-     * @formula (tokens + boostCount×(1071×2)×10 + freeTokenClaimCount×4540 + tokensNeeded) / 720
+     * @formula (tokens + optimalBoostPlays×2142 + freeTokenClaimCount×4540 + tokensNeeded) / 720
      * @description (现有道具 + 火攒道具获得双倍道具 + 白给道具 + 还需道具) / 720
      */
     tokenConsumePlays: computed(
       (): number =>
         Math.ceil(
           ((form.value.tokens ?? 0) +
-            (form.value.boostCount ?? 0) *
-              MLTD.tokensPerAccumulatePlay *
-              2 *
-              MLTD.boostAccumulatePlaysPerBoostItem +
+            result.optimalBoostPlays * MLTD.tokensPerBoostAccumulatePlay +
             (form.value.freeTokenClaimCount ?? 0) * MLTD.dailyFreeTokens +
             result.tokensNeeded) /
             MLTD.tokensPerConsumePlay,
