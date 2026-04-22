@@ -275,6 +275,9 @@
         <el-col :lg="9" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
+            <el-alert type="warning" :closable="false" style="margin-bottom: 1em">
+              本计算器假设🔥火全部用于攒道具，并且🔥火全部使用完毕。
+            </el-alert>
             <el-card class="mltd-anni-result-card">
               <template #header>关键信息</template>
               <el-table
