@@ -258,7 +258,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
 
     /**
      * 步骤4-4：火攒道具消耗体力
-     * @formula optimalBoostAccumulatePlays × 450
+     * @formula optimalBoostAccumulatePlays × 450（每次游玩消耗450体力）
      */
     staminaForBoostAccumulate: computed(
       (): number => result.optimalBoostAccumulatePlays * MLTD.staminaCostForTokenAccumulate || 0,
@@ -303,7 +303,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
 
     /**
      * 步骤5-5：普通攒道具消耗体力
-     * @formula normalAccumulatePlays × 450
+     * @formula normalAccumulatePlays × 450（每次游玩消耗450体力）
      */
     staminaForNormalAccumulate: computed(
       (): number => result.normalAccumulatePlays * MLTD.staminaCostForTokenAccumulate || 0,

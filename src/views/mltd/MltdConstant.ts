@@ -23,8 +23,6 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
     return this.ptPerConsumePlay / this.tokensPerConsumePlay;
   },
 
-  /** 火攒道具模式 - 每次火消耗体力（10次×450） */
-  staminaCostPerBoostAccumulate: 4500,
   /** 火模式 - 每个火可游玩次数（攒道具和清道具共用） */
   boostPlaysPerBoostItem: 10,
   /** 火攒道具模式 - 每次获得道具数（双倍：1071×2） */
