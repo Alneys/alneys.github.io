@@ -115,7 +115,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="白给道具剩余次数" prop="freeTokenClaimCount">
+                <el-form-item label="赠送道具剩余次数" prop="freeTokenClaimCount">
                   <el-input
                     v-model.number="form.freeTokenClaimCount"
                     :min="0"
@@ -187,12 +187,95 @@
             </el-row>
             <el-alert type="info" :closable="false">
               <p>
-                🔥火：首日送1个火，每次强制休息🌙后送1个火（最后一天没有强制休息，不给火），整个活动送13个。
+                🔥火：首日赠送1个🔥火，每次强制🌙休息后赠送1个🔥火（最后一天没有强制休息，不赠送火），整个活动送13个。
               </p>
               <p>
-                白给道具：每日登录活动界面给540道具，每日首次打推荐歌给4000道具，总共4540道具。整个活动送13次。
+                赠送道具：每日登录活动界面给540道具，每日游玩4首推荐歌曲各一次额外给4000道具，总共4540道具。整个活动送13次。
               </p>
             </el-alert>
+
+            <h2>🔥火使用分配</h2>
+            <el-card class="boost-allocation-card">
+              <el-form-item label="🔥火攒道具次数" style="margin-bottom: 0.5em">
+                <el-slider
+                  v-model="sliderTotalBoostAccumulatePlays"
+                  :min="0"
+                  :max="result.totalBoostPlaysAvailable"
+                  :step="1"
+                  show-input
+                  :show-input-controls="false"
+                  input-size="small"
+                  @change="handleTotalBoostAccumulateChange"
+                />
+              </el-form-item>
+              <el-alert type="info" :closable="false">
+                🔥火清道具次数（自动推算）：<strong class="mono"
+                  >{{ result.boostConsumePlays }}次</strong
+                >（总次数 - 火攒次数）
+              </el-alert>
+              <el-alert
+                v-if="!result.useAutoOptimize"
+                type="warning"
+                :closable="false"
+                style="margin-top: 8px"
+              >
+                <strong>⚠️ 当前为手动模式</strong
+                >，🔥火使用分配可能并非最优解。点击下方"自动优化"按钮可恢复自动计算。
+              </el-alert>
+              <el-alert
+                v-if="result.isBoostConsumeTokensInsufficient"
+                type="warning"
+                :closable="false"
+                style="margin-top: 8px"
+              >
+                ⚠️ 当前道具不足以支持全部🔥火清道具次数！需要额外道具
+                {{
+                  (
+                    result.boostConsumePlays * MLTD_ANNIVERSARY_CONSTANTS.tokensPerConsumePlay -
+                    result.tokensFromFixedSources -
+                    result.tokensFromBoostAccumulate
+                  ).toLocaleString('en-US')
+                }}
+                个。
+              </el-alert>
+              <el-row :gutter="16" style="margin-top: 12px">
+                <el-col :span="12">
+                  <el-button @click="applyOptimalAllocation" :disabled="result.useAutoOptimize">
+                    自动优化
+                  </el-button>
+                  <span v-if="result.useAutoOptimize" class="auto-mode-hint"
+                    >（当前：自动优化模式）</span
+                  >
+                </el-col>
+              </el-row>
+              <el-alert type="info" :closable="false" style="margin-top: 12px">
+                <template #title>
+                  <strong>预计收益</strong>
+                </template>
+                <p class="mono">
+                  🔥火攒道具 {{ result.totalBoostAccumulatePlays }}次 → +{{
+                    result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? 0
+                  }}pt, +{{ result.tokensFromBoostAccumulate?.toLocaleString('en-US') ?? 0 }}道具
+                </p>
+                <p class="mono">
+                  🔥火清道具 {{ result.boostConsumePlays }}次 → +{{
+                    result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0
+                  }}pt, -{{ result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0 }}道具
+                </p>
+                <p class="mono total">
+                  <strong>合计</strong> → +{{
+                    (
+                      (result.ptFromBoostAccumulate ?? 0) + (result.ptFromBoostConsume ?? 0)
+                    ).toLocaleString('en-US')
+                  }}pt,
+                  {{
+                    (
+                      (result.tokensFromBoostAccumulate ?? 0) - (result.tokensConsumedByBoost ?? 0)
+                    ).toLocaleString('en-US')
+                  }}道具
+                </p>
+              </el-alert>
+            </el-card>
 
             <h2>时间设置</h2>
             <el-row :gutter="16">
@@ -275,155 +358,78 @@
         <el-col :lg="9" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
-            <table class="mltd-anni-result-table">
-              <caption>
-                关键信息
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                  <th scope="col">时间（分钟）</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="color: red; font-size: var(--el-font-size-large)">
-                  <td>需要钻石数量</td>
-                  <td style="font-weight: 700">
-                    {{ result.jewelNeeded.toLocaleString('en-US') ?? '?' }}
-                  </td>
-                  <td style="color: black; text-align: center">/</td>
-                </tr>
-                <tr>
-                  <td>火攒道具次数</td>
-                  <td>{{ result.boostPlays.toLocaleString('en-US') ?? '?' }}</td>
-                  <td style="text-align: right" class="font-mono">
-                    {{ result.boostTimeSpent.toFixed(2) ?? '?' }}分钟
-                  </td>
-                </tr>
-                <tr>
-                  <td>普通攒道具次数</td>
-                  <td>{{ result.tokenAccumulatePlays.toLocaleString('en-US') ?? '?' }}</td>
-                  <td style="text-align: right" class="font-mono">
-                    {{ result.tokenAccumulateTimeSpent.toFixed(2) ?? '?' }}分钟
-                  </td>
-                </tr>
-                <tr>
-                  <td>清道具次数</td>
-                  <td>{{ result.tokenConsumePlays.toLocaleString('en-US') ?? '?' }}</td>
-                  <td style="text-align: right" class="font-mono">
-                    {{ result.tokenConsumeTimeSpent.toFixed(2) ?? '?' }}分钟
-                  </td>
-                </tr>
-                <tr>
-                  <td>所有项目总时间</td>
-                  <td colspan="2" style="text-align: center">
-                    {{ result.totalTimeSpent.toFixed(2) }}分钟 /
-                    {{ (result.totalTimeSpent / 60).toFixed(2) }}小时
-                  </td>
-                </tr>
-                <tr>
-                  <td>平均每日所需时间</td>
-                  <td colspan="2" style="text-align: center">
-                    <template v-if="(form.remainingTime ?? 0) >= 1">
-                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1)).toFixed(2) }}分钟 /
-                      {{ (result.totalTimeSpent / (form.remainingTime ?? 1) / 60).toFixed(2) }}小时
-                    </template>
-                    <template v-else>-</template>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <table class="mltd-anni-result-table">
-              <caption>
-                当前pt情况
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>来自于火🔥的pt<br />（攒道具+清道具）</td>
-                  <td>{{ result.ptFromBoost.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr>
-                  <td>来自于白给道具的pt</td>
-                  <td>{{ result.ptFromFreeTokens.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr>
-                  <td>来自于剩余道具的pt</td>
-                  <td>{{ result.ptFromRemainingTokens.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr style="color: red">
-                  <td>还需要获得pt</td>
-                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <table class="mltd-anni-result-table">
-              <caption>
-                还需要获得pt情况
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                  <th scope="col">备注</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="color: red">
-                  <td>还需要额外pt</td>
-                  <td>{{ result.ptNeeded.toLocaleString('en-US') }}</td>
-                </tr>
-                <tr>
-                  <td>还需要体力</td>
-                  <td>{{ result.staminaNeeded.toLocaleString('en-US') }}</td>
-                  <td>不包含火消耗的体力</td>
-                </tr>
-                <tr>
-                  <td>还需要获取道具</td>
-                  <td>{{ result.tokensNeeded.toLocaleString('en-US') }}</td>
-                  <td>上面体力转化的道具</td>
-                </tr>
-              </tbody>
-            </table>
-            <table class="mltd-anni-result-table">
-              <caption>
-                体力情况
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">项目</th>
-                  <th scope="col">结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>最大体力</td>
-                  <td>{{ result.currentMaxStamina.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>火攒道具消耗体力</td>
-                  <td>{{ result.staminaForBoost.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>自然回复体力</td>
-                  <td>{{ result.staminaRecovered.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>每日任务回复体力</td>
-                  <td>{{ result.staminaFromDaily.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-                <tr>
-                  <td>体力瓶回复体力</td>
-                  <td>{{ result.staminaFromBottles.toLocaleString('en-US') ?? '?' }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <el-alert type="info" :closable="false" style="margin-bottom: 1em">
+              根据目标pt自动计算最优🔥火分配（火攒道具+火清道具），最小化体力使用。可通过滑块自定义分配。
+            </el-alert>
+            <el-alert
+              v-if="result.ptExceeded > 0"
+              :type="result.ptExceeded > 10000 ? 'error' : 'warning'"
+              :closable="false"
+              style="margin-bottom: 1em"
+            >
+              使用最优🔥火数量后，实际获得的pt将超过目标pt
+              {{ result.ptExceeded.toLocaleString('en-US') }} pt（向上取整导致）
+            </el-alert>
+            <el-card class="mltd-anni-result-card">
+              <template #header>关键信息</template>
+              <el-table
+                :data="keyInfoTableData"
+                border
+                :span-method="keyInfoSpanMethod"
+                :row-class-name="highlightRowClassName"
+                :cell-class-name="monoCellClassName"
+              >
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right">
+                  <template #default="{ row }">
+                    <span :class="{ 'highlight-value': row.highlight }">{{ row.value }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="time"
+                  label="时间（分钟）"
+                  header-align="center"
+                  align="right"
+                />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>🔥火使用建议</template>
+              <el-table :data="boostTableData" border :cell-class-name="monoCellClassName">
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right" />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>当前 pt / 道具情况</template>
+              <el-table
+                :data="ptStatusTableData"
+                border
+                :row-class-name="highlightRowClassName"
+                :cell-class-name="monoCellClassName"
+              >
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="pt" label="pt 变动" header-align="center" align="right" />
+                <el-table-column
+                  prop="token"
+                  label="道具变动"
+                  header-align="center"
+                  align="right"
+                />
+              </el-table>
+            </el-card>
+            <el-card class="mltd-anni-result-card">
+              <template #header>体力情况</template>
+              <el-table
+                :data="staminaTableData"
+                border
+                :row-class-name="highlightRowClassName"
+                :cell-class-name="monoCellClassName"
+              >
+                <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                <el-table-column prop="value" label="结果" header-align="center" align="right" />
+              </el-table>
+            </el-card>
           </div>
         </el-col>
       </el-row>
@@ -446,6 +452,8 @@ const {
   result,
   resetCurrentRemainingTime,
   setBoostFromRemainingTime,
+  applyOptimalAllocation,
+  setUserTotalBoostAccumulatePlays,
   saveToLocalStorage,
   loadFromLocalStorage,
   clearLocalStorage,
@@ -465,6 +473,196 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
 });
 
 const formattedEventEndTime = computed(() => dateTimeFormatter.format(form.value.eventEndTime));
+
+const sliderTotalBoostAccumulatePlays = computed({
+  get: () => result.totalBoostAccumulatePlays,
+  set: (val) => setUserTotalBoostAccumulatePlays(val),
+});
+
+function handleTotalBoostAccumulateChange(val: number | number[]) {
+  if (typeof val === 'number') {
+    setUserTotalBoostAccumulatePlays(val);
+  }
+}
+
+const boostTableData = computed(() => [
+  {
+    item: '拥有🔥火数量',
+    value: `${form.value.boostCount || 0}个`,
+  },
+  {
+    item: '🔥火攒道具次数',
+    value: `${result.totalBoostAccumulatePlays}次`,
+    highlight: true,
+  },
+  {
+    item: '🔥火清道具次数',
+    value: `${result.boostConsumePlays}次`,
+    highlight: true,
+  },
+  {
+    item: '🔥火使用总次数',
+    value: `${result.boostPlays}次`,
+  },
+]);
+
+const keyInfoTableData = computed(() => [
+  {
+    item: '需要钻石数量',
+    value: result.jewelNeeded?.toLocaleString('en-US') ?? '?',
+    time: '/',
+    highlight: true,
+  },
+  {
+    item: '🔥火攒道具次数',
+    value: result.totalBoostAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.boostTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '🔥火清道具次数',
+    value: result.boostConsumePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.boostConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '普通攒道具次数',
+    value: result.normalAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.normalAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '总攒道具次数',
+    value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${((result.totalTokenAccumulatePlays || 0) * (form.value.tokenAccumulateTime || 0)).toFixed(2)}分钟`,
+  },
+  {
+    item: '普通清道具次数',
+    value: result.normalConsumePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.normalConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '所有项目总时间',
+    value: `${result.totalTimeSpent.toFixed(2)}分钟 / ${(result.totalTimeSpent / 60).toFixed(2)}小时`,
+    time: '',
+    colSpan: true,
+  },
+  {
+    item: '平均每日所需时间',
+    value:
+      (form.value.remainingTime || 0) >= 1
+        ? `${(result.totalTimeSpent / (form.value.remainingTime || 1)).toFixed(2)}分钟 / ${(result.totalTimeSpent / (form.value.remainingTime || 1) / 60).toFixed(2)}小时`
+        : '-',
+    time: '',
+    colSpan: true,
+  },
+]);
+
+const ptStatusTableData = computed(() => {
+  const tokensConsumedByNormalConsume =
+    result.normalConsumePlays * MLTD_ANNIVERSARY_CONSTANTS.tokensPerConsumePlay;
+  return [
+    {
+      item: '当前状态',
+      pt: `${form.value.pt?.toLocaleString('en-US') || 0} pt`,
+      token: `${form.value.tokens?.toLocaleString('en-US') || 0} 个`,
+    },
+    {
+      item: '来自登录赠送',
+      pt: '-',
+      token: `+${result.tokensFromLogin?.toLocaleString('en-US') ?? 0} 个`,
+    },
+    {
+      item: '来自推荐歌曲赠送',
+      pt: '-',
+      token: `+${result.tokensFromRecommendedBonus?.toLocaleString('en-US') ?? 0} 个`,
+    },
+    {
+      item: '🔥火攒道具',
+      pt: `+${result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? 0} pt`,
+      token: `+${result.tokensFromBoostAccumulate?.toLocaleString('en-US') ?? 0} 个`,
+    },
+    {
+      item: '🔥火清道具',
+      pt: `+${result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0} pt`,
+      token: `-${result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0} 个`,
+    },
+    {
+      item: '普通攒道具',
+      pt: `+${result.ptFromNormalAccumulate?.toLocaleString('en-US') ?? 0} pt`,
+      token: `+${result.tokensFromNormalAccumulate?.toLocaleString('en-US') ?? 0} 个`,
+    },
+    {
+      item: '普通清道具',
+      pt: `+${result.ptFromNormalConsume?.toLocaleString('en-US') ?? 0} pt`,
+      token: `-${tokensConsumedByNormalConsume?.toLocaleString('en-US') ?? 0} 个`,
+    },
+    {
+      item: '汇总',
+      pt: `${((form.value.pt || 0) + (result.ptTotalFromOperations || 0)).toLocaleString('en-US')} pt`,
+      token: `${result.finalTokensRemaining?.toLocaleString('en-US') || 0} 个`,
+      highlight: true,
+    },
+  ];
+});
+
+const staminaTableData = computed(() => [
+  {
+    item: '最大体力',
+    value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '🔥火攒道具消耗体力',
+    value: result.staminaForBoostAccumulate?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '普通攒道具消耗体力',
+    value: result.staminaForNormalAccumulate?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '总消耗体力',
+    value: result.totalStaminaNeeded?.toLocaleString('en-US') ?? '?',
+    highlight: true,
+  },
+  {
+    item: '自然回复体力',
+    value: result.staminaRecovered?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '每日任务回复体力',
+    value: result.staminaFromDaily?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '体力瓶回复体力',
+    value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '需要额外体力',
+    value: result.extraStaminaNeeded > 0 ? result.extraStaminaNeeded.toLocaleString('en-US') : '0',
+    highlight: true,
+  },
+  {
+    item: '需要回满次数',
+    value: result.fullStaminaRecoveriesNeeded?.toLocaleString('en-US') ?? '0',
+  },
+]);
+
+function keyInfoSpanMethod({ row, columnIndex }: { row: any; columnIndex: number }) {
+  if (row.colSpan && columnIndex === 1) {
+    return [1, 2];
+  }
+  if (row.colSpan && columnIndex === 2) {
+    return [0, 0];
+  }
+}
+
+function highlightRowClassName({ row }: { row: any }) {
+  if (row.highlight) return 'highlight-row';
+  return '';
+}
+
+function monoCellClassName({ column }: { column: any }) {
+  const monoColumnProps = ['value', 'time', 'pt', 'token'];
+  if (monoColumnProps.includes(column.property)) return 'font-mono';
+  return '';
+}
 
 onMounted(() => {
   resetCurrentRemainingTime();
@@ -486,60 +684,105 @@ function handleClear() {
 <style lang="scss" scoped>
 @use 'sass:map';
 @use '@/assets/styles/im/im-colors.scss' as im;
-// :deep() {
-//   /* Chrome, Safari, Edge, Opera */
-//   input::-webkit-outer-spin-button,
-//   input::-webkit-inner-spin-button {
-//     -webkit-appearance: none;
-//     margin: 0;
-//   }
 
-//   /* Firefox */
-//   input[type='number'] {
-//     appearance: textfield;
-//   }
-// }
-.mltd-anni-result-table {
-  & {
-    border: 2px solid rgb(128 128 128);
-    border-collapse: collapse;
+.boost-allocation-card {
+  margin-bottom: 1em;
+  --el-card-padding: 16px;
+
+  :deep(.el-slider) {
+    .el-slider__runway {
+      height: 8px;
+    }
+
+    .el-slider__bar {
+      height: 8px;
+    }
+
+    .el-slider__button {
+      width: 16px;
+      height: 16px;
+    }
+
+    .el-input-number {
+      width: 80px;
+    }
   }
 
-  caption {
+  .slider-hint {
+    color: #666;
+    font-size: 14px;
+  }
+
+  .auto-mode-hint {
+    color: #67c23a;
+    font-size: 14px;
+    margin-left: 8px;
+  }
+
+  .mono {
+    font-family: var(--al-font-family-mono);
+  }
+
+  .total {
+    border-top: 1px dashed #999;
+    padding-top: 8px;
+    margin-bottom: 0.5em;
+  }
+}
+
+.mltd-anni-result-card {
+  margin-bottom: 1em;
+  --border-color: rgb(128 128 128);
+
+  :deep(.el-card__header) {
     padding: 8px;
+    line-height: 23px;
     font-weight: bold;
-  }
-
-  thead,
-  tfoot {
-    background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
-  }
-
-  th,
-  td {
-    border: 1px solid rgb(128 128 128);
-    padding: 8px 10px;
-    min-width: 80px;
-  }
-
-  td:first-of-type {
+    color: black;
     text-align: center;
+    background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    border-bottom: none;
   }
 
-  td:nth-of-type(2) {
-    font-family: var(--al-font-family-mono) !important;
-    text-align: right;
+  :deep(.el-card__body) {
+    padding: 0;
   }
 
-  tbody > tr:nth-of-type(even) {
-    background-color: rgb(237 238 242);
+  :deep(.el-table) {
+    --el-table-border-color: var(--border-color);
+    --el-table-text-color: black;
+    --el-table-header-text-color: black;
+
+    .el-table__header th {
+      background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+    }
+
+    .el-table__row--striped .el-table__cell {
+      background-color: rgb(237 238 242);
+    }
+
+    .el-table__cell {
+      padding: 8px 10px;
+      min-width: 80px;
+    }
+
+    .font-mono {
+      font-family: var(--al-font-family-mono);
+    }
   }
 
-  tfoot th {
-    text-align: right;
+  :deep(.highlight-row) {
+    color: red;
+
+    .el-table__cell {
+      font-weight: bold;
+    }
   }
 
-  tfoot td {
+  :deep(.highlight-value) {
     font-weight: bold;
   }
 }

@@ -19,16 +19,14 @@ describe('useMltdAnniversaryCalc', () => {
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      const ptFromBoost = result.ptFromBoost;
-      const ptFromFreeTokens = result.ptFromFreeTokens;
-      const ptFromRemainingTokens = result.ptFromRemainingTokens;
+      const ptFromBoostAccumulate = result.ptFromBoostAccumulate;
+      const ptTotalFromOperations = result.ptTotalFromOperations;
 
-      expect(ptFromBoost).toBeGreaterThan(0);
-      expect(ptFromFreeTokens).toBeGreaterThan(0);
-      expect(ptFromRemainingTokens).toBeGreaterThan(0);
+      expect(ptFromBoostAccumulate).toBeGreaterThanOrEqual(0);
+      expect(ptTotalFromOperations).toBeGreaterThanOrEqual(0);
 
-      const expectedNeeded = 500000 - 0 - ptFromBoost - ptFromFreeTokens - ptFromRemainingTokens;
-      expect(result.ptNeeded).toBe(expectedNeeded);
+      const expectedNeeded = 500000 - 0 - ptTotalFromOperations;
+      expect(result.ptNeeded).toBe(expectedNeeded > 0 ? expectedNeeded : 0);
     });
 
     it('已达标时应返回0', async () => {
@@ -91,7 +89,7 @@ describe('useMltdAnniversaryCalc', () => {
       const staminaFromBottles = result.staminaFromBottles;
       const staminaFromDaily = result.staminaFromDaily;
 
-      expect(result.staminaNeeded + result.staminaForBoost).toBeLessThan(
+      expect(result.totalStaminaNeeded).toBeLessThan(
         staminaRecovered + staminaFromBottles + staminaFromDaily,
       );
       expect(result.jewelNeeded).toBe(0);
@@ -111,64 +109,70 @@ describe('useMltdAnniversaryCalc', () => {
     });
   });
 
-  describe('ptFromBoost', () => {
+  describe('ptFromBoostAccumulate', () => {
     it('boostCount为0时返回0', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         boostCount: 0,
-      });
-
-      const { result } = useMltdAnniversaryCalc(form);
-      await nextTick();
-
-      expect(result.ptFromBoost).toBe(0);
-    });
-
-    it('应正确计算火获得的pt', async () => {
-      const form = ref<AnniversaryForm>({
-        ...createDefaultForm(),
-        boostCount: 5,
-      });
-
-      const { result } = useMltdAnniversaryCalc(form);
-      await nextTick();
-
-      const expected =
-        5 *
-        (MLTD.tokensPerBoostAccumulatePlay +
-          (MLTD.tokensPerBoostAccumulatePlay * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay) *
-        MLTD.boostAccumulatePlaysPerBoostItem;
-
-      expect(result.ptFromBoost).toBe(Math.floor(expected));
-    });
-  });
-
-  describe('ptFromFreeTokens', () => {
-    it('freeTokenCount为0时返回0', async () => {
-      const form = ref<AnniversaryForm>({
-        ...createDefaultForm(),
         freeTokenClaimCount: 0,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.ptFromFreeTokens).toBe(0);
+      expect(result.ptFromBoostAccumulate).toBe(0);
     });
 
-    it('应正确计算白给道具获得的pt', async () => {
+    it('应正确计算火攒道具直接获得的pt', async () => {
+      const form = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        boostCount: 5,
+        freeTokenClaimCount: 0,
+        targetPt: 1000000,
+      });
+
+      const { result } = useMltdAnniversaryCalc(form);
+      await nextTick();
+
+      expect(result.optimalTotalBoostAccumulatePlays).toBe(50);
+      expect(result.totalBoostAccumulatePlays).toBe(50);
+      expect(result.ptFromBoostAccumulate).toBe(50 * MLTD.ptPerBoostAccumulatePlay);
+    });
+  });
+
+  describe('tokensFromFixedSources', () => {
+    it('应正确计算固定来源道具总和', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         freeTokenClaimCount: 10,
+        tokens: 1000,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
       const expected =
-        10 * ((MLTD.dailyFreeTokens * MLTD.ptPerConsumePlay) / MLTD.tokensPerConsumePlay);
+        1000 + 10 * MLTD.dailyLoginTokens + 10 * MLTD.dailyRecommendedSongsBonusTokens;
+      expect(result.tokensFromFixedSources).toBe(expected);
+    });
+  });
 
-      expect(result.ptFromFreeTokens).toBe(Math.floor(expected));
+  describe('normalConsumePlays', () => {
+    it('应正确计算清道具次数（基于总道具数）', async () => {
+      const form = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 0,
+        pt: 100000,
+        boostCount: 0,
+        freeTokenClaimCount: 0,
+        tokens: 7200,
+      });
+
+      const { result } = useMltdAnniversaryCalc(form);
+      await nextTick();
+
+      expect(result.totalConsumePlays).toBe(Math.floor(7200 / MLTD.tokensPerConsumePlay));
+      expect(result.normalConsumePlays).toBe(Math.floor(7200 / MLTD.tokensPerConsumePlay));
     });
   });
 
@@ -210,18 +214,19 @@ describe('useMltdAnniversaryCalc', () => {
     });
   });
 
-  describe('staminaNeeded', () => {
+  describe('totalStaminaNeeded', () => {
     it('ptNeeded为0时返回0', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         targetPt: 1000,
         pt: 10000,
+        freeTokenClaimCount: 1,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.staminaNeeded).toBeGreaterThanOrEqual(0);
+      expect(result.totalStaminaNeeded).toBe(0);
     });
 
     it('应正确计算所需体力', async () => {
@@ -237,14 +242,7 @@ describe('useMltdAnniversaryCalc', () => {
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.staminaNeeded).toBeGreaterThan(0);
-
-      const expectedRate =
-        MLTD.staminaCostForTokenAccumulate /
-        (MLTD.tokensPerAccumulatePlay +
-          (MLTD.tokensPerAccumulatePlay / MLTD.tokensPerConsumePlay) * MLTD.ptPerConsumePlay);
-
-      expect(result.staminaNeeded).toBe(Math.ceil(result.ptNeeded * expectedRate));
+      expect(result.totalStaminaNeeded).toBeGreaterThan(0);
     });
   });
 

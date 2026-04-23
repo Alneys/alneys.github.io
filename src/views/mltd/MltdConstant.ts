@@ -4,13 +4,19 @@
  * 周年活动机制：
  * 1. 攒道具阶段：消耗体力打歌，获得道具
  * 2. 清道具阶段：消耗道具打活动专属歌曲，获得pt
- * 3. 火机制：特殊模式，消耗更多体力但获得双倍道具
+ * 3. 火机制：
+ *    - 火攒道具：消耗体力获得双倍道具
+ *    - 火清道具：消耗双倍道具获得双倍pt
  */
 export const MLTD_ANNIVERSARY_CONSTANTS = {
   /** 攒道具阶段 - 每次消耗体力 */
   staminaCostForTokenAccumulate: 450,
+
   /** 攒道具阶段 - 每次获得道具数 */
   tokensPerAccumulatePlay: 1071,
+
+  /** 攒道具阶段 - 每次直接获得pt数 */
+  ptPerAccumulatePlay: 1071,
 
   /** 清道具阶段 - 每次消耗道具数 */
   tokensPerConsumePlay: 720,
@@ -21,28 +27,35 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
     return this.ptPerConsumePlay / this.tokensPerConsumePlay;
   },
 
-  /** 火攒道具模式 - 每次火消耗体力（10次×450） */
-  staminaCostPerBoostAccumulate: 4500,
-  /** 火攒道具模式 - 每个火可游玩次数 */
-  boostAccumulatePlaysPerBoostItem: 10,
+  /** 火模式 - 每个火可游玩次数（攒道具和清道具共用） */
+  boostPlaysPerBoostItem: 10,
+  /** 火攒道具阶段 - 每次消耗体力（与普通相同：450） */
+  staminaCostForBoostAccumulate: 450,
   /** 火攒道具模式 - 每次获得道具数（双倍：1071×2） */
   tokensPerBoostAccumulatePlay: 1071 * 2,
-
-  /** 火清道具模式 - 每个火可游玩次数 */
-  boostConsumePlaysPerBoostItem: 10,
-  /** 火清道具模式 - 每次消耗道具数（双倍：720×2） */
-  tokensPerBoostConsumePlay: 720 * 2,
+  /** 火攒道具模式 - 每次直接获得pt数（双倍：1071×2） */
+  ptPerBoostAccumulatePlay: 1071 * 2,
+  /** 火清道具模式 - 每次消耗道具数（与普通相同：720） */
+  tokensPerBoostConsumePlay: 720,
   /** 火清道具模式 - 每次获得pt数（双倍：2148×2） */
   ptPerBoostConsumePlay: 2148 * 2,
 
-  /** 白给道具 - 每日登录活动界面获得 */
+  /** 赠送道具 - 每日登录活动界面获得 */
   dailyLoginTokens: 540,
-  /** 白给道具 - 每日首次打推荐歌获得 */
-  dailyFirstSongTokens: 4000,
-  /** 白给道具 - 每日合计：540 + 4000 = 4540 */
-  get dailyFreeTokens() {
-    return this.dailyLoginTokens + this.dailyFirstSongTokens;
+  /** 赠送道具 - 每首推荐歌曲首次游玩额外奖励 */
+  dailyRecommendedSongBonusTokens: 1000,
+  /** 每日推荐歌曲数量 */
+  dailyRecommendedSongCount: 4,
+  /** 赠送道具 - 每日推荐歌曲赠送奖励合计：4 × 1000 = 4000 */
+  get dailyRecommendedSongsBonusTokens() {
+    return this.dailyRecommendedSongCount * this.dailyRecommendedSongBonusTokens;
   },
+  /** 赠送道具 - 每日合计：540 + 4000 = 4540 */
+  get dailyFreeTokens() {
+    return this.dailyLoginTokens + this.dailyRecommendedSongsBonusTokens;
+  },
+  /** 每个火可用于推荐歌曲的最大次数 */
+  boostPlaysPerBoostItemForRecommendedSongs: 4,
 
   /** 体力资源 - 自然回复：每5分钟1点，每天288点 */
   staminaRecoverPerDay: 24 * 12,
