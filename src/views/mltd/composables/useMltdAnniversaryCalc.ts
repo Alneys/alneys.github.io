@@ -468,6 +468,17 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     ),
 
     /**
+     * 步骤5-11：火清道具是否有足够的道具支持
+     * @formula tokensFromFixedSources + tokensFromBoostAccumulate >= boostConsumePlays × 720
+     * @description 用于判断道具是否足以支持火清道具次数
+     */
+    isBoostConsumeTokensInsufficient: computed((): boolean => {
+      const tokensAvailable = result.tokensFromFixedSources + result.tokensFromBoostAccumulate;
+      const tokensNeeded = result.boostConsumePlays * MLTD.tokensPerConsumePlay;
+      return tokensNeeded > tokensAvailable;
+    }),
+
+    /**
      * 步骤6-1：总消耗体力
      * @formula staminaForBoostAccumulate + staminaForNormalAccumulate
      */
@@ -611,27 +622,28 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
   /**
    * 设置用户自定义火攒道具次数
    * @param plays - 火攒道具次数
-   * @description 自动切换到自定义模式，并确保不超过总火次数限制
+   * @description 自动切换到自定义模式，火清道具次数自动推算为总火次数 - 火攒道具次数
    */
   const setUserTotalBoostAccumulatePlays = (plays: number) => {
     form.value.useAutoOptimize = false;
-    const maxAccumulate = result.totalBoostPlaysAvailable;
-    const currentConsume = form.value.userBoostConsumePlays ?? 0;
-    const maxAccumulateAllowed = maxAccumulate - currentConsume;
-    form.value.userTotalBoostAccumulatePlays = Math.max(0, Math.min(plays, maxAccumulateAllowed));
+    const totalBoostPlays = result.totalBoostPlaysAvailable;
+    const accumulate = Math.max(0, Math.min(plays, totalBoostPlays));
+    const consume = totalBoostPlays - accumulate;
+    form.value.userTotalBoostAccumulatePlays = accumulate;
+    form.value.userBoostConsumePlays = consume;
   };
 
   /**
-   * 设置用户自定义火清道具次数
+   * 设置用户自定义火清道具次数（已废弃，不再使用）
    * @param plays - 火清道具次数
-   * @description 自动切换到自定义模式，并确保不超过总火次数限制
+   * @deprecated 火清道具次数现在由火攒道具次数自动推算
    */
   const setUserBoostConsumePlays = (plays: number) => {
     form.value.useAutoOptimize = false;
-    const maxConsume = result.totalBoostPlaysAvailable;
-    const currentAccumulate = form.value.userTotalBoostAccumulatePlays ?? 0;
-    const maxConsumeAllowed = maxConsume - currentAccumulate;
-    form.value.userBoostConsumePlays = Math.max(0, Math.min(plays, maxConsumeAllowed));
+    const totalBoostPlays = result.totalBoostPlaysAvailable;
+    const accumulate = form.value.userTotalBoostAccumulatePlays ?? 0;
+    const consume = Math.max(0, Math.min(plays, totalBoostPlays - accumulate));
+    form.value.userBoostConsumePlays = consume;
   };
 
   /**
@@ -716,7 +728,6 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     setBoostFromRemainingTime,
     applyOptimalAllocation,
     setUserTotalBoostAccumulatePlays,
-    setUserBoostConsumePlays,
     saveToLocalStorage,
     loadFromLocalStorage,
     clearLocalStorage,

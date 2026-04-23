@@ -192,68 +192,58 @@
               <p>
                 赠送道具：每日登录活动界面给540道具，每日游玩4首推荐歌曲各一次额外给4000道具，总共4540道具。整个活动送13次。
               </p>
-              <p>
-                🔥火使用：🔥火可用于攒道具（获得双倍道具）或清道具（消耗道具获得双倍pt）。火清道具不消耗体力，适合低目标pt时使用。
-              </p>
             </el-alert>
 
             <h2>🔥火使用分配</h2>
             <el-card class="boost-allocation-card">
-              <el-row :gutter="16">
-                <el-col :span="24">
-                  <el-form-item label="🔥火攒道具次数">
-                    <el-slider
-                      v-model="sliderTotalBoostAccumulatePlays"
-                      :min="0"
-                      :max="result.totalBoostPlaysAvailable"
-                      :step="1"
-                      show-input
-                      :show-input-controls="false"
-                      input-size="small"
-                      @change="handleTotalBoostAccumulateChange"
-                    />
-                    <div class="slider-hint">
-                      每次直接获得{{
-                        MLTD_ANNIVERSARY_CONSTANTS.ptPerBoostAccumulatePlay
-                      }}PT，同时获得{{
-                        MLTD_ANNIVERSARY_CONSTANTS.tokensPerBoostAccumulatePlay
-                      }}道具
-                    </div>
-                  </el-form-item>
-                </el-col>
-                <el-col :span="24">
-                  <el-form-item label="🔥火清道具次数">
-                    <el-slider
-                      v-model="sliderBoostConsumePlays"
-                      :min="0"
-                      :max="maxBoostConsumePlays"
-                      :step="1"
-                      show-input
-                      :show-input-controls="false"
-                      input-size="small"
-                      @change="handleBoostConsumeChange"
-                    />
-                    <div class="slider-hint">
-                      每次消耗{{ MLTD_ANNIVERSARY_CONSTANTS.tokensPerConsumePlay }}道具，获得{{
-                        MLTD_ANNIVERSARY_CONSTANTS.ptPerBoostConsumePlay
-                      }}PT，不消耗体力
-                    </div>
-                  </el-form-item>
-                </el-col>
-              </el-row>
-              <el-row :gutter="16">
-                <el-col :span="12">
-                  <div class="boost-summary">
-                    <span>剩余🔥火使用次数：</span>
-                    <span class="mono"
-                      >{{
-                        result.totalBoostPlaysAvailable -
-                        result.totalBoostAccumulatePlays -
-                        result.boostConsumePlays
-                      }}次</span
-                    >
-                  </div>
-                </el-col>
+              <el-form-item label="🔥火攒道具次数">
+                <el-slider
+                  v-model="sliderTotalBoostAccumulatePlays"
+                  :min="0"
+                  :max="result.totalBoostPlaysAvailable"
+                  :step="1"
+                  show-input
+                  :show-input-controls="false"
+                  input-size="small"
+                  @change="handleTotalBoostAccumulateChange"
+                />
+                <div class="slider-hint">
+                  每次直接获得{{
+                    MLTD_ANNIVERSARY_CONSTANTS.ptPerBoostAccumulatePlay
+                  }}pt，同时获得{{ MLTD_ANNIVERSARY_CONSTANTS.tokensPerBoostAccumulatePlay }}道具
+                </div>
+              </el-form-item>
+              <el-alert type="info" :closable="false" style="margin-top: 8px">
+                🔥火清道具次数（自动推算）：<strong class="mono"
+                  >{{ result.boostConsumePlays }}次</strong
+                >（总次数 - 火攒次数）
+              </el-alert>
+              <el-alert
+                v-if="!result.useAutoOptimize"
+                type="warning"
+                :closable="false"
+                style="margin-top: 8px"
+              >
+                <strong>⚠️ 当前为手动模式</strong
+                >，🔥火使用分配可能并非最优解。点击下方"自动优化"按钮可恢复自动计算。
+              </el-alert>
+              <el-alert
+                v-if="result.isBoostConsumeTokensInsufficient"
+                type="warning"
+                :closable="false"
+                style="margin-top: 8px"
+              >
+                ⚠️ 当前道具不足以支持全部🔥火清道具次数！需要额外道具
+                {{
+                  (
+                    result.boostConsumePlays * MLTD_ANNIVERSARY_CONSTANTS.tokensPerConsumePlay -
+                    result.tokensFromFixedSources -
+                    result.tokensFromBoostAccumulate
+                  ).toLocaleString('en-US')
+                }}
+                个。
+              </el-alert>
+              <el-row :gutter="16" style="margin-top: 12px">
                 <el-col :span="12">
                   <el-button
                     size="small"
@@ -262,48 +252,38 @@
                   >
                     自动优化
                   </el-button>
-                  <span v-if="!result.useAutoOptimize" class="custom-mode-hint"
-                    >（当前：自定义模式）</span
+                  <span v-if="result.useAutoOptimize" class="auto-mode-hint"
+                    >（当前：自动优化模式）</span
                   >
-                  <span v-else class="auto-mode-hint">（当前：自动优化模式）</span>
                 </el-col>
               </el-row>
-              <el-alert
-                v-if="
-                  result.totalBoostAccumulatePlays + result.boostConsumePlays >
-                  result.totalBoostPlaysAvailable
-                "
-                type="error"
-                :closable="false"
-                style="margin-top: 8px"
-              >
-                🔥火使用次数超出限制！
+              <el-alert type="info" :closable="false" style="margin-top: 12px">
+                <template #title>
+                  <strong>预计收益</strong>
+                </template>
+                <p class="mono">
+                  🔥火攒道具 {{ result.totalBoostAccumulatePlays }}次 → +{{
+                    result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? 0
+                  }}pt, +{{ result.tokensFromBoostAccumulate?.toLocaleString('en-US') ?? 0 }}道具
+                </p>
+                <p class="mono">
+                  🔥火清道具 {{ result.boostConsumePlays }}次 → +{{
+                    result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0
+                  }}pt, -{{ result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0 }}道具
+                </p>
+                <p class="mono total">
+                  <strong>合计</strong> → +{{
+                    (
+                      (result.ptFromBoostAccumulate ?? 0) + (result.ptFromBoostConsume ?? 0)
+                    ).toLocaleString('en-US')
+                  }}pt,
+                  {{
+                    (
+                      (result.tokensFromBoostAccumulate ?? 0) - (result.tokensConsumedByBoost ?? 0)
+                    ).toLocaleString('en-US')
+                  }}道具
+                </p>
               </el-alert>
-              <el-row :gutter="16" style="margin-top: 8px">
-                <el-col :span="24">
-                  <div class="boost-preview">
-                    <strong>预计收益：</strong>
-                    <div class="boost-preview-detail">
-                      <span class="mono">
-                        🔥火攒道具 {{ result.totalBoostAccumulatePlays }}次 →
-                        {{ result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? 0 }}pt
-                      </span>
-                      <span class="mono">
-                        🔥火清道具 {{ result.boostConsumePlays }}次 →
-                        {{ result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0 }}pt
-                      </span>
-                      <span class="mono total">
-                        合计 →
-                        {{
-                          (
-                            (result.ptFromBoostAccumulate ?? 0) + (result.ptFromBoostConsume ?? 0)
-                          ).toLocaleString('en-US')
-                        }}pt
-                      </span>
-                    </div>
-                  </div>
-                </el-col>
-              </el-row>
             </el-card>
 
             <h2>时间设置</h2>
@@ -392,7 +372,7 @@
             </el-alert>
             <el-alert
               v-if="result.ptExceeded > 0"
-              type="warning"
+              :type="result.ptExceeded > 10000 ? 'error' : 'warning'"
               :closable="false"
               style="margin-bottom: 1em"
             >
@@ -438,7 +418,7 @@
                 :cell-class-name="monoCellClassName"
               >
                 <el-table-column prop="item" label="项目" header-align="center" align="center" />
-                <el-table-column prop="pt" label="PT 变动" header-align="center" align="right" />
+                <el-table-column prop="pt" label="pt 变动" header-align="center" align="right" />
                 <el-table-column
                   prop="token"
                   label="道具变动"
@@ -483,7 +463,6 @@ const {
   setBoostFromRemainingTime,
   applyOptimalAllocation,
   setUserTotalBoostAccumulatePlays,
-  setUserBoostConsumePlays,
   saveToLocalStorage,
   loadFromLocalStorage,
   clearLocalStorage,
@@ -509,31 +488,16 @@ const sliderTotalBoostAccumulatePlays = computed({
   set: (val) => setUserTotalBoostAccumulatePlays(val),
 });
 
-const sliderBoostConsumePlays = computed({
-  get: () => result.boostConsumePlays,
-  set: (val) => setUserBoostConsumePlays(val),
-});
-
-const maxBoostConsumePlays = computed(
-  () => result.totalBoostPlaysAvailable - result.totalBoostAccumulatePlays,
-);
-
 function handleTotalBoostAccumulateChange(val: number | number[]) {
   if (typeof val === 'number') {
     setUserTotalBoostAccumulatePlays(val);
   }
 }
 
-function handleBoostConsumeChange(val: number | number[]) {
-  if (typeof val === 'number') {
-    setUserBoostConsumePlays(val);
-  }
-}
-
 const boostTableData = computed(() => [
   {
     item: '拥有🔥火数量',
-    value: `${form.value.boostCount ?? 0}个（共${result.totalBoostPlaysAvailable}次）`,
+    value: `${form.value.boostCount ?? 0}个`,
   },
   {
     item: '🔥火攒道具次数',
@@ -757,54 +721,25 @@ function handleClear() {
   }
 
   .slider-hint {
-    font-size: 12px;
     color: #666;
-    margin-top: 4px;
-  }
-
-  .boost-summary {
     font-size: 14px;
-    .mono {
-      font-family: var(--al-font-family-mono);
-      font-weight: bold;
-    }
-  }
-
-  .custom-mode-hint {
-    color: #e6a23c;
-    font-size: 12px;
-    margin-left: 8px;
+    margin-top: 4px;
   }
 
   .auto-mode-hint {
     color: #67c23a;
-    font-size: 12px;
+    font-size: 14px;
     margin-left: 8px;
   }
 
-  .boost-preview {
-    font-size: 14px;
-    padding: 8px;
-    background-color: rgba(map.get(im.$colors, 'miya'), 0.1);
-    border-radius: 4px;
+  .mono {
+    font-family: var(--al-font-family-mono);
+  }
 
-    .boost-preview-detail {
-      margin-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .mono {
-      font-family: var(--al-font-family-mono);
-    }
-
-    .total {
-      font-weight: bold;
-      border-top: 1px dashed #999;
-      padding-top: 4px;
-      margin-top: 4px;
-    }
+  .total {
+    border-top: 1px dashed #999;
+    padding-top: 8px;
+    margin-bottom: 0.5em;
   }
 }
 
