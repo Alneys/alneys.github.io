@@ -20,16 +20,12 @@ describe('useMltdAnniversaryCalc', () => {
       await nextTick();
 
       const ptFromBoostAccumulate = result.ptFromBoostAccumulate;
-      const ptFromFixedSources = result.ptFromFixedSources;
-      const ptFromRecommendedSongs = result.ptFromRecommendedSongs;
-      const ptFromRemainingTokens = result.ptFromRemainingTokens;
+      const ptTotalFromOperations = result.ptTotalFromOperations;
 
       expect(ptFromBoostAccumulate).toBeGreaterThanOrEqual(0);
-      expect(ptFromFixedSources).toBeGreaterThan(0);
-      expect(ptFromRemainingTokens).toBeGreaterThan(0);
+      expect(ptTotalFromOperations).toBeGreaterThanOrEqual(0);
 
-      const expectedNeeded =
-        500000 - 0 - ptFromBoostAccumulate - ptFromFixedSources - ptFromRecommendedSongs;
+      const expectedNeeded = 500000 - 0 - ptTotalFromOperations;
       expect(result.ptNeeded).toBe(expectedNeeded > 0 ? expectedNeeded : 0);
     });
 
@@ -93,7 +89,7 @@ describe('useMltdAnniversaryCalc', () => {
       const staminaFromBottles = result.staminaFromBottles;
       const staminaFromDaily = result.staminaFromDaily;
 
-      expect(result.totalStaminaNeeded + result.staminaForBoostAccumulate).toBeLessThan(
+      expect(result.totalStaminaNeeded).toBeLessThan(
         staminaRecovered + staminaFromBottles + staminaFromDaily,
       );
       expect(result.jewelNeeded).toBe(0);
@@ -127,7 +123,7 @@ describe('useMltdAnniversaryCalc', () => {
       expect(result.ptFromBoostAccumulate).toBe(0);
     });
 
-    it('应正确计算火获得的pt', async () => {
+    it('应正确计算火攒道具直接获得的pt', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         boostCount: 5,
@@ -138,52 +134,45 @@ describe('useMltdAnniversaryCalc', () => {
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.optimalBoostAccumulatePlays).toBe(50);
-      expect(result.ptFromBoostAccumulate).toBe(Math.floor(50 * MLTD.ptPerBoostPlay));
+      expect(result.optimalTotalBoostAccumulatePlays).toBe(50);
+      expect(result.totalBoostAccumulatePlays).toBe(50);
+      expect(result.ptFromBoostAccumulate).toBe(50 * MLTD.ptPerBoostAccumulatePlay);
     });
   });
 
-  describe('ptFromLogin', () => {
-    it('freeTokenCount为0时返回0', async () => {
+  describe('tokensFromFixedSources', () => {
+    it('应正确计算固定来源道具总和', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
+        freeTokenClaimCount: 10,
+        tokens: 1000,
+      });
+
+      const { result } = useMltdAnniversaryCalc(form);
+      await nextTick();
+
+      const expected =
+        1000 + 10 * MLTD.dailyLoginTokens + 10 * MLTD.dailyRecommendedSongsBonusTokens;
+      expect(result.tokensFromFixedSources).toBe(expected);
+    });
+  });
+
+  describe('normalConsumePlays', () => {
+    it('应正确计算清道具次数（基于总道具数）', async () => {
+      const form = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 0,
+        pt: 100000,
+        boostCount: 0,
         freeTokenClaimCount: 0,
+        tokens: 7200,
       });
 
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.ptFromLogin).toBe(0);
-    });
-
-    it('应正确计算登录赠送道具获得的pt', async () => {
-      const form = ref<AnniversaryForm>({
-        ...createDefaultForm(),
-        freeTokenClaimCount: 10,
-      });
-
-      const { result } = useMltdAnniversaryCalc(form);
-      await nextTick();
-
-      const expected = 10 * MLTD.dailyLoginTokens * MLTD.tokenToPtRatio;
-
-      expect(result.ptFromLogin).toBe(Math.floor(expected));
-    });
-  });
-
-  describe('ptFromRecommendedBonus', () => {
-    it('应正确计算推荐歌曲赠送奖励获得的pt', async () => {
-      const form = ref<AnniversaryForm>({
-        ...createDefaultForm(),
-        freeTokenClaimCount: 10,
-      });
-
-      const { result } = useMltdAnniversaryCalc(form);
-      await nextTick();
-
-      const expected = 10 * MLTD.dailyRecommendedSongsBonusTokens * MLTD.tokenToPtRatio;
-
-      expect(result.ptFromRecommendedBonus).toBe(Math.floor(expected));
+      expect(result.totalConsumePlays).toBe(Math.floor(7200 / MLTD.tokensPerConsumePlay));
+      expect(result.normalConsumePlays).toBe(Math.floor(7200 / MLTD.tokensPerConsumePlay));
     });
   });
 
@@ -226,7 +215,7 @@ describe('useMltdAnniversaryCalc', () => {
   });
 
   describe('totalStaminaNeeded', () => {
-    it('ptNeeded为0时返回推荐歌曲消耗体力', async () => {
+    it('ptNeeded为0时返回0', async () => {
       const form = ref<AnniversaryForm>({
         ...createDefaultForm(),
         targetPt: 1000,
@@ -237,7 +226,7 @@ describe('useMltdAnniversaryCalc', () => {
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.totalStaminaNeeded).toBe(result.staminaForRecommendedSongs);
+      expect(result.totalStaminaNeeded).toBe(0);
     });
 
     it('应正确计算所需体力', async () => {

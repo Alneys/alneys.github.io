@@ -18,32 +18,34 @@ export interface AnniversaryForm {
   tokenAccumulateTime?: number;
   tokenConsumeTime?: number;
   remainingTime?: number;
+  userTotalBoostAccumulatePlays?: number;
+  userBoostConsumePlays?: number;
+  useAutoOptimize?: boolean;
 }
 
 export interface AnniversaryResult {
-  minTokenAccumulatePlays: number;
-  recommendedSongBoostPlays: number;
-  recommendedSongNonBoostPlays: number;
-  remainingBoostPlays: number;
-  staminaForRecommendedSongs: number;
+  totalBoostPlaysAvailable: number;
+  optimalTotalBoostAccumulatePlays: number;
+  optimalBoostConsumePlays: number;
+  totalBoostAccumulatePlays: number;
+  boostConsumePlays: number;
   tokensFromLogin: number;
   tokensFromRecommendedBonus: number;
-  tokensFromRecommendedBoost: number;
-  tokensFromRecommendedNonBoost: number;
   tokensFromRemaining: number;
   ptFromLogin: number;
   ptFromRecommendedBonus: number;
-  ptFromRecommendedBoost: number;
-  ptFromRecommendedNonBoost: number;
   ptFromRemainingTokens: number;
   ptFromFixedSources: number;
-  ptFromRecommendedSongs: number;
-  ptFromConfirmedSources: number;
   currentMaxStamina: number;
   ptStillNeeded: number;
-  optimalBoostAccumulatePlays: number;
+  tokensAvailableBeforeBoostAllocation: number;
+  useAutoOptimize: boolean;
   ptFromBoostAccumulate: number;
+  ptFromBoostConsume: number;
+  tokensFromBoostAccumulate: number;
+  tokensConsumedByBoost: number;
   staminaForBoostAccumulate: number;
+  ptFromConfirmedSources: number;
   ptNeededAfterBoost: number;
   ptPerNormalAccumulatePlay: number;
   normalAccumulatePlays: number;
@@ -60,7 +62,9 @@ export interface AnniversaryResult {
   staminaFromDaily: number;
   jewelNeeded: number;
   boostTimeSpent: number;
+  boostConsumeTimeSpent: number;
   normalAccumulateTimeSpent: number;
   tokenConsumeTimeSpent: number;
   totalTimeSpent: number;
+  finalTokensRemaining: number;
 }
