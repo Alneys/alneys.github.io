@@ -143,8 +143,8 @@ export const createDefaultForm = (): AnniversaryForm => ({
  * @returns 计算结果和操作方法
  */
 export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
-  const f = computed(() => form.value.freeTokenClaimCount ?? 0);
-  const b = computed(() => form.value.boostCount ?? 0);
+  const f = computed(() => form.value.freeTokenClaimCount || 0);
+  const b = computed(() => form.value.boostCount || 0);
 
   const result = reactive({
     /**
@@ -166,7 +166,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     /**
      * 步骤1-3：现有道具
      */
-    tokensFromRemaining: computed((): number => form.value.tokens ?? 0),
+    tokensFromRemaining: computed((): number => form.value.tokens || 0),
 
     /**
      * 步骤1-4：固定来源道具总和
@@ -175,7 +175,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     tokensFromFixedSources: computed(
       (): number =>
-        (form.value.tokens ?? 0) + result.tokensFromLogin + result.tokensFromRecommendedBonus,
+        (form.value.tokens || 0) + result.tokensFromLogin + result.tokensFromRecommendedBonus,
     ),
 
     /**
@@ -193,7 +193,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 不含固定来源道具贡献的pt（道具需通过清道具获得pt）
      */
     ptStillNeeded: computed((): number => {
-      const needed = (form.value.targetPt ?? 0) - (form.value.pt ?? 0);
+      const needed = (form.value.targetPt || 0) - (form.value.pt || 0);
       return needed > 0 ? needed : 0;
     }),
 
@@ -251,7 +251,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
       if (result.useAutoOptimize) {
         return result.optimalTotalBoostAccumulatePlays;
       }
-      return form.value.userTotalBoostAccumulatePlays ?? 0;
+      return form.value.userTotalBoostAccumulatePlays || 0;
     }),
 
     /**
@@ -262,7 +262,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
       if (result.useAutoOptimize) {
         return result.optimalBoostConsumePlays;
       }
-      return form.value.userBoostConsumePlays ?? 0;
+      return form.value.userBoostConsumePlays || 0;
     }),
 
     /**
@@ -419,7 +419,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     ptNeeded: computed((): number => {
       const needed =
-        (form.value.targetPt ?? 0) - (form.value.pt ?? 0) - result.ptTotalFromOperations;
+        (form.value.targetPt || 0) - (form.value.pt || 0) - result.ptTotalFromOperations;
       return needed && needed > 0 ? needed : 0;
     }),
 
@@ -428,8 +428,8 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula currentPt + ptTotalFromOperations - targetPt
      */
     ptExceeded: computed((): number => {
-      const total = (form.value.pt ?? 0) + result.ptTotalFromOperations;
-      const exceeded = total - (form.value.targetPt ?? 0);
+      const total = (form.value.pt || 0) + result.ptTotalFromOperations;
+      const exceeded = total - (form.value.targetPt || 0);
       return exceeded > 0 ? exceeded : 0;
     }),
 
@@ -491,7 +491,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula remainingTime × 288
      */
     staminaRecovered: computed(
-      (): number => Math.floor((form.value.remainingTime ?? 0) * MLTD.staminaRecoverPerDay) || 0,
+      (): number => Math.floor((form.value.remainingTime || 0) * MLTD.staminaRecoverPerDay) || 0,
     ),
 
     /**
@@ -500,10 +500,10 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     staminaFromBottles: computed(
       (): number =>
-        (form.value.staminaMaxBottleCount ?? 0) * result.currentMaxStamina +
-        (form.value.stamina30BottleCount ?? 0) * 30 +
-        (form.value.stamina20BottleCount ?? 0) * 20 +
-        (form.value.stamina10BottleCount ?? 0) * 10,
+        (form.value.staminaMaxBottleCount || 0) * result.currentMaxStamina +
+        (form.value.stamina30BottleCount || 0) * 30 +
+        (form.value.stamina20BottleCount || 0) * 20 +
+        (form.value.stamina10BottleCount || 0) * 10,
     ),
 
     /**
@@ -554,7 +554,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula totalBoostAccumulatePlays × tokenAccumulateTime
      */
     boostTimeSpent: computed(
-      (): number => result.totalBoostAccumulatePlays * (form.value.tokenAccumulateTime ?? 0),
+      (): number => result.totalBoostAccumulatePlays * (form.value.tokenAccumulateTime || 0),
     ),
 
     /**
@@ -562,7 +562,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula boostConsumePlays × tokenConsumeTime
      */
     boostConsumeTimeSpent: computed(
-      (): number => result.boostConsumePlays * (form.value.tokenConsumeTime ?? 0),
+      (): number => result.boostConsumePlays * (form.value.tokenConsumeTime || 0),
     ),
 
     /**
@@ -570,7 +570,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalAccumulatePlays × tokenAccumulateTime
      */
     normalAccumulateTimeSpent: computed(
-      (): number => result.normalAccumulatePlays * (form.value.tokenAccumulateTime ?? 0),
+      (): number => result.normalAccumulatePlays * (form.value.tokenAccumulateTime || 0),
     ),
 
     /**
@@ -578,7 +578,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalConsumePlays × tokenConsumeTime
      */
     normalConsumeTimeSpent: computed(
-      (): number => result.normalConsumePlays * (form.value.tokenConsumeTime ?? 0),
+      (): number => result.normalConsumePlays * (form.value.tokenConsumeTime || 0),
     ),
 
     /**
@@ -657,7 +657,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
   const setUserBoostConsumePlays = (plays: number) => {
     form.value.useAutoOptimize = false;
     const totalBoostPlays = result.totalBoostPlaysAvailable;
-    const accumulate = form.value.userTotalBoostAccumulatePlays ?? 0;
+    const accumulate = form.value.userTotalBoostAccumulatePlays || 0;
     const consume = Math.max(0, Math.min(plays, totalBoostPlays - accumulate));
     form.value.userBoostConsumePlays = consume;
   };

@@ -196,7 +196,7 @@
 
             <h2>🔥火使用分配</h2>
             <el-card class="boost-allocation-card">
-              <el-form-item label="🔥火攒道具次数">
+              <el-form-item label="🔥火攒道具次数" style="margin-bottom: 0.5em">
                 <el-slider
                   v-model="sliderTotalBoostAccumulatePlays"
                   :min="0"
@@ -207,13 +207,8 @@
                   input-size="small"
                   @change="handleTotalBoostAccumulateChange"
                 />
-                <div class="slider-hint">
-                  每次直接获得{{
-                    MLTD_ANNIVERSARY_CONSTANTS.ptPerBoostAccumulatePlay
-                  }}pt，同时获得{{ MLTD_ANNIVERSARY_CONSTANTS.tokensPerBoostAccumulatePlay }}道具
-                </div>
               </el-form-item>
-              <el-alert type="info" :closable="false" style="margin-top: 8px">
+              <el-alert type="info" :closable="false">
                 🔥火清道具次数（自动推算）：<strong class="mono"
                   >{{ result.boostConsumePlays }}次</strong
                 >（总次数 - 火攒次数）
@@ -245,11 +240,7 @@
               </el-alert>
               <el-row :gutter="16" style="margin-top: 12px">
                 <el-col :span="12">
-                  <el-button
-                    size="small"
-                    @click="applyOptimalAllocation"
-                    :disabled="result.useAutoOptimize"
-                  >
+                  <el-button @click="applyOptimalAllocation" :disabled="result.useAutoOptimize">
                     自动优化
                   </el-button>
                   <span v-if="result.useAutoOptimize" class="auto-mode-hint"
@@ -497,7 +488,7 @@ function handleTotalBoostAccumulateChange(val: number | number[]) {
 const boostTableData = computed(() => [
   {
     item: '拥有🔥火数量',
-    value: `${form.value.boostCount ?? 0}个`,
+    value: `${form.value.boostCount || 0}个`,
   },
   {
     item: '🔥火攒道具次数',
@@ -540,7 +531,7 @@ const keyInfoTableData = computed(() => [
   {
     item: '总攒道具次数',
     value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
-    time: `${((result.totalTokenAccumulatePlays ?? 0) * (form.value.tokenAccumulateTime ?? 0)).toFixed(2)}分钟`,
+    time: `${((result.totalTokenAccumulatePlays || 0) * (form.value.tokenAccumulateTime || 0)).toFixed(2)}分钟`,
   },
   {
     item: '普通清道具次数',
@@ -556,8 +547,8 @@ const keyInfoTableData = computed(() => [
   {
     item: '平均每日所需时间',
     value:
-      (form.value.remainingTime ?? 0) >= 1
-        ? `${(result.totalTimeSpent / (form.value.remainingTime ?? 1)).toFixed(2)}分钟 / ${(result.totalTimeSpent / (form.value.remainingTime ?? 1) / 60).toFixed(2)}小时`
+      (form.value.remainingTime || 0) >= 1
+        ? `${(result.totalTimeSpent / (form.value.remainingTime || 1)).toFixed(2)}分钟 / ${(result.totalTimeSpent / (form.value.remainingTime || 1) / 60).toFixed(2)}小时`
         : '-',
     time: '',
     colSpan: true,
@@ -570,8 +561,8 @@ const ptStatusTableData = computed(() => {
   return [
     {
       item: '当前状态',
-      pt: `${form.value.pt?.toLocaleString('en-US') ?? 0} pt`,
-      token: `${form.value.tokens?.toLocaleString('en-US') ?? 0} 个`,
+      pt: `${form.value.pt?.toLocaleString('en-US') || 0} pt`,
+      token: `${form.value.tokens?.toLocaleString('en-US') || 0} 个`,
     },
     {
       item: '来自登录赠送',
@@ -605,8 +596,8 @@ const ptStatusTableData = computed(() => {
     },
     {
       item: '汇总',
-      pt: `${((form.value.pt ?? 0) + (result.ptTotalFromOperations ?? 0)).toLocaleString('en-US')} pt`,
-      token: `${result.finalTokensRemaining?.toLocaleString('en-US') ?? 0} 个`,
+      pt: `${((form.value.pt || 0) + (result.ptTotalFromOperations || 0)).toLocaleString('en-US')} pt`,
+      token: `${result.finalTokensRemaining?.toLocaleString('en-US') || 0} 个`,
       highlight: true,
     },
   ];
@@ -720,7 +711,6 @@ function handleClear() {
   .slider-hint {
     color: #666;
     font-size: 14px;
-    margin-top: 4px;
   }
 
   .auto-mode-hint {
