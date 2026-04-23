@@ -612,49 +612,46 @@ const ptStatusTableData = computed(() => {
   ];
 });
 
-const staminaTableData = computed(() => {
-  const extraStaminaNeeded =
-    result.totalStaminaNeeded -
-    result.staminaRecovered -
-    result.staminaFromDaily -
-    result.staminaFromBottles;
-  return [
-    {
-      item: '最大体力',
-      value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
-    },
-    {
-      item: '🔥火攒道具消耗体力',
-      value: result.staminaForBoostAccumulate?.toLocaleString('en-US') ?? '?',
-    },
-    {
-      item: '普通攒道具消耗体力',
-      value: result.staminaForNormalAccumulate?.toLocaleString('en-US') ?? '?',
-    },
-    {
-      item: '总消耗体力',
-      value: result.totalStaminaNeeded?.toLocaleString('en-US') ?? '?',
-      highlight: true,
-    },
-    {
-      item: '自然回复体力',
-      value: result.staminaRecovered?.toLocaleString('en-US') ?? '?',
-    },
-    {
-      item: '每日任务回复体力',
-      value: result.staminaFromDaily?.toLocaleString('en-US') ?? '?',
-    },
-    {
-      item: '体力瓶回复体力',
-      value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
-    },
-    {
-      item: '需要额外体力',
-      value: extraStaminaNeeded > 0 ? extraStaminaNeeded.toLocaleString('en-US') : '0',
-      highlight: true,
-    },
-  ];
-});
+const staminaTableData = computed(() => [
+  {
+    item: '最大体力',
+    value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '🔥火攒道具消耗体力',
+    value: result.staminaForBoostAccumulate?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '普通攒道具消耗体力',
+    value: result.staminaForNormalAccumulate?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '总消耗体力',
+    value: result.totalStaminaNeeded?.toLocaleString('en-US') ?? '?',
+    highlight: true,
+  },
+  {
+    item: '自然回复体力',
+    value: result.staminaRecovered?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '每日任务回复体力',
+    value: result.staminaFromDaily?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '体力瓶回复体力',
+    value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
+  },
+  {
+    item: '需要额外体力',
+    value: result.extraStaminaNeeded > 0 ? result.extraStaminaNeeded.toLocaleString('en-US') : '0',
+    highlight: true,
+  },
+  {
+    item: '需要回满次数',
+    value: result.fullStaminaRecoveriesNeeded?.toLocaleString('en-US') ?? '0',
+  },
+]);
 
 function keyInfoSpanMethod({ row, columnIndex }: { row: any; columnIndex: number }) {
   if (row.colSpan && columnIndex === 1) {

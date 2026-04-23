@@ -518,19 +518,35 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     ),
 
     /**
-     * 步骤7：需要钻石数
-     * @formula (totalStaminaNeeded - staminaRecovered - staminaFromBottles - staminaFromDaily) / maxStamina × 50
+     * 步骤7-1：需要额外体力
+     * @formula totalStaminaNeeded - staminaRecovered - staminaFromBottles - staminaFromDaily
+     */
+    extraStaminaNeeded: computed((): number => {
+      const extra =
+        result.totalStaminaNeeded -
+        result.staminaRecovered -
+        result.staminaFromBottles -
+        result.staminaFromDaily;
+      return extra > 0 ? extra : 0;
+    }),
+
+    /**
+     * 步骤7-2：需要回满体力的次数
+     * @formula ceil(extraStaminaNeeded / maxStamina)
+     * @description 钻石回满体力不能部分回复，必须整数次
+     */
+    fullStaminaRecoveriesNeeded: computed((): number => {
+      if (result.extraStaminaNeeded <= 0) return 0;
+      return Math.ceil(result.extraStaminaNeeded / result.currentMaxStamina);
+    }),
+
+    /**
+     * 步骤7-3：需要钻石数
+     * @formula fullStaminaRecoveriesNeeded × 50
+     * @description 每次回满体力消耗50钻石，必须整数次
      */
     jewelNeeded: computed((): number => {
-      const res = Math.ceil(
-        ((result.totalStaminaNeeded -
-          result.staminaRecovered -
-          result.staminaFromBottles -
-          result.staminaFromDaily) /
-          result.currentMaxStamina) *
-          MLTD.jewelPerFullStamina,
-      );
-      return res > 0 ? res : 0;
+      return result.fullStaminaRecoveriesNeeded * MLTD.jewelPerFullStamina;
     }),
 
     /**
