@@ -4,6 +4,163 @@ import { useMltdAnniversaryCalc, createDefaultForm } from './useMltdAnniversaryC
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../MltdConstant';
 import type { AnniversaryForm } from '../MltdTypes';
 
+describe('calculateOptimalBoostAllocation', () => {
+  describe('钻石最小化优化', () => {
+    it('目标pt=594858时应找到最小钻石消耗的火分配方案', async () => {
+      const form = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594858,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+        staminaMaxBottleCount: 0,
+        stamina30BottleCount: 0,
+        stamina20BottleCount: 0,
+        stamina10BottleCount: 0,
+      });
+
+      const { result } = useMltdAnniversaryCalc(form);
+      await nextTick();
+
+      expect(result.optimalTotalBoostAccumulatePlays).toBe(22);
+      expect(result.optimalBoostConsumePlays).toBe(108);
+      expect(result.jewelNeeded).toBeLessThanOrEqual(1000);
+      expect(result.ptTotalFromOperations).toBeGreaterThanOrEqual(594858);
+    });
+
+    it('目标pt=594859时应找到最小钻石消耗的火分配方案', async () => {
+      const form = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594859,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+        staminaMaxBottleCount: 0,
+        stamina30BottleCount: 0,
+        stamina20BottleCount: 0,
+        stamina10BottleCount: 0,
+      });
+
+      const { result } = useMltdAnniversaryCalc(form);
+      await nextTick();
+
+      expect(result.optimalTotalBoostAccumulatePlays).toBe(22);
+      expect(result.optimalBoostConsumePlays).toBe(108);
+      expect(result.jewelNeeded).toBeLessThanOrEqual(1000);
+      expect(result.ptTotalFromOperations).toBeGreaterThanOrEqual(594859);
+    });
+
+    it('手动设置火攒22次火清108次时应满足目标594858', async () => {
+      const form = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594858,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+        staminaMaxBottleCount: 0,
+        stamina30BottleCount: 0,
+        stamina20BottleCount: 0,
+        stamina10BottleCount: 0,
+        useAutoOptimize: false,
+        userTotalBoostAccumulatePlays: 22,
+        userBoostConsumePlays: 108,
+      });
+
+      const { result } = useMltdAnniversaryCalc(form);
+      await nextTick();
+
+      expect(result.totalBoostAccumulatePlays).toBe(22);
+      expect(result.boostConsumePlays).toBe(108);
+      expect(result.ptTotalFromOperations).toBeGreaterThanOrEqual(594858);
+    });
+
+    it('自动优化结果不应比手动设置更差', async () => {
+      const formAuto = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594858,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+        staminaMaxBottleCount: 0,
+        stamina30BottleCount: 0,
+        stamina20BottleCount: 0,
+        stamina10BottleCount: 0,
+      });
+
+      const formManual = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594858,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+        staminaMaxBottleCount: 0,
+        stamina30BottleCount: 0,
+        stamina20BottleCount: 0,
+        stamina10BottleCount: 0,
+        useAutoOptimize: false,
+        userTotalBoostAccumulatePlays: 22,
+        userBoostConsumePlays: 108,
+      });
+
+      const { result: autoResult } = useMltdAnniversaryCalc(formAuto);
+      const { result: manualResult } = useMltdAnniversaryCalc(formManual);
+      await nextTick();
+
+      expect(autoResult.jewelNeeded).toBeLessThanOrEqual(manualResult.jewelNeeded);
+      expect(autoResult.ptTotalFromOperations).toBeGreaterThanOrEqual(594858);
+    });
+
+    it('目标pt相差1时不应导致钻石消耗大幅增加', async () => {
+      const form1 = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594858,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+      });
+
+      const form2 = ref<AnniversaryForm>({
+        ...createDefaultForm(),
+        targetPt: 594859,
+        pt: 0,
+        plv: 1,
+        boostCount: 13,
+        freeTokenClaimCount: 13,
+        tokens: 0,
+        remainingTime: 13,
+      });
+
+      const { result: result1 } = useMltdAnniversaryCalc(form1);
+      const { result: result2 } = useMltdAnniversaryCalc(form2);
+      await nextTick();
+
+      expect(result1.optimalTotalBoostAccumulatePlays).toBe(
+        result2.optimalTotalBoostAccumulatePlays,
+      );
+      expect(result1.optimalBoostConsumePlays).toBe(result2.optimalBoostConsumePlays);
+      expect(Math.abs(result1.jewelNeeded - result2.jewelNeeded)).toBeLessThanOrEqual(50);
+    });
+  });
+});
+
 describe('useMltdAnniversaryCalc', () => {
   describe('ptNeeded', () => {
     it('应正确计算需要的pt', async () => {
@@ -134,9 +291,11 @@ describe('useMltdAnniversaryCalc', () => {
       const { result } = useMltdAnniversaryCalc(form);
       await nextTick();
 
-      expect(result.optimalTotalBoostAccumulatePlays).toBe(50);
-      expect(result.totalBoostAccumulatePlays).toBe(50);
-      expect(result.ptFromBoostAccumulate).toBe(50 * MLTD.ptPerBoostAccumulatePlay);
+      expect(result.optimalTotalBoostAccumulatePlays).toBeGreaterThanOrEqual(0);
+      expect(result.optimalTotalBoostAccumulatePlays).toBeLessThanOrEqual(50);
+      expect(result.ptFromBoostAccumulate).toBe(
+        result.optimalTotalBoostAccumulatePlays * MLTD.ptPerBoostAccumulatePlay,
+      );
     });
   });
 

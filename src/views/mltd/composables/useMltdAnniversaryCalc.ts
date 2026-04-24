@@ -39,23 +39,162 @@ const PT_PER_NORMAL_ACCUMULATE = MLTD.ptPerAccumulatePlay;
 const PT_PER_NORMAL_CONSUME = MLTD.ptPerConsumePlay;
 
 /**
- * 计算最优火分配（火攒道具次数 + 火清道具次数）
+ * 使用二分搜索计算普通攒道具次数
  *
- * 最优化目标：最小化体力使用，同时用完所有火次数
- * - 火攒道具消耗体力但产生道具，火清道具不消耗体力
- * - 应优先用完所有火次数，通过平衡火攒道具和火清道具来满足目标
+ * 算法原理：
+ * - 每次普通攒道具获得 1071pt + 1071道具
+ * - 道具可用于清道具获得额外 2148pt/次
+ * - PT随攒次数单调递增，可用二分搜索
  *
- * 数学推导：
- * - 设 x = 火攒道具次数，y = 火清道具次数
- * - 约束1：x + y = N（总火次数）
- * - 约束2：y ≤ floor((T + 2142x) / 720)（道具限制）
- * - 从约束2近似：720y ≤ T + 2142x
- *   代入 y = N - x：720(N - x) ≤ T + 2142x
- *   解得：x ≥ (720N - T) / 2862
- * - 最小 x = max(0, ceil((720N - T) / 2862))
+ * 计算逻辑：
+ * - totalTokens = availableTokens + z * 1071
+ * - totalConsumePlays = floor(totalTokens / 720)
+ * - normalConsumePlays = max(0, totalConsumePlays - boostConsumePlays)
+ * - totalPt = z * 1071 + normalConsumePlays * 2148
+ *
+ * @param ptNeeded - 还需要获得的PT（火贡献后）
+ * @param availableTokens - 可用道具（固定来源 + 火攒道具贡献）
+ * @param boostConsumePlays - 火清道具次数（优先占用道具）
+ * @returns 最小普通攒道具次数
+ */
+function calculateNormalAccumulatePlays(
+  ptNeeded: number,
+  availableTokens: number,
+  boostConsumePlays: number,
+): number {
+  const tokensNeededForBoostConsume = boostConsumePlays * MLTD.tokensPerConsumePlay;
+  const minAccumulateForBoostConsume =
+    availableTokens >= tokensNeededForBoostConsume
+      ? 0
+      : Math.ceil((tokensNeededForBoostConsume - availableTokens) / MLTD.tokensPerAccumulatePlay);
+
+  if (ptNeeded <= 0) {
+    return minAccumulateForBoostConsume;
+  }
+
+  const baseTokens = availableTokens + minAccumulateForBoostConsume * MLTD.tokensPerAccumulatePlay;
+  const upperBound = Math.ceil(ptNeeded / PT_PER_NORMAL_ACCUMULATE) + 1;
+  let lo = 0;
+  let hi = upperBound;
+
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const totalTokens = baseTokens + mid * MLTD.tokensPerAccumulatePlay;
+    const totalConsumePlays = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
+    const normalConsumePlays = Math.max(0, totalConsumePlays - boostConsumePlays);
+    const totalPt =
+      (minAccumulateForBoostConsume + mid) * PT_PER_NORMAL_ACCUMULATE +
+      normalConsumePlays * PT_PER_NORMAL_CONSUME;
+
+    if (totalPt >= ptNeeded) {
+      hi = mid;
+    } else {
+      lo = mid + 1;
+    }
+  }
+
+  return minAccumulateForBoostConsume + lo;
+}
+
+/**
+ * 评估某个火攒次数的效果
+ *
+ * @param x - 火攒道具次数
+ * @param ptNeeded - 还需要获得的PT
+ * @param N - 总火使用次数
+ * @param T - 可用道具
+ * @returns 总攒次数和总获得PT，如果不可行返回null
+ */
+function evaluateBoostAllocation(
+  x: number,
+  ptNeeded: number,
+  N: number,
+  T: number,
+): { totalAccumulatePlays: number; totalPt: number } | null {
+  const y = N - x;
+  const tokensFromAccumulate = x * MLTD.tokensPerBoostAccumulatePlay;
+  const totalAvailableTokens = T + tokensFromAccumulate;
+  const maxBoostConsumeFromTokens = Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay);
+
+  if (y > maxBoostConsumeFromTokens) {
+    return null;
+  }
+
+  const ptFromBoost = x * PT_PER_BOOST_ACCUMULATE + y * PT_PER_BOOST_CONSUME;
+  const ptNeededAfterBoost = Math.max(0, ptNeeded - ptFromBoost);
+
+  const normalAccumulatePlays = calculateNormalAccumulatePlays(
+    ptNeededAfterBoost,
+    totalAvailableTokens,
+    y,
+  );
+
+  const totalAccumulatePlays = x + normalAccumulatePlays;
+
+  const totalTokensAfterNormal =
+    totalAvailableTokens + normalAccumulatePlays * MLTD.tokensPerAccumulatePlay;
+  const totalConsumePlays = Math.floor(totalTokensAfterNormal / MLTD.tokensPerConsumePlay);
+  const normalConsumePlays = Math.max(0, totalConsumePlays - y);
+  const totalPt =
+    ptFromBoost +
+    normalAccumulatePlays * PT_PER_NORMAL_ACCUMULATE +
+    normalConsumePlays * PT_PER_NORMAL_CONSUME;
+
+  return { totalAccumulatePlays, totalPt };
+}
+
+/**
+ * 在指定范围内找最优火分配
  *
  * @param ptNeeded - 还需要获得的PT
- * @param totalBoostPlaysAvailable - 总火使用次数（b×10）
+ * @param N - 总火使用次数
+ * @param T - 可用道具
+ * @param rangeLo - 搜索范围起点
+ * @param rangeHi - 搜索范围终点
+ * @returns 最优火攒次数和火清次数
+ */
+function findBestBoostAllocationInRange(
+  ptNeeded: number,
+  N: number,
+  T: number,
+  rangeLo: number,
+  rangeHi: number,
+): { totalBoostAccumulate: number; boostConsume: number } {
+  let bestX = rangeLo;
+  let minTotalAccumulatePlays = Infinity;
+  let maxPt = 0;
+
+  for (let x = rangeLo; x <= rangeHi; x++) {
+    const result = evaluateBoostAllocation(x, ptNeeded, N, T);
+    if (
+      result &&
+      (result.totalAccumulatePlays < minTotalAccumulatePlays ||
+        (result.totalAccumulatePlays === minTotalAccumulatePlays && result.totalPt > maxPt))
+    ) {
+      minTotalAccumulatePlays = result.totalAccumulatePlays;
+      maxPt = result.totalPt;
+      bestX = x;
+    }
+  }
+
+  return { totalBoostAccumulate: bestX, boostConsume: N - bestX };
+}
+
+/**
+ * 计算最优火分配（火攒道具次数 + 火清道具次数）
+ *
+ * 最优化目标：最小化总体力消耗（从而最小化钻石消耗），同时满足目标PT
+ *
+ * 算法原理（二分搜索优化）：
+ * - 函数 f(x) = 总攒次数 在可行区域内是凸函数（先减后增或单调）
+ * - 可行区域起点：minX = ceil((720N - T) / 2862)
+ * - 使用二分搜索找极小值区域，复杂度 O(log N)
+ * - 在极小值区域找PT最大的最优解
+ *
+ * 复杂度：O(log(N) + k)，其中 k 是极小值区域大小（通常≤5）
+ *
+ * @param ptNeeded - 还需要获得的PT
+ * @param totalBoostPlaysAvailable - 总火使用次数（b×10，最大130）
  * @param availableTokens - 可用道具（现有+即将获得，不含火攒道具贡献）
  * @returns 最优火攒道具次数和火清道具次数
  */
@@ -71,45 +210,58 @@ function calculateOptimalBoostAllocation(
   const N = totalBoostPlaysAvailable;
   const T = availableTokens;
 
-  const minAccumulate = Math.max(0, Math.ceil((720 * N - T) / 2862));
-  let totalBoostAccumulate = Math.min(minAccumulate, N);
-  let boostConsume = N - totalBoostAccumulate;
+  // 计算可行区域起点：需要 T + x*2142 >= (N-x)*720
+  // 解得：x >= (720N - T) / 2862
+  const minX = Math.max(0, Math.ceil((720 * N - T) / 2862));
 
-  const tokensFromAccumulate = totalBoostAccumulate * MLTD.tokensPerBoostAccumulatePlay;
-  const totalAvailableTokens = T + tokensFromAccumulate;
-  const maxBoostConsumeFromTokens = Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay);
-
-  if (boostConsume > maxBoostConsumeFromTokens) {
-    boostConsume = maxBoostConsumeFromTokens;
-    totalBoostAccumulate = N - boostConsume;
+  // 特殊情况1：无可行解，所有火用于攒道具
+  if (minX > N) {
+    const tokensFromAccumulate = N * MLTD.tokensPerBoostAccumulatePlay;
+    const totalAvailableTokens = T + tokensFromAccumulate;
+    const boostConsume = Math.min(0, Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay));
+    return { totalBoostAccumulate: N, boostConsume };
   }
 
-  const ptFromBoost =
-    totalBoostAccumulate * PT_PER_BOOST_ACCUMULATE + boostConsume * PT_PER_BOOST_CONSUME;
+  // 特殊情况2：范围太小，直接遍历
+  if (N - minX <= 3) {
+    return findBestBoostAllocationInRange(ptNeeded, N, T, minX, N);
+  }
 
-  if (ptFromBoost < ptNeeded) {
-    const ptPerBoostAccumulateTotal =
-      PT_PER_BOOST_ACCUMULATE +
-      Math.floor(MLTD.tokensPerBoostAccumulatePlay / MLTD.tokensPerConsumePlay) *
-        PT_PER_NORMAL_CONSUME;
-    const additionalPtNeeded = ptNeeded - ptFromBoost;
-    const additionalAccumulate = Math.ceil(additionalPtNeeded / ptPerBoostAccumulateTotal);
-    totalBoostAccumulate = Math.min(totalBoostAccumulate + additionalAccumulate, N);
-    boostConsume = N - totalBoostAccumulate;
+  // 二分搜索找极小值区域
+  let lo = minX;
+  let hi = N;
 
-    const newTokensFromAccumulate = totalBoostAccumulate * MLTD.tokensPerBoostAccumulatePlay;
-    const newTotalTokens = T + newTokensFromAccumulate;
-    const newMaxConsume = Math.floor(newTotalTokens / MLTD.tokensPerConsumePlay);
-    if (boostConsume > newMaxConsume) {
-      boostConsume = newMaxConsume;
-      totalBoostAccumulate = N - boostConsume;
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+
+    const rMid = evaluateBoostAllocation(mid, ptNeeded, N, T);
+    const rMidPlus1 = evaluateBoostAllocation(mid + 1, ptNeeded, N, T);
+
+    // 处理不可行情况
+    if (rMid === null) {
+      lo = mid + 1;
+      continue;
+    }
+    if (rMidPlus1 === null) {
+      hi = mid;
+      continue;
+    }
+
+    // 核心判断：凸函数性质
+    // 如果 f(mid) < f(mid+1)，极小值在左边
+    // 如果 f(mid) >= f(mid+1)，极小值在右边
+    if (rMid.totalAccumulatePlays < rMidPlus1.totalAccumulatePlays) {
+      hi = mid;
+    } else {
+      lo = mid + 1;
     }
   }
 
-  totalBoostAccumulate = Math.max(0, Math.min(totalBoostAccumulate, N));
-  boostConsume = Math.max(0, Math.min(boostConsume, N - totalBoostAccumulate));
+  // 在极小值区域找最优解（处理平台区域，选PT最大）
+  const searchLo = Math.max(minX, lo - 2);
+  const searchHi = Math.min(N, lo + 2);
 
-  return { totalBoostAccumulate, boostConsume };
+  return findBestBoostAllocationInRange(ptNeeded, N, T, searchLo, searchHi);
 }
 
 /**
@@ -123,8 +275,8 @@ export const createDefaultForm = (): AnniversaryForm => ({
   maxStamina: undefined,
   pt: undefined,
   tokens: undefined,
-  boostCount: 0,
-  freeTokenClaimCount: 0,
+  boostCount: 13,
+  freeTokenClaimCount: 13,
   staminaMaxBottleCount: 0,
   stamina30BottleCount: 0,
   stamina20BottleCount: 0,
@@ -328,21 +480,12 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 每次攒道具获得1071pt+1071道具，道具可用于清道具获得额外pt
      */
     normalAccumulatePlays: computed((): number => {
-      if (result.ptNeededAfterBoost <= 0) return 0;
-
-      const fixedTokens = result.tokensFromFixedSources;
-      const boostAccumulateTokens = result.tokensFromBoostAccumulate;
-      const boostConsumePlays = result.boostConsumePlays;
-      const ptNeeded = result.ptNeededAfterBoost;
-
-      for (let x = 0; x <= 100000; x++) {
-        const totalTokens = fixedTokens + boostAccumulateTokens + x * MLTD.tokensPerAccumulatePlay;
-        const totalConsumePlays = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
-        const normalConsumePlays = Math.max(0, totalConsumePlays - boostConsumePlays);
-        const totalPt = x * PT_PER_NORMAL_ACCUMULATE + normalConsumePlays * PT_PER_NORMAL_CONSUME;
-        if (totalPt >= ptNeeded) return x;
-      }
-      return 0;
+      const availableTokens = result.tokensFromFixedSources + result.tokensFromBoostAccumulate;
+      return calculateNormalAccumulatePlays(
+        result.ptNeededAfterBoost,
+        availableTokens,
+        result.boostConsumePlays,
+      );
     }),
 
     /**
