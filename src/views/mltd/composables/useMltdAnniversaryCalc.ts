@@ -39,23 +39,72 @@ const PT_PER_NORMAL_ACCUMULATE = MLTD.ptPerAccumulatePlay;
 const PT_PER_NORMAL_CONSUME = MLTD.ptPerConsumePlay;
 
 /**
+ * 使用二分搜索计算普通攒道具次数
+ *
+ * 算法原理：
+ * - 每次普通攒道具获得 1071pt + 1071道具
+ * - 道具可用于清道具获得额外 2148pt/次
+ * - PT随攒次数单调递增，可用二分搜索
+ *
+ * 计算逻辑：
+ * - totalTokens = availableTokens + z * 1071
+ * - totalConsumePlays = floor(totalTokens / 720)
+ * - normalConsumePlays = max(0, totalConsumePlays - boostConsumePlays)
+ * - totalPt = z * 1071 + normalConsumePlays * 2148
+ *
+ * @param ptNeeded - 还需要获得的PT（火贡献后）
+ * @param availableTokens - 可用道具（固定来源 + 火攒道具贡献）
+ * @param boostConsumePlays - 火清道具次数（优先占用道具）
+ * @returns 最小普通攒道具次数
+ */
+function calculateNormalAccumulatePlays(
+  ptNeeded: number,
+  availableTokens: number,
+  boostConsumePlays: number,
+): number {
+  if (ptNeeded <= 0) return 0;
+
+  const upperBound = Math.ceil(ptNeeded / PT_PER_NORMAL_ACCUMULATE) + 1;
+  let lo = 0;
+  let hi = upperBound;
+
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const totalTokens = availableTokens + mid * MLTD.tokensPerAccumulatePlay;
+    const totalConsumePlays = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
+    const normalConsumePlays = Math.max(0, totalConsumePlays - boostConsumePlays);
+    const totalPt = mid * PT_PER_NORMAL_ACCUMULATE + normalConsumePlays * PT_PER_NORMAL_CONSUME;
+
+    if (totalPt >= ptNeeded) {
+      hi = mid;
+    } else {
+      lo = mid + 1;
+    }
+  }
+
+  return lo;
+}
+
+/**
  * 计算最优火分配（火攒道具次数 + 火清道具次数）
  *
- * 最优化目标：最小化体力使用，同时用完所有火次数
- * - 火攒道具消耗体力但产生道具，火清道具不消耗体力
- * - 应优先用完所有火次数，通过平衡火攒道具和火清道具来满足目标
+ * 最优化目标：最小化总体力消耗（从而最小化钻石消耗），同时满足目标PT
  *
- * 数学推导：
- * - 设 x = 火攒道具次数，y = 火清道具次数
- * - 约束1：x + y = N（总火次数）
- * - 约束2：y ≤ floor((T + 2142x) / 720)（道具限制）
- * - 从约束2近似：720y ≤ T + 2142x
- *   代入 y = N - x：720(N - x) ≤ T + 2142x
- *   解得：x ≥ (720N - T) / 2862
- * - 最小 x = max(0, ceil((720N - T) / 2862))
+ * 算法原理：
+ * - 火攒道具消耗体力（450/次），产生道具和直接PT
+ * - 火清道具不消耗体力，消耗道具获得PT
+ * - 总体力消耗 = 火攒次数 + 普通攒次数（两者各消耗450体力）
+ * - 需遍历所有可行的火分配方案，找最小总体力消耗
+ *
+ * 遍历策略：
+ * - 外层：遍历火攒次数 x（0到N）
+ * - 内层：用二分搜索计算对应普通攒次数
+ * - 比较 x + normalAccumulatePlays，找最小值
+ *
+ * 复杂度：O(N * log(M))，其中 N≤130，M≈100000
  *
  * @param ptNeeded - 还需要获得的PT
- * @param totalBoostPlaysAvailable - 总火使用次数（b×10）
+ * @param totalBoostPlaysAvailable - 总火使用次数（b×10，最大130）
  * @param availableTokens - 可用道具（现有+即将获得，不含火攒道具贡献）
  * @returns 最优火攒道具次数和火清道具次数
  */
@@ -71,45 +120,50 @@ function calculateOptimalBoostAllocation(
   const N = totalBoostPlaysAvailable;
   const T = availableTokens;
 
-  const minAccumulate = Math.max(0, Math.ceil((720 * N - T) / 2862));
-  let totalBoostAccumulate = Math.min(minAccumulate, N);
-  let boostConsume = N - totalBoostAccumulate;
+  let bestAllocation = { totalBoostAccumulate: 0, boostConsume: 0 };
+  let minTotalAccumulatePlays = Infinity;
 
-  const tokensFromAccumulate = totalBoostAccumulate * MLTD.tokensPerBoostAccumulatePlay;
-  const totalAvailableTokens = T + tokensFromAccumulate;
-  const maxBoostConsumeFromTokens = Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay);
+  for (let x = 0; x <= N; x++) {
+    const y = N - x;
 
-  if (boostConsume > maxBoostConsumeFromTokens) {
-    boostConsume = maxBoostConsumeFromTokens;
-    totalBoostAccumulate = N - boostConsume;
-  }
+    const tokensFromAccumulate = x * MLTD.tokensPerBoostAccumulatePlay;
+    const totalAvailableTokens = T + tokensFromAccumulate;
+    const maxBoostConsumeFromTokens = Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay);
 
-  const ptFromBoost =
-    totalBoostAccumulate * PT_PER_BOOST_ACCUMULATE + boostConsume * PT_PER_BOOST_CONSUME;
+    if (y > maxBoostConsumeFromTokens) {
+      continue;
+    }
 
-  if (ptFromBoost < ptNeeded) {
-    const ptPerBoostAccumulateTotal =
-      PT_PER_BOOST_ACCUMULATE +
-      Math.floor(MLTD.tokensPerBoostAccumulatePlay / MLTD.tokensPerConsumePlay) *
-        PT_PER_NORMAL_CONSUME;
-    const additionalPtNeeded = ptNeeded - ptFromBoost;
-    const additionalAccumulate = Math.ceil(additionalPtNeeded / ptPerBoostAccumulateTotal);
-    totalBoostAccumulate = Math.min(totalBoostAccumulate + additionalAccumulate, N);
-    boostConsume = N - totalBoostAccumulate;
+    const ptFromBoost = x * PT_PER_BOOST_ACCUMULATE + y * PT_PER_BOOST_CONSUME;
+    const ptNeededAfterBoost = Math.max(0, ptNeeded - ptFromBoost);
 
-    const newTokensFromAccumulate = totalBoostAccumulate * MLTD.tokensPerBoostAccumulatePlay;
-    const newTotalTokens = T + newTokensFromAccumulate;
-    const newMaxConsume = Math.floor(newTotalTokens / MLTD.tokensPerConsumePlay);
-    if (boostConsume > newMaxConsume) {
-      boostConsume = newMaxConsume;
-      totalBoostAccumulate = N - boostConsume;
+    const normalAccumulatePlays = calculateNormalAccumulatePlays(
+      ptNeededAfterBoost,
+      totalAvailableTokens,
+      y,
+    );
+
+    const totalAccumulatePlays = x + normalAccumulatePlays;
+
+    if (totalAccumulatePlays < minTotalAccumulatePlays) {
+      minTotalAccumulatePlays = totalAccumulatePlays;
+      bestAllocation = { totalBoostAccumulate: x, boostConsume: y };
     }
   }
 
-  totalBoostAccumulate = Math.max(0, Math.min(totalBoostAccumulate, N));
-  boostConsume = Math.max(0, Math.min(boostConsume, N - totalBoostAccumulate));
+  if (minTotalAccumulatePlays === Infinity) {
+    const minAccumulate = Math.max(0, Math.ceil((720 * N - T) / 2862));
+    const totalBoostAccumulate = Math.min(minAccumulate, N);
+    const tokensFromAccumulate = totalBoostAccumulate * MLTD.tokensPerBoostAccumulatePlay;
+    const totalAvailableTokens = T + tokensFromAccumulate;
+    const boostConsume = Math.min(
+      N - totalBoostAccumulate,
+      Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay),
+    );
+    return { totalBoostAccumulate, boostConsume };
+  }
 
-  return { totalBoostAccumulate, boostConsume };
+  return bestAllocation;
 }
 
 /**
@@ -330,19 +384,12 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     normalAccumulatePlays: computed((): number => {
       if (result.ptNeededAfterBoost <= 0) return 0;
 
-      const fixedTokens = result.tokensFromFixedSources;
-      const boostAccumulateTokens = result.tokensFromBoostAccumulate;
-      const boostConsumePlays = result.boostConsumePlays;
-      const ptNeeded = result.ptNeededAfterBoost;
-
-      for (let x = 0; x <= 100000; x++) {
-        const totalTokens = fixedTokens + boostAccumulateTokens + x * MLTD.tokensPerAccumulatePlay;
-        const totalConsumePlays = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
-        const normalConsumePlays = Math.max(0, totalConsumePlays - boostConsumePlays);
-        const totalPt = x * PT_PER_NORMAL_ACCUMULATE + normalConsumePlays * PT_PER_NORMAL_CONSUME;
-        if (totalPt >= ptNeeded) return x;
-      }
-      return 0;
+      const availableTokens = result.tokensFromFixedSources + result.tokensFromBoostAccumulate;
+      return calculateNormalAccumulatePlays(
+        result.ptNeededAfterBoost,
+        availableTokens,
+        result.boostConsumePlays,
+      );
     }),
 
     /**
