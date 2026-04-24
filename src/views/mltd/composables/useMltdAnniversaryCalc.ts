@@ -62,18 +62,29 @@ function calculateNormalAccumulatePlays(
   availableTokens: number,
   boostConsumePlays: number,
 ): number {
-  if (ptNeeded <= 0) return 0;
+  const tokensNeededForBoostConsume = boostConsumePlays * MLTD.tokensPerConsumePlay;
+  const minAccumulateForBoostConsume =
+    availableTokens >= tokensNeededForBoostConsume
+      ? 0
+      : Math.ceil((tokensNeededForBoostConsume - availableTokens) / MLTD.tokensPerAccumulatePlay);
 
+  if (ptNeeded <= 0) {
+    return minAccumulateForBoostConsume;
+  }
+
+  const baseTokens = availableTokens + minAccumulateForBoostConsume * MLTD.tokensPerAccumulatePlay;
   const upperBound = Math.ceil(ptNeeded / PT_PER_NORMAL_ACCUMULATE) + 1;
   let lo = 0;
   let hi = upperBound;
 
   while (lo < hi) {
     const mid = Math.floor((lo + hi) / 2);
-    const totalTokens = availableTokens + mid * MLTD.tokensPerAccumulatePlay;
+    const totalTokens = baseTokens + mid * MLTD.tokensPerAccumulatePlay;
     const totalConsumePlays = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
     const normalConsumePlays = Math.max(0, totalConsumePlays - boostConsumePlays);
-    const totalPt = mid * PT_PER_NORMAL_ACCUMULATE + normalConsumePlays * PT_PER_NORMAL_CONSUME;
+    const totalPt =
+      (minAccumulateForBoostConsume + mid) * PT_PER_NORMAL_ACCUMULATE +
+      normalConsumePlays * PT_PER_NORMAL_CONSUME;
 
     if (totalPt >= ptNeeded) {
       hi = mid;
@@ -82,7 +93,7 @@ function calculateNormalAccumulatePlays(
     }
   }
 
-  return lo;
+  return minAccumulateForBoostConsume + lo;
 }
 
 /**
@@ -469,8 +480,6 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 每次攒道具获得1071pt+1071道具，道具可用于清道具获得额外pt
      */
     normalAccumulatePlays: computed((): number => {
-      if (result.ptNeededAfterBoost <= 0) return 0;
-
       const availableTokens = result.tokensFromFixedSources + result.tokensFromBoostAccumulate;
       return calculateNormalAccumulatePlays(
         result.ptNeededAfterBoost,
