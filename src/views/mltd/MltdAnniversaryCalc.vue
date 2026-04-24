@@ -21,6 +21,7 @@
                     :min="0"
                     :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
                     maxlength="8"
+                    step="1000"
                     type="number"
                     inputmode="numeric"
                     placeholder="0"
@@ -208,11 +209,6 @@
                   @change="handleTotalBoostAccumulateChange"
                 />
               </el-form-item>
-              <el-alert type="info" :closable="false">
-                🔥火清道具次数（自动推算）：<strong class="mono"
-                  >{{ result.boostConsumePlays }}次</strong
-                >（总次数 - 火攒次数）
-              </el-alert>
               <el-alert
                 v-if="!result.useAutoOptimize"
                 type="warning"
@@ -358,17 +354,13 @@
         <el-col :lg="9" :sm="24">
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
-            <el-alert type="info" :closable="false" style="margin-bottom: 1em">
-              根据目标pt自动计算最优🔥火分配（火攒道具+火清道具），最小化体力使用。可通过滑块自定义分配。
-            </el-alert>
             <el-alert
-              v-if="result.ptExceeded > 0"
               :type="result.ptExceeded > 10000 ? 'error' : 'warning'"
               :closable="false"
               style="margin-bottom: 1em"
             >
-              使用最优🔥火数量后，实际获得的pt将超过目标pt
-              {{ result.ptExceeded.toLocaleString('en-US') }} pt（向上取整导致）
+              当前实际获得的pt将超过目标pt
+              {{ result.ptExceeded.toLocaleString('en-US') }} pt
             </el-alert>
             <el-card class="mltd-anni-result-card">
               <template #header>关键信息</template>

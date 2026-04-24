@@ -86,22 +86,101 @@ function calculateNormalAccumulatePlays(
 }
 
 /**
+ * 评估某个火攒次数的效果
+ *
+ * @param x - 火攒道具次数
+ * @param ptNeeded - 还需要获得的PT
+ * @param N - 总火使用次数
+ * @param T - 可用道具
+ * @returns 总攒次数和总获得PT，如果不可行返回null
+ */
+function evaluateBoostAllocation(
+  x: number,
+  ptNeeded: number,
+  N: number,
+  T: number,
+): { totalAccumulatePlays: number; totalPt: number } | null {
+  const y = N - x;
+  const tokensFromAccumulate = x * MLTD.tokensPerBoostAccumulatePlay;
+  const totalAvailableTokens = T + tokensFromAccumulate;
+  const maxBoostConsumeFromTokens = Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay);
+
+  if (y > maxBoostConsumeFromTokens) {
+    return null;
+  }
+
+  const ptFromBoost = x * PT_PER_BOOST_ACCUMULATE + y * PT_PER_BOOST_CONSUME;
+  const ptNeededAfterBoost = Math.max(0, ptNeeded - ptFromBoost);
+
+  const normalAccumulatePlays = calculateNormalAccumulatePlays(
+    ptNeededAfterBoost,
+    totalAvailableTokens,
+    y,
+  );
+
+  const totalAccumulatePlays = x + normalAccumulatePlays;
+
+  const totalTokensAfterNormal =
+    totalAvailableTokens + normalAccumulatePlays * MLTD.tokensPerAccumulatePlay;
+  const totalConsumePlays = Math.floor(totalTokensAfterNormal / MLTD.tokensPerConsumePlay);
+  const normalConsumePlays = Math.max(0, totalConsumePlays - y);
+  const totalPt =
+    ptFromBoost +
+    normalAccumulatePlays * PT_PER_NORMAL_ACCUMULATE +
+    normalConsumePlays * PT_PER_NORMAL_CONSUME;
+
+  return { totalAccumulatePlays, totalPt };
+}
+
+/**
+ * 在指定范围内找最优火分配
+ *
+ * @param ptNeeded - 还需要获得的PT
+ * @param N - 总火使用次数
+ * @param T - 可用道具
+ * @param rangeLo - 搜索范围起点
+ * @param rangeHi - 搜索范围终点
+ * @returns 最优火攒次数和火清次数
+ */
+function findBestBoostAllocationInRange(
+  ptNeeded: number,
+  N: number,
+  T: number,
+  rangeLo: number,
+  rangeHi: number,
+): { totalBoostAccumulate: number; boostConsume: number } {
+  let bestX = rangeLo;
+  let minTotalAccumulatePlays = Infinity;
+  let maxPt = 0;
+
+  for (let x = rangeLo; x <= rangeHi; x++) {
+    const result = evaluateBoostAllocation(x, ptNeeded, N, T);
+    if (
+      result &&
+      (result.totalAccumulatePlays < minTotalAccumulatePlays ||
+        (result.totalAccumulatePlays === minTotalAccumulatePlays && result.totalPt > maxPt))
+    ) {
+      minTotalAccumulatePlays = result.totalAccumulatePlays;
+      maxPt = result.totalPt;
+      bestX = x;
+    }
+  }
+
+  return { totalBoostAccumulate: bestX, boostConsume: N - bestX };
+}
+
+/**
  * 计算最优火分配（火攒道具次数 + 火清道具次数）
  *
  * 最优化目标：最小化总体力消耗（从而最小化钻石消耗），同时满足目标PT
  *
- * 算法原理：
- * - 火攒道具消耗体力（450/次），产生道具和直接PT
- * - 火清道具不消耗体力，消耗道具获得PT
- * - 总体力消耗 = 火攒次数 + 普通攒次数（两者各消耗450体力）
- * - 需遍历所有可行的火分配方案，找最小总体力消耗
+ * 算法原理（二分搜索优化）：
+ * - 函数 f(x) = 总攒次数 在可行区域内是凸函数（先减后增或单调）
+ * - 可行区域起点：minX = ceil((720N - T) / 2862)
+ * - 使用二分搜索找极小值区域，复杂度 O(log N)
+ * - 在极小值区域找PT最大的最优解
  *
- * 遍历策略：
- * - 外层：遍历火攒次数 x（0到N）
- * - 内层：用二分搜索计算对应普通攒次数
- * - 比较 x + normalAccumulatePlays，找最小值
- *
- * 复杂度：O(N * log(M))，其中 N≤130，M≈100000
+ * 复杂度：O(log(N) + k)，其中 k 是极小值区域大小（通常≤5）
  *
  * @param ptNeeded - 还需要获得的PT
  * @param totalBoostPlaysAvailable - 总火使用次数（b×10，最大130）
@@ -120,64 +199,58 @@ function calculateOptimalBoostAllocation(
   const N = totalBoostPlaysAvailable;
   const T = availableTokens;
 
-  let bestAllocation = { totalBoostAccumulate: 0, boostConsume: 0 };
-  let minTotalAccumulatePlays = Infinity;
-  let maxPt = 0;
+  // 计算可行区域起点：需要 T + x*2142 >= (N-x)*720
+  // 解得：x >= (720N - T) / 2862
+  const minX = Math.max(0, Math.ceil((720 * N - T) / 2862));
 
-  for (let x = 0; x <= N; x++) {
-    const y = N - x;
-
-    const tokensFromAccumulate = x * MLTD.tokensPerBoostAccumulatePlay;
+  // 特殊情况1：无可行解，所有火用于攒道具
+  if (minX > N) {
+    const tokensFromAccumulate = N * MLTD.tokensPerBoostAccumulatePlay;
     const totalAvailableTokens = T + tokensFromAccumulate;
-    const maxBoostConsumeFromTokens = Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay);
+    const boostConsume = Math.min(0, Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay));
+    return { totalBoostAccumulate: N, boostConsume };
+  }
 
-    if (y > maxBoostConsumeFromTokens) {
+  // 特殊情况2：范围太小，直接遍历
+  if (N - minX <= 3) {
+    return findBestBoostAllocationInRange(ptNeeded, N, T, minX, N);
+  }
+
+  // 二分搜索找极小值区域
+  let lo = minX;
+  let hi = N;
+
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+
+    const rMid = evaluateBoostAllocation(mid, ptNeeded, N, T);
+    const rMidPlus1 = evaluateBoostAllocation(mid + 1, ptNeeded, N, T);
+
+    // 处理不可行情况
+    if (rMid === null) {
+      lo = mid + 1;
+      continue;
+    }
+    if (rMidPlus1 === null) {
+      hi = mid;
       continue;
     }
 
-    const ptFromBoost = x * PT_PER_BOOST_ACCUMULATE + y * PT_PER_BOOST_CONSUME;
-    const ptNeededAfterBoost = Math.max(0, ptNeeded - ptFromBoost);
-
-    const normalAccumulatePlays = calculateNormalAccumulatePlays(
-      ptNeededAfterBoost,
-      totalAvailableTokens,
-      y,
-    );
-
-    const totalAccumulatePlays = x + normalAccumulatePlays;
-
-    const totalTokensAfterNormal =
-      totalAvailableTokens + normalAccumulatePlays * MLTD.tokensPerAccumulatePlay;
-    const totalConsumePlays = Math.floor(totalTokensAfterNormal / MLTD.tokensPerConsumePlay);
-    const normalConsumePlays = Math.max(0, totalConsumePlays - y);
-    const ptTotal =
-      ptFromBoost +
-      normalAccumulatePlays * PT_PER_NORMAL_ACCUMULATE +
-      normalConsumePlays * PT_PER_NORMAL_CONSUME;
-
-    if (
-      totalAccumulatePlays < minTotalAccumulatePlays ||
-      (totalAccumulatePlays === minTotalAccumulatePlays && ptTotal > maxPt)
-    ) {
-      minTotalAccumulatePlays = totalAccumulatePlays;
-      maxPt = ptTotal;
-      bestAllocation = { totalBoostAccumulate: x, boostConsume: y };
+    // 核心判断：凸函数性质
+    // 如果 f(mid) < f(mid+1)，极小值在左边
+    // 如果 f(mid) >= f(mid+1)，极小值在右边
+    if (rMid.totalAccumulatePlays < rMidPlus1.totalAccumulatePlays) {
+      hi = mid;
+    } else {
+      lo = mid + 1;
     }
   }
 
-  if (minTotalAccumulatePlays === Infinity) {
-    const minAccumulate = Math.max(0, Math.ceil((720 * N - T) / 2862));
-    const totalBoostAccumulate = Math.min(minAccumulate, N);
-    const tokensFromAccumulate = totalBoostAccumulate * MLTD.tokensPerBoostAccumulatePlay;
-    const totalAvailableTokens = T + tokensFromAccumulate;
-    const boostConsume = Math.min(
-      N - totalBoostAccumulate,
-      Math.floor(totalAvailableTokens / MLTD.tokensPerConsumePlay),
-    );
-    return { totalBoostAccumulate, boostConsume };
-  }
+  // 在极小值区域找最优解（处理平台区域，选PT最大）
+  const searchLo = Math.max(minX, lo - 2);
+  const searchHi = Math.min(N, lo + 2);
 
-  return bestAllocation;
+  return findBestBoostAllocationInRange(ptNeeded, N, T, searchLo, searchHi);
 }
 
 /**
