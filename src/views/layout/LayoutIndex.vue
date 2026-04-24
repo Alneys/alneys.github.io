@@ -2,6 +2,7 @@
 import LayoutHeader from './LayoutHeader.vue';
 import LayoutMain from './LayoutMain.vue';
 import LayoutFooter from './LayoutFooter.vue';
+import VersionUpdatePrompt from '@/components/VersionUpdatePrompt.vue';
 </script>
 
 <template>
@@ -9,6 +10,7 @@ import LayoutFooter from './LayoutFooter.vue';
     <LayoutHeader></LayoutHeader>
     <LayoutMain></LayoutMain>
     <LayoutFooter></LayoutFooter>
+    <VersionUpdatePrompt />
   </div>
 </template>
 
