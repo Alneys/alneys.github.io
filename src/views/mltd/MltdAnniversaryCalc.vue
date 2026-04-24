@@ -355,6 +355,14 @@
           <div id="mltd-anni-calc-result" style="margin-bottom: 2em">
             <h2>结果</h2>
             <el-alert
+              v-if="!result.useAutoOptimize"
+              type="warning"
+              :closable="false"
+              style="margin-bottom: 1em"
+            >
+              ⚠️ 当前为手动模式，🔥火使用分配可能并非最优解。
+            </el-alert>
+            <el-alert
               :type="result.ptExceeded > 10000 ? 'error' : 'warning'"
               :closable="false"
               style="margin-bottom: 1em"
