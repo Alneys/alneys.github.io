@@ -122,6 +122,7 @@ function calculateOptimalBoostAllocation(
 
   let bestAllocation = { totalBoostAccumulate: 0, boostConsume: 0 };
   let minTotalAccumulatePlays = Infinity;
+  let maxPt = 0;
 
   for (let x = 0; x <= N; x++) {
     const y = N - x;
@@ -145,8 +146,21 @@ function calculateOptimalBoostAllocation(
 
     const totalAccumulatePlays = x + normalAccumulatePlays;
 
-    if (totalAccumulatePlays < minTotalAccumulatePlays) {
+    const totalTokensAfterNormal =
+      totalAvailableTokens + normalAccumulatePlays * MLTD.tokensPerAccumulatePlay;
+    const totalConsumePlays = Math.floor(totalTokensAfterNormal / MLTD.tokensPerConsumePlay);
+    const normalConsumePlays = Math.max(0, totalConsumePlays - y);
+    const ptTotal =
+      ptFromBoost +
+      normalAccumulatePlays * PT_PER_NORMAL_ACCUMULATE +
+      normalConsumePlays * PT_PER_NORMAL_CONSUME;
+
+    if (
+      totalAccumulatePlays < minTotalAccumulatePlays ||
+      (totalAccumulatePlays === minTotalAccumulatePlays && ptTotal > maxPt)
+    ) {
       minTotalAccumulatePlays = totalAccumulatePlays;
+      maxPt = ptTotal;
       bestAllocation = { totalBoostAccumulate: x, boostConsume: y };
     }
   }
