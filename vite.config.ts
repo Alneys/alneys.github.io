@@ -13,6 +13,9 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 // unplugin-fonts
 import Unfonts from 'unplugin-fonts/vite';
 
+// custom plugins
+import { versionCheckPlugin } from './src/vite-plugins/versionCheck';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -38,6 +41,7 @@ export default defineConfig({
         families: ['Noto Sans SC Variable', 'Noto Sans JP Variable', 'Inconsolata Variable'],
       },
     }),
+    versionCheckPlugin(),
   ],
   resolve: {
     alias: {

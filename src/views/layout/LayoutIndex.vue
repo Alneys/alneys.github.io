@@ -2,7 +2,9 @@
 import LayoutHeader from './LayoutHeader.vue';
 import LayoutMain from './LayoutMain.vue';
 import LayoutFooter from './LayoutFooter.vue';
-import VersionUpdatePrompt from '@/components/VersionUpdatePrompt.vue';
+import { useVersionCheck } from '@/composables/useVersionCheck';
+
+useVersionCheck();
 </script>
 
 <template>
@@ -10,7 +12,6 @@ import VersionUpdatePrompt from '@/components/VersionUpdatePrompt.vue';
     <LayoutHeader></LayoutHeader>
     <LayoutMain></LayoutMain>
     <LayoutFooter></LayoutFooter>
-    <VersionUpdatePrompt />
   </div>
 </template>
 

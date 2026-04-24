@@ -5,7 +5,8 @@
     "vitest.config.*",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    "src/vite-plugins/**/*"
   ],
   "resolveJsonModule": true,
   "compilerOptions": {
@@ -15,7 +16,6 @@
 
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    
     "types": ["node"]
   }
 }
