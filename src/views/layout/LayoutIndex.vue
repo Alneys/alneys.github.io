@@ -2,6 +2,9 @@
 import LayoutHeader from './LayoutHeader.vue';
 import LayoutMain from './LayoutMain.vue';
 import LayoutFooter from './LayoutFooter.vue';
+import { useVersionCheck } from '@/composables/useVersionCheck';
+
+useVersionCheck();
 </script>
 
 <template>

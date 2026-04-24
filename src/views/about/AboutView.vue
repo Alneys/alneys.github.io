@@ -3,6 +3,13 @@ import svgCG from '@/assets/svg/imas-cinderella-girls.svg?raw';
 import svgML from '@/assets/svg/imas-million-live.svg?raw';
 import svgSC from '@/assets/svg/imas-shiny-colors.svg?raw';
 import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
+import { useVersionCheck } from '@/composables/useVersionCheck';
+
+const env = import.meta.env;
+
+const { showUpdateNotification } = env.DEV
+  ? useVersionCheck()
+  : { showUpdateNotification: () => {} };
 </script>
 
 <template>
@@ -143,6 +150,10 @@ import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
         </el-collapse-item>
       </el-collapse>
     </div>
+
+    <div v-if="env.DEV" class="debug-panel">
+      <el-button size="small" type="info" @click="showUpdateNotification">显示更新提示</el-button>
+    </div>
   </div>
 </template>
 
@@ -193,5 +204,17 @@ img[src^='https://img.shields.io'] {
     --el-collapse-header-font-size: var(--el-font-size-base);
     --el-collapse-content-font-size: var(--el-font-size-base);
   }
+}
+
+.debug-panel {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 9998;
+  padding: 8px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  box-shadow: var(--el-box-shadow-light);
 }
 </style>
