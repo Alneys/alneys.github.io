@@ -519,15 +519,19 @@ const keyInfoTableData = computed(() => [
   {
     item: '总攒道具次数',
     value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
-    time: `${((result.totalTokenAccumulatePlays || 0) * (form.value.tokenAccumulateTime || 0)).toFixed(2)}分钟`,
+    time: `${result.totalTokenAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
     highlight: true,
   },
   {
     item: '总清道具次数',
-    value: ((result.boostConsumePlays || 0) + (result.normalConsumePlays || 0)).toLocaleString(
-      'en-US',
-    ),
-    time: `${((result.boostConsumeTimeSpent || 0) + (result.normalConsumeTimeSpent || 0)).toFixed(2)}分钟`,
+    value: result.totalTokenConsumePlays?.toLocaleString('en-US') ?? '?',
+    time: `${result.totalConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
+    highlight: true,
+  },
+  {
+    item: '总次数',
+    value: result.totalPlays?.toLocaleString('en-US') ?? '?',
+    time: `/`,
     highlight: true,
   },
   {

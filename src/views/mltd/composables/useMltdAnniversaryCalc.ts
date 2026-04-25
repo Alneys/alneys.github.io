@@ -690,6 +690,22 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
       (): number =>
         result.boostTimeSpent + result.normalAccumulateTimeSpent + result.totalConsumeTimeSpent,
     ),
+
+    /**
+     * 步骤8-7：总攒道具时间
+     * @formula boostTimeSpent + normalAccumulateTimeSpent
+     */
+    totalTokenAccumulateTimeSpent: computed(
+      (): number => result.boostTimeSpent + result.normalAccumulateTimeSpent,
+    ),
+
+    /**
+     * 步骤9-1：总游玩次数
+     * @formula totalTokenAccumulatePlays + totalTokenConsumePlays
+     */
+    totalPlays: computed(
+      (): number => result.totalTokenAccumulatePlays + result.totalTokenConsumePlays,
+    ),
   });
 
   /**
