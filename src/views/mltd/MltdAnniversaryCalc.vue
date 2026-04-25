@@ -384,7 +384,7 @@
               当前实际获得的pt将超过目标pt
               {{ result.ptExceeded.toLocaleString('en-US') }} pt
             </el-alert>
-            <el-card class="mltd-anni-result-card">
+            <el-card class="mltd-anni-result-card" shadow="never">
               <template #header>关键信息</template>
               <el-table
                 :data="keyInfoTableData"
@@ -408,7 +408,7 @@
               </el-table>
             </el-card>
 
-            <el-card class="mltd-anni-result-card">
+            <el-card class="mltd-anni-result-card" shadow="never">
               <template #header>当前 pt / 道具情况</template>
               <el-table
                 :data="ptStatusTableData"
@@ -426,7 +426,7 @@
                 />
               </el-table>
             </el-card>
-            <el-card class="mltd-anni-result-card">
+            <el-card class="mltd-anni-result-card" shadow="never">
               <template #header>体力情况</template>
               <el-table
                 :data="staminaTableData"
