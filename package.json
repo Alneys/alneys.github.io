@@ -19,6 +19,7 @@
     "@fontsource-variable/inconsolata": "~5.2.8",
     "@fontsource-variable/noto-sans-jp": "~5.2.10",
     "@fontsource-variable/noto-sans-sc": "~5.2.10",
+    "@vueuse/core": "^14.2.1",
     "cheerio": "~1.2.0",
     "echarts": "~6.0.0",
     "element-plus": "~2.13.6",
