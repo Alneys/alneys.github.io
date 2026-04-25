@@ -113,15 +113,15 @@ function calculateOptimalBoostAllocation(
   totalBoostPlaysAvailable: number,
   availableTokens: number,
 ): { totalBoostAccumulate: number; boostConsume: number; unusedBoostPlays: number } {
-  if (ptNeeded <= 0 || totalBoostPlaysAvailable <= 0) {
-    return { totalBoostAccumulate: 0, boostConsume: 0, unusedBoostPlays: 0 };
-  }
-
   const totalBoostPlays = totalBoostPlaysAvailable;
   const tokens = availableTokens;
 
   let lo = 0;
   let hi = totalBoostPlays;
+
+  if (ptNeeded <= 0 || totalBoostPlaysAvailable <= 0) {
+    hi = 0;
+  }
 
   while (lo < hi) {
     const mid = Math.floor((lo + hi) / 2);
