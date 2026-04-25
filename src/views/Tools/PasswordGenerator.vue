@@ -1,6 +1,6 @@
 <template>
   <div class="password-generator">
-    <h1 class="view-title">密码生成器</h1>
+    <h1 class="view-title">随机密码生成器</h1>
     <div class="al-divider"></div>
 
     <div class="password-generator-container">
