@@ -278,9 +278,10 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 默认返回60
      */
     currentMaxStamina: computed((): number => {
-      if (!form.value.plv) return 60;
+      const plv = form.value.plv || 0;
+      if (!plv) return 60;
       const { levelToMaxStamina } = useMltdUtils();
-      return levelToMaxStamina(form.value.plv) || 60;
+      return levelToMaxStamina(plv) || 60;
     }),
 
     /**

@@ -601,8 +601,8 @@ const ptStatusTableData = computed(() => {
   return [
     {
       item: '当前状态',
-      pt: `${formatNumber(form.value.pt)} pt`,
-      token: `${formatNumber(form.value.tokens)} 个`,
+      pt: `${formatNumber(form.value.pt || 0)} pt`,
+      token: `${formatNumber(form.value.tokens || 0)} 个`,
     },
     {
       item: '来自登录赠送',
