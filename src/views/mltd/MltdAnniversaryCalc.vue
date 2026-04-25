@@ -396,13 +396,7 @@
                 />
               </el-table>
             </el-card>
-            <el-card class="mltd-anni-result-card">
-              <template #header>🔥火使用建议</template>
-              <el-table :data="boostTableData" border :cell-class-name="monoCellClassName">
-                <el-table-column prop="item" label="项目" header-align="center" align="center" />
-                <el-table-column prop="value" label="结果" header-align="center" align="right" />
-              </el-table>
-            </el-card>
+
             <el-card class="mltd-anni-result-card">
               <template #header>当前 pt / 道具情况</template>
               <el-table
@@ -488,27 +482,6 @@ function handleTotalBoostAccumulateChange(val: number | number[]) {
   }
 }
 
-const boostTableData = computed(() => [
-  {
-    item: '拥有🔥火数量',
-    value: `${form.value.boostCount || 0}个`,
-  },
-  {
-    item: '🔥火攒道具次数',
-    value: `${result.totalBoostAccumulatePlays}次`,
-    highlight: true,
-  },
-  {
-    item: '🔥火清道具次数',
-    value: `${result.boostConsumePlays}次`,
-    highlight: true,
-  },
-  {
-    item: '🔥火使用总次数',
-    value: `${result.boostPlays}次`,
-  },
-]);
-
 const keyInfoTableData = computed(() => [
   {
     item: '需要钻石数量',
@@ -532,14 +505,23 @@ const keyInfoTableData = computed(() => [
     time: `${result.normalAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
   },
   {
-    item: '总攒道具次数',
-    value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
-    time: `${((result.totalTokenAccumulatePlays || 0) * (form.value.tokenAccumulateTime || 0)).toFixed(2)}分钟`,
-  },
-  {
     item: '普通清道具次数',
     value: result.normalConsumePlays?.toLocaleString('en-US') ?? '?',
     time: `${result.normalConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
+  },
+  {
+    item: '总攒道具次数',
+    value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    time: `${((result.totalTokenAccumulatePlays || 0) * (form.value.tokenAccumulateTime || 0)).toFixed(2)}分钟`,
+    highlight: true,
+  },
+  {
+    item: '总清道具次数',
+    value: ((result.boostConsumePlays || 0) + (result.normalConsumePlays || 0)).toLocaleString(
+      'en-US',
+    ),
+    time: `${((result.boostConsumeTimeSpent || 0) + (result.normalConsumeTimeSpent || 0)).toFixed(2)}分钟`,
+    highlight: true,
   },
   {
     item: '所有项目总时间',
@@ -555,6 +537,7 @@ const keyInfoTableData = computed(() => [
         : '-',
     time: '',
     colSpan: true,
+    highlight: true,
   },
 ]);
 
