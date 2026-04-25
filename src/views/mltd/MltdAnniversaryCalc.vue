@@ -246,7 +246,7 @@
               </el-row>
               <el-alert type="info" :closable="false" style="margin-top: 12px">
                 <template #title>
-                  <strong>预计收益</strong>
+                  <strong>火分配详情</strong>
                 </template>
                 <p class="mono">
                   🔥火攒道具 {{ result.totalBoostAccumulatePlays }}次 → +{{
@@ -257,6 +257,9 @@
                   🔥火清道具 {{ result.boostConsumePlays }}次 → +{{
                     result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0
                   }}pt, -{{ result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0 }}道具
+                </p>
+                <p class="mono" v-if="result.optimalUnusedBoostPlays > 0">
+                  🔥未使用火 {{ result.optimalUnusedBoostPlays }}次（pt需求较少时节省）
                 </p>
                 <p class="mono total">
                   <strong>合计</strong> → +{{
