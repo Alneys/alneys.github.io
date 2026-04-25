@@ -25,9 +25,17 @@
 import { reactive, computed, type Ref } from 'vue';
 import { useMltdUtils } from './useMltdUtils';
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../MltdConstant';
-import type { AnniversaryForm, AnniversaryResult } from '../MltdTypes';
+import type { AnniversaryForm, AnniversaryResult, BoostAllocationResult } from '../MltdTypes';
 
 const STORAGE_KEY = 'mltd-anni';
+
+interface PtWithoutNormalAccumulateResult {
+  totalPt: number;
+  boostConsumePlays: number;
+  normalConsumePlays: number;
+  remainingTokens: number;
+  unusedBoostPlays: number;
+}
 
 /**
  * 计算给定火攒次数下，不进行普通攒道具时的总PT
@@ -43,13 +51,7 @@ function calculatePtWithoutNormalAccumulate(
   totalBoostPlays: number,
   availableTokens: number,
   ptNeeded: number,
-): {
-  totalPt: number;
-  boostConsumePlays: number;
-  normalConsumePlays: number;
-  remainingTokens: number;
-  unusedBoostPlays: number;
-} {
+): PtWithoutNormalAccumulateResult {
   const ptFromBoostAccumulate = boostAccumulatePlays * MLTD.ptPerBoostAccumulatePlay;
   const totalTokens = availableTokens + boostAccumulatePlays * MLTD.tokensPerBoostAccumulatePlay;
 
@@ -112,7 +114,7 @@ function calculateOptimalBoostAllocation(
   ptNeeded: number,
   totalBoostPlaysAvailable: number,
   availableTokens: number,
-): { totalBoostAccumulate: number; boostConsume: number; unusedBoostPlays: number } {
+): BoostAllocationResult {
   const totalBoostPlays = totalBoostPlaysAvailable;
   const tokens = availableTokens;
 
@@ -239,7 +241,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
   const f = computed(() => form.value.freeTokenClaimCount || 0);
   const b = computed(() => form.value.boostCount || 0);
 
-  const result = reactive({
+  const result = reactive<AnniversaryResult>({
     /**
      * 步骤1-1：登录赠送道具
      * @formula f × 540
@@ -309,13 +311,12 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 根据目标PT和道具情况，计算最优的火攒道具次数和火清道具次数
      */
     optimalBoostAllocation: computed(
-      (): { totalBoostAccumulate: number; boostConsume: number; unusedBoostPlays: number } => {
-        return calculateOptimalBoostAllocation(
+      (): BoostAllocationResult =>
+        calculateOptimalBoostAllocation(
           result.ptStillNeeded,
           result.totalBoostPlaysAvailable,
           result.tokensAvailableBeforeBoostAllocation,
-        );
-      },
+        ),
     ),
 
     /**
@@ -372,7 +373,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula totalBoostAccumulatePlays × 2142
      */
     ptFromBoostAccumulate: computed(
-      (): number => result.totalBoostAccumulatePlays * MLTD.ptPerBoostAccumulatePlay || 0,
+      (): number => result.totalBoostAccumulatePlays * MLTD.ptPerBoostAccumulatePlay,
     ),
 
     /**
@@ -381,7 +382,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 火清道具不消耗体力，消耗720道具获得4296pt
      */
     ptFromBoostConsume: computed(
-      (): number => result.boostConsumePlays * MLTD.ptPerBoostConsumePlay || 0,
+      (): number => result.boostConsumePlays * MLTD.ptPerBoostConsumePlay,
     ),
 
     /**
@@ -389,7 +390,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula totalBoostAccumulatePlays × 2142
      */
     tokensFromBoostAccumulate: computed(
-      (): number => result.totalBoostAccumulatePlays * MLTD.tokensPerBoostAccumulatePlay || 0,
+      (): number => result.totalBoostAccumulatePlays * MLTD.tokensPerBoostAccumulatePlay,
     ),
 
     /**
@@ -397,7 +398,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula boostConsumePlays × 720
      */
     tokensConsumedByBoost: computed(
-      (): number => result.boostConsumePlays * MLTD.tokensPerConsumePlay || 0,
+      (): number => result.boostConsumePlays * MLTD.tokensPerConsumePlay,
     ),
 
     /**
@@ -405,7 +406,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula totalBoostAccumulatePlays × 450
      */
     staminaForBoostAccumulate: computed(
-      (): number => result.totalBoostAccumulatePlays * MLTD.staminaCostForBoostAccumulate || 0,
+      (): number => result.totalBoostAccumulatePlays * MLTD.staminaCostForBoostAccumulate,
     ),
 
     /**
@@ -443,7 +444,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalAccumulatePlays × 1071
      */
     ptFromNormalAccumulate: computed(
-      (): number => result.normalAccumulatePlays * MLTD.ptPerAccumulatePlay || 0,
+      (): number => result.normalAccumulatePlays * MLTD.ptPerAccumulatePlay,
     ),
 
     /**
@@ -451,7 +452,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalAccumulatePlays × 1071
      */
     tokensFromNormalAccumulate: computed(
-      (): number => result.normalAccumulatePlays * MLTD.tokensPerAccumulatePlay || 0,
+      (): number => result.normalAccumulatePlays * MLTD.tokensPerAccumulatePlay,
     ),
 
     /**
@@ -459,7 +460,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalAccumulatePlays × 450
      */
     staminaForNormalAccumulate: computed(
-      (): number => result.normalAccumulatePlays * MLTD.staminaCostForTokenAccumulate || 0,
+      (): number => result.normalAccumulatePlays * MLTD.staminaCostForTokenAccumulate,
     ),
 
     /**
@@ -477,25 +478,23 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * 步骤5-2：总清道具次数
      * @formula floor(totalTokensAllSources / 720)
      */
-    totalConsumePlays: computed(
-      (): number => Math.floor(result.totalTokensAllSources / MLTD.tokensPerConsumePlay) || 0,
+    totalConsumePlays: computed((): number =>
+      Math.floor(result.totalTokensAllSources / MLTD.tokensPerConsumePlay),
     ),
 
     /**
      * 步骤5-3：普通清道具次数
      * @formula totalConsumePlays - boostConsumePlays
      */
-    normalConsumePlays: computed(
-      (): number => Math.max(0, result.totalConsumePlays - result.boostConsumePlays) || 0,
+    normalConsumePlays: computed((): number =>
+      Math.max(0, result.totalConsumePlays - result.boostConsumePlays),
     ),
 
     /**
      * 步骤5-4：普通清道具获得pt
      * @formula normalConsumePlays × 2148
      */
-    ptFromNormalConsume: computed(
-      (): number => result.normalConsumePlays * MLTD.ptPerConsumePlay || 0,
-    ),
+    ptFromNormalConsume: computed((): number => result.normalConsumePlays * MLTD.ptPerConsumePlay),
 
     /**
      * 步骤5-5：已获得的总pt（不含当前pt）
@@ -513,7 +512,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     ptNeeded: computed((): number => {
       const needed =
         (form.value.targetPt || 0) - (form.value.pt || 0) - result.ptTotalFromOperations;
-      return needed && needed > 0 ? needed : 0;
+      return needed > 0 ? needed : 0;
     }),
 
     /**
@@ -583,8 +582,8 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * 步骤6-2：自然回复体力
      * @formula remainingTime × 288
      */
-    staminaRecovered: computed(
-      (): number => Math.floor((form.value.remainingTime || 0) * MLTD.staminaRecoverPerDay) || 0,
+    staminaRecovered: computed((): number =>
+      Math.floor((form.value.remainingTime || 0) * MLTD.staminaRecoverPerDay),
     ),
 
     /**
