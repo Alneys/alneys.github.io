@@ -112,8 +112,9 @@ export function useVersionCheck() {
       showClose: true,
       customClass: 'version-check-notification',
     });
-
-    console.log('[version-check] 已显示更新通知');
+    if (import.meta.env.DEV) {
+      console.log('[version-check] 已显示更新通知');
+    }
   };
 
   /**
@@ -122,12 +123,16 @@ export function useVersionCheck() {
    */
   const checkForUpdate = async (force = false) => {
     if (checking) {
-      console.log('[version-check] 检测进行中，跳过');
+      if (import.meta.env.DEV) {
+        console.log('[version-check] 检测进行中，跳过');
+      }
       return;
     }
     const now = Date.now();
     if (!force && now - lastCheckAt < CHECK_COOLDOWN) {
-      console.log('[version-check] 冷却时间内，跳过检测');
+      if (import.meta.env.DEV) {
+        console.log('[version-check] 冷却时间内，跳过检测');
+      }
       return;
     }
 
@@ -190,7 +195,9 @@ export function useVersionCheck() {
    */
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
-      console.log('[version-check] 页面重新可见，触发检测');
+      if (import.meta.env.DEV) {
+        console.log('[version-check] 页面重新可见，触发检测');
+      }
       checkForUpdate(false);
     }
   };
@@ -216,13 +223,15 @@ export function useVersionCheck() {
     // 页面可见性变化检测
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    console.log(
-      '[version-check] 已启动，首次检测延迟:',
-      FIRST_CHECK_DELAY / 1000,
-      '秒，轮询间隔:',
-      CHECK_INTERVAL / 60000,
-      '分钟',
-    );
+    if (import.meta.env.DEV) {
+      console.log(
+        '[version-check] 已启动，首次检测延迟:',
+        FIRST_CHECK_DELAY / 1000,
+        '秒，轮询间隔:',
+        CHECK_INTERVAL / 60000,
+        '分钟',
+      );
+    }
   });
 
   onUnmounted(() => {
@@ -239,7 +248,9 @@ export function useVersionCheck() {
       notificationInstance.close();
       notificationInstance = null;
     }
-    console.log('[version-check] 已停止');
+    if (import.meta.env.DEV) {
+      console.log('[version-check] 已停止');
+    }
   });
 
   return {
