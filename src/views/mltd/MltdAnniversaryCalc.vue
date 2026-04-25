@@ -8,6 +8,7 @@
           <el-form
             ref="formRef"
             :model="form"
+            :rules="rules"
             label-width="auto"
             label-position="top"
             style="max-width: 800px"
@@ -19,7 +20,7 @@
                   <el-input
                     v-model.number="form.targetPt"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
+                    :max="MLTD.maxTargetPt"
                     maxlength="8"
                     step="1000"
                     type="number"
@@ -57,7 +58,7 @@
                   <el-input
                     v-model.number="form.plv"
                     :min="1"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxLevel"
+                    :max="MLTD.maxLevel"
                     type="number"
                     inputmode="numeric"
                     placeholder="1"
@@ -71,7 +72,7 @@
                   <el-input
                     v-model.number="form.pt"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTargetPt"
+                    :max="MLTD.maxTargetPt"
                     maxlength="8"
                     type="number"
                     inputmode="numeric"
@@ -86,7 +87,7 @@
                   <el-input
                     v-model.number="form.tokens"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTokens"
+                    :max="MLTD.maxTokens"
                     maxlength="7"
                     type="number"
                     inputmode="numeric"
@@ -106,7 +107,7 @@
                   <el-input
                     v-model.number="form.boostCount"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalBoosts"
+                    :max="MLTD.eventTotalBoosts"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 13"
@@ -120,7 +121,7 @@
                   <el-input
                     v-model.number="form.freeTokenClaimCount"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalDays"
+                    :max="MLTD.eventTotalDays"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 13"
@@ -129,12 +130,12 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="0">
+              <el-col :span="8" :xs="24">
                 <el-form-item label="MAX体力瓶数量" prop="staminaMaxBottleCount">
                   <el-input
                     v-model.number="form.staminaMaxBottleCount"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
+                    :max="MLTD.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -143,12 +144,12 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="0">
+              <el-col :span="8" :xs="24">
                 <el-form-item label="30体力瓶数量" prop="stamina30BottleCount">
                   <el-input
                     v-model.number="form.stamina30BottleCount"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
+                    :max="MLTD.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -157,12 +158,12 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="0">
+              <el-col :span="8" :xs="24">
                 <el-form-item label="20体力瓶数量" prop="stamina20BottleCount">
                   <el-input
                     v-model.number="form.stamina20BottleCount"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
+                    :max="MLTD.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -171,12 +172,12 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="0">
+              <el-col :span="8" :xs="24">
                 <el-form-item label="10体力瓶数量" prop="stamina10BottleCount">
                   <el-input
                     v-model.number="form.stamina10BottleCount"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxStaminaBottles"
+                    :max="MLTD.maxStaminaBottles"
                     type="number"
                     inputmode="numeric"
                     placeholder="0 - 9999"
@@ -226,11 +227,11 @@
               >
                 ⚠️ 当前道具不足以支持全部🔥火清道具次数！需要额外道具
                 {{
-                  (
-                    result.boostConsumePlays * MLTD_ANNIVERSARY_CONSTANTS.tokensPerConsumePlay -
-                    result.tokensFromFixedSources -
-                    result.tokensFromBoostAccumulate
-                  ).toLocaleString('en-US')
+                  formatNumber(
+                    result.boostConsumePlays * MLTD.tokensPerConsumePlay -
+                      result.tokensFromFixedSources -
+                      result.tokensFromBoostAccumulate,
+                  )
                 }}
                 个。
               </el-alert>
@@ -248,29 +249,39 @@
                 <template #title>
                   <strong>火分配详情</strong>
                 </template>
-                <p class="mono">
+                <p class="font-mono">
                   🔥火攒道具 {{ result.totalBoostAccumulatePlays }}次 → +{{
-                    result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? 0
-                  }}pt, +{{ result.tokensFromBoostAccumulate?.toLocaleString('en-US') ?? 0 }}道具
+                    formatNumber(result.ptFromBoostAccumulate)
+                  }}pt, +{{ formatNumber(result.tokensFromBoostAccumulate) }}道具
                 </p>
-                <p class="mono">
+                <p class="font-mono">
                   🔥火清道具 {{ result.boostConsumePlays }}次 → +{{
-                    result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0
-                  }}pt, -{{ result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0 }}道具
+                    formatNumber(result.ptFromBoostConsume)
+                  }}pt, -{{ formatNumber(result.tokensConsumedByBoost) }}道具
                 </p>
-                <p class="mono" v-if="result.optimalUnusedBoostPlays > 0">
+                <p
+                  class="font-mono"
+                  v-if="result.useAutoOptimize && result.optimalUnusedBoostPlays > 0"
+                >
                   🔥未使用火 {{ result.optimalUnusedBoostPlays }}次（pt需求较少时节省）
                 </p>
-                <p class="mono total">
+                <p class="font-mono total">
                   <strong>合计</strong> → +{{
-                    (
-                      (result.ptFromBoostAccumulate ?? 0) + (result.ptFromBoostConsume ?? 0)
-                    ).toLocaleString('en-US')
+                    formatNumber(
+                      (result.ptFromBoostAccumulate ?? 0) + (result.ptFromBoostConsume ?? 0),
+                    )
                   }}pt,
-                  {{
-                    (
-                      (result.tokensFromBoostAccumulate ?? 0) - (result.tokensConsumedByBoost ?? 0)
-                    ).toLocaleString('en-US')
+                  <template
+                    v-if="
+                      (result.tokensFromBoostAccumulate ?? 0) -
+                        (result.tokensConsumedByBoost ?? 0) >=
+                      0
+                    "
+                    >+</template
+                  >{{
+                    formatNumber(
+                      (result.tokensFromBoostAccumulate ?? 0) - (result.tokensConsumedByBoost ?? 0),
+                    )
                   }}道具
                 </p>
               </el-alert>
@@ -279,11 +290,11 @@
             <h2>时间设置</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenAccumulateTime">
+                <el-form-item label="单轮攒道具时间" prop="tokenAccumulateTime">
                   <el-input
                     v-model.number="form.tokenAccumulateTime"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTimeMinutes"
+                    :max="MLTD.maxTimeMinutes"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -298,7 +309,7 @@
                   <el-input
                     v-model.number="form.tokenConsumeTime"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.maxTimeMinutes"
+                    :max="MLTD.maxTimeMinutes"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -313,7 +324,7 @@
                   <el-input
                     v-model.number="form.remainingTime"
                     :min="0"
-                    :max="MLTD_ANNIVERSARY_CONSTANTS.eventTotalDays"
+                    :max="MLTD.eventTotalDays"
                     :step="0.1"
                     type="number"
                     inputmode="decimal"
@@ -328,7 +339,7 @@
             <el-form-item label=" ">
               <el-space wrap>
                 <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
-                <el-button @click="handleClear">清空</el-button>
+                <el-button @click="handleClear">重置</el-button>
                 <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
               </el-space>
             </el-form-item>
@@ -366,7 +377,7 @@
               ⚠️ 当前为手动模式，🔥火使用分配可能并非最优解。
             </el-alert>
             <el-alert
-              :type="result.ptExceeded > 10000 ? 'error' : 'warning'"
+              :type="result.ptExceeded > PT_EXCEEDED_WARNING_THRESHOLD ? 'error' : 'warning'"
               :closable="false"
               style="margin-bottom: 1em"
             >
@@ -435,15 +446,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, computed } from 'vue';
-import type { FormInstance } from 'element-plus';
+import { ref, nextTick, onMounted, computed, useTemplateRef } from 'vue';
 
-import { MLTD_ANNIVERSARY_CONSTANTS } from './MltdConstant';
+import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from './MltdConstant';
 import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
 import type { AnniversaryForm } from './MltdTypes';
 import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';
 
+const PT_EXCEEDED_WARNING_THRESHOLD = 10000;
+
 const form = ref<AnniversaryForm>(createDefaultForm());
+
+const rules = {
+  targetPt: [{ type: 'number', min: 0, max: MLTD.maxTargetPt, message: '请输入有效的目标pt' }],
+  plv: [{ type: 'number', min: 1, max: MLTD.maxLevel, message: '请输入有效的等级' }],
+  pt: [{ type: 'number', min: 0, max: MLTD.maxTargetPt, message: '请输入有效的当前pt' }],
+  tokens: [{ type: 'number', min: 0, max: MLTD.maxTokens, message: '请输入有效的道具数' }],
+  boostCount: [
+    { type: 'number', min: 0, max: MLTD.eventTotalBoosts, message: '请输入有效的火数量' },
+  ],
+  freeTokenClaimCount: [
+    { type: 'number', min: 0, max: MLTD.eventTotalDays, message: '请输入有效的赠送道具次数' },
+  ],
+  staminaMaxBottleCount: [
+    { type: 'number', min: 0, max: MLTD.maxStaminaBottles, message: '请输入有效的体力瓶数量' },
+  ],
+  stamina30BottleCount: [
+    { type: 'number', min: 0, max: MLTD.maxStaminaBottles, message: '请输入有效的体力瓶数量' },
+  ],
+  stamina20BottleCount: [
+    { type: 'number', min: 0, max: MLTD.maxStaminaBottles, message: '请输入有效的体力瓶数量' },
+  ],
+  stamina10BottleCount: [
+    { type: 'number', min: 0, max: MLTD.maxStaminaBottles, message: '请输入有效的体力瓶数量' },
+  ],
+  tokenAccumulateTime: [
+    { type: 'number', min: 0, max: MLTD.maxTimeMinutes, message: '请输入有效的时间' },
+  ],
+  tokenConsumeTime: [
+    { type: 'number', min: 0, max: MLTD.maxTimeMinutes, message: '请输入有效的时间' },
+  ],
+  remainingTime: [
+    { type: 'number', min: 0, max: MLTD.eventTotalDays, message: '请输入有效的剩余天数' },
+  ],
+};
 
 const {
   result,
@@ -456,7 +502,12 @@ const {
   clearLocalStorage,
 } = useMltdAnniversaryCalc(form);
 
-const formRef = ref<FormInstance | null>();
+const formRef = useTemplateRef('formRef');
+
+function formatNumber(n?: number | string): string {
+  const num = Number(n);
+  return Number.isFinite(num) ? num.toLocaleString('en-US') : '0';
+}
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
@@ -485,42 +536,46 @@ function handleTotalBoostAccumulateChange(val: number | number[]) {
 const keyInfoTableData = computed(() => [
   {
     item: '需要钻石数量',
-    value: result.jewelNeeded?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.jewelNeeded),
     time: '/',
     highlight: true,
   },
   {
     item: '🔥火攒道具次数',
-    value: result.totalBoostAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.totalBoostAccumulatePlays),
     time: `${result.boostTimeSpent?.toFixed(2) ?? '?'}分钟`,
   },
   {
     item: '🔥火清道具次数',
-    value: result.boostConsumePlays?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.boostConsumePlays),
     time: `${result.boostConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
   },
   {
     item: '普通攒道具次数',
-    value: result.normalAccumulatePlays?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.normalAccumulatePlays),
     time: `${result.normalAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
   },
   {
     item: '普通清道具次数',
-    value: result.normalConsumePlays?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.normalConsumePlays),
     time: `${result.normalConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
   },
   {
     item: '总攒道具次数',
-    value: result.totalTokenAccumulatePlays?.toLocaleString('en-US') ?? '?',
-    time: `${((result.totalTokenAccumulatePlays || 0) * (form.value.tokenAccumulateTime || 0)).toFixed(2)}分钟`,
+    value: formatNumber(result.totalTokenAccumulatePlays),
+    time: `${result.totalTokenAccumulateTimeSpent?.toFixed(2) ?? '?'}分钟`,
     highlight: true,
   },
   {
     item: '总清道具次数',
-    value: ((result.boostConsumePlays || 0) + (result.normalConsumePlays || 0)).toLocaleString(
-      'en-US',
-    ),
-    time: `${((result.boostConsumeTimeSpent || 0) + (result.normalConsumeTimeSpent || 0)).toFixed(2)}分钟`,
+    value: formatNumber(result.totalTokenConsumePlays),
+    time: `${result.totalConsumeTimeSpent?.toFixed(2) ?? '?'}分钟`,
+    highlight: true,
+  },
+  {
+    item: '总次数',
+    value: formatNumber(result.totalPlays),
+    time: `/`,
     highlight: true,
   },
   {
@@ -542,48 +597,47 @@ const keyInfoTableData = computed(() => [
 ]);
 
 const ptStatusTableData = computed(() => {
-  const tokensConsumedByNormalConsume =
-    result.normalConsumePlays * MLTD_ANNIVERSARY_CONSTANTS.tokensPerConsumePlay;
+  const tokensConsumedByNormalConsume = result.normalConsumePlays * MLTD.tokensPerConsumePlay;
   return [
     {
       item: '当前状态',
-      pt: `${form.value.pt?.toLocaleString('en-US') || 0} pt`,
-      token: `${form.value.tokens?.toLocaleString('en-US') || 0} 个`,
+      pt: `${formatNumber(form.value.pt || 0)} pt`,
+      token: `${formatNumber(form.value.tokens || 0)} 个`,
     },
     {
       item: '来自登录赠送',
       pt: '-',
-      token: `+${result.tokensFromLogin?.toLocaleString('en-US') ?? 0} 个`,
+      token: `+${formatNumber(result.tokensFromLogin)} 个`,
     },
     {
       item: '来自推荐歌曲赠送',
       pt: '-',
-      token: `+${result.tokensFromRecommendedBonus?.toLocaleString('en-US') ?? 0} 个`,
+      token: `+${formatNumber(result.tokensFromRecommendedBonus)} 个`,
     },
     {
       item: '🔥火攒道具',
-      pt: `+${result.ptFromBoostAccumulate?.toLocaleString('en-US') ?? 0} pt`,
-      token: `+${result.tokensFromBoostAccumulate?.toLocaleString('en-US') ?? 0} 个`,
+      pt: `+${formatNumber(result.ptFromBoostAccumulate)} pt`,
+      token: `+${formatNumber(result.tokensFromBoostAccumulate)} 个`,
     },
     {
       item: '🔥火清道具',
-      pt: `+${result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0} pt`,
-      token: `-${result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0} 个`,
+      pt: `+${formatNumber(result.ptFromBoostConsume)} pt`,
+      token: `-${formatNumber(result.tokensConsumedByBoost)} 个`,
     },
     {
       item: '普通攒道具',
-      pt: `+${result.ptFromNormalAccumulate?.toLocaleString('en-US') ?? 0} pt`,
-      token: `+${result.tokensFromNormalAccumulate?.toLocaleString('en-US') ?? 0} 个`,
+      pt: `+${formatNumber(result.ptFromNormalAccumulate)} pt`,
+      token: `+${formatNumber(result.tokensFromNormalAccumulate)} 个`,
     },
     {
       item: '普通清道具',
-      pt: `+${result.ptFromNormalConsume?.toLocaleString('en-US') ?? 0} pt`,
-      token: `-${tokensConsumedByNormalConsume?.toLocaleString('en-US') ?? 0} 个`,
+      pt: `+${formatNumber(result.ptFromNormalConsume)} pt`,
+      token: `-${formatNumber(tokensConsumedByNormalConsume)} 个`,
     },
     {
       item: '汇总',
-      pt: `${((form.value.pt || 0) + (result.ptTotalFromOperations || 0)).toLocaleString('en-US')} pt`,
-      token: `${result.finalTokensRemaining?.toLocaleString('en-US') || 0} 个`,
+      pt: `${formatNumber((form.value.pt || 0) + (result.ptTotalFromOperations || 0))} pt`,
+      token: `${formatNumber(result.finalTokensRemaining)} 个`,
       highlight: true,
     },
   ];
@@ -592,41 +646,41 @@ const ptStatusTableData = computed(() => {
 const staminaTableData = computed(() => [
   {
     item: '最大体力',
-    value: result.currentMaxStamina?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.currentMaxStamina),
   },
   {
     item: '🔥火攒道具消耗体力',
-    value: result.staminaForBoostAccumulate?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.staminaForBoostAccumulate),
   },
   {
     item: '普通攒道具消耗体力',
-    value: result.staminaForNormalAccumulate?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.staminaForNormalAccumulate),
   },
   {
     item: '总消耗体力',
-    value: result.totalStaminaNeeded?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.totalStaminaNeeded),
     highlight: true,
   },
   {
     item: '自然回复体力',
-    value: result.staminaRecovered?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.staminaRecovered),
   },
   {
     item: '每日任务回复体力',
-    value: result.staminaFromDaily?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.staminaFromDaily),
   },
   {
     item: '体力瓶回复体力',
-    value: result.staminaFromBottles?.toLocaleString('en-US') ?? '?',
+    value: formatNumber(result.staminaFromBottles),
   },
   {
     item: '需要额外体力',
-    value: result.extraStaminaNeeded > 0 ? result.extraStaminaNeeded.toLocaleString('en-US') : '0',
+    value: result.extraStaminaNeeded > 0 ? formatNumber(result.extraStaminaNeeded) : '0',
     highlight: true,
   },
   {
     item: '需要回满次数',
-    value: result.fullStaminaRecoveriesNeeded?.toLocaleString('en-US') ?? '0',
+    value: formatNumber(result.fullStaminaRecoveriesNeeded),
   },
 ]);
 
@@ -658,6 +712,7 @@ onMounted(() => {
 function handleClear() {
   formRef.value?.resetFields();
   resetCurrentRemainingTime();
+  applyOptimalAllocation();
 
   nextTick(() => {
     setTimeout(() => {
@@ -703,10 +758,6 @@ function handleClear() {
     color: #67c23a;
     font-size: 14px;
     margin-left: 8px;
-  }
-
-  .mono {
-    font-family: var(--al-font-family-mono);
   }
 
   .total {

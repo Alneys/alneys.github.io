@@ -559,4 +559,377 @@ describe('useMltdAnniversaryCalc', () => {
       expect(loadResult).toBe(false);
     });
   });
+
+  describe('空字符串处理 (v-model.number 清空输入框)', () => {
+    describe('边缘情况 - 空字符串与 0 结果一致性', () => {
+      const createBaseForm = (): AnniversaryForm => ({
+        ...createDefaultForm(),
+        targetPt: 100000,
+        pt: 50000,
+        tokens: 1000,
+        boostCount: 5,
+        freeTokenClaimCount: 5,
+        plv: 100,
+        remainingTime: 5,
+        staminaMaxBottleCount: 10,
+        stamina30BottleCount: 5,
+        stamina20BottleCount: 3,
+        stamina10BottleCount: 2,
+        tokenAccumulateTime: 6.5,
+        tokenConsumeTime: 3,
+      });
+
+      describe('道具相关', () => {
+        it('freeTokenClaimCount 为空字符串时道具相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            freeTokenClaimCount: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            freeTokenClaimCount: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.tokensFromLogin).toBe(rZero.tokensFromLogin);
+          expect(rEmpty.tokensFromRecommendedBonus).toBe(rZero.tokensFromRecommendedBonus);
+          expect(rEmpty.tokensFromFixedSources).toBe(rZero.tokensFromFixedSources);
+          expect(rEmpty.tokensAvailableBeforeBoostAllocation).toBe(
+            rZero.tokensAvailableBeforeBoostAllocation,
+          );
+          expect(rEmpty.tokensFromBoostAccumulate).toBe(rZero.tokensFromBoostAccumulate);
+          expect(rEmpty.tokensConsumedByBoost).toBe(rZero.tokensConsumedByBoost);
+          expect(rEmpty.totalTokensAllSources).toBe(rZero.totalTokensAllSources);
+          expect(rEmpty.finalTokensRemaining).toBe(rZero.finalTokensRemaining);
+        });
+
+        it('tokens 为空字符串时道具相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            tokens: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            tokens: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.tokensFromRemaining).toBe(rZero.tokensFromRemaining);
+          expect(rEmpty.tokensFromFixedSources).toBe(rZero.tokensFromFixedSources);
+          expect(rEmpty.tokensAvailableBeforeBoostAllocation).toBe(
+            rZero.tokensAvailableBeforeBoostAllocation,
+          );
+          expect(rEmpty.totalTokensAllSources).toBe(rZero.totalTokensAllSources);
+          expect(rEmpty.finalTokensRemaining).toBe(rZero.finalTokensRemaining);
+        });
+      });
+
+      describe('PT相关', () => {
+        it('targetPt 为空字符串时PT相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            targetPt: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            targetPt: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.ptStillNeeded).toBe(rZero.ptStillNeeded);
+          expect(rEmpty.ptNeeded).toBe(rZero.ptNeeded);
+          expect(rEmpty.ptExceeded).toBe(rZero.ptExceeded);
+          expect(rEmpty.ptTotalFromOperations).toBe(rZero.ptTotalFromOperations);
+        });
+
+        it('pt 为空字符串时PT相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            pt: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            pt: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.ptStillNeeded).toBe(rZero.ptStillNeeded);
+          expect(rEmpty.ptNeeded).toBe(rZero.ptNeeded);
+          expect(rEmpty.ptExceeded).toBe(rZero.ptExceeded);
+          expect(rEmpty.ptTotalFromOperations).toBe(rZero.ptTotalFromOperations);
+        });
+      });
+
+      describe('体力相关', () => {
+        it('plv 为空字符串时体力相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            plv: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            plv: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.currentMaxStamina).toBe(rZero.currentMaxStamina);
+          expect(rEmpty.staminaFromBottles).toBe(rZero.staminaFromBottles);
+          expect(rEmpty.staminaFromDaily).toBe(rZero.staminaFromDaily);
+          expect(rEmpty.extraStaminaNeeded).toBe(rZero.extraStaminaNeeded);
+          expect(rEmpty.fullStaminaRecoveriesNeeded).toBe(rZero.fullStaminaRecoveriesNeeded);
+          expect(rEmpty.jewelNeeded).toBe(rZero.jewelNeeded);
+        });
+
+        it('remainingTime 为空字符串时体力相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            remainingTime: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            remainingTime: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.staminaRecovered).toBe(rZero.staminaRecovered);
+          expect(rEmpty.extraStaminaNeeded).toBe(rZero.extraStaminaNeeded);
+          expect(rEmpty.fullStaminaRecoveriesNeeded).toBe(rZero.fullStaminaRecoveriesNeeded);
+          expect(rEmpty.jewelNeeded).toBe(rZero.jewelNeeded);
+        });
+
+        it('体力瓶字段为空字符串时体力相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            staminaMaxBottleCount: '' as unknown as number,
+            stamina30BottleCount: '' as unknown as number,
+            stamina20BottleCount: '' as unknown as number,
+            stamina10BottleCount: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            staminaMaxBottleCount: 0,
+            stamina30BottleCount: 0,
+            stamina20BottleCount: 0,
+            stamina10BottleCount: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.staminaFromBottles).toBe(rZero.staminaFromBottles);
+          expect(rEmpty.extraStaminaNeeded).toBe(rZero.extraStaminaNeeded);
+          expect(rEmpty.fullStaminaRecoveriesNeeded).toBe(rZero.fullStaminaRecoveriesNeeded);
+          expect(rEmpty.jewelNeeded).toBe(rZero.jewelNeeded);
+        });
+
+        it('部分体力瓶为空字符串时混合计算应与对照组相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            plv: 100,
+            staminaMaxBottleCount: 2,
+            stamina30BottleCount: '' as unknown as number,
+            stamina20BottleCount: '' as unknown as number,
+            stamina10BottleCount: 5,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            plv: 100,
+            staminaMaxBottleCount: 2,
+            stamina30BottleCount: 0,
+            stamina20BottleCount: 0,
+            stamina10BottleCount: 5,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.currentMaxStamina).toBe(rZero.currentMaxStamina);
+          expect(rEmpty.staminaFromBottles).toBe(rZero.staminaFromBottles);
+          expect(rEmpty.extraStaminaNeeded).toBe(rZero.extraStaminaNeeded);
+          expect(rEmpty.fullStaminaRecoveriesNeeded).toBe(rZero.fullStaminaRecoveriesNeeded);
+          expect(rEmpty.jewelNeeded).toBe(rZero.jewelNeeded);
+        });
+      });
+
+      describe('次数相关', () => {
+        it('boostCount 为空字符串时次数相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            boostCount: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            boostCount: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.totalBoostPlaysAvailable).toBe(rZero.totalBoostPlaysAvailable);
+          expect(rEmpty.optimalTotalBoostAccumulatePlays).toBe(
+            rZero.optimalTotalBoostAccumulatePlays,
+          );
+          expect(rEmpty.optimalBoostConsumePlays).toBe(rZero.optimalBoostConsumePlays);
+          expect(rEmpty.optimalUnusedBoostPlays).toBe(rZero.optimalUnusedBoostPlays);
+          expect(rEmpty.totalBoostAccumulatePlays).toBe(rZero.totalBoostAccumulatePlays);
+          expect(rEmpty.boostConsumePlays).toBe(rZero.boostConsumePlays);
+          expect(rEmpty.ptFromBoostAccumulate).toBe(rZero.ptFromBoostAccumulate);
+          expect(rEmpty.ptFromBoostConsume).toBe(rZero.ptFromBoostConsume);
+          expect(rEmpty.tokensFromBoostAccumulate).toBe(rZero.tokensFromBoostAccumulate);
+          expect(rEmpty.tokensConsumedByBoost).toBe(rZero.tokensConsumedByBoost);
+          expect(rEmpty.staminaForBoostAccumulate).toBe(rZero.staminaForBoostAccumulate);
+          expect(rEmpty.boostPlays).toBe(rZero.boostPlays);
+        });
+      });
+
+      describe('时间相关', () => {
+        it('tokenAccumulateTime 为空字符串时时间相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            tokenAccumulateTime: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            tokenAccumulateTime: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.boostTimeSpent).toBe(rZero.boostTimeSpent);
+          expect(rEmpty.normalAccumulateTimeSpent).toBe(rZero.normalAccumulateTimeSpent);
+          expect(rEmpty.totalTokenAccumulateTimeSpent).toBe(rZero.totalTokenAccumulateTimeSpent);
+          expect(rEmpty.totalTimeSpent).toBe(rZero.totalTimeSpent);
+        });
+
+        it('tokenConsumeTime 为空字符串时时间相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            tokenConsumeTime: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            tokenConsumeTime: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.boostConsumeTimeSpent).toBe(rZero.boostConsumeTimeSpent);
+          expect(rEmpty.normalConsumeTimeSpent).toBe(rZero.normalConsumeTimeSpent);
+          expect(rEmpty.totalConsumeTimeSpent).toBe(rZero.totalConsumeTimeSpent);
+          expect(rEmpty.totalTimeSpent).toBe(rZero.totalTimeSpent);
+        });
+      });
+
+      describe('钻石相关', () => {
+        it('影响钻石的多个字段为空字符串时钻石相关属性应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            plv: '' as unknown as number,
+            remainingTime: '' as unknown as number,
+            staminaMaxBottleCount: '' as unknown as number,
+            stamina30BottleCount: '' as unknown as number,
+            stamina20BottleCount: '' as unknown as number,
+            stamina10BottleCount: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            plv: 0,
+            remainingTime: 0,
+            staminaMaxBottleCount: 0,
+            stamina30BottleCount: 0,
+            stamina20BottleCount: 0,
+            stamina10BottleCount: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.jewelNeeded).toBe(rZero.jewelNeeded);
+          expect(rEmpty.fullStaminaRecoveriesNeeded).toBe(rZero.fullStaminaRecoveriesNeeded);
+        });
+      });
+
+      describe('布尔/状态', () => {
+        it('布尔属性应返回正确的布尔值', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            targetPt: '' as unknown as number,
+            pt: '' as unknown as number,
+            boostCount: '' as unknown as number,
+            freeTokenClaimCount: '' as unknown as number,
+            tokens: '' as unknown as number,
+            plv: '' as unknown as number,
+            remainingTime: '' as unknown as number,
+          });
+
+          const { result } = useMltdAnniversaryCalc(formEmpty);
+          await nextTick();
+
+          expect(typeof result.useAutoOptimize).toBe('boolean');
+          expect(typeof result.isBoostConsumeTokensInsufficient).toBe('boolean');
+        });
+      });
+
+      describe('复合对象', () => {
+        it('optimalBoostAllocation 子属性应与对照组相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            targetPt: '' as unknown as number,
+            pt: '' as unknown as number,
+            boostCount: '' as unknown as number,
+            freeTokenClaimCount: '' as unknown as number,
+            tokens: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            targetPt: 0,
+            pt: 0,
+            boostCount: 0,
+            freeTokenClaimCount: 0,
+            tokens: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.optimalBoostAllocation.totalBoostAccumulate).toBe(
+            rZero.optimalBoostAllocation.totalBoostAccumulate,
+          );
+          expect(rEmpty.optimalBoostAllocation.boostConsume).toBe(
+            rZero.optimalBoostAllocation.boostConsume,
+          );
+          expect(rEmpty.optimalBoostAllocation.unusedBoostPlays).toBe(
+            rZero.optimalBoostAllocation.unusedBoostPlays,
+          );
+        });
+      });
+    });
+  });
 });

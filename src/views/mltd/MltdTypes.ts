@@ -2,6 +2,8 @@
  * MLTD 周年活动计算器类型定义
  */
 
+import type { ComputedRef } from 'vue';
+
 export interface AnniversaryForm {
   eventEndTime: Date;
   targetPt?: number;
@@ -23,48 +25,64 @@ export interface AnniversaryForm {
   useAutoOptimize?: boolean;
 }
 
+export interface BoostAllocationResult {
+  totalBoostAccumulate: number;
+  boostConsume: number;
+  unusedBoostPlays: number;
+}
+
 export interface AnniversaryResult {
-  totalBoostPlaysAvailable: number;
-  optimalTotalBoostAccumulatePlays: number;
-  optimalBoostConsumePlays: number;
-  totalBoostAccumulatePlays: number;
-  boostConsumePlays: number;
-  tokensFromLogin: number;
-  tokensFromRecommendedBonus: number;
-  tokensFromRemaining: number;
-  ptFromLogin: number;
-  ptFromRecommendedBonus: number;
-  ptFromRemainingTokens: number;
-  ptFromFixedSources: number;
-  currentMaxStamina: number;
-  ptStillNeeded: number;
-  tokensAvailableBeforeBoostAllocation: number;
-  useAutoOptimize: boolean;
-  ptFromBoostAccumulate: number;
-  ptFromBoostConsume: number;
-  tokensFromBoostAccumulate: number;
-  tokensConsumedByBoost: number;
-  staminaForBoostAccumulate: number;
-  ptFromConfirmedSources: number;
-  ptNeededAfterBoost: number;
-  ptPerNormalAccumulatePlay: number;
-  normalAccumulatePlays: number;
-  ptFromNormalAccumulate: number;
-  staminaForNormalAccumulate: number;
-  ptNeeded: number;
-  ptExceeded: number;
-  boostPlays: number;
-  totalTokenAccumulatePlays: number;
-  tokenConsumePlays: number;
-  totalStaminaNeeded: number;
-  staminaRecovered: number;
-  staminaFromBottles: number;
-  staminaFromDaily: number;
-  jewelNeeded: number;
-  boostTimeSpent: number;
-  boostConsumeTimeSpent: number;
-  normalAccumulateTimeSpent: number;
-  tokenConsumeTimeSpent: number;
-  totalTimeSpent: number;
-  finalTokensRemaining: number;
+  tokensFromLogin: ComputedRef<number>;
+  tokensFromRecommendedBonus: ComputedRef<number>;
+  tokensFromRemaining: ComputedRef<number>;
+  tokensFromFixedSources: ComputedRef<number>;
+  currentMaxStamina: ComputedRef<number>;
+  ptStillNeeded: ComputedRef<number>;
+  tokensAvailableBeforeBoostAllocation: ComputedRef<number>;
+  totalBoostPlaysAvailable: ComputedRef<number>;
+  optimalBoostAllocation: ComputedRef<BoostAllocationResult>;
+  useAutoOptimize: ComputedRef<boolean>;
+  optimalTotalBoostAccumulatePlays: ComputedRef<number>;
+  optimalBoostConsumePlays: ComputedRef<number>;
+  optimalUnusedBoostPlays: ComputedRef<number>;
+  totalBoostAccumulatePlays: ComputedRef<number>;
+  boostConsumePlays: ComputedRef<number>;
+  ptFromBoostAccumulate: ComputedRef<number>;
+  ptFromBoostConsume: ComputedRef<number>;
+  tokensFromBoostAccumulate: ComputedRef<number>;
+  tokensConsumedByBoost: ComputedRef<number>;
+  staminaForBoostAccumulate: ComputedRef<number>;
+  ptFromBoostSources: ComputedRef<number>;
+  ptNeededAfterBoost: ComputedRef<number>;
+  normalAccumulatePlays: ComputedRef<number>;
+  ptFromNormalAccumulate: ComputedRef<number>;
+  tokensFromNormalAccumulate: ComputedRef<number>;
+  staminaForNormalAccumulate: ComputedRef<number>;
+  totalTokensAllSources: ComputedRef<number>;
+  totalConsumePlays: ComputedRef<number>;
+  normalConsumePlays: ComputedRef<number>;
+  ptFromNormalConsume: ComputedRef<number>;
+  ptTotalFromOperations: ComputedRef<number>;
+  ptNeeded: ComputedRef<number>;
+  ptExceeded: ComputedRef<number>;
+  boostPlays: ComputedRef<number>;
+  totalTokenAccumulatePlays: ComputedRef<number>;
+  totalTokenConsumePlays: ComputedRef<number>;
+  finalTokensRemaining: ComputedRef<number>;
+  isBoostConsumeTokensInsufficient: ComputedRef<boolean>;
+  totalStaminaNeeded: ComputedRef<number>;
+  staminaRecovered: ComputedRef<number>;
+  staminaFromBottles: ComputedRef<number>;
+  staminaFromDaily: ComputedRef<number>;
+  extraStaminaNeeded: ComputedRef<number>;
+  fullStaminaRecoveriesNeeded: ComputedRef<number>;
+  jewelNeeded: ComputedRef<number>;
+  boostTimeSpent: ComputedRef<number>;
+  boostConsumeTimeSpent: ComputedRef<number>;
+  normalAccumulateTimeSpent: ComputedRef<number>;
+  normalConsumeTimeSpent: ComputedRef<number>;
+  totalConsumeTimeSpent: ComputedRef<number>;
+  totalTimeSpent: ComputedRef<number>;
+  totalTokenAccumulateTimeSpent: ComputedRef<number>;
+  totalPlays: ComputedRef<number>;
 }

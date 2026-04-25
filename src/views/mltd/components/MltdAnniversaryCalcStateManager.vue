@@ -16,15 +16,6 @@
 </template>
 
 <script setup lang="ts">
-const emit = defineEmits<{
-  'save-success': [];
-  'load-success': [];
-  'clear-success': [];
-  'save-error': [error: unknown];
-  'load-error': [error: unknown];
-  'clear-error': [error: unknown];
-}>();
-
 const props = defineProps<{
   saveToLocalStorage: () => boolean;
   loadFromLocalStorage: () => boolean;
@@ -36,13 +27,11 @@ const handleSaveToLocalStorage = () => {
     const success = props.saveToLocalStorage();
     if (success) {
       ElMessage.success('保存成功');
-      emit('save-success');
     } else {
       ElMessage.error('保存失败');
     }
   } catch (error) {
     ElMessage.error('保存失败');
-    emit('save-error', error);
     throw error;
   }
 };
@@ -52,13 +41,11 @@ const handleLoadFromLocalStorage = () => {
     const success = props.loadFromLocalStorage();
     if (success) {
       ElMessage.success('读取成功');
-      emit('load-success');
     } else {
       ElMessage.error('读取失败：没有数据');
     }
   } catch (error) {
     ElMessage.error('读取失败');
-    emit('load-error', error);
     throw error;
   }
 };
@@ -68,13 +55,11 @@ const handleClearLocalStorage = () => {
     const success = props.clearLocalStorage();
     if (success) {
       ElMessage.success('清除成功');
-      emit('clear-success');
     } else {
       ElMessage.error('清除失败');
     }
   } catch (error) {
     ElMessage.error('清除失败');
-    emit('clear-error', error);
     throw error;
   }
 };
