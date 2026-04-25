@@ -328,7 +328,7 @@
             <el-form-item label=" ">
               <el-space wrap>
                 <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
-                <el-button @click="handleClear">清空</el-button>
+                <el-button @click="handleClear">重置</el-button>
                 <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
               </el-space>
             </el-form-item>
@@ -658,6 +658,7 @@ onMounted(() => {
 function handleClear() {
   formRef.value?.resetFields();
   resetCurrentRemainingTime();
+  applyOptimalAllocation();
 
   nextTick(() => {
     setTimeout(() => {
