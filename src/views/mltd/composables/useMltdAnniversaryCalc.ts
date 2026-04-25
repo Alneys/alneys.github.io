@@ -29,28 +29,19 @@ import type { AnniversaryForm, AnniversaryResult } from '../MltdTypes';
 
 const STORAGE_KEY = 'mltd-anni';
 
-/** 火攒道具单次直接获得PT：2142 */
-const PT_PER_BOOST_ACCUMULATE = MLTD.ptPerBoostAccumulatePlay;
-/** 火清道具单次PT贡献：2148 × 2 = 4296 */
-const PT_PER_BOOST_CONSUME = MLTD.ptPerBoostConsumePlay;
-/** 普通攒道具单次直接获得PT：1071 */
-const PT_PER_NORMAL_ACCUMULATE = MLTD.ptPerAccumulatePlay;
-/** 普通清道具单次PT贡献：2148 */
-const PT_PER_NORMAL_CONSUME = MLTD.ptPerConsumePlay;
-
 /**
  * 计算给定火攒次数下，不进行普通攒道具时的总PT
  *
- * @param x - 火攒道具次数
- * @param N - 总火使用次数
- * @param T - 可用道具
+ * @param boostAccumulatePlays - 火攒道具次数
+ * @param totalBoostPlays - 总火使用次数
+ * @param availableTokens - 可用道具
  * @param ptNeeded - 还需要获得的PT
  * @returns 总PT及相关信息，不可行返回 totalPt=-1
  */
 function calculatePtWithoutNormalAccumulate(
-  x: number,
-  N: number,
-  T: number,
+  boostAccumulatePlays: number,
+  totalBoostPlays: number,
+  availableTokens: number,
   ptNeeded: number,
 ): {
   totalPt: number;
@@ -59,35 +50,42 @@ function calculatePtWithoutNormalAccumulate(
   remainingTokens: number;
   unusedBoostPlays: number;
 } {
-  const ptFromBoostAccumulate = x * PT_PER_BOOST_ACCUMULATE;
+  const ptFromBoostAccumulate = boostAccumulatePlays * MLTD.ptPerBoostAccumulatePlay;
+  const totalTokens = availableTokens + boostAccumulatePlays * MLTD.tokensPerBoostAccumulatePlay;
+
   const ptNeededAfterAccumulate = Math.max(0, ptNeeded - ptFromBoostAccumulate);
-  const yNeeded = Math.ceil(ptNeededAfterAccumulate / PT_PER_BOOST_CONSUME);
-  const y = Math.max(0, Math.min(yNeeded, N - x));
-  const unusedBoostPlays = N - x - y;
+  const minConsumePlaysNeeded = Math.ceil(ptNeededAfterAccumulate / MLTD.ptPerBoostConsumePlay);
+  const maxConsumeFromTokens = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
+  const boostConsumePlays = Math.max(
+    0,
+    Math.min(
+      Math.max(minConsumePlaysNeeded, maxConsumeFromTokens),
+      totalBoostPlays - boostAccumulatePlays,
+    ),
+  );
+  const unusedBoostPlays = totalBoostPlays - boostAccumulatePlays - boostConsumePlays;
 
-  const totalTokens = T + x * MLTD.tokensPerBoostAccumulatePlay;
-
-  if (totalTokens < y * MLTD.tokensPerConsumePlay) {
+  if (totalTokens < boostConsumePlays * MLTD.tokensPerConsumePlay) {
     return {
       totalPt: -1,
-      boostConsumePlays: y,
+      boostConsumePlays,
       normalConsumePlays: 0,
       remainingTokens: totalTokens,
       unusedBoostPlays,
     };
   }
 
-  const remainingTokens = totalTokens - y * MLTD.tokensPerConsumePlay;
+  const remainingTokens = totalTokens - boostConsumePlays * MLTD.tokensPerConsumePlay;
   const normalConsumePlays = Math.floor(remainingTokens / MLTD.tokensPerConsumePlay);
   const tokensAfterNormalConsume = remainingTokens - normalConsumePlays * MLTD.tokensPerConsumePlay;
 
-  const ptFromBoost = ptFromBoostAccumulate + y * PT_PER_BOOST_CONSUME;
-  const ptFromNormalConsume = normalConsumePlays * PT_PER_NORMAL_CONSUME;
+  const ptFromBoost = ptFromBoostAccumulate + boostConsumePlays * MLTD.ptPerBoostConsumePlay;
+  const ptFromNormalConsume = normalConsumePlays * MLTD.ptPerConsumePlay;
   const totalPt = ptFromBoost + ptFromNormalConsume;
 
   return {
     totalPt,
-    boostConsumePlays: y,
+    boostConsumePlays,
     normalConsumePlays,
     remainingTokens: tokensAfterNormalConsume,
     unusedBoostPlays,
@@ -119,15 +117,15 @@ function calculateOptimalBoostAllocation(
     return { totalBoostAccumulate: 0, boostConsume: 0, unusedBoostPlays: 0 };
   }
 
-  const N = totalBoostPlaysAvailable;
-  const T = availableTokens;
+  const totalBoostPlays = totalBoostPlaysAvailable;
+  const tokens = availableTokens;
 
   let lo = 0;
-  let hi = N;
+  let hi = totalBoostPlays;
 
   while (lo < hi) {
     const mid = Math.floor((lo + hi) / 2);
-    const result = calculatePtWithoutNormalAccumulate(mid, N, T, ptNeeded);
+    const result = calculatePtWithoutNormalAccumulate(mid, totalBoostPlays, tokens, ptNeeded);
 
     if (result.totalPt < 0) {
       lo = mid + 1;
@@ -141,7 +139,7 @@ function calculateOptimalBoostAllocation(
     }
   }
 
-  const finalResult = calculatePtWithoutNormalAccumulate(lo, N, T, ptNeeded);
+  const finalResult = calculatePtWithoutNormalAccumulate(lo, totalBoostPlays, tokens, ptNeeded);
   return {
     totalBoostAccumulate: lo,
     boostConsume: finalResult.boostConsumePlays,
@@ -184,7 +182,7 @@ function calculateNormalAccumulatePlays(
   }
 
   const baseTokens = availableTokens + minAccumulateForBoostConsume * MLTD.tokensPerAccumulatePlay;
-  const upperBound = Math.ceil(ptNeeded / PT_PER_NORMAL_ACCUMULATE) + 1;
+  const upperBound = Math.ceil(ptNeeded / MLTD.ptPerAccumulatePlay) + 1;
   let lo = 0;
   let hi = upperBound;
 
@@ -194,8 +192,8 @@ function calculateNormalAccumulatePlays(
     const totalConsumePlays = Math.floor(totalTokens / MLTD.tokensPerConsumePlay);
     const normalConsumePlays = Math.max(0, totalConsumePlays - boostConsumePlays);
     const totalPt =
-      (minAccumulateForBoostConsume + mid) * PT_PER_NORMAL_ACCUMULATE +
-      normalConsumePlays * PT_PER_NORMAL_CONSUME;
+      (minAccumulateForBoostConsume + mid) * MLTD.ptPerAccumulatePlay +
+      normalConsumePlays * MLTD.ptPerConsumePlay;
 
     if (totalPt >= ptNeeded) {
       hi = mid;
@@ -374,7 +372,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula totalBoostAccumulatePlays × 2142
      */
     ptFromBoostAccumulate: computed(
-      (): number => result.totalBoostAccumulatePlays * PT_PER_BOOST_ACCUMULATE || 0,
+      (): number => result.totalBoostAccumulatePlays * MLTD.ptPerBoostAccumulatePlay || 0,
     ),
 
     /**
@@ -383,7 +381,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @description 火清道具不消耗体力，消耗720道具获得4296pt
      */
     ptFromBoostConsume: computed(
-      (): number => result.boostConsumePlays * PT_PER_BOOST_CONSUME || 0,
+      (): number => result.boostConsumePlays * MLTD.ptPerBoostConsumePlay || 0,
     ),
 
     /**
@@ -445,7 +443,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalAccumulatePlays × 1071
      */
     ptFromNormalAccumulate: computed(
-      (): number => result.normalAccumulatePlays * PT_PER_NORMAL_ACCUMULATE || 0,
+      (): number => result.normalAccumulatePlays * MLTD.ptPerAccumulatePlay || 0,
     ),
 
     /**
@@ -496,7 +494,7 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * @formula normalConsumePlays × 2148
      */
     ptFromNormalConsume: computed(
-      (): number => result.normalConsumePlays * PT_PER_NORMAL_CONSUME || 0,
+      (): number => result.normalConsumePlays * MLTD.ptPerConsumePlay || 0,
     ),
 
     /**
