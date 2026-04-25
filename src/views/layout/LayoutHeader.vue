@@ -10,7 +10,12 @@ const isDark = useDark();
   <header id="layout-header">
     <div class="layout-max-width-container">
       <router-link to="/" class="title"><h1>Alneys.github.io</h1></router-link>
-      <el-switch v-model="isDark" :inactive-action-icon="Sunny" :active-action-icon="Moon" />
+      <el-switch
+        v-model="isDark"
+        class="switch-dark"
+        :inactive-action-icon="Sunny"
+        :active-action-icon="Moon"
+      />
     </div>
     <!-- <CgssCountdownHeader></CgssCountdownHeader> -->
   </header>
@@ -34,6 +39,12 @@ const isDark = useDark();
         margin: 0;
       }
     }
+  }
+
+  .switch-dark {
+    --el-switch-on-color: #4c4d4f;
+    --el-switch-off-color: var(--im-color-miya);
+    --el-switch-border-color: rgba(255, 255, 255, 0.4);
   }
 }
 </style>
