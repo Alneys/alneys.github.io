@@ -258,7 +258,7 @@
                     result.ptFromBoostConsume?.toLocaleString('en-US') ?? 0
                   }}pt, -{{ result.tokensConsumedByBoost?.toLocaleString('en-US') ?? 0 }}道具
                 </p>
-                <p class="mono" v-if="result.optimalUnusedBoostPlays > 0">
+                <p class="mono" v-if="result.useAutoOptimize && result.optimalUnusedBoostPlays > 0">
                   🔥未使用火 {{ result.optimalUnusedBoostPlays }}次（pt需求较少时节省）
                 </p>
                 <p class="mono total">
@@ -267,7 +267,14 @@
                       (result.ptFromBoostAccumulate ?? 0) + (result.ptFromBoostConsume ?? 0)
                     ).toLocaleString('en-US')
                   }}pt,
-                  {{
+                  <template
+                    v-if="
+                      (result.tokensFromBoostAccumulate ?? 0) -
+                        (result.tokensConsumedByBoost ?? 0) >=
+                      0
+                    "
+                    >+</template
+                  >{{
                     (
                       (result.tokensFromBoostAccumulate ?? 0) - (result.tokensConsumedByBoost ?? 0)
                     ).toLocaleString('en-US')
@@ -279,7 +286,7 @@
             <h2>时间设置</h2>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24">
-                <el-form-item label="单轮（攒450票+清票）攒道具时间" prop="tokenAccumulateTime">
+                <el-form-item label="单轮攒道具时间" prop="tokenAccumulateTime">
                   <el-input
                     v-model.number="form.tokenAccumulateTime"
                     :min="0"
