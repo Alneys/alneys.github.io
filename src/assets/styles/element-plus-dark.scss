@@ -3,6 +3,9 @@
 @use 'element-plus/theme-chalk/src/dark/css-vars.scss';
 
 html.dark {
+  --el-org-popper-bg-color-light: #1d1e1f;
+  --el-org-popper-bg-color-dark: #e5eaf3;
+
   --el-text-color-primary: rgba(255, 255, 255, 0.85);
   --el-text-color-regular: rgba(255, 255, 255, 0.85);
   --el-text-color-secondary: rgba(255, 255, 255, 0.65);

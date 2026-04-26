@@ -53,10 +53,19 @@
     '': #ffffff,
     'page': #f5f5f5,
     'overlay': #ffffff,
+  ),
+  $popper: (
+    'bg-color-light': var(--el-org-popper-bg-color-light),
+    'bg-color-dark': var(--el-org-popper-bg-color-dark),
   )
 );
 
 @use './element-plus-dark.scss';
+
+:root {
+  --el-org-popper-bg-color-light: #ffffff;
+  --el-org-popper-bg-color-dark: #303133;
+}
 
 // Import all styles (disabled when importing on demand)
 // @use 'element-plus/theme-chalk/src/index.scss';
