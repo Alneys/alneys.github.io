@@ -775,7 +775,7 @@ function handleClear() {
     padding: 8px;
     line-height: 23px;
     font-weight: bold;
-    color: black;
+    color: var(--el-text-color-primary);
     text-align: center;
     background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
     border-top: 1px solid var(--border-color);
@@ -790,8 +790,8 @@ function handleClear() {
 
   :deep(.el-table) {
     --el-table-border-color: var(--border-color);
-    --el-table-text-color: black;
-    --el-table-header-text-color: black;
+    --el-table-text-color: var(--el-text-color-primary);
+    --el-table-header-text-color: var(--el-text-color-primary);
 
     .el-table__header th {
       background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
