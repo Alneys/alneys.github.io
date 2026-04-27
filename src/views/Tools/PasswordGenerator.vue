@@ -1,6 +1,10 @@
 <template>
   <div class="password-generator">
-    <h1 class="view-title">随机密码生成器</h1>
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/tools' }">开发者工具</el-breadcrumb-item>
+      <el-breadcrumb-item>随机密码生成器</el-breadcrumb-item>
+    </el-breadcrumb>
     <div class="al-divider"></div>
 
     <div class="password-generator-container">
@@ -193,6 +197,12 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.password-generator {
+  .el-breadcrumb {
+    margin-top: 0.5em;
+  }
+}
+
 .password-generator-container {
   margin-top: 1em;
 }

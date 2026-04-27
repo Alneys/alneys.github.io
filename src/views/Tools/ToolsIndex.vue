@@ -1,8 +1,9 @@
-<script setup lang="ts"></script>
-
 <template>
   <div id="view-tools">
-    <h1 class="view-title">开发者工具</h1>
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item>开发者工具</el-breadcrumb-item>
+    </el-breadcrumb>
     <div class="al-divider"></div>
     <div class="main">
       <router-link to="/tools/password-generator">
@@ -12,8 +13,14 @@
   </div>
 </template>
 
+<script setup lang="ts"></script>
+
 <style lang="scss" scoped>
 #view-tools {
+  .el-breadcrumb {
+    margin-top: 0.5em;
+  }
+
   > .main {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
