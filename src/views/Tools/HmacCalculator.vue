@@ -11,7 +11,7 @@
       <!-- 密钥输入区 -->
       <div class="key-section">
         <span class="section-label">密钥:</span>
-        <div class="key-encoding-switch">
+        <div class="encoding-switch">
           <el-radio-group v-model="keyEncoding">
             <el-radio-button value="text">明文</el-radio-button>
             <el-radio-button value="hex">Hex</el-radio-button>
@@ -24,14 +24,14 @@
           type="textarea"
           :rows="2"
           placeholder="请输入密钥..."
-          class="key-input font-mono"
+          class="mono-input font-mono"
         />
       </div>
 
       <!-- 消息输入区 -->
       <div class="message-section">
         <span class="section-label">消息:</span>
-        <div class="input-mode-switch">
+        <div class="encoding-switch">
           <el-radio-group v-model="inputMode">
             <el-radio-button value="text">文本输入</el-radio-button>
             <el-radio-button value="file">文件上传</el-radio-button>
@@ -45,7 +45,7 @@
           type="textarea"
           :rows="4"
           placeholder="请输入要计算 HMAC 的消息..."
-          class="text-input font-mono"
+          class="mono-input font-mono"
         />
 
         <!-- 文件上传 -->
@@ -427,49 +427,35 @@ function copyToClipboard(): void {
   margin-top: 1em;
 }
 
-.key-section {
-  margin-bottom: 1.5em;
+.input-section {
+  margin-bottom: 1em;
 
   .section-label {
     display: block;
     font-weight: 500;
-    margin-bottom: 0.5em;
+    margin-bottom: 1em;
   }
 
-  .key-encoding-switch {
+  .encoding-switch {
     display: block;
     margin-bottom: 1em;
     margin-top: 1em;
   }
 
-  .key-input {
+  .mono-input {
     :deep(textarea) {
       font-family: var(--font-mono, monospace);
     }
   }
 }
 
-.message-section {
-  margin-top: 1.5em;
-  margin-bottom: 1.5em;
-
-  .section-label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.5em;
-  }
-
-  .input-mode-switch {
-    display: block;
-    margin-bottom: 1em;
-    margin-top: 0.5em;
-  }
+.key-section {
+  @extend .input-section;
 }
 
-.text-input {
-  :deep(textarea) {
-    font-family: var(--font-mono, monospace);
-  }
+.message-section {
+  @extend .input-section;
+  margin-top: 1em;
 }
 
 .file-upload {

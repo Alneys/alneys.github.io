@@ -8,26 +8,29 @@
     <div class="al-divider"></div>
 
     <div class="hash-calculator-container">
-      <!-- 输入方式选择 -->
-      <el-radio-group v-model="inputMode" class="input-mode-switch">
-        <el-radio-button value="text">文本输入</el-radio-button>
-        <el-radio-button value="file">文件上传</el-radio-button>
-      </el-radio-group>
+      <!-- 消息输入区 -->
+      <div class="input-section">
+        <span class="section-label">消息:</span>
+        <div class="encoding-switch">
+          <el-radio-group v-model="inputMode">
+            <el-radio-button value="text">文本输入</el-radio-button>
+            <el-radio-button value="file">文件上传</el-radio-button>
+          </el-radio-group>
+        </div>
 
-      <!-- 文本输入区 -->
-      <div v-show="inputMode === 'text'" class="input-section">
+        <!-- 文本输入 -->
         <el-input
+          v-show="inputMode === 'text'"
           v-model="inputText"
           type="textarea"
           :rows="4"
           placeholder="请输入要计算哈希值的文本..."
-          class="text-input"
+          class="mono-input font-mono"
         />
-      </div>
 
-      <!-- 文件上传区 -->
-      <div v-show="inputMode === 'file'" class="input-section">
+        <!-- 文件上传 -->
         <el-upload
+          v-show="inputMode === 'file'"
           drag
           :auto-upload="false"
           :show-file-list="false"
@@ -338,18 +341,25 @@ function copyToClipboard(): void {
   margin-top: 1em;
 }
 
-.input-mode-switch {
-  margin-bottom: 1em;
-}
-
 .input-section {
-  margin-top: 1em;
   margin-bottom: 1em;
-}
 
-.text-input {
-  :deep(textarea) {
-    font-family: var(--font-mono, monospace);
+  .section-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 1em;
+  }
+
+  .encoding-switch {
+    display: block;
+    margin-bottom: 1em;
+    margin-top: 1em;
+  }
+
+  .mono-input {
+    :deep(textarea) {
+      font-family: var(--font-mono, monospace);
+    }
   }
 }
 
