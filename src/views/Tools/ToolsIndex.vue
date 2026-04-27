@@ -12,6 +12,9 @@
       <router-link to="/tools/uuid-generator">
         <el-card shadow="hover">UUID 生成器</el-card>
       </router-link>
+      <router-link to="/tools/hash-calculator">
+        <el-card shadow="hover">哈希值计算器</el-card>
+      </router-link>
     </div>
   </div>
 </template>

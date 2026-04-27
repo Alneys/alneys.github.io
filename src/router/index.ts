@@ -73,6 +73,11 @@ const router = createRouter({
               name: 'tools-uuid-generator',
               component: () => import('@/views/Tools/UuidGenerator.vue'),
             },
+            {
+              path: 'hash-calculator',
+              name: 'tools-hash-calculator',
+              component: () => import('@/views/Tools/HashCalculator.vue'),
+            },
           ],
         },
         {
