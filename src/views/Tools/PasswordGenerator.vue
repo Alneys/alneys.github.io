@@ -9,7 +9,12 @@
 
     <div class="password-generator-container">
       <div class="password-display">
-        <el-input v-model="generatedPassword" readonly ref="passwordInput" class="password-input">
+        <el-input
+          v-model="generatedPassword"
+          readonly
+          ref="passwordInput"
+          class="password-input font-mono"
+        >
           <template #append>
             <el-button @click="copyPassword" :icon="copyIcon">
               {{ copyButtonText }}
@@ -71,6 +76,7 @@
     <div class="password-generator-info">
       <ul>
         <li>本功能不涉及远程请求，仅本地运行</li>
+        <li>使用 <code>crypto.getRandomValues</code> 密码学安全的随机数生成器，保证安全性</li>
       </ul>
     </div>
   </div>
@@ -86,6 +92,13 @@ const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
 const NUMBERS = '0123456789';
 const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 const SIMILAR_CHARS = /[il1Lo0O]/g;
+
+// 密码学安全的随机整数生成（使用 Web Crypto API）
+function getSecureRandomInt(max: number): number {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return array[0]! % max;
+}
 
 // 复制图标状态 - 改为使用shallowRef避免组件被转换为reactive对象
 const copyIcon = shallowRef<typeof CopyDocument>(CopyDocument);
@@ -156,7 +169,7 @@ function generatePassword() {
 
   // 填充剩余长度
   for (let i = password.length; i < options.length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charsetLength));
+    password += charset.charAt(getSecureRandomInt(charsetLength));
   }
 
   // 打乱密码字符顺序
@@ -172,14 +185,14 @@ function getRandomChar(charset: string, excludeSimilar: boolean): string {
   if (excludeSimilar) {
     charset = charset.replace(SIMILAR_CHARS, '');
   }
-  return charset.charAt(Math.floor(Math.random() * charset.length));
+  return charset.charAt(getSecureRandomInt(charset.length));
 }
 
 // 打乱字符串
 function shuffleString(str: string): string {
   const array = str.split('');
   for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = getSecureRandomInt(i + 1);
     [array[i], array[j]] = [array[j]!, array[i]!];
   }
   return array.join('');
