@@ -68,6 +68,11 @@ const router = createRouter({
               name: 'tools-password-generator',
               component: () => import('@/views/Tools/PasswordGenerator.vue'),
             },
+            {
+              path: 'uuid-generator',
+              name: 'tools-uuid-generator',
+              component: () => import('@/views/Tools/UuidGenerator.vue'),
+            },
           ],
         },
         {
