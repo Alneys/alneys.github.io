@@ -1,11 +1,20 @@
 <template>
   <div class="password-generator">
-    <h1 class="view-title">密码生成器</h1>
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/tools' }">开发者工具</el-breadcrumb-item>
+      <el-breadcrumb-item>随机密码生成器</el-breadcrumb-item>
+    </el-breadcrumb>
     <div class="al-divider"></div>
 
     <div class="password-generator-container">
       <div class="password-display">
-        <el-input v-model="generatedPassword" readonly ref="passwordInput" class="password-input">
+        <el-input
+          v-model="generatedPassword"
+          readonly
+          ref="passwordInput"
+          class="password-input font-mono"
+        >
           <template #append>
             <el-button @click="copyPassword" :icon="copyIcon">
               {{ copyButtonText }}
@@ -14,7 +23,7 @@
         </el-input>
       </div>
 
-      <el-card class="settings-panel">
+      <el-card class="settings-panel" shadow="never">
         <div class="setting-row">
           <span>密码长度:</span>
           <el-slider
@@ -39,7 +48,16 @@
         </div>
 
         <div class="setting-row">
-          <el-checkbox v-model="options.includeSymbols"> 包含特殊字符 (!@#$%^&*) </el-checkbox>
+          <el-checkbox v-model="options.includeSymbols"> 包含特殊字符 </el-checkbox>
+        </div>
+        <div class="setting-row setting-indent" v-show="options.includeSymbols">
+          <span class="setting-label">自定义字符:</span>
+          <el-input
+            v-model="customSymbols"
+            placeholder="清空则恢复默认字符集"
+            clearable
+            class="symbols-input"
+          />
         </div>
 
         <div class="setting-row">
@@ -57,8 +75,8 @@
     <div class="al-divider"></div>
     <div class="password-generator-info">
       <ul>
-        <li>本功能对应代码完全使用Qwen3-Max与Qwen3-Coder生成</li>
         <li>本功能不涉及远程请求，仅本地运行</li>
+        <li>使用 <code>crypto.getRandomValues</code> 密码学安全的随机数生成器，保证安全性</li>
       </ul>
     </div>
   </div>
@@ -75,6 +93,13 @@ const NUMBERS = '0123456789';
 const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 const SIMILAR_CHARS = /[il1Lo0O]/g;
 
+// 密码学安全的随机整数生成（使用 Web Crypto API）
+function getSecureRandomInt(max: number): number {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return array[0]! % max;
+}
+
 // 复制图标状态 - 改为使用shallowRef避免组件被转换为reactive对象
 const copyIcon = shallowRef<typeof CopyDocument>(CopyDocument);
 
@@ -88,6 +113,9 @@ const options = reactive({
   excludeSimilar: false,
 });
 
+// 自定义特殊字符（默认使用标准字符集）
+const customSymbols = ref(SYMBOLS);
+
 // 生成的密码
 const generatedPassword = ref('');
 
@@ -99,12 +127,15 @@ const passwordInput = ref<HTMLInputElement | null>(null);
 
 // 生成密码函数
 function generatePassword() {
+  // 获取实际使用的特殊字符集
+  const effectiveSymbols = customSymbols.value.trim() || SYMBOLS;
+
   let charset = '';
 
   if (options.includeUppercase) charset += UPPERCASE;
   if (options.includeLowercase) charset += LOWERCASE;
   if (options.includeNumbers) charset += NUMBERS;
-  if (options.includeSymbols) charset += SYMBOLS;
+  if (options.includeSymbols) charset += effectiveSymbols;
 
   // 如果没有选择任何字符集，则默认使用字母和数字
   if (charset === '') {
@@ -133,12 +164,12 @@ function generatePassword() {
     password += getRandomChar(NUMBERS, options.excludeSimilar);
   }
   if (options.includeSymbols) {
-    password += getRandomChar(SYMBOLS, options.excludeSimilar);
+    password += getRandomChar(effectiveSymbols, options.excludeSimilar);
   }
 
   // 填充剩余长度
   for (let i = password.length; i < options.length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charsetLength));
+    password += charset.charAt(getSecureRandomInt(charsetLength));
   }
 
   // 打乱密码字符顺序
@@ -154,14 +185,14 @@ function getRandomChar(charset: string, excludeSimilar: boolean): string {
   if (excludeSimilar) {
     charset = charset.replace(SIMILAR_CHARS, '');
   }
-  return charset.charAt(Math.floor(Math.random() * charset.length));
+  return charset.charAt(getSecureRandomInt(charset.length));
 }
 
 // 打乱字符串
 function shuffleString(str: string): string {
   const array = str.split('');
   for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = getSecureRandomInt(i + 1);
     [array[i], array[j]] = [array[j]!, array[i]!];
   }
   return array.join('');
@@ -186,6 +217,11 @@ watch(
   { deep: true },
 );
 
+// 监听自定义特殊字符变化，自动重新生成密码
+watch(customSymbols, (newValue) => {
+  generatePassword();
+});
+
 // 组件挂载时生成初始密码
 onMounted(() => {
   generatePassword();
@@ -193,6 +229,12 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.password-generator {
+  .el-breadcrumb {
+    margin-top: 0.5em;
+  }
+}
+
 .password-generator-container {
   margin-top: 1em;
 }
@@ -229,6 +271,21 @@ onMounted(() => {
   .length-slider {
     flex: 1;
     margin-left: 1em;
+  }
+}
+
+.setting-indent {
+  padding-left: 1.5em;
+
+  .setting-label {
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .symbols-input {
+    flex: 1;
+    max-width: 300px;
   }
 }
 

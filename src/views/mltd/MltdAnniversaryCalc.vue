@@ -384,7 +384,7 @@
               当前实际获得的pt将超过目标pt
               {{ result.ptExceeded.toLocaleString('en-US') }} pt
             </el-alert>
-            <el-card class="mltd-anni-result-card">
+            <el-card class="mltd-anni-result-card" shadow="never">
               <template #header>关键信息</template>
               <el-table
                 :data="keyInfoTableData"
@@ -408,7 +408,7 @@
               </el-table>
             </el-card>
 
-            <el-card class="mltd-anni-result-card">
+            <el-card class="mltd-anni-result-card" shadow="never">
               <template #header>当前 pt / 道具情况</template>
               <el-table
                 :data="ptStatusTableData"
@@ -426,7 +426,7 @@
                 />
               </el-table>
             </el-card>
-            <el-card class="mltd-anni-result-card">
+            <el-card class="mltd-anni-result-card" shadow="never">
               <template #header>体力情况</template>
               <el-table
                 :data="staminaTableData"
@@ -723,9 +723,6 @@ function handleClear() {
 </script>
 
 <style lang="scss" scoped>
-@use 'sass:map';
-@use '@/assets/styles/im/im-colors.scss' as im;
-
 .boost-allocation-card {
   margin-bottom: 1em;
   --el-card-padding: 16px;
@@ -750,18 +747,18 @@ function handleClear() {
   }
 
   .slider-hint {
-    color: #666;
+    color: var(--el-text-color-secondary);
     font-size: 14px;
   }
 
   .auto-mode-hint {
-    color: #67c23a;
+    color: var(--el-color-success);
     font-size: 14px;
     margin-left: 8px;
   }
 
   .total {
-    border-top: 1px dashed #999;
+    border-top: 1px dashed var(--el-border-color-darker);
     padding-top: 8px;
     margin-bottom: 0.5em;
   }
@@ -769,15 +766,15 @@ function handleClear() {
 
 .mltd-anni-result-card {
   margin-bottom: 1em;
-  --border-color: rgb(128 128 128);
+  --border-color: var(--el-border-color);
 
   :deep(.el-card__header) {
     padding: 8px;
     line-height: 23px;
     font-weight: bold;
-    color: black;
+    color: var(--el-text-color-primary);
     text-align: center;
-    background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+    background-color: var(--el-color-primary-light-3);
     border-top: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
     border-left: 1px solid var(--border-color);
@@ -790,15 +787,15 @@ function handleClear() {
 
   :deep(.el-table) {
     --el-table-border-color: var(--border-color);
-    --el-table-text-color: black;
-    --el-table-header-text-color: black;
+    --el-table-text-color: var(--el-text-color-primary);
+    --el-table-header-text-color: var(--el-text-color-primary);
 
     .el-table__header th {
-      background-color: rgba(map.get(im.$colors, 'miya'), 0.5);
+      background-color: var(--el-color-primary-light-3);
     }
 
     .el-table__row--striped .el-table__cell {
-      background-color: rgb(237 238 242);
+      background-color: var(--el-fill-color-light);
     }
 
     .el-table__cell {
@@ -812,7 +809,7 @@ function handleClear() {
   }
 
   :deep(.highlight-row) {
-    color: red;
+    color: var(--el-color-danger);
 
     .el-table__cell {
       font-weight: bold;

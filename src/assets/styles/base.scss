@@ -93,3 +93,71 @@ samp {
     sans-serif;
   font-size: 1em;
 }
+
+// ========================================
+// 中性色应用 - 原生标签样式
+// ========================================
+
+$el-exclude: ':not([class^="el-"] *)';
+
+:where(body) {
+  color: var(--al-color-text);
+  background-color: var(--al-color-bg-layout);
+}
+
+:where(h1, h2, h3, h4, h5, h6)#{$el-exclude} {
+  color: var(--al-color-text);
+}
+
+:where(p, span, div)#{$el-exclude} {
+  color: var(--al-color-text);
+}
+
+:where(small)#{$el-exclude},
+:where(.text-secondary) {
+  color: var(--al-color-text-secondary);
+}
+
+:where(.text-tertiary) {
+  color: var(--al-color-text-tertiary);
+}
+
+:where(:disabled, [disabled])#{$el-exclude},
+:where(.text-disabled) {
+  color: var(--al-color-text-quaternary);
+}
+
+:where(hr)#{$el-exclude} {
+  border-top: 1px solid var(--al-color-border-secondary);
+}
+
+:where(a)#{$el-exclude} {
+  color: var(--al-color-text);
+
+  &:hover {
+    color: var(--im-color-miya);
+  }
+}
+
+:where(code, pre)#{$el-exclude} {
+  background-color: var(--al-color-fill-tertiary);
+}
+
+:where(blockquote)#{$el-exclude} {
+  border-left-color: var(--al-color-border);
+  color: var(--al-color-text-secondary);
+}
+
+:where(table)#{$el-exclude} {
+  :where(th, td) {
+    border-color: var(--al-color-border-secondary);
+  }
+
+  :where(th) {
+    background-color: var(--al-color-fill-quaternary);
+  }
+}
+
+:where(ul, ol)#{$el-exclude} {
+  color: var(--al-color-text);
+}

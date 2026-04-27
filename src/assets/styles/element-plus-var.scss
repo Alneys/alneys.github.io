@@ -24,8 +24,48 @@
   ),
   $select: (
     'input-font-size': 16px,
+  ),
+  $text-color: (
+    'primary': rgba(0, 0, 0, 0.88),
+    'regular': rgba(0, 0, 0, 0.88),
+    'secondary': rgba(0, 0, 0, 0.65),
+    'placeholder': rgba(0, 0, 0, 0.25),
+    'disabled': rgba(0, 0, 0, 0.25),
+  ),
+  $border-color: (
+    '': #d9d9d9,
+    'light': #d9d9d9,
+    'lighter': rgba(5, 5, 5, 0.06),
+    'extra-light': rgba(0, 0, 0, 0.04),
+    'dark': #d9d9d9,
+    'darker': #bfbfbf,
+  ),
+  $fill-color: (
+    '': #f5f5f5,
+    'light': #f5f5f5,
+    'lighter': #fafafa,
+    'extra-light': rgba(0, 0, 0, 0.02),
+    'dark': #e8e8e8,
+    'darker': #e0e0e0,
+    'blank': #ffffff,
+  ),
+  $bg-color: (
+    '': #ffffff,
+    'page': #f5f5f5,
+    'overlay': #ffffff,
+  ),
+  $popper: (
+    'bg-color-light': var(--el-org-popper-bg-color-light),
+    'bg-color-dark': var(--el-org-popper-bg-color-dark),
   )
 );
+
+@use './element-plus-dark.scss';
+
+:root {
+  --el-org-popper-bg-color-light: #ffffff;
+  --el-org-popper-bg-color-dark: #303133;
+}
 
 // Import all styles (disabled when importing on demand)
 // @use 'element-plus/theme-chalk/src/index.scss';

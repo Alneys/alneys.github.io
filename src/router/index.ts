@@ -59,9 +59,29 @@ const router = createRouter({
           path: '/tools',
           children: [
             {
+              path: '',
+              name: 'tools',
+              component: () => import('@/views/Tools/ToolsIndex.vue'),
+            },
+            {
               path: 'password-generator',
               name: 'tools-password-generator',
               component: () => import('@/views/Tools/PasswordGenerator.vue'),
+            },
+            {
+              path: 'uuid-generator',
+              name: 'tools-uuid-generator',
+              component: () => import('@/views/Tools/UuidGenerator.vue'),
+            },
+            {
+              path: 'hash-calculator',
+              name: 'tools-hash-calculator',
+              component: () => import('@/views/Tools/HashCalculator.vue'),
+            },
+            {
+              path: 'hmac-calculator',
+              name: 'tools-hmac-calculator',
+              component: () => import('@/views/Tools/HmacCalculator.vue'),
             },
           ],
         },

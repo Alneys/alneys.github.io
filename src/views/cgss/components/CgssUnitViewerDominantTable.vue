@@ -154,9 +154,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, toRef } from 'vue';
+import { ref, computed, watch, toRef } from 'vue';
 import type { TableColumnCtx } from 'element-plus';
-import CgssCardSkillTable from '../data/cgss_extracted_card_skill_table_ssr.json';
 import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 import {
   type CgssCardSkillTableItem,
@@ -183,6 +182,7 @@ import {
 
 // 传入属性
 const props = defineProps<{
+  skillData: CgssCardSkillTableItem[] | null;
   showSimpleLabels: boolean;
   clickIconAction: string;
   nameFilter: string;
@@ -362,11 +362,16 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
   return result;
 };
 
-onMounted(() => {
-  tableData.value = initializeData(CgssCardSkillTable as CgssCardSkillTableItem[]);
-});
+watch(
+  () => props.skillData,
+  (newData) => {
+    if (newData) {
+      tableData.value = initializeData(newData);
+    }
+  },
+  { immediate: true },
+);
 
-// 组合式函数：图标操作
 const clickIconActionRef = computed(() => props.clickIconAction);
 
 // 组合式函数：亮度状态

@@ -1,5 +1,5 @@
 <template>
-  <h1 class="view-title">Endfield gacha info</h1>
+  <h1 class="view-title">明日方舟终末地 抽卡信息</h1>
   <div class="al-divider"></div>
   <div class="endfield-gacha-title" id="endfield-gacha-character" style="font-weight: bold">
     角色
@@ -149,8 +149,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted, nextTick, useTemplateRef } from 'vue';
+import {
+  ref,
+  reactive,
+  watch,
+  onMounted,
+  onUnmounted,
+  nextTick,
+  useTemplateRef,
+  shallowRef,
+} from 'vue';
+import { useDark } from '@vueuse/core';
 import * as echarts from 'echarts';
+
+const isDark = useDark();
+const chartCharacter = shallowRef<echarts.ECharts | null>(null);
+const chartWeapon = shallowRef<echarts.ECharts | null>(null);
 import {
   type GachaStrategy,
   type GachaSimulationResult,
@@ -852,7 +866,10 @@ async function redrawCharacterChart() {
   await nextTick();
 
   if (chartCharacterRef.value) {
-    const chart = echarts.init(chartCharacterRef.value);
+    if (!chartCharacter.value) {
+      chartCharacter.value = echarts.init(chartCharacterRef.value);
+    }
+    const chart = chartCharacter.value;
 
     const processedData = processDataForCharacterChart(frequencyList.value);
 
@@ -1010,12 +1027,8 @@ async function redrawCharacterChart() {
       ],
     };
 
-    chart.setOption(option);
-
-    // 响应式调整
-    window.addEventListener('resize', () => {
-      chart.resize();
-    });
+    chart.setOption(option, { notMerge: true });
+    chart.setTheme(isDark.value ? 'dark' : 'default');
   }
 }
 
@@ -1040,7 +1053,10 @@ async function redrawWeaponChart() {
   await nextTick();
 
   if (chartWeaponRef.value) {
-    const chart = echarts.init(chartWeaponRef.value);
+    if (!chartWeapon.value) {
+      chartWeapon.value = echarts.init(chartWeaponRef.value);
+    }
+    const chart = chartWeapon.value;
 
     const processedData = processDataForWeaponChart(weaponFrequencyList.value);
 
@@ -1130,12 +1146,8 @@ async function redrawWeaponChart() {
       ],
     };
 
-    chart.setOption(option);
-
-    // 响应式调整
-    window.addEventListener('resize', () => {
-      chart.resize();
-    });
+    chart.setOption(option, { notMerge: true });
+    chart.setTheme(isDark.value ? 'dark' : 'default');
   }
 }
 
@@ -1177,10 +1189,32 @@ watch(
   },
 );
 
+function handleResize() {
+  chartCharacter.value?.resize();
+  chartWeapon.value?.resize();
+}
+
 onMounted(async () => {
   // 初始化图表
   await redrawCharacterChart();
   await redrawWeaponChart();
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  chartCharacter.value?.dispose();
+  chartWeapon.value?.dispose();
+});
+
+watch(isDark, () => {
+  if (isDark.value) {
+    chartCharacter.value?.setTheme('dark');
+    chartWeapon.value?.setTheme('dark');
+  } else {
+    chartCharacter.value?.setTheme('default');
+    chartWeapon.value?.setTheme('default');
+  }
 });
 </script>
 
@@ -1202,7 +1236,7 @@ onMounted(async () => {
   font-weight: bold;
   text-align: center;
   padding: 0.5em;
-  background-color: #f5f5f5;
+  background-color: var(--el-fill-color);
   border-radius: 4px;
 }
 </style>
