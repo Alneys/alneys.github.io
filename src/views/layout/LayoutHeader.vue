@@ -32,9 +32,9 @@ const isDark = useDark();
     justify-content: space-between;
 
     .title {
-      color: white;
       text-decoration: none;
       h1 {
+        color: white;
         line-height: 1.25;
         margin: 0;
       }
