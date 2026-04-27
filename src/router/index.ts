@@ -78,6 +78,11 @@ const router = createRouter({
               name: 'tools-hash-calculator',
               component: () => import('@/views/Tools/HashCalculator.vue'),
             },
+            {
+              path: 'hmac-calculator',
+              name: 'tools-hmac-calculator',
+              component: () => import('@/views/Tools/HmacCalculator.vue'),
+            },
           ],
         },
         {

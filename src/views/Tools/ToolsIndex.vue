@@ -15,6 +15,9 @@
       <router-link to="/tools/hash-calculator">
         <el-card shadow="hover">哈希值计算器</el-card>
       </router-link>
+      <router-link to="/tools/hmac-calculator">
+        <el-card shadow="hover">HMAC 消息验证码计算器</el-card>
+      </router-link>
     </div>
   </div>
 </template>
