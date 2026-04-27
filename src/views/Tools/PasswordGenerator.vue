@@ -23,7 +23,7 @@
         </el-input>
       </div>
 
-      <el-card class="settings-panel">
+      <el-card class="settings-panel" shadow="never">
         <div class="setting-row">
           <span>密码长度:</span>
           <el-slider

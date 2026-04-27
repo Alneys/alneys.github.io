@@ -69,7 +69,7 @@
       </div>
 
       <!-- 设置面板 -->
-      <el-card class="settings-panel">
+      <el-card class="settings-panel" shadow="never">
         <div class="setting-row">
           <span>哈希算法:</span>
           <el-select v-model="selectedAlgorithm" placeholder="选择算法" class="algorithm-select">

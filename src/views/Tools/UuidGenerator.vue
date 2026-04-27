@@ -23,7 +23,7 @@
       </div>
 
       <!-- 设置面板 -->
-      <el-card class="settings-panel">
+      <el-card class="settings-panel" shadow="never">
         <div class="setting-row">
           <span>UUID 版本:</span>
           <el-radio-group v-model="options.version">
