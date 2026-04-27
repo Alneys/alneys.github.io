@@ -60,7 +60,6 @@
             >https://starlight.kirara.ca</el-link
           >
         </p>
-        <p>本组件全程使用氛围编程，项目初期使用了 Qwen2.5-Max 与 Qwen3-Max，项目重构使用了 GLM-5</p>
       </div>
     </div>
   </div>

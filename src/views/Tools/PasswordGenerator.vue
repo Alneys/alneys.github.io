@@ -61,7 +61,6 @@
     <div class="al-divider"></div>
     <div class="password-generator-info">
       <ul>
-        <li>本功能对应代码完全使用Qwen3-Max与Qwen3-Coder生成</li>
         <li>本功能不涉及远程请求，仅本地运行</li>
       </ul>
     </div>
