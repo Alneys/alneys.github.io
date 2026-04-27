@@ -43,7 +43,16 @@
         </div>
 
         <div class="setting-row">
-          <el-checkbox v-model="options.includeSymbols"> 包含特殊字符 (!@#$%^&*) </el-checkbox>
+          <el-checkbox v-model="options.includeSymbols"> 包含特殊字符 </el-checkbox>
+        </div>
+        <div class="setting-row setting-indent" v-show="options.includeSymbols">
+          <span class="setting-label">自定义字符:</span>
+          <el-input
+            v-model="customSymbols"
+            placeholder="清空则恢复默认字符集"
+            clearable
+            class="symbols-input"
+          />
         </div>
 
         <div class="setting-row">
@@ -91,6 +100,9 @@ const options = reactive({
   excludeSimilar: false,
 });
 
+// 自定义特殊字符（默认使用标准字符集）
+const customSymbols = ref(SYMBOLS);
+
 // 生成的密码
 const generatedPassword = ref('');
 
@@ -102,12 +114,15 @@ const passwordInput = ref<HTMLInputElement | null>(null);
 
 // 生成密码函数
 function generatePassword() {
+  // 获取实际使用的特殊字符集
+  const effectiveSymbols = customSymbols.value.trim() || SYMBOLS;
+
   let charset = '';
 
   if (options.includeUppercase) charset += UPPERCASE;
   if (options.includeLowercase) charset += LOWERCASE;
   if (options.includeNumbers) charset += NUMBERS;
-  if (options.includeSymbols) charset += SYMBOLS;
+  if (options.includeSymbols) charset += effectiveSymbols;
 
   // 如果没有选择任何字符集，则默认使用字母和数字
   if (charset === '') {
@@ -136,7 +151,7 @@ function generatePassword() {
     password += getRandomChar(NUMBERS, options.excludeSimilar);
   }
   if (options.includeSymbols) {
-    password += getRandomChar(SYMBOLS, options.excludeSimilar);
+    password += getRandomChar(effectiveSymbols, options.excludeSimilar);
   }
 
   // 填充剩余长度
@@ -189,6 +204,11 @@ watch(
   { deep: true },
 );
 
+// 监听自定义特殊字符变化，自动重新生成密码
+watch(customSymbols, (newValue) => {
+  generatePassword();
+});
+
 // 组件挂载时生成初始密码
 onMounted(() => {
   generatePassword();
@@ -238,6 +258,21 @@ onMounted(() => {
   .length-slider {
     flex: 1;
     margin-left: 1em;
+  }
+}
+
+.setting-indent {
+  padding-left: 1.5em;
+
+  .setting-label {
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .symbols-input {
+    flex: 1;
+    max-width: 300px;
   }
 }
 
