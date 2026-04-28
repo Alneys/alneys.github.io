@@ -120,7 +120,6 @@
 <script setup lang="ts">
 import { ref, reactive, shallowRef, computed, watch } from 'vue';
 import { UploadFilled, CopyDocument, Check } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
 import type { UploadFile } from 'element-plus';
 import CryptoJS from 'crypto-js';
 import { sm3 } from 'sm-crypto';
@@ -252,9 +251,11 @@ function calculateHashFromFile(file: File, algorithm: Algorithm): Promise<string
 async function calculateHash(): Promise<void> {
   // 验证输入
   if (inputMode.value === 'text' && !inputText.value.trim()) {
+    ElMessage.warning('请输入消息');
     return;
   }
   if (inputMode.value === 'file' && !selectedFile.value) {
+    ElMessage.warning('请选择文件');
     return;
   }
 
@@ -270,6 +271,8 @@ async function calculateHash(): Promise<void> {
     // 重置复制状态
     copyIcon.value = CopyDocument;
     copyButtonText.value = '复制';
+  } catch {
+    ElMessage.error('计算失败，请检查输入');
   } finally {
     isCalculating.value = false;
   }
