@@ -19,10 +19,10 @@
           >
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
-                <el-option label="Theater / Trust" :value="3"></el-option>
-                <el-option label="Anniversary" :value="5"></el-option>
-                <el-option label="[开发中] Tour / Tour Bingo" :value="4" disabled></el-option>
-                <el-option label="其他活动开发中" :value="0" disabled></el-option>
+                <el-option label="Theater" value="theater"></el-option>
+                <el-option label="Anniversary" value="anniversary"></el-option>
+                <el-option label="Tour" value="tour" disabled></el-option>
+                <el-option label="其他活动开发中" value="disabled" disabled></el-option>
                 <!-- 1: Showtime -->
                 <!-- 2: Millicolle! -->
                 <!-- 3: Theater / Trust -->
@@ -95,7 +95,12 @@
               </el-space>
             </el-form-item>
           </el-form>
-          <el-alert v-show="form.eventType === 5" type="warning" :closable="false" show-icon>
+          <el-alert
+            v-show="form.eventType === 'anniversary'"
+            type="warning"
+            :closable="false"
+            show-icon
+          >
             <p style="font-size: var(--el-font-size-base)">
               注意：周年活动有每日推荐曲和普通曲的区别
             </p>
@@ -177,7 +182,7 @@ const { eventTheaterChoices } = useMltdUtils();
 const formRef = ref<FormInstance | null>();
 
 interface formCheckedInterface {
-  eventType: number;
+  eventType: string;
   targetPt: number;
   pt: number;
   token: number;
@@ -186,7 +191,7 @@ interface formCheckedInterface {
 type formType = { [P in keyof formCheckedInterface]: formCheckedInterface[P] | undefined };
 
 const form = reactive<formType>({
-  eventType: 3,
+  eventType: 'theater',
   targetPt: undefined,
   pt: undefined,
   token: undefined,
@@ -301,10 +306,10 @@ function handleClear() {
 async function handleSubmit() {
   preprocessingForm();
   calculatedForm.value = { ...form };
-  if (form.eventType === 3 || form.eventType === 5) {
+  if (form.eventType === 'theater' || form.eventType === 'anniversary') {
     parkingResult.value = await calcParkingTheater(
       form as formCheckedInterface,
-      form.eventType === 5,
+      form.eventType === 'anniversary',
     );
   }
   calculatedFlag.value = true;
@@ -317,7 +322,9 @@ async function handleSubmit() {
 function preprocessingForm() {
   Object.keys(form).forEach((each) => {
     const key = each as keyof typeof form;
-    form[key] = Number(form[key]) || 0;
+    if (key !== 'eventType') {
+      form[key] = Number(form[key]) || 0;
+    }
   });
 }
 
