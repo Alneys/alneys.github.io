@@ -91,8 +91,54 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
  * MLTD 活动控分相关常量定义
  */
 export const MLTD_PARKING_CONSTANTS = {
-  /** 活动剧场选择项列表 */
+  /** Theater 活动剧场选择项列表 */
   eventTheaterChoices: [
+    {
+      name: '活动曲',
+      multiplier: '1倍',
+      pt: 537,
+      token: -180,
+    },
+    {
+      name: 'MM / OM通常曲',
+      multiplier: '300打工票',
+      pt: 595,
+      token: 595,
+    },
+    {
+      name: 'MM / OM 通常曲',
+      multiplier: '1倍体力',
+      pt: 85,
+      token: 85,
+    },
+    {
+      name: '6M 通常曲',
+      multiplier: '1倍体力',
+      pt: 64,
+      token: 64,
+    },
+    {
+      name: '2M+ 通常曲',
+      multiplier: '1倍体力',
+      pt: 62,
+      token: 62,
+    },
+    {
+      name: '4M 通常曲',
+      multiplier: '1倍体力',
+      pt: 49,
+      token: 49,
+    },
+    {
+      name: '2M 通常曲',
+      multiplier: '1倍体力',
+      pt: 35,
+      token: 35,
+    },
+  ] as EventTheaterChoice[],
+
+  /** Anniversary 活动剧场选择项列表 */
+  eventAnniversaryChoices: [
     {
       name: '活动曲',
       multiplier: '1倍',
@@ -104,14 +150,12 @@ export const MLTD_PARKING_CONSTANTS = {
       multiplier: '450打工票',
       pt: 1071,
       token: 1071,
-      anniversaryOnly: true,
     },
     {
       name: 'MM / OM 普通曲',
       multiplier: '450打工票',
       pt: 893,
       token: 893,
-      anniversaryOnly: true,
     },
     {
       name: 'MM / OM通常曲',
@@ -124,7 +168,6 @@ export const MLTD_PARKING_CONSTANTS = {
       multiplier: '1倍体力',
       pt: 102,
       token: 102,
-      anniversaryOnly: true,
     },
     {
       name: 'MM / OM 通常曲',

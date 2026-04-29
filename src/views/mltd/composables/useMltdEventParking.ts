@@ -3,9 +3,14 @@
  * 提供表单预处理、计算逻辑和状态管理
  */
 
-import { ref, type Ref } from 'vue';
+import { ref, computed, type Ref } from 'vue';
 import { MLTD_PARKING_CONSTANTS } from '../MltdConstant';
-import type { ParkingForm, ParkingResult, ParkingResultItem } from '../MltdTypes';
+import type {
+  ParkingForm,
+  ParkingResult,
+  ParkingResultItem,
+  EventTheaterChoice,
+} from '../MltdTypes';
 
 /**
  * 创建默认表单数据
@@ -24,7 +29,13 @@ export const createDefaultParkingForm = (): ParkingForm => ({
  * @returns 计算结果和操作方法
  */
 export function useMltdEventParking(form: Ref<ParkingForm>) {
-  const eventTheaterChoices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
+  // 根据活动类型返回对应的选择项列表
+  const eventTheaterChoices = computed<EventTheaterChoice[]>(() => {
+    if (form.value.eventType === 'anniversary') {
+      return MLTD_PARKING_CONSTANTS.eventAnniversaryChoices;
+    }
+    return MLTD_PARKING_CONSTANTS.eventTheaterChoices;
+  });
 
   const calculatedFlag = ref(false);
   const parkingResult = ref<ParkingResult>();
@@ -56,14 +67,11 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   const handleSubmit = async () => {
     preprocessingForm();
     if (form.value.eventType === 'theater' || form.value.eventType === 'anniversary') {
-      parkingResult.value = await calcParkingTheater(
-        {
-          targetPt: form.value.targetPt ?? 0,
-          pt: form.value.pt ?? 0,
-          token: form.value.token ?? 0,
-        },
-        form.value.eventType === 'anniversary',
-      );
+      parkingResult.value = await calcParkingTheater({
+        targetPt: form.value.targetPt ?? 0,
+        pt: form.value.pt ?? 0,
+        token: form.value.token ?? 0,
+      });
     }
     calculatedFlag.value = true;
   };
@@ -71,13 +79,13 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   /**
    * Theater / Anniversary 活动控分计算算法
    * @param formData - 表单数据（已预处理）
-   * @param isAnniversary - 是否为周年活动
    * @returns 计算结果
    */
-  async function calcParkingTheater(
-    formData: { targetPt: number; pt: number; token: number },
-    isAnniversary = false,
-  ): Promise<ParkingResult> {
+  async function calcParkingTheater(formData: {
+    targetPt: number;
+    pt: number;
+    token: number;
+  }): Promise<ParkingResult> {
     if (formData.pt >= formData.targetPt) {
       return { flag: false, message: '当前pt已达到或超过目标pt' };
     }
@@ -85,10 +93,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       return { flag: false, message: 'pt差距大于10000，请缩小后重试' };
     }
 
-    // 过滤可用的选择项
-    const choices = eventTheaterChoices.filter(
-      (each) => isAnniversary || !each.anniversaryOnly,
-    );
+    // 使用当前活动类型对应的选择项
+    const choices = eventTheaterChoices.value;
 
     // 栈节点结构
     interface StackNode {

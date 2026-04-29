@@ -222,7 +222,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
   if (!parkingResult.value?.result) return [];
 
   const data: PlanTableRow[] = parkingResult.value.result.map((item) => {
-    const choice = eventTheaterChoices.find(
+    const choice = eventTheaterChoices.value.find(
       (c: EventTheaterChoice) => c.name === item.name && c.multiplier === item.multiplier,
     );
     const ptTotal = (choice?.pt ?? 0) * item.value;
