@@ -121,4 +121,5 @@ export interface EventTheaterChoice {
   multiplier: string;
   pt: number;
   token: number;
+  extra?: boolean;
 }

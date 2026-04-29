@@ -88,54 +88,141 @@ export const MLTD_ANNIVERSARY_CONSTANTS = {
 } as const;
 
 /**
+ * MLTD 活动控分 - 歌曲配置
+ * @description 用于动态生成游玩选项
+ */
+interface SongConfigForParking {
+  /** 歌曲名称（中文） */
+  name: string;
+  /** 元气等倍消耗时获得的点数 */
+  value: number;
+  /** 单倍票券消耗所需的票数 */
+  ticket: number;
+}
+
+/**
+ * 歌曲基础配置表
+ */
+const SONG_CONFIGS_FOR_PARKING: SongConfigForParking[] = [
+  { name: 'MM / OM通常曲', value: 85, ticket: 30 },
+  { name: '6M 通常曲', value: 64, ticket: 25 },
+  { name: '2M+ 通常曲', value: 62, ticket: 25 },
+  { name: '4M 通常曲', value: 49, ticket: 20 },
+  { name: '2M 通常曲', value: 35, ticket: 15 },
+];
+
+/**
+ * 票券消耗倍率配置
+ * @description 从 10 到 1，每个值乘以 0.7 得到点数倍率
+ * 原始倍率：[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+ * 点数倍率：[7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
+ */
+const TICKET_MULTIPLIER_CONFIG = {
+  /** 最大倍率 */
+  maxMultiplier: 10,
+  /** 点数计算系数 */
+  pointCoefficient: 0.7,
+} as const;
+
+/**
+ * Event Live 配置
+ * @description 消耗活动道具获得大量点数
+ */
+const EVENT_LIVE_CONFIG_FOR_PARKING = {
+  name: '活动曲',
+  multiplier: '1倍',
+  pt: 634,
+  token: -180,
+} as const;
+
+/**
+ * 计算票券消耗时的点数
+ * @param basePoint 基础点数
+ * @param multiplier 票券倍率
+ * @returns 向上取整后的点数
+ */
+function calculateTicketPoint(basePoint: number, multiplier: number): number {
+  return Math.ceil(basePoint * multiplier * TICKET_MULTIPLIER_CONFIG.pointCoefficient);
+}
+
+/**
+ * 计算票券消耗所需的票数
+ * @param multiplier 票券倍率
+ * @param ticket 单倍票券消耗所需的票数
+ * @returns 票数
+ */
+function calculateTicketCount(multiplier: number, ticket: number): number {
+  return multiplier * ticket;
+}
+
+/**
+ * 生成票券消耗倍率数组（从大到小）
+ * @returns 倍率数组 [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+ */
+function generateTicketMultipliers(): number[] {
+  const multipliers: number[] = [];
+  for (let i = TICKET_MULTIPLIER_CONFIG.maxMultiplier; i >= 1; i--) {
+    multipliers.push(i);
+  }
+  return multipliers;
+}
+
+/**
+ * 生成 Theater 活动的完整游玩选项列表
+ *
+ * 生成顺序：
+ * 1. 活动曲（消耗道具）
+ * 2. 体力消耗（元气等倍，按体力消耗大到小）
+ * 3. 票券消耗（按体力消耗大到小，倍率从大到小）
+ *
+ * @returns 按固定顺序生成的选项列表（搜索算法中会按 pt 降序排序）
+ */
+function generateTheaterChoices(): EventTheaterChoice[] {
+  const entries: EventTheaterChoice[] = [];
+
+  // 1. 活动曲（消耗道具获得大量点数）
+  entries.push({
+    name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
+    multiplier: EVENT_LIVE_CONFIG_FOR_PARKING.multiplier,
+    pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt,
+    token: EVENT_LIVE_CONFIG_FOR_PARKING.token,
+  });
+
+  // 2. 体力消耗（元气等倍，按体力消耗大到小）
+  for (const song of SONG_CONFIGS_FOR_PARKING) {
+    entries.push({
+      name: song.name,
+      multiplier: '1倍体力',
+      pt: song.value,
+      token: song.value,
+    });
+  }
+
+  // 3. 票券消耗（按体力消耗大到小，倍率从大到小）
+  const multipliers = generateTicketMultipliers();
+  for (const song of SONG_CONFIGS_FOR_PARKING) {
+    for (const multiplier of multipliers) {
+      const ticketPoint = calculateTicketPoint(song.value, multiplier);
+      const ticketCount = calculateTicketCount(multiplier, song.ticket);
+      entries.push({
+        name: song.name,
+        multiplier: `${multiplier}倍 / ${ticketCount}打工票`,
+        pt: ticketPoint,
+        token: ticketPoint,
+        extra: multiplier < TICKET_MULTIPLIER_CONFIG.maxMultiplier,
+      });
+    }
+  }
+
+  return entries;
+}
+
+/**
  * MLTD 活动控分相关常量定义
  */
 export const MLTD_PARKING_CONSTANTS = {
-  /** Theater 活动剧场选择项列表 */
-  eventTheaterChoices: [
-    {
-      name: '活动曲',
-      multiplier: '1倍',
-      pt: 634,
-      token: -180,
-    },
-    {
-      name: 'MM / OM通常曲',
-      multiplier: '300打工票',
-      pt: 595,
-      token: 595,
-    },
-    {
-      name: 'MM / OM 通常曲',
-      multiplier: '1倍体力',
-      pt: 85,
-      token: 85,
-    },
-    {
-      name: '6M 通常曲',
-      multiplier: '1倍体力',
-      pt: 64,
-      token: 64,
-    },
-    {
-      name: '2M+ 通常曲',
-      multiplier: '1倍体力',
-      pt: 62,
-      token: 62,
-    },
-    {
-      name: '4M 通常曲',
-      multiplier: '1倍体力',
-      pt: 49,
-      token: 49,
-    },
-    {
-      name: '2M 通常曲',
-      multiplier: '1倍体力',
-      pt: 35,
-      token: 35,
-    },
-  ] as EventTheaterChoice[],
+  /** Theater 活动剧场选择项列表（动态生成） */
+  eventTheaterChoices: generateTheaterChoices(),
 
   /** Anniversary 活动剧场选择项列表 */
   eventAnniversaryChoices: [

@@ -10,13 +10,7 @@
     <div id="mltd-event-parking-form">
       <el-row :gutter="16">
         <el-col :lg="13" :sm="24">
-          <el-form
-            ref="formRef"
-            :model="form"
-            label-width="auto"
-            label-position="top"
-            style="max-width: 800px"
-          >
+          <el-form ref="formRef" :model="form" label-width="auto" label-position="top">
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
                 <el-option label="Theater" value="theater"></el-option>
@@ -94,6 +88,41 @@
                 <el-button @click="handleClear">清空</el-button>
               </el-space>
             </el-form-item>
+            <!-- 分数表折叠面板 -->
+            <el-collapse v-model="activeCollapse">
+              <el-collapse-item title="分数表" name="pointTable">
+                <el-table :data="pointTableData" border :cell-class-name="monoCellClassName">
+                  <el-table-column
+                    prop="name"
+                    label="曲目"
+                    header-align="center"
+                    align="left"
+                    min-width="120"
+                  />
+                  <el-table-column
+                    prop="multiplier"
+                    label="倍率"
+                    header-align="center"
+                    align="center"
+                    min-width="100"
+                  />
+                  <el-table-column
+                    prop="pt"
+                    label="获得pt"
+                    header-align="center"
+                    align="right"
+                    min-width="70"
+                  />
+                  <el-table-column
+                    prop="token"
+                    label="道具"
+                    header-align="center"
+                    align="right"
+                    min-width="70"
+                  />
+                </el-table>
+              </el-collapse-item>
+            </el-collapse>
           </el-form>
           <el-alert
             v-show="form.eventType === 'anniversary'"
@@ -168,7 +197,6 @@
         </el-col>
       </el-row>
     </div>
-    <!-- <div class="al-divider"></div> -->
   </div>
 </template>
 
@@ -178,6 +206,7 @@ import { useMltdEventParking, createDefaultParkingForm } from './composables/use
 import type { ParkingForm, EventTheaterChoice } from './MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
+const activeCollapse = ref<string[]>([]);
 
 const {
   calculatedFlag,
@@ -256,6 +285,19 @@ const planTableData = computed<PlanTableRow[]>(() => {
   });
 
   return data;
+});
+
+// 分数表数据
+const pointTableData = computed(() => {
+  return eventTheaterChoices.value.map((choice) => ({
+    name: choice.name,
+    multiplier: choice.multiplier,
+    pt: choice.pt.toLocaleString('en-US'),
+    token:
+      choice.token >= 0
+        ? `+${choice.token.toLocaleString('en-US')}`
+        : choice.token.toLocaleString('en-US'),
+  }));
 });
 
 // 表格行样式
