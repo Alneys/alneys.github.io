@@ -82,6 +82,9 @@
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-form-item label="使用更多倍率（打工票默认只使用最大倍率）">
+              <el-switch v-model="form.enableExtraChoices" />
+            </el-form-item>
             <el-form-item label=" ">
               <el-space wrap>
                 <el-button type="primary" @click="handleSubmit">开始计算</el-button>

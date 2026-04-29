@@ -21,6 +21,7 @@ export const createDefaultParkingForm = (): ParkingForm => ({
   targetPt: undefined,
   pt: undefined,
   token: undefined,
+  enableExtraChoices: true,
 });
 
 /**
@@ -29,12 +30,21 @@ export const createDefaultParkingForm = (): ParkingForm => ({
  * @returns 计算结果和操作方法
  */
 export function useMltdEventParking(form: Ref<ParkingForm>) {
-  // 根据活动类型返回对应的选择项列表
+  // 根据活动类型返回对应的选择项列表，并根据开关过滤 extra 选项
   const eventTheaterChoices = computed<EventTheaterChoice[]>(() => {
+    let choices: EventTheaterChoice[];
     if (form.value.eventType === 'anniversary') {
-      return MLTD_PARKING_CONSTANTS.eventAnniversaryChoices;
+      choices = MLTD_PARKING_CONSTANTS.eventAnniversaryChoices;
+    } else {
+      choices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
     }
-    return MLTD_PARKING_CONSTANTS.eventTheaterChoices;
+
+    // 当禁用更多倍率时，过滤掉 extra: true 的选项
+    if (form.value.enableExtraChoices === false) {
+      choices = choices.filter((c) => !c.extra);
+    }
+
+    return choices;
   });
 
   const calculatedFlag = ref(false);
@@ -48,13 +58,10 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * @description 将 undefined 字段转换为 0
    */
   const preprocessingForm = () => {
-    Object.keys(form.value).forEach((each) => {
-      const key = each as keyof ParkingForm;
-      if (key !== 'eventType') {
-        (form.value as unknown as Record<string, number | string>)[key] =
-          Number(form.value[key]) || 0;
-      }
-    });
+    const numericFields: (keyof ParkingForm)[] = ['targetPt', 'pt', 'token'];
+    for (const key of numericFields) {
+      (form.value as unknown as Record<string, number>)[key] = Number(form.value[key]) || 0;
+    }
   };
 
   /**

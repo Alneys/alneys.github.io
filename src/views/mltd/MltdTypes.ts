@@ -97,6 +97,7 @@ export interface ParkingForm {
   targetPt?: number;
   pt?: number;
   token?: number;
+  enableExtraChoices?: boolean;
 }
 
 // Parking 计算结果项
