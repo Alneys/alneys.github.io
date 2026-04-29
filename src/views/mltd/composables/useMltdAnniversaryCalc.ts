@@ -23,7 +23,7 @@
  */
 
 import { reactive, computed, type Ref } from 'vue';
-import { useMltdUtils } from './useMltdUtils';
+import { levelToMaxStamina } from '../mltdUtils';
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../MltdConstant';
 import type { AnniversaryForm, AnniversaryResult, BoostAllocationResult } from '../MltdTypes';
 
@@ -280,7 +280,6 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
     currentMaxStamina: computed((): number => {
       const plv = form.value.plv || 0;
       if (!plv) return 60;
-      const { levelToMaxStamina } = useMltdUtils();
       return levelToMaxStamina(plv) || 60;
     }),
 

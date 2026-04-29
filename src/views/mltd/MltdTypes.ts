@@ -86,3 +86,40 @@ export interface AnniversaryResult {
   totalTokenAccumulateTimeSpent: ComputedRef<number>;
   totalPlays: ComputedRef<number>;
 }
+
+/**
+ * MLTD 活动控分计算器类型定义
+ */
+
+// Parking 表单类型
+export interface ParkingForm {
+  eventType: string;
+  targetPt?: number;
+  pt?: number;
+  token?: number;
+}
+
+// Parking 计算结果项
+export interface ParkingResultItem {
+  name: string;
+  multiplier: string;
+  value: number;
+}
+
+// Parking 计算结果
+export interface ParkingResult {
+  flag: boolean;
+  message?: string;
+  result?: ParkingResultItem[];
+}
+
+/**
+ * MLTD 活动剧场选择项类型定义
+ */
+export interface EventTheaterChoice {
+  name: string;
+  multiplier: string;
+  pt: number;
+  token: number;
+  anniversaryOnly?: boolean;
+}
