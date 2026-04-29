@@ -118,6 +118,7 @@ export interface ParkingResult {
  */
 export interface EventTheaterChoice {
   name: string;
+  type?: string;
   multiplier: string;
   pt: number;
   token: number;

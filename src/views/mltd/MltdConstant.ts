@@ -183,6 +183,7 @@ function generateTheaterChoices(): EventTheaterChoice[] {
   // 1. 活动曲（消耗道具获得大量点数）
   entries.push({
     name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
+    type: '',
     multiplier: EVENT_LIVE_CONFIG_FOR_PARKING.multiplier,
     pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt,
     token: EVENT_LIVE_CONFIG_FOR_PARKING.token,
@@ -192,7 +193,8 @@ function generateTheaterChoices(): EventTheaterChoice[] {
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     entries.push({
       name: song.name,
-      multiplier: '1倍体力',
+      type: '体力',
+      multiplier: '1倍',
       pt: song.value,
       token: song.value,
     });
@@ -206,7 +208,8 @@ function generateTheaterChoices(): EventTheaterChoice[] {
       const ticketCount = calculateTicketCount(multiplier, song.ticket);
       entries.push({
         name: song.name,
-        multiplier: `${multiplier}倍 / ${ticketCount}打工票`,
+        type: '打工票',
+        multiplier: `${multiplier}倍`,
         pt: ticketPoint,
         token: ticketPoint,
         extra: multiplier < TICKET_MULTIPLIER_CONFIG.maxMultiplier,

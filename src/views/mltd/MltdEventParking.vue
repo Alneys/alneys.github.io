@@ -100,11 +100,18 @@
                     min-width="120"
                   />
                   <el-table-column
+                    prop="type"
+                    label="类型"
+                    header-align="center"
+                    align="center"
+                    min-width="70"
+                  />
+                  <el-table-column
                     prop="multiplier"
                     label="倍率"
                     header-align="center"
                     align="center"
-                    min-width="100"
+                    min-width="70"
                   />
                   <el-table-column
                     prop="pt"
@@ -291,6 +298,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 const pointTableData = computed(() => {
   return eventTheaterChoices.value.map((choice) => ({
     name: choice.name,
+    type: choice.type ?? '',
     multiplier: choice.multiplier,
     pt: choice.pt.toLocaleString('en-US'),
     token:
