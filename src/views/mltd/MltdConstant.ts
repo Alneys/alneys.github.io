@@ -96,7 +96,7 @@ export const MLTD_PARKING_CONSTANTS = {
     {
       name: '活动曲',
       multiplier: '1倍',
-      pt: 537,
+      pt: 634,
       token: -180,
     },
     {
