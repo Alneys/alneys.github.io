@@ -187,11 +187,14 @@ function handleClear() {
   });
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   preprocessingForm();
   calculatedForm.value = { ...form };
   if (form.eventType === 3 || form.eventType === 5) {
-    parkingResult.value = calcParkingTheater(form as formCheckedInterface, form.eventType === 5);
+    parkingResult.value = await calcParkingTheater(
+      form as formCheckedInterface,
+      form.eventType === 5,
+    );
   }
   calculatedFlag.value = true;
 
@@ -207,92 +210,119 @@ function preprocessingForm() {
   });
 }
 
-function calcParkingTheater(
+async function calcParkingTheater(
   form: { targetPt: number; pt: number; token: number },
   isAnniversary = false,
-): {
+): Promise<{
   flag: boolean;
   message?: string;
   result?: Array<resultItemInterface>;
-} {
+}> {
   if (form.pt >= form.targetPt) {
     return { flag: false, message: '当前pt已达到或超过目标pt' };
   }
   if (form.targetPt - form.pt > 10000) {
     return { flag: false, message: 'pt差距大于10000，请缩小后重试' };
   }
-  const record: Record<string, number> = {};
-  let flag = false;
 
-  /**
-   *
-   * @param pt: pt behind target, less than 0
-   * @param token: remaining token
-   */
-  function dfs(pt: number, token: number) {
-    // result already found
-    if (flag) {
-      return;
-    }
-    // invalid state
-    if (pt > 0 || token < 0) {
-      return;
-    }
-    // result found now
-    if (pt === 0) {
-      flag = true;
-      return;
-    }
-    // DFS start
-    // Order: token to pt, ticket to token, stamina to token
-    for (let i = 0; i < eventTheaterChoices.value.length; i++) {
-      const each = eventTheaterChoices.value[i];
-      // result already found
-      if (flag) {
-        return;
-      }
-      // Check anniversary only choice
-      // @ts-expect-error dynamic property access
-      if (!isAnniversary && each.anniversaryOnly === true) {
-        continue;
-      }
-      // enough token
-      // @ts-expect-error dynamic property access
-      if (token >= -each.token) {
-        // record in result
-        record[i] = (record[i] ?? 0) + 1;
-        // DFS
-        // @ts-expect-error dynamic property access
-        dfs(pt + each.pt, token + each.token);
-        // if failed, recover result
-        if (!flag) {
-          record[i]! -= 1;
-        }
-      }
-    }
-    // failed
-    return;
+  // 过滤可用的选择项
+  const choices = eventTheaterChoices.value.filter(
+    (each) => isAnniversary || each.anniversaryOnly !== true,
+  );
+
+  // 栈节点结构
+  interface StackNode {
+    ptDiff: number; // pt 差距（负数表示还需要多少）
+    token: number;
+    stepIndex: number; // 下一个要尝试的步骤索引
+    viaStepIndex?: number; // 到达此状态所用的步骤索引
   }
 
-  dfs(form.pt - form.targetPt, form.token);
-  if (flag) {
+  let iterations = 0;
+  const stack: StackNode[] = [{ ptDiff: form.pt - form.targetPt, token: form.token, stepIndex: 0 }];
+
+  while (stack.length) {
+    // 防阻塞：每 100000 次迭代让出执行权
+    iterations++;
+    if (iterations % 100000 === 0) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+
+    const top = stack[stack.length - 1]!;
+
+    // 所有步骤都尝试过了，回溯
+    if (top.stepIndex >= choices.length) {
+      stack.pop();
+      continue;
+    }
+
+    // 获取当前要尝试的步骤
+    const currentStepIndex = top.stepIndex;
+    top.stepIndex++; // 下次尝试下一个步骤
+
+    const choice = choices[currentStepIndex]!;
+
+    // 检查 token 是否足够
+    if (top.token < -choice.token) {
+      continue;
+    }
+
+    // 计算新状态
+    const newPtDiff = top.ptDiff + choice.pt;
+    const newToken = top.token + choice.token;
+
+    // 剪枝：pt 超过目标
+    if (newPtDiff > 0) {
+      continue;
+    }
+
+    // 找到解
+    if (newPtDiff === 0) {
+      stack.push({
+        ptDiff: newPtDiff,
+        token: newToken,
+        stepIndex: 0,
+        viaStepIndex: currentStepIndex,
+      });
+      break;
+    }
+
+    // 继续深入搜索
+    stack.push({
+      ptDiff: newPtDiff,
+      token: newToken,
+      stepIndex: 0,
+      viaStepIndex: currentStepIndex,
+    });
+  }
+
+  // 提取结果
+  const lastNode = stack[stack.length - 1];
+  if (stack.length && lastNode && lastNode.ptDiff === 0) {
+    // 统计每个步骤使用的次数
+    const record: Record<string, number> = {};
+    for (const node of stack) {
+      if (node.viaStepIndex !== undefined) {
+        record[node.viaStepIndex] = (record[node.viaStepIndex] ?? 0) + 1;
+      }
+    }
+
     const result: Array<resultItemInterface> = [];
-    Object.entries(record).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(record)) {
       if (value > 0) {
+        const choice = choices[Number(key)]!;
         result.push({
-          // @ts-expect-error dynamic property access
-          name: eventTheaterChoices.value[Number(key)].name,
-          // @ts-expect-error dynamic property access
-          multiplier: eventTheaterChoices.value[Number(key)].multiplier,
+          name: choice.name,
+          multiplier: choice.multiplier,
           value,
         });
       }
-    });
+    }
 
-    return { flag, result };
-  } else {
-    return { flag, message: '不存在控分方案' };
+    return { flag: true, result };
   }
+
+  return { flag: false, message: '不存在控分方案' };
 }
 </script>
 
