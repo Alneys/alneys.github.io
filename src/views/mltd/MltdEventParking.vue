@@ -110,24 +110,55 @@
         <el-col :lg="10" :sm="24">
           <div id="mltd-event-parking-result" style="margin-bottom: 2em">
             <h2>结果</h2>
-            <div v-if="calculatedFlag">
-              <p v-if="parkingResult?.flag === false">控分失败：{{ parkingResult.message }}</p>
-              <div v-else>
-                <h4>当前状态</h4>
-                <p>pt差距：{{ (form.targetPt! - form.pt!).toLocaleString('en-US') }}</p>
-                <p>道具数：{{ form.token!.toLocaleString('en-US') }}</p>
 
-                <h4>控分方案</h4>
-                <template v-for="each of parkingResult?.result" :key="each.name">
-                  <p v-if="each.value > 0">
-                    {{ each.name }} {{ each.multiplier }} ：{{ each.value }}次
-                  </p>
-                </template>
-              </div>
-            </div>
-            <div v-else>
-              <p>等待输入</p>
-            </div>
+            <!-- 错误提示 -->
+            <el-alert
+              v-if="calculatedFlag && parkingResult?.flag === false"
+              type="error"
+              :closable="false"
+              style="margin-bottom: 1em"
+            >
+              控分失败：{{ parkingResult.message }}
+            </el-alert>
+
+            <!-- 成功结果 -->
+            <template v-if="calculatedFlag && parkingResult?.flag === true">
+              <!-- 当前状态卡片 -->
+              <el-card class="mltd-parking-result-card" shadow="never">
+                <template #header>当前状态</template>
+                <el-table :data="statusTableData" border :cell-class-name="monoCellClassName">
+                  <el-table-column prop="item" label="项目" header-align="center" align="center" />
+                  <el-table-column prop="value" label="数值" header-align="center" align="right" />
+                </el-table>
+              </el-card>
+
+              <!-- 控分方案卡片 -->
+              <el-card class="mltd-parking-result-card" shadow="never">
+                <template #header>控分方案</template>
+                <el-table
+                  :data="planTableData"
+                  border
+                  :row-class-name="highlightRowClassName"
+                  :cell-class-name="monoCellClassName"
+                >
+                  <el-table-column prop="name" label="曲目" header-align="center" align="center" />
+                  <el-table-column
+                    prop="multiplier"
+                    label="倍率"
+                    header-align="center"
+                    align="center"
+                  />
+                  <el-table-column prop="count" label="次数" header-align="center" align="right" />
+                  <el-table-column prop="pt" label="pt" header-align="center" align="right" />
+                  <el-table-column prop="token" label="道具" header-align="center" align="right" />
+                </el-table>
+              </el-card>
+            </template>
+
+            <!-- 等待输入 -->
+            <el-alert v-if="!calculatedFlag" type="info" :closable="false">
+              请输入数据后点击「开始计算」
+            </el-alert>
           </div>
         </el-col>
       </el-row>
@@ -137,7 +168,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick } from 'vue';
+import { ref, reactive, nextTick, computed } from 'vue';
 import type { FormInstance } from 'element-plus';
 import { useMltdUtils } from './composables/useMltdUtils';
 
@@ -175,6 +206,86 @@ const parkingResult = ref<{
   message?: string;
   result?: Array<resultItemInterface>;
 }>();
+
+// 格式化数字
+function formatNumber(n: number): string {
+  return n.toLocaleString('en-US');
+}
+
+// 当前状态表格数据
+const statusTableData = computed(() => [
+  {
+    item: 'pt差距',
+    value: `${formatNumber((form.targetPt ?? 0) - (form.pt ?? 0))} pt`,
+  },
+  {
+    item: '当前道具',
+    value: `${formatNumber(form.token ?? 0)} 个`,
+  },
+]);
+
+// 控分方案表格数据
+interface PlanTableRow {
+  name: string;
+  multiplier: string;
+  count: number;
+  pt: string;
+  token: string;
+  ptRaw: number;
+  tokenRaw: number;
+  highlight?: boolean;
+}
+
+const planTableData = computed<PlanTableRow[]>(() => {
+  if (!parkingResult.value?.result) return [];
+
+  const data: PlanTableRow[] = parkingResult.value.result.map((item) => {
+    const choice = eventTheaterChoices.value.find(
+      (c) => c.name === item.name && c.multiplier === item.multiplier,
+    );
+    const ptTotal = (choice?.pt ?? 0) * item.value;
+    const tokenTotal = (choice?.token ?? 0) * item.value;
+
+    return {
+      name: item.name,
+      multiplier: item.multiplier,
+      count: item.value,
+      pt: `+${formatNumber(ptTotal)}`,
+      token: tokenTotal >= 0 ? `+${formatNumber(tokenTotal)}` : formatNumber(tokenTotal),
+      ptRaw: ptTotal,
+      tokenRaw: tokenTotal,
+    };
+  });
+
+  // 汇总行
+  const totalCount = data.reduce((sum, item) => sum + item.count, 0);
+  const totalPt = data.reduce((sum, item) => sum + item.ptRaw, 0);
+  const totalToken = data.reduce((sum, item) => sum + item.tokenRaw, 0);
+
+  data.push({
+    name: '汇总',
+    multiplier: '',
+    count: totalCount,
+    pt: `+${formatNumber(totalPt)}`,
+    token: totalToken >= 0 ? `+${formatNumber(totalToken)}` : formatNumber(totalToken),
+    ptRaw: totalPt,
+    tokenRaw: totalToken,
+    highlight: true,
+  });
+
+  return data;
+});
+
+// 表格行样式
+function highlightRowClassName({ row }: { row: any }) {
+  return row.highlight ? 'highlight-row' : '';
+}
+
+// 表格单元格样式
+function monoCellClassName({ column }: { column: any }) {
+  const monoColumnProps = ['value', 'count', 'pt', 'token'];
+  return monoColumnProps.includes(column.property) ? 'font-mono' : '';
+}
 
 function handleClear() {
   formRef.value?.resetFields();
@@ -338,6 +449,55 @@ async function calcParkingTheater(
   /* Firefox */
   input[type='number'] {
     appearance: textfield;
+  }
+}
+
+.mltd-parking-result-card {
+  margin-bottom: 1em;
+  --border-color: var(--el-border-color);
+
+  :deep(.el-card__header) {
+    padding: 8px;
+    line-height: 23px;
+    font-weight: bold;
+    color: var(--el-text-color-primary);
+    text-align: center;
+    background-color: var(--el-color-primary-light-3);
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    border-bottom: none;
+  }
+
+  :deep(.el-card__body) {
+    padding: 0;
+  }
+
+  :deep(.el-table) {
+    --el-table-border-color: var(--border-color);
+    --el-table-text-color: var(--el-text-color-primary);
+    --el-table-header-text-color: var(--el-text-color-primary);
+
+    .el-table__header th {
+      background-color: var(--el-color-primary-light-3);
+    }
+
+    .el-table__cell {
+      padding: 8px 10px;
+      min-width: 80px;
+    }
+
+    .font-mono {
+      font-family: var(--al-font-family-mono);
+    }
+  }
+
+  :deep(.highlight-row) {
+    color: var(--el-color-danger);
+
+    .el-table__cell {
+      font-weight: bold;
+    }
   }
 }
 </style>
