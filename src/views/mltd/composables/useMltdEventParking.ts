@@ -40,6 +40,9 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   const calculatedFlag = ref(false);
   const parkingResult = ref<ParkingResult>();
 
+  /** 计算时的表单数据快照 */
+  const formSnapshot = ref<{ targetPt: number; pt: number; token: number }>();
+
   /**
    * 预处理表单数据
    * @description 将 undefined 字段转换为 0
@@ -59,6 +62,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    */
   const handleClear = () => {
     calculatedFlag.value = false;
+    formSnapshot.value = undefined;
   };
 
   /**
@@ -66,12 +70,14 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    */
   const handleSubmit = async () => {
     preprocessingForm();
+    // 保存表单数据快照
+    formSnapshot.value = {
+      targetPt: form.value.targetPt ?? 0,
+      pt: form.value.pt ?? 0,
+      token: form.value.token ?? 0,
+    };
     if (form.value.eventType === 'theater' || form.value.eventType === 'anniversary') {
-      parkingResult.value = await calcParkingTheater({
-        targetPt: form.value.targetPt ?? 0,
-        pt: form.value.pt ?? 0,
-        token: form.value.token ?? 0,
-      });
+      parkingResult.value = await calcParkingTheater(formSnapshot.value);
     }
     calculatedFlag.value = true;
   };
@@ -242,6 +248,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   return {
     calculatedFlag,
     parkingResult,
+    formSnapshot,
     eventTheaterChoices,
     preprocessingForm,
     handleClear,

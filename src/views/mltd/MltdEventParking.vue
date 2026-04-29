@@ -218,6 +218,7 @@ const activeCollapse = ref<string[]>([]);
 const {
   calculatedFlag,
   parkingResult,
+  formSnapshot,
   eventTheaterChoices,
   handleClear: clearCalculation,
   handleSubmit: submitCalculation,
@@ -231,16 +232,23 @@ function formatNumber(n: number): string {
 }
 
 // 当前状态表格数据
-const statusTableData = computed(() => [
-  {
-    item: 'pt差距',
-    value: `${formatNumber((form.value.targetPt ?? 0) - (form.value.pt ?? 0))} pt`,
-  },
-  {
-    item: '当前道具',
-    value: `${formatNumber(form.value.token ?? 0)} 个`,
-  },
-]);
+const statusTableData = computed(() => {
+  const snapshot = formSnapshot.value;
+  const targetPt = snapshot?.targetPt ?? form.value.targetPt ?? 0;
+  const pt = snapshot?.pt ?? form.value.pt ?? 0;
+  const token = snapshot?.token ?? form.value.token ?? 0;
+
+  return [
+    {
+      item: 'pt差距',
+      value: `${formatNumber(targetPt - pt)} pt`,
+    },
+    {
+      item: '当前道具',
+      value: `${formatNumber(token)} 个`,
+    },
+  ];
+});
 
 // 控分方案表格数据
 interface PlanTableRow {
