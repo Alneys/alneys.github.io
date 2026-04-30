@@ -186,7 +186,15 @@
                   :row-class-name="highlightRowClassName"
                   :cell-class-name="monoCellClassName"
                 >
-                  <el-table-column prop="name" label="曲目" header-align="center" align="center" />
+                  <el-table-column prop="name" label="曲目" header-align="center" align="center">
+                    <template #default="{ row }">
+                      <span v-if="row.isRecommended">
+                        {{ row.name.replace('推荐曲', '')
+                        }}<span class="recommended-text">推荐曲</span>
+                      </span>
+                      <span v-else>{{ row.name }}</span>
+                    </template>
+                  </el-table-column>
                   <el-table-column prop="type" label="类型" header-align="center" align="center" />
                   <el-table-column
                     prop="multiplier"
@@ -239,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, computed, useTemplateRef } from 'vue';
+import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
 import type { ParkingForm, EventTheaterChoice, ParkingResultItem } from './MltdTypes';
@@ -264,6 +272,14 @@ const {
 } = useMltdEventParking(form);
 
 const formRef = useTemplateRef('formRef');
+
+// 监听活动类型变化，清空计算结果
+watch(
+  () => form.value.eventType,
+  () => {
+    clearCalculation();
+  },
+);
 
 // 格式化数字
 function formatNumber(n: number): string {
@@ -311,6 +327,7 @@ interface PlanTableRow {
   ptRaw: number;
   tokenRaw: number;
   highlight?: boolean;
+  isRecommended?: boolean;
   // 用于操作列
   rawItem?: ParkingResultItem;
 }
@@ -336,6 +353,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
       ptRaw: ptTotal,
       tokenRaw: tokenTotal,
       rawItem: item,
+      isRecommended: form.value.eventType === 'anniversary' && item.name.includes('推荐曲'),
     };
   });
 
@@ -371,7 +389,7 @@ const pointTableData = computed(() => {
 });
 
 // 表格行样式
-function highlightRowClassName({ row }: { row: any }) {
+function highlightRowClassName({ row }: { row: PlanTableRow }) {
   return row.highlight ? 'highlight-row' : '';
 }
 
@@ -457,6 +475,10 @@ async function handleSubmit() {
     .el-table__cell {
       font-weight: bold;
     }
+  }
+
+  :deep(.recommended-text) {
+    color: var(--el-color-danger);
   }
 }
 </style>
