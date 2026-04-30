@@ -9,7 +9,7 @@
     </div>
     <div id="mltd-event-parking-form">
       <el-row :gutter="16">
-        <el-col :lg="13" :sm="24">
+        <el-col :lg="11" :sm="24">
           <el-form ref="formRef" :model="form" label-width="auto" label-position="top">
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
@@ -151,7 +151,7 @@
         <el-col :lg="0" :sm="24">
           <div class="al-divider"></div>
         </el-col>
-        <el-col :lg="10" :sm="24">
+        <el-col :lg="12" :sm="24">
           <div id="mltd-event-parking-result" style="margin-bottom: 2em">
             <h2>结果</h2>
 
@@ -186,6 +186,7 @@
                   :cell-class-name="monoCellClassName"
                 >
                   <el-table-column prop="name" label="曲目" header-align="center" align="center" />
+                  <el-table-column prop="type" label="类型" header-align="center" align="center" />
                   <el-table-column
                     prop="multiplier"
                     label="倍率"
@@ -256,6 +257,7 @@ const statusTableData = computed(() => {
 // 控分方案表格数据
 interface PlanTableRow {
   name: string;
+  type: string;
   multiplier: string;
   count: number;
   pt: string;
@@ -277,6 +279,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
     return {
       name: item.name,
+      type: choice?.type ?? '',
       multiplier: item.multiplier,
       count: item.value,
       pt: `+${formatNumber(ptTotal)}`,
@@ -293,6 +296,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
   data.push({
     name: '汇总',
+    type: '',
     multiplier: '',
     count: totalCount,
     pt: `+${formatNumber(totalPt)}`,
@@ -395,13 +399,8 @@ async function handleSubmit() {
       background-color: var(--el-color-primary-light-3);
     }
 
-    .el-table__cell {
-      padding: 8px 10px;
-      min-width: 80px;
-    }
-
-    .font-mono {
-      font-family: var(--al-font-family-mono);
+    .font-mono .cell {
+      padding: 0 8px;
     }
   }
 

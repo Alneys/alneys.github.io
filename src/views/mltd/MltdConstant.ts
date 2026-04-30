@@ -104,7 +104,7 @@ interface SongConfigForParking {
  * 歌曲基础配置表
  */
 const SONG_CONFIGS_FOR_PARKING: SongConfigForParking[] = [
-  { name: 'MM / OM通常曲', value: 85, ticket: 30 },
+  { name: 'MM 通常曲', value: 85, ticket: 30 },
   { name: '6M 通常曲', value: 64, ticket: 25 },
   { name: '2M+ 通常曲', value: 62, ticket: 25 },
   { name: '4M 通常曲', value: 49, ticket: 20 },
@@ -157,14 +157,10 @@ function calculateTicketCount(multiplier: number, ticket: number): number {
 
 /**
  * 生成票券消耗倍率数组（从大到小）
- * @returns 倍率数组 [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+ * @returns 倍率数组
  */
-function generateTicketMultipliers(): number[] {
-  const multipliers: number[] = [];
-  for (let i = TICKET_MULTIPLIER_CONFIG.maxMultiplier; i >= 1; i--) {
-    multipliers.push(i);
-  }
-  return multipliers;
+function generateTicketMultipliers(x = TICKET_MULTIPLIER_CONFIG.maxMultiplier): number[] {
+  return Array.from({ length: x }, (_, i) => x - i);
 }
 
 /**
@@ -209,7 +205,7 @@ function generateTheaterChoices(): EventTheaterChoice[] {
       entries.push({
         name: song.name,
         type: '打工票',
-        multiplier: `${multiplier}倍`,
+        multiplier: `${(multiplier * 0.7).toFixed(1)} 倍`,
         pt: ticketPoint,
         token: ticketPoint,
         extra: multiplier < TICKET_MULTIPLIER_CONFIG.maxMultiplier,
@@ -242,13 +238,13 @@ export const MLTD_PARKING_CONSTANTS = {
       token: 1071,
     },
     {
-      name: 'MM / OM 普通曲',
+      name: 'MM 通常曲',
       multiplier: '450打工票',
       pt: 893,
       token: 893,
     },
     {
-      name: 'MM / OM通常曲',
+      name: 'MM 通常曲',
       multiplier: '300打工票',
       pt: 595,
       token: 595,
@@ -260,7 +256,7 @@ export const MLTD_PARKING_CONSTANTS = {
       token: 102,
     },
     {
-      name: 'MM / OM 通常曲',
+      name: 'MM 通常曲',
       multiplier: '1倍体力',
       pt: 85,
       token: 85,
