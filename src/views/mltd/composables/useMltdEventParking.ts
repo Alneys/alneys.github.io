@@ -4,7 +4,7 @@
  */
 
 import { ref, computed, type Ref } from 'vue';
-import { MLTD_PARKING_CONSTANTS } from '../MltdConstant';
+import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
 import type {
   ParkingForm,
   ParkingResult,

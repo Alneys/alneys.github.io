@@ -289,7 +289,7 @@
 import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
-import { EVENT_PARKING_TIPS } from './MltdConstant';
+import { EVENT_PARKING_TIPS } from './data/MltdEventParkingConstant';
 import type { ParkingForm, EventTheaterChoice, ParkingResultItem } from './MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());

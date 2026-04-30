@@ -24,7 +24,7 @@
 
 import { reactive, computed, type Ref } from 'vue';
 import { levelToMaxStamina } from '../mltdUtils';
-import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../MltdConstant';
+import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../data/MltdAnniversaryConstant';
 import type { AnniversaryForm, AnniversaryResult, BoostAllocationResult } from '../MltdTypes';
 
 const STORAGE_KEY = 'mltd-anni';
