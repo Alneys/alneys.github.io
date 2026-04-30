@@ -196,6 +196,32 @@
                   <el-table-column prop="count" label="次数" header-align="center" align="right" />
                   <el-table-column prop="pt" label="pt" header-align="center" align="right" />
                   <el-table-column prop="token" label="道具" header-align="center" align="right" />
+                  <el-table-column label="操作" header-align="center" align="center" min-width="80">
+                    <template #default="{ row }">
+                      <el-button-group v-if="!row.highlight && row.rawItem">
+                        <el-button
+                          :icon="Plus"
+                          size="small"
+                          :disabled="row.count >= getInitialCount(row.rawItem)"
+                          @click="undoOperation(row.rawItem)"
+                        />
+                        <el-button
+                          :icon="Minus"
+                          size="small"
+                          :disabled="row.count <= 0"
+                          @click="executeOperation(row.rawItem)"
+                        />
+                      </el-button-group>
+                      <el-button
+                        v-if="row.highlight"
+                        :icon="RefreshRight"
+                        size="small"
+                        :disabled="!hasExecutedOperations"
+                        @click="resetToInitial"
+                      >
+                      </el-button>
+                    </template>
+                  </el-table-column>
                 </el-table>
               </el-card>
             </template>
@@ -213,8 +239,9 @@
 
 <script setup lang="ts">
 import { ref, nextTick, computed, useTemplateRef } from 'vue';
+import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
-import type { ParkingForm, EventTheaterChoice } from './MltdTypes';
+import type { ParkingForm, EventTheaterChoice, ParkingResultItem } from './MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
 const activeCollapse = ref<string[]>([]);
@@ -223,9 +250,16 @@ const {
   calculatedFlag,
   parkingResult,
   formSnapshot,
+  parkingResultSnapshot,
+  executedCounts,
   eventTheaterChoices,
   handleClear: clearCalculation,
   handleSubmit: submitCalculation,
+  executeOperation,
+  undoOperation,
+  getRemainingCount,
+  getInitialCount,
+  resetToInitial,
 } = useMltdEventParking(form);
 
 const formRef = useTemplateRef('formRef');
@@ -235,12 +269,23 @@ function formatNumber(n: number): string {
   return n.toLocaleString('en-US');
 }
 
+// 格式化 token（正确处理 0 和负数）
+function formatToken(n: number): string {
+  if (n === 0 || Object.is(n, -0)) return '0';
+  if (n > 0) return `+${formatNumber(n)}`;
+  return formatNumber(n); // 负数已经带有负号
+}
+
+// 是否有已执行的操作（用于重置按钮的禁用状态）
+const hasExecutedOperations = computed(() => {
+  return Object.values(executedCounts.value).some((count) => count > 0);
+});
+
 // 当前状态表格数据
 const statusTableData = computed(() => {
-  const snapshot = formSnapshot.value;
-  const targetPt = snapshot?.targetPt ?? form.value.targetPt ?? 0;
-  const pt = snapshot?.pt ?? form.value.pt ?? 0;
-  const token = snapshot?.token ?? form.value.token ?? 0;
+  const targetPt = formSnapshot.value?.targetPt ?? form.value.targetPt ?? 0;
+  const pt = form.value.pt ?? 0;
+  const token = form.value.token ?? 0;
 
   return [
     {
@@ -265,6 +310,8 @@ interface PlanTableRow {
   ptRaw: number;
   tokenRaw: number;
   highlight?: boolean;
+  // 用于操作列
+  rawItem?: ParkingResultItem;
 }
 
 const planTableData = computed<PlanTableRow[]>(() => {
@@ -274,18 +321,20 @@ const planTableData = computed<PlanTableRow[]>(() => {
     const choice = eventTheaterChoices.value.find(
       (c: EventTheaterChoice) => c.name === item.name && c.multiplier === item.multiplier,
     );
-    const ptTotal = (choice?.pt ?? 0) * item.value;
-    const tokenTotal = (choice?.token ?? 0) * item.value;
+    const remainingCount = getRemainingCount(item);
+    const ptTotal = (choice?.pt ?? 0) * remainingCount;
+    const tokenTotal = (choice?.token ?? 0) * remainingCount;
 
     return {
       name: item.name,
       type: choice?.type ?? '',
       multiplier: item.multiplier,
-      count: item.value,
+      count: remainingCount,
       pt: `+${formatNumber(ptTotal)}`,
-      token: tokenTotal >= 0 ? `+${formatNumber(tokenTotal)}` : formatNumber(tokenTotal),
+      token: formatToken(tokenTotal),
       ptRaw: ptTotal,
       tokenRaw: tokenTotal,
+      rawItem: item,
     };
   });
 
@@ -300,7 +349,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
     multiplier: '',
     count: totalCount,
     pt: `+${formatNumber(totalPt)}`,
-    token: totalToken >= 0 ? `+${formatNumber(totalToken)}` : formatNumber(totalToken),
+    token: formatToken(totalToken),
     ptRaw: totalPt,
     tokenRaw: totalToken,
     highlight: true,
@@ -316,10 +365,7 @@ const pointTableData = computed(() => {
     type: choice.type ?? '',
     multiplier: choice.multiplier,
     pt: choice.pt.toLocaleString('en-US'),
-    token:
-      choice.token >= 0
-        ? `+${choice.token.toLocaleString('en-US')}`
-        : choice.token.toLocaleString('en-US'),
+    token: formatToken(choice.token),
   }));
 });
 

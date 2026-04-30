@@ -53,6 +53,12 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   /** 计算时的表单数据快照 */
   const formSnapshot = ref<{ targetPt: number; pt: number; token: number }>();
 
+  /** 初始方案快照（用于撤销操作的上限判断） */
+  const parkingResultSnapshot = ref<ParkingResultItem[]>([]);
+
+  /** 已执行次数记录（key: `${name}-${multiplier}`） */
+  const executedCounts = ref<Record<string, number>>({});
+
   /**
    * 预处理表单数据
    * @description 将 undefined 字段转换为 0
@@ -65,11 +71,112 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   };
 
   /**
+   * 生成方案项的唯一标识 key
+   */
+  const getOperationKey = (item: ParkingResultItem): string => {
+    return `${item.name}-${item.multiplier}`;
+  };
+
+  /**
    * 清除计算状态
    */
   const handleClear = () => {
     calculatedFlag.value = false;
     formSnapshot.value = undefined;
+    parkingResultSnapshot.value = [];
+    executedCounts.value = {};
+  };
+
+  /**
+   * 重置执行状态（保留方案但清空执行记录）
+   */
+  const resetExecution = () => {
+    executedCounts.value = {};
+  };
+
+  /**
+   * 重置为初始状态（恢复表单数据并清空执行记录）
+   */
+  const resetToInitial = () => {
+    if (!formSnapshot.value) return;
+    form.value.pt = formSnapshot.value.pt;
+    form.value.token = formSnapshot.value.token;
+    executedCounts.value = {};
+  };
+
+  /**
+   * 执行一次操作（模拟玩家进行游戏）
+   * @param item - 方案项
+   */
+  const executeOperation = (item: ParkingResultItem) => {
+    const key = getOperationKey(item);
+    const snapshotItem = parkingResultSnapshot.value.find(
+      (s) => s.name === item.name && s.multiplier === item.multiplier,
+    );
+
+    // 找到对应的 choice 获取 pt/token
+    const choice = eventTheaterChoices.value.find(
+      (c) => c.name === item.name && c.multiplier === item.multiplier,
+    );
+    if (!choice) return;
+
+    // 更新表单数据
+    form.value.pt = (form.value.pt ?? 0) + choice.pt;
+    form.value.token = (form.value.token ?? 0) + choice.token;
+
+    // 更新执行次数
+    executedCounts.value[key] = (executedCounts.value[key] ?? 0) + 1;
+  };
+
+  /**
+   * 撤销一次操作
+   * @param item - 方案项
+   */
+  const undoOperation = (item: ParkingResultItem) => {
+    const key = getOperationKey(item);
+
+    // 已执行次数为 0，无法撤销
+    if ((executedCounts.value[key] ?? 0) <= 0) return;
+
+    // 找到对应的 choice 获取 pt/token
+    const choice = eventTheaterChoices.value.find(
+      (c) => c.name === item.name && c.multiplier === item.multiplier,
+    );
+    if (!choice) return;
+
+    // 更新表单数据（撤销）
+    form.value.pt = (form.value.pt ?? 0) - choice.pt;
+    form.value.token = (form.value.token ?? 0) - choice.token;
+
+    // 更新执行次数
+    executedCounts.value[key] = (executedCounts.value[key] ?? 0) - 1;
+  };
+
+  /**
+   * 获取方案项的剩余次数
+   * @param item - 方案项
+   * @returns 剩余次数
+   */
+  const getRemainingCount = (item: ParkingResultItem): number => {
+    const key = getOperationKey(item);
+    const snapshotItem = parkingResultSnapshot.value.find(
+      (s) => s.name === item.name && s.multiplier === item.multiplier,
+    );
+    const initialCount = snapshotItem?.value ?? 0;
+    const executed = executedCounts.value[key] ?? 0;
+    return initialCount - executed;
+  };
+
+  /**
+   * 获取方案项的初始次数
+   * @param item - 方案项
+   * @returns 初始次数
+   */
+  const getInitialCount = (item: ParkingResultItem): number => {
+    const snapshotItem = parkingResultSnapshot.value.find(
+      (s) => s.name === item.name && s.multiplier === item.multiplier,
+    );
+    return snapshotItem?.value ?? 0;
   };
 
   /**
@@ -85,6 +192,11 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     };
     if (form.value.eventType === 'theater' || form.value.eventType === 'anniversary') {
       parkingResult.value = await calcParkingTheater(formSnapshot.value);
+      // 保存初始方案快照并重置执行状态
+      if (parkingResult.value?.flag && parkingResult.value.result) {
+        parkingResultSnapshot.value = [...parkingResult.value.result];
+        executedCounts.value = {};
+      }
     }
     calculatedFlag.value = true;
   };
@@ -256,9 +368,17 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     calculatedFlag,
     parkingResult,
     formSnapshot,
+    parkingResultSnapshot,
+    executedCounts,
     eventTheaterChoices,
     preprocessingForm,
     handleClear,
     handleSubmit,
+    executeOperation,
+    undoOperation,
+    getRemainingCount,
+    getInitialCount,
+    resetExecution,
+    resetToInitial,
   };
 }
