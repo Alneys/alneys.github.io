@@ -82,7 +82,7 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            <el-form-item label="使用更多倍率（打工票默认只使用最大倍率）">
+            <el-form-item label="打工票使用更多倍率（默认只使用最大倍率）">
               <el-switch v-model="form.enableExtraChoices" />
             </el-form-item>
             <el-form-item label=" ">
@@ -98,10 +98,49 @@
               show-icon
               style="margin-bottom: 1em"
             >
-              <p style="font-size: var(--el-font-size-base)">
+              <span style="font-size: var(--el-font-size-base); line-height: 1.5">
                 注意：周年活动有每日推荐曲和普通曲的区别
-              </p>
+              </span>
             </el-alert>
+            <el-alert
+              v-if="form.eventType === 'theater'"
+              type="info"
+              :closable="false"
+              show-icon
+              style="margin-bottom: 1em"
+            >
+              <ul
+                style="
+                  margin: 0;
+                  padding-left: 1.5em;
+                  font-size: var(--el-font-size-base);
+                  line-height: 1.5;
+                "
+              >
+                <li v-for="(tip, index) in EVENT_PARKING_TIPS.theater" :key="index">{{ tip }}</li>
+              </ul>
+            </el-alert>
+            <el-alert
+              v-else-if="form.eventType === 'anniversary'"
+              type="info"
+              :closable="false"
+              show-icon
+              style="margin-bottom: 1em"
+            >
+              <ul
+                style="
+                  margin: 0;
+                  padding-left: 1.5em;
+                  font-size: var(--el-font-size-base);
+                  line-height: 1.5;
+                "
+              >
+                <li v-for="(tip, index) in EVENT_PARKING_TIPS.anniversary" :key="index">
+                  {{ tip }}
+                </li>
+              </ul>
+            </el-alert>
+
             <!-- 分数表折叠面板 -->
             <el-collapse v-model="activeCollapse">
               <el-collapse-item title="分数表" name="pointTable">
@@ -250,6 +289,7 @@
 import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
+import { EVENT_PARKING_TIPS } from './MltdConstant';
 import type { ParkingForm, EventTheaterChoice, ParkingResultItem } from './MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
