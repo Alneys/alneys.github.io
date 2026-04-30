@@ -91,6 +91,17 @@
                 <el-button @click="handleClear">清空</el-button>
               </el-space>
             </el-form-item>
+            <el-alert
+              v-show="form.eventType === 'anniversary'"
+              type="warning"
+              :closable="false"
+              show-icon
+              style="margin-bottom: 1em"
+            >
+              <p style="font-size: var(--el-font-size-base)">
+                注意：周年活动有每日推荐曲和普通曲的区别
+              </p>
+            </el-alert>
             <!-- 分数表折叠面板 -->
             <el-collapse v-model="activeCollapse">
               <el-collapse-item title="分数表" name="pointTable">
@@ -134,16 +145,6 @@
               </el-collapse-item>
             </el-collapse>
           </el-form>
-          <el-alert
-            v-show="form.eventType === 'anniversary'"
-            type="warning"
-            :closable="false"
-            show-icon
-          >
-            <p style="font-size: var(--el-font-size-base)">
-              注意：周年活动有每日推荐曲和普通曲的区别
-            </p>
-          </el-alert>
         </el-col>
         <el-col :span="0.1" class="hidden-sm-and-down">
           <div class="al-divider-vertical" style="margin: 0 0.5%"></div>

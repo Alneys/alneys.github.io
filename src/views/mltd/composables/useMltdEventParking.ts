@@ -239,8 +239,18 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       return { flag: false, message: 'pt差距大于100000，请缩小后重试' };
     }
 
-    // 使用当前活动类型对应的选择项，并按 pt 降序排序（优先尝试高收益选项）
-    const choices = [...eventTheaterChoices.value].sort((a, b) => b.pt - a.pt);
+    // 排序优先级：
+    // 1. 活动曲（消耗道具，token < 0）优先
+    // 2. 其他选项按 pt 降序
+    const choices = [...eventTheaterChoices.value].sort((a, b) => {
+      const aIsEventLive = a.token < 0;
+      const bIsEventLive = b.token < 0;
+
+      if (aIsEventLive && !bIsEventLive) return -1;
+      if (!aIsEventLive && bIsEventLive) return 1;
+
+      return b.pt - a.pt;
+    });
 
     /**
      * 栈节点结构
