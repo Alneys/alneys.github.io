@@ -35,6 +35,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     let choices: EventTheaterChoice[];
     if (form.value.eventType === 'anniversary') {
       choices = MLTD_PARKING_CONSTANTS.eventAnniversaryChoices;
+    } else if (form.value.eventType === 'trust') {
+      choices = MLTD_PARKING_CONSTANTS.eventTrustChoices;
     } else {
       choices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
     }
@@ -190,7 +192,11 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       pt: form.value.pt ?? 0,
       token: form.value.token ?? 0,
     };
-    if (form.value.eventType === 'theater' || form.value.eventType === 'anniversary') {
+    if (
+      form.value.eventType === 'theater' ||
+      form.value.eventType === 'anniversary' ||
+      form.value.eventType === 'trust'
+    ) {
       parkingResult.value = await calcParkingTheater(formSnapshot.value);
       // 保存初始方案快照并重置执行状态
       if (parkingResult.value?.flag && parkingResult.value.result) {
@@ -212,7 +218,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   } as const;
 
   /**
-   * Theater / Anniversary 活动控分计算算法
+   * Theater / Anniversary / Trust 活动控分计算算法
    *
    * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径
    *

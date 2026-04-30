@@ -15,6 +15,7 @@
               <el-select v-model="form.eventType">
                 <el-option label="Theater" value="theater"></el-option>
                 <el-option label="Anniversary" value="anniversary"></el-option>
+                <el-option label="Trust" value="trust"></el-option>
                 <el-option label="Tour" value="tour" disabled></el-option>
                 <el-option label="其他活动开发中" value="disabled" disabled></el-option>
                 <!-- 1: Showtime -->
@@ -92,23 +93,12 @@
               </el-space>
             </el-form-item>
             <el-alert
-              v-show="form.eventType === 'anniversary'"
+              v-if="currentNotices.length > 0"
               type="warning"
               :closable="false"
               show-icon
               style="margin-bottom: 1em"
             >
-              <span style="font-size: var(--el-font-size-base); line-height: 1.5">
-                注意：周年活动有每日推荐曲和普通曲的区别
-              </span>
-            </el-alert>
-            <el-alert
-              v-if="form.eventType === 'theater'"
-              type="info"
-              :closable="false"
-              show-icon
-              style="margin-bottom: 1em"
-            >
               <ul
                 style="
                   margin: 0;
@@ -117,11 +107,13 @@
                   line-height: 1.5;
                 "
               >
-                <li v-for="(tip, index) in EVENT_PARKING_TIPS.theater" :key="index">{{ tip }}</li>
+                <li v-for="(notice, index) in currentNotices" :key="index">
+                  {{ notice }}
+                </li>
               </ul>
             </el-alert>
             <el-alert
-              v-else-if="form.eventType === 'anniversary'"
+              v-if="currentTips.length > 0"
               type="info"
               :closable="false"
               show-icon
@@ -135,9 +127,7 @@
                   line-height: 1.5;
                 "
               >
-                <li v-for="(tip, index) in EVENT_PARKING_TIPS.anniversary" :key="index">
-                  {{ tip }}
-                </li>
+                <li v-for="(tip, index) in currentTips" :key="index">{{ tip }}</li>
               </ul>
             </el-alert>
 
@@ -289,7 +279,7 @@
 import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
-import { EVENT_PARKING_TIPS } from './data/MltdEventParkingConstant';
+import { EVENT_PARKING_TIPS, EVENT_PARKING_NOTICES } from './data/MltdEventParkingConstant';
 import type { ParkingForm, EventTheaterChoice, ParkingResultItem } from './MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
@@ -336,6 +326,24 @@ function formatToken(n: number): string {
 // 是否有已执行的操作（用于重置按钮的禁用状态）
 const hasExecutedOperations = computed(() => {
   return Object.values(executedCounts.value).some((count) => count > 0);
+});
+
+// 当前活动类型的注意事项
+const currentNotices = computed(() => {
+  const eventType = form.value.eventType;
+  if (eventType === 'theater' || eventType === 'anniversary' || eventType === 'trust') {
+    return EVENT_PARKING_NOTICES[eventType];
+  }
+  return [];
+});
+
+// 当前活动类型的提示信息
+const currentTips = computed(() => {
+  const eventType = form.value.eventType;
+  if (eventType === 'theater' || eventType === 'anniversary' || eventType === 'trust') {
+    return EVENT_PARKING_TIPS[eventType];
+  }
+  return [];
 });
 
 // 当前状态表格数据
