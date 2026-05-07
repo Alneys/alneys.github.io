@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 活动控分计算器组合式函数
  * 提供表单预处理、计算逻辑和状态管理
  */
@@ -22,6 +22,8 @@ export const createDefaultParkingForm = (): ParkingForm => ({
   pt: undefined,
   token: undefined,
   enableExtraChoices: true,
+  bonus: 30,
+  isBoostPeriod: true,
 });
 
 /**
@@ -33,10 +35,16 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   // 根据活动类型返回对应的选择项列表，并根据开关过滤 extra 选项
   const eventTheaterChoices = computed<EventTheaterChoice[]>(() => {
     let choices: EventTheaterChoice[];
+
     if (form.value.eventType === 'anniversary') {
       choices = MLTD_PARKING_CONSTANTS.eventAnniversaryChoices;
     } else if (form.value.eventType === 'trust') {
       choices = MLTD_PARKING_CONSTANTS.eventTrustChoices;
+    } else if (form.value.eventType === 'tune') {
+      // Tune 活动需要 bonus 和 isBoostPeriod 参数
+      const bonus = form.value.bonus ?? 30;
+      const isBoostPeriod = form.value.isBoostPeriod ?? false;
+      choices = MLTD_PARKING_CONSTANTS.generateTuneChoices(bonus, isBoostPeriod);
     } else {
       choices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
     }
@@ -192,17 +200,11 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       pt: form.value.pt ?? 0,
       token: form.value.token ?? 0,
     };
-    if (
-      form.value.eventType === 'theater' ||
-      form.value.eventType === 'anniversary' ||
-      form.value.eventType === 'trust'
-    ) {
-      parkingResult.value = await calcParkingTheater(formSnapshot.value);
-      // 保存初始方案快照并重置执行状态
-      if (parkingResult.value?.flag && parkingResult.value.result) {
-        parkingResultSnapshot.value = [...parkingResult.value.result];
-        executedCounts.value = {};
-      }
+    parkingResult.value = await calcParkingTheater(formSnapshot.value);
+    // 保存初始方案快照并重置执行状态
+    if (parkingResult.value?.flag && parkingResult.value.result) {
+      parkingResultSnapshot.value = [...parkingResult.value.result];
+      executedCounts.value = {};
     }
     calculatedFlag.value = true;
   };
@@ -218,9 +220,11 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   } as const;
 
   /**
-   * Theater / Anniversary / Trust 活动控分计算算法
+   * 活动控分计算算法（Theater / Anniversary / Trust / Tune 通用）
    *
-   * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径
+   * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
+   * 各活动类型的差异仅体现在选择项（choices）的生成上（见 eventTheaterChoices），
+   * 搜索算法本身无需区分活动类型。
    *
    * @param formData - 表单数据（已预处理）
    * @returns 计算结果
@@ -246,8 +250,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     }
 
     // 排序优先级：
-    // 1. 活动曲（消耗活动道具，token < 0）优先
-    // 2. 其他选项按 pt 降序
+    // 1. 活动曲（消耗活动道具，token < 0）优先，pt 获取多的靠前
+    // 2. 其他选项按 pt 降序，pt 获取多的靠前
     const choices = [...eventTheaterChoices.value].sort((a, b) => {
       const aIsEventLive = a.token < 0;
       const bIsEventLive = b.token < 0;
@@ -255,6 +259,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       if (aIsEventLive && !bIsEventLive) return -1;
       if (!aIsEventLive && bIsEventLive) return 1;
 
+      // 相同类型：选项按 pt 降序，获取多的靠前
       return b.pt - a.pt;
     });
 

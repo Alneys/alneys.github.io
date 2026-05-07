@@ -11,6 +11,7 @@
                 <el-option label="Theater" value="theater"></el-option>
                 <el-option label="Anniversary" value="anniversary"></el-option>
                 <el-option label="Trust" value="trust"></el-option>
+                <el-option label="Tune" value="tune"></el-option>
                 <el-option label="Tour" value="tour" disabled></el-option>
                 <el-option label="其他活动开发中" value="disabled" disabled></el-option>
                 <!-- 1: Showtime -->
@@ -78,6 +79,28 @@
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-row v-if="form.eventType === 'tune'" :gutter="16">
+              <el-col :span="8" :xs="24">
+                <el-form-item label="获得pt加成" prop="bonus">
+                  <template #label><b>获得pt加成</b></template>
+                  <el-input
+                    v-model.number="form.bonus"
+                    :min="0"
+                    :max="30"
+                    type="number"
+                    inputmode="numeric"
+                    placeholder="30"
+                  >
+                    <template #append>%</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="24">
+                <el-form-item label="活动折返">
+                  <el-switch v-model="form.isBoostPeriod" />
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-form-item label="打工票使用更多倍率（默认只使用最大倍率）">
               <el-switch v-model="form.enableExtraChoices" />
             </el-form-item>
@@ -127,7 +150,7 @@
             </el-alert>
 
             <!-- 分数表折叠面板 -->
-            <el-collapse v-model="activeCollapse">
+            <el-collapse v-model="activeCollapse" style="--el-collapse-header-font-size: 16px">
               <el-collapse-item title="分数表" name="pointTable">
                 <el-table :data="pointTableData" border :cell-class-name="monoCellClassName">
                   <el-table-column
@@ -326,7 +349,12 @@ const hasExecutedOperations = computed(() => {
 // 当前活动类型的注意事项
 const currentNotices = computed(() => {
   const eventType = form.value.eventType;
-  if (eventType === 'theater' || eventType === 'anniversary' || eventType === 'trust') {
+  if (
+    eventType === 'theater' ||
+    eventType === 'anniversary' ||
+    eventType === 'trust' ||
+    eventType === 'tune'
+  ) {
     return EVENT_PARKING_NOTICES[eventType];
   }
   return [];
@@ -335,7 +363,12 @@ const currentNotices = computed(() => {
 // 当前活动类型的提示信息
 const currentTips = computed(() => {
   const eventType = form.value.eventType;
-  if (eventType === 'theater' || eventType === 'anniversary' || eventType === 'trust') {
+  if (
+    eventType === 'theater' ||
+    eventType === 'anniversary' ||
+    eventType === 'trust' ||
+    eventType === 'tune'
+  ) {
     return EVENT_PARKING_TIPS[eventType];
   }
   return [];

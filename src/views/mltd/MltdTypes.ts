@@ -98,6 +98,8 @@ export interface ParkingForm {
   pt?: number;
   token?: number;
   enableExtraChoices?: boolean;
+  bonus?: number;
+  isBoostPeriod?: boolean;
 }
 
 // Parking 计算结果项
@@ -124,4 +126,7 @@ export interface EventTheaterChoice {
   pt: number;
   token: number;
   extra?: boolean;
+  // Tune 活动专用字段
+  neededForStep?: string; // '体力' | '打工票' | '活动曲'
+  mag?: string; // 倍率标记（打工票倍率 或 活动曲消费倍率）
 }
