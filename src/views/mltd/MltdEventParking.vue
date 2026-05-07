@@ -2,11 +2,6 @@
   <div id="view-mltd-event-parking">
     <h1 class="view-title">偶像大师百万现场 活动控分计算器</h1>
     <div class="al-divider"></div>
-    <div style="margin-bottom: 1em">
-      <el-alert type="error" :closable="false" show-icon>
-        <h2>警告：本页面正在开发中，无法保证结果的准确性！</h2>
-      </el-alert>
-    </div>
     <div id="mltd-event-parking-form">
       <el-row :gutter="16">
         <el-col :lg="11" :sm="24">
