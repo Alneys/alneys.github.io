@@ -292,6 +292,7 @@
                     <template #default="{ row }">
                       <el-button-group v-if="!row.highlight && row.rawItem">
                         <el-button
+                          v-if="!isTourEventLiveRow(row)"
                           :icon="Plus"
                           size="small"
                           :disabled="row.count >= getInitialCount(row.rawItem)"
@@ -603,6 +604,15 @@ function highlightRowClassName({ row }: { row: PlanTableRow }) {
 function monoCellClassName({ column }: { column: any }) {
   const monoColumnProps = ['value', 'count', 'pt', 'token'];
   return monoColumnProps.includes(column.property) ? 'font-mono' : '';
+}
+
+// 判断是否为 Tour 活动的 Event Live 行
+function isTourEventLiveRow(row: PlanTableRow): boolean {
+  if (form.value.eventType !== 'tour') return false;
+  const choice = eventTheaterChoices.value.find(
+    (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
+  );
+  return choice?.neededForStep === 'trigger';
 }
 
 function handleClear() {

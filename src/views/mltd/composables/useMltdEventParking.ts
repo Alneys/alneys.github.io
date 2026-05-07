@@ -151,9 +151,36 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     );
     if (!choice) return;
 
-    // 更新表单数据
+    // 更新 pt（通用）
     form.value.pt = (form.value.pt ?? 0) + choice.pt;
-    form.value.token = (form.value.token ?? 0) + choice.token;
+
+    // Tour 活动需要特殊处理进度和道具
+    if (form.value.eventType === 'tour') {
+      const isEventLive = choice.neededForStep === 'trigger';
+
+      if (!isEventLive && choice.progress && choice.progress > 0) {
+        // 歌曲游玩：增加进度，处理道具转换
+        let newItemProgress = (form.value.itemProgress ?? 0) + choice.progress;
+        let newToken = form.value.token ?? 0;
+
+        // 道具进度满 20 转换 1 个道具
+        if (newItemProgress >= 20) {
+          newToken++;
+          newItemProgress -= 20;
+        }
+
+        form.value.itemProgress = newItemProgress;
+        form.value.liveProgress = (form.value.liveProgress ?? 0) + choice.progress;
+        form.value.token = newToken;
+      } else if (isEventLive) {
+        // Event Live：消耗道具，重置 Live 进度
+        form.value.token = (form.value.token ?? 0) + choice.token;
+        form.value.liveProgress = 0;
+      }
+    } else {
+      // 其他活动类型：直接更新 token
+      form.value.token = (form.value.token ?? 0) + choice.token;
+    }
 
     // 更新执行次数
     executedCounts.value[key] = (executedCounts.value[key] ?? 0) + 1;
@@ -175,9 +202,32 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     );
     if (!choice) return;
 
-    // 更新表单数据（撤销）
+    // 更新 pt（通用）
     form.value.pt = (form.value.pt ?? 0) - choice.pt;
-    form.value.token = (form.value.token ?? 0) - choice.token;
+
+    // Tour 活动需要特殊处理进度和道具（仅支持歌曲游玩的撤销）
+    if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
+      // 歌曲游玩：逆向计算进度，处理道具逆向转换
+      const currentProgress = form.value.itemProgress ?? 0;
+      const progressToUndo = choice.progress;
+
+      // 减少 Live 进度
+      form.value.liveProgress = Math.max(0, (form.value.liveProgress ?? 0) - progressToUndo);
+
+      // 处理道具进度逆向转换
+      if (currentProgress >= progressToUndo) {
+        // 当前进度足够，直接扣减
+        form.value.itemProgress = currentProgress - progressToUndo;
+      } else {
+        // 当前进度不足，说明之前转换了道具，需要逆向处理
+        // 扣减 1 个道具，恢复进度 = 当前进度 + 20 - progressToUndo
+        form.value.token = Math.max(0, (form.value.token ?? 0) - 1);
+        form.value.itemProgress = currentProgress + 20 - progressToUndo;
+      }
+    } else {
+      // 其他活动类型：直接更新 token
+      form.value.token = (form.value.token ?? 0) - choice.token;
+    }
 
     // 更新执行次数
     executedCounts.value[key] = (executedCounts.value[key] ?? 0) - 1;
