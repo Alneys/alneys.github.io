@@ -9,10 +9,10 @@
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
                 <el-option label="Theater" value="theater"></el-option>
+                <el-option label="Tour" value="tour"></el-option>
                 <el-option label="Anniversary" value="anniversary"></el-option>
                 <el-option label="Trust" value="trust"></el-option>
                 <el-option label="Tune" value="tune"></el-option>
-                <el-option label="Tour" value="tour" disabled></el-option>
                 <el-option label="其他活动开发中" value="disabled" disabled></el-option>
                 <!-- 1: Showtime -->
                 <!-- 2: Millicolle! -->
@@ -97,6 +97,42 @@
               </el-col>
               <el-col :span="8" :xs="24">
                 <el-form-item label="活动折返">
+                  <el-switch v-model="form.isBoostPeriod" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row v-if="form.eventType === 'tour'" :gutter="16">
+              <el-col :span="6" :xs="24">
+                <el-form-item label="道具进度" prop="itemProgress">
+                  <template #label><b>道具进度</b></template>
+                  <el-input
+                    v-model.number="form.itemProgress"
+                    :min="0"
+                    :max="19"
+                    type="number"
+                    inputmode="numeric"
+                    placeholder="0"
+                  >
+                    <template #append>/20</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6" :xs="24">
+                <el-form-item label="Live进度" prop="liveProgress">
+                  <el-input
+                    v-model.number="form.liveProgress"
+                    :min="0"
+                    :max="40"
+                    type="number"
+                    inputmode="numeric"
+                    placeholder="0"
+                  >
+                    <template #append>/40</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6" :xs="24">
+                <el-form-item label="已折返">
                   <el-switch v-model="form.isBoostPeriod" />
                 </el-form-item>
               </el-col>
@@ -353,7 +389,8 @@ const currentNotices = computed(() => {
     eventType === 'theater' ||
     eventType === 'anniversary' ||
     eventType === 'trust' ||
-    eventType === 'tune'
+    eventType === 'tune' ||
+    eventType === 'tour'
   ) {
     return EVENT_PARKING_NOTICES[eventType];
   }
@@ -367,7 +404,8 @@ const currentTips = computed(() => {
     eventType === 'theater' ||
     eventType === 'anniversary' ||
     eventType === 'trust' ||
-    eventType === 'tune'
+    eventType === 'tune' ||
+    eventType === 'tour'
   ) {
     return EVENT_PARKING_TIPS[eventType];
   }
@@ -380,6 +418,33 @@ const statusTableData = computed(() => {
   const pt = form.value.pt ?? 0;
   const token = form.value.token ?? 0;
 
+  // Tour 活动专属状态行
+  if (form.value.eventType === 'tour') {
+    return [
+      {
+        item: 'pt差距',
+        value: `${formatNumber(targetPt - pt)} pt`,
+      },
+      {
+        item: '当前道具',
+        value: `${formatNumber(token)} 个`,
+      },
+      {
+        item: '道具进度',
+        value: `${form.value.itemProgress ?? 0}/20`,
+      },
+      {
+        item: 'Live进度',
+        value: `${form.value.liveProgress ?? 0}`,
+      },
+      {
+        item: '折返状态',
+        value: form.value.isBoostPeriod ? '已折返' : '未折返',
+      },
+    ];
+  }
+
+  // 其他活动类型的标准状态行
   return [
     {
       item: 'pt差距',
@@ -417,7 +482,19 @@ const planTableData = computed<PlanTableRow[]>(() => {
     );
     const remainingCount = getRemainingCount(item);
     const ptTotal = (choice?.pt ?? 0) * remainingCount;
-    const tokenTotal = (choice?.token ?? 0) * remainingCount;
+
+    // Tour 活动：歌曲游玩显示进度带来的道具收益
+    let tokenTotal: number;
+    let tokenDisplay: string;
+    if (form.value.eventType === 'tour' && choice?.progress && choice.progress > 0) {
+      // 歌曲游玩增加进度，计算总进度
+      const progressTotal = choice.progress * remainingCount;
+      tokenTotal = Math.floor(progressTotal / 20); // 完整道具数量
+      tokenDisplay = `+${progressTotal}/20`;
+    } else {
+      tokenTotal = (choice?.token ?? 0) * remainingCount;
+      tokenDisplay = formatToken(tokenTotal);
+    }
 
     return {
       name: item.name,
@@ -425,7 +502,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
       multiplier: item.multiplier,
       count: remainingCount,
       pt: `+${formatNumber(ptTotal)}`,
-      token: formatToken(tokenTotal),
+      token: tokenDisplay,
       ptRaw: ptTotal,
       tokenRaw: tokenTotal,
       rawItem: item,
@@ -438,13 +515,55 @@ const planTableData = computed<PlanTableRow[]>(() => {
   const totalPt = data.reduce((sum, item) => sum + item.ptRaw, 0);
   const totalToken = data.reduce((sum, item) => sum + item.tokenRaw, 0);
 
+  // Tour 活动：汇总行需要特殊处理进度和道具
+  let totalTokenDisplay: string;
+  if (form.value.eventType === 'tour') {
+    // 计算总进度（从所有歌曲游玩中）
+    let totalProgress = 0;
+    for (const row of data) {
+      const choice = eventTheaterChoices.value.find(
+        (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
+      );
+      if (choice?.progress && choice.progress > 0) {
+        totalProgress += choice.progress * row.count;
+      }
+    }
+    // 计算进度转换后的道具数量
+    const progressTokens = Math.floor(totalProgress / 20);
+    const progressRemainder = totalProgress % 20;
+
+    // Event Live 消耗的道具
+    const eventLiveToken = data.reduce((sum, row) => {
+      const choice = eventTheaterChoices.value.find(
+        (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
+      );
+      if (choice?.token && choice.token < 0) {
+        return sum + choice.token * row.count;
+      }
+      return sum;
+    }, 0);
+
+    // 合并道具变化：进度获得的道具 + Event Live消耗的道具
+    const netTokenChange = progressTokens + eventLiveToken;
+
+    // 组合显示：净道具变化 + 剩余进度
+    const parts: string[] = [];
+    parts.push(formatToken(netTokenChange));
+    if (progressRemainder > 0) {
+      parts.push(`(进度${progressRemainder}/20)`);
+    }
+    totalTokenDisplay = parts.join(' ');
+  } else {
+    totalTokenDisplay = formatToken(totalToken);
+  }
+
   data.push({
     name: '汇总',
     type: '',
     multiplier: '',
     count: totalCount,
     pt: `+${formatNumber(totalPt)}`,
-    token: formatToken(totalToken),
+    token: totalTokenDisplay,
     ptRaw: totalPt,
     tokenRaw: totalToken,
     highlight: true,
@@ -455,13 +574,24 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
 // 分数表数据
 const pointTableData = computed(() => {
-  return eventTheaterChoices.value.map((choice) => ({
-    name: choice.name,
-    type: choice.type ?? '',
-    multiplier: choice.multiplier,
-    pt: choice.pt.toLocaleString('en-US'),
-    token: formatToken(choice.token),
-  }));
+  return eventTheaterChoices.value.map((choice) => {
+    // Tour 活动：歌曲游玩显示进度带来的道具收益
+    let tokenDisplay: string;
+    if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
+      // 歌曲游玩增加进度，显示为 "+进度/20"
+      tokenDisplay = `+${choice.progress}/20`;
+    } else {
+      tokenDisplay = formatToken(choice.token);
+    }
+
+    return {
+      name: choice.name,
+      type: choice.type ?? '',
+      multiplier: choice.multiplier,
+      pt: choice.pt.toLocaleString('en-US'),
+      token: tokenDisplay,
+    };
+  });
 });
 
 // 表格行样式

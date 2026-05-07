@@ -507,6 +507,80 @@ function generateTuneChoices(
 }
 
 /**
+ * Tour 活动歌曲配置
+ * @description 用于动态生成游玩选项
+ */
+const TOUR_SONG_CONFIGS = [
+  { name: '2 Mix', point: 58, progress: 3, multiplier: 1 },
+  { name: '2 Mix', point: 70, progress: 3, multiplier: 1.2 },
+  { name: '4 Mix', point: 77, progress: 4, multiplier: 1 },
+  { name: '4 Mix', point: 93, progress: 4, multiplier: 1.2 },
+  { name: '6 Mix', point: 96, progress: 5, multiplier: 1 },
+  { name: 'Million Mix', point: 116, progress: 6, multiplier: 1 },
+  { name: 'Million Mix', point: 140, progress: 6, multiplier: 1.2 },
+] as const;
+
+/**
+ * Tour Event Live 配置（消耗道具）
+ * @description 消耗活动道具获得大量积分
+ */
+const TOUR_EVENT_LIVE_CONFIGS = [
+  { name: 'Event Live', point: 720, trigger: -1, mag: '1' },
+  { name: 'Event Live', point: 1440, trigger: -2, mag: '2' },
+  { name: 'Event Live', point: 2160, trigger: -3, mag: '3' },
+] as const;
+
+/**
+ * 生成 Tour 活动的游玩选项列表
+ *
+ * Tour 特点：
+ * 1. Event Live 消耗道具获得大量积分，需要 Live 进度满足条件
+ * 2. 歌曲游玩获得积分并增加 Live 进度
+ * 3. 道具进度满 20 转换 1 个道具
+ * 4. 未折返时 Live 进度上限 40
+ *
+ * 生成顺序：
+ * 1. Event Live（消耗道具，按积分降序）
+ * 2. 歌曲游玩（不消耗道具，按积分降序）
+ *
+ * @returns 按积分降序排列的选项列表
+ */
+function generateTourChoices(): EventTheaterChoice[] {
+  const entries: EventTheaterChoice[] = [];
+
+  // 1. Event Live（消耗道具）
+  for (const config of TOUR_EVENT_LIVE_CONFIGS) {
+    entries.push({
+      name: config.name,
+      type: '活动曲',
+      multiplier: `${config.mag}倍`,
+      pt: config.point,
+      token: config.trigger,
+      neededForStep: 'trigger',
+      mag: config.mag,
+      progress: 0, // Event Live 不增加 Live 进度
+    });
+  }
+
+  // 2. 歌曲游玩（不消耗道具，获得积分和进度）
+  for (const song of TOUR_SONG_CONFIGS) {
+    const is1_2x = song.multiplier === 1.2;
+    entries.push({
+      name: song.name,
+      type: '体力',
+      multiplier: `${song.multiplier}倍`,
+      pt: song.point,
+      token: 0, // 不消耗道具
+      neededForStep: is1_2x ? 'life1.2' : 'life',
+      progress: song.progress,
+    });
+  }
+
+  // 按积分降序排序
+  return entries.sort((a, b) => b.pt - a.pt);
+}
+
+/**
  * MLTD 活动控分相关常量定义
  */
 export const MLTD_PARKING_CONSTANTS = {
@@ -521,6 +595,9 @@ export const MLTD_PARKING_CONSTANTS = {
 
   /** Tune 活动剧场选择项生成器（需要 bonus 和 isEnded 参数） */
   generateTuneChoices,
+
+  /** Tour 活动剧场选择项列表（动态生成） */
+  eventTourChoices: generateTourChoices(),
 } as const;
 
 /**
@@ -539,6 +616,11 @@ export const EVENT_PARKING_NOTICES = {
   tune: [
     '注意：积分加成最大为 1.3 倍',
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
+  ],
+  tour: [
+    '5倍活动曲需要在进度达到限制后才能使用',
+    '道具进度满 20 自动转换 1 个道具',
+    '进度上限为 40',
   ],
 } as const;
 
@@ -567,5 +649,9 @@ export const EVENT_PARKING_TIPS = {
     'Trust 活动有最大 1.3 倍分数加成，只对活动曲积分有效，对普通曲无效',
     '使用打工票游玩时的计算公式：基础积分 × 打工票倍率（向上取整）',
     '活动曲积分公式：基础积分 × 消费倍率 × (100 + 获得pt加成百分比) / 100（向上取整）',
+  ],
+  tour: [
+    '歌曲游玩不消耗道具，获得积分并增加 Live 进度',
+    'Event Live 消耗道具获得大量积分，并重置 Live 进度为 0',
   ],
 } as const;

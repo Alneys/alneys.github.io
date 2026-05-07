@@ -24,6 +24,9 @@ export const createDefaultParkingForm = (): ParkingForm => ({
   enableExtraChoices: true,
   bonus: 30,
   isBoostPeriod: true,
+  // Tour 专属字段默认值
+  itemProgress: 0,
+  liveProgress: 0,
 });
 
 /**
@@ -45,6 +48,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       const bonus = form.value.bonus ?? 30;
       const isBoostPeriod = form.value.isBoostPeriod ?? false;
       choices = MLTD_PARKING_CONSTANTS.generateTuneChoices(bonus, isBoostPeriod);
+    } else if (form.value.eventType === 'tour') {
+      choices = MLTD_PARKING_CONSTANTS.eventTourChoices;
     } else {
       choices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
     }
@@ -61,7 +66,17 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   const parkingResult = ref<ParkingResult>();
 
   /** 计算时的表单数据快照 */
-  const formSnapshot = ref<{ targetPt: number; pt: number; token: number }>();
+  const formSnapshot = ref<
+    | { targetPt: number; pt: number; token: number }
+    | {
+        targetPt: number;
+        pt: number;
+        token: number;
+        itemProgress: number;
+        liveProgress: number;
+        isBoostPeriod: boolean;
+      }
+  >();
 
   /** 初始方案快照（用于撤销操作的上限判断） */
   const parkingResultSnapshot = ref<ParkingResultItem[]>([]);
@@ -111,6 +126,12 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if (!formSnapshot.value) return;
     form.value.pt = formSnapshot.value.pt;
     form.value.token = formSnapshot.value.token;
+    // Tour 类型需要重置额外字段
+    if ('itemProgress' in formSnapshot.value) {
+      form.value.itemProgress = formSnapshot.value.itemProgress;
+      form.value.liveProgress = formSnapshot.value.liveProgress;
+      form.value.isBoostPeriod = formSnapshot.value.isBoostPeriod;
+    }
     executedCounts.value = {};
   };
 
@@ -194,13 +215,27 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    */
   const handleSubmit = async () => {
     preprocessingForm();
-    // 保存表单数据快照
-    formSnapshot.value = {
-      targetPt: form.value.targetPt ?? 0,
-      pt: form.value.pt ?? 0,
-      token: form.value.token ?? 0,
-    };
-    parkingResult.value = await calcParkingTheater(formSnapshot.value);
+
+    // 根据活动类型保存快照并选择计算函数
+    if (form.value.eventType === 'tour') {
+      formSnapshot.value = {
+        targetPt: form.value.targetPt ?? 0,
+        pt: form.value.pt ?? 0,
+        token: form.value.token ?? 0,
+        itemProgress: form.value.itemProgress ?? 0,
+        liveProgress: form.value.liveProgress ?? 0,
+        isBoostPeriod: form.value.isBoostPeriod ?? false,
+      };
+      parkingResult.value = await calcParkingTour(formSnapshot.value);
+    } else {
+      formSnapshot.value = {
+        targetPt: form.value.targetPt ?? 0,
+        pt: form.value.pt ?? 0,
+        token: form.value.token ?? 0,
+      };
+      parkingResult.value = await calcParkingTheater(formSnapshot.value);
+    }
+
     // 保存初始方案快照并重置执行状态
     if (parkingResult.value?.flag && parkingResult.value.result) {
       parkingResultSnapshot.value = [...parkingResult.value.result];
@@ -350,6 +385,204 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       stack.push({
         ptDiff: newPtDiff,
         token: newToken,
+        stepIndex: 0,
+        viaStepIndex: currentStepIndex,
+      });
+    }
+
+    // 提取结果
+    const lastNode = stack[stack.length - 1];
+    if (stack.length && lastNode && lastNode.ptDiff === 0) {
+      // 统计每个步骤使用的次数
+      const record: Record<string, number> = {};
+      for (const node of stack) {
+        if (node.viaStepIndex !== undefined) {
+          record[node.viaStepIndex] = (record[node.viaStepIndex] ?? 0) + 1;
+        }
+      }
+
+      const result: ParkingResultItem[] = [];
+      for (const [key, value] of Object.entries(record)) {
+        if (value > 0) {
+          const choice = choices[Number(key)];
+          if (!choice) continue;
+          result.push({
+            name: choice.name,
+            multiplier: choice.multiplier,
+            value,
+          });
+        }
+      }
+
+      return { flag: true, result };
+    }
+
+    return { flag: false, message: '不存在控分方案' };
+  }
+
+  /**
+   * Tour 活动专用计算算法
+   *
+   * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
+   * Tour 活动特点：
+   * 1. 引入道具进度系统（满 20 转换 1 个道具）
+   * 2. 引入 Live 进度系统（未折返上限 40）
+   * 3. Event Live 需要满足 Live 进度条件才能使用
+   * 4. Event Live 会重置 Live 进度为 0
+   *
+   * @param formData - 表单数据（已预处理，包含 Tour 专属字段）
+   * @returns 计算结果
+   */
+  async function calcParkingTour(formData: {
+    targetPt: number;
+    pt: number;
+    token: number;
+    itemProgress: number;
+    liveProgress: number;
+    isBoostPeriod: boolean;
+  }): Promise<ParkingResult> {
+    // 验证：负数参数
+    if (
+      formData.targetPt < 0 ||
+      formData.pt < 0 ||
+      formData.token < 0 ||
+      formData.itemProgress < 0 ||
+      formData.liveProgress < 0
+    ) {
+      return { flag: false, message: '参数不能为负数' };
+    }
+
+    // 验证：道具进度范围
+    if (formData.itemProgress > 19) {
+      return { flag: false, message: '道具进度必须在 0-19 之间' };
+    }
+
+    // 验证：已达标
+    if (formData.pt >= formData.targetPt) {
+      return { flag: true, result: [] };
+    }
+
+    // 验证：差距过大
+    if (formData.targetPt - formData.pt > 100000) {
+      return { flag: false, message: '积分差距大于100000，请缩小后重试' };
+    }
+
+    /**
+     * Tour 栈节点结构
+     *
+     * 扩展状态：ptDiff, token, itemProgress, liveProgress
+     */
+    interface TourStackNode {
+      ptDiff: number;
+      token: number;
+      itemProgress: number;
+      liveProgress: number;
+      stepIndex: number;
+      viaStepIndex?: number;
+    }
+
+    const choices = [...eventTheaterChoices.value];
+    let iterations = 0;
+    const stack: TourStackNode[] = [
+      {
+        ptDiff: formData.pt - formData.targetPt,
+        token: formData.token,
+        itemProgress: formData.itemProgress,
+        liveProgress: formData.liveProgress,
+        stepIndex: 0,
+      },
+    ];
+
+    while (stack.length) {
+      // 检查迭代限制
+      if (iterations >= DFS_CONFIG.maxIterations) {
+        return { flag: false, message: '达到最大迭代次数限制，搜索终止' };
+      }
+
+      // 防阻塞：定期让出执行权
+      iterations++;
+      if (iterations % DFS_CONFIG.iterationPauseInterval === 0) {
+        await new Promise((r) => setTimeout(r, 0));
+      }
+
+      const top = stack[stack.length - 1];
+      if (!top) {
+        stack.pop();
+        continue;
+      }
+
+      // 所有步骤都尝试过了，回溯
+      if (top.stepIndex >= choices.length) {
+        stack.pop();
+        continue;
+      }
+
+      // 获取当前要尝试的步骤
+      const currentStepIndex = top.stepIndex;
+      top.stepIndex++;
+
+      const choice = choices[currentStepIndex];
+      if (!choice) {
+        continue;
+      }
+
+      // Tour 专用约束检查
+      const isEventLive = choice.neededForStep === 'trigger';
+
+      // Event Live 倍率条件检查
+      if (isEventLive) {
+        // 3 倍道具消耗需要 isBoostPeriod（已折返）
+        if (choice.token === -3 && !formData.isBoostPeriod) continue;
+        // 2 倍和 1 倍道具消耗需要 Live 进度达到 40
+        if ((choice.token === -2 || choice.token === -1) && top.liveProgress < 40) continue;
+      }
+
+      // 3. 计算新状态
+      let newItem = top.token + choice.token;
+      const newPtDiff = top.ptDiff + choice.pt;
+      let newItemProgress = top.itemProgress + (choice.progress ?? 0);
+      let newLiveProgress = top.liveProgress + (choice.progress ?? 0);
+
+      // 道具进度满 20 转换 1 个道具
+      if (newItemProgress >= 20) {
+        newItem++;
+        newItemProgress -= 20;
+      }
+
+      // 4. 道具数量不能为负
+      if (newItem < 0) {
+        continue;
+      }
+
+      // 5. 积分不能超过目标
+      if (newPtDiff > 0) {
+        continue;
+      }
+
+      // 6. Event Live 重置 Live 进度
+      if (isEventLive) {
+        newLiveProgress = 0;
+      }
+
+      // 找到解
+      if (newPtDiff === 0) {
+        stack.push({
+          ptDiff: newPtDiff,
+          token: newItem,
+          itemProgress: newItemProgress,
+          liveProgress: newLiveProgress,
+          stepIndex: 0,
+          viaStepIndex: currentStepIndex,
+        });
+        break;
+      }
+
+      // 继续深入搜索
+      stack.push({
+        ptDiff: newPtDiff,
+        token: newItem,
+        itemProgress: newItemProgress,
+        liveProgress: newLiveProgress,
         stepIndex: 0,
         viaStepIndex: currentStepIndex,
       });

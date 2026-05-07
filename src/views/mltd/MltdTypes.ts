@@ -98,8 +98,13 @@ export interface ParkingForm {
   pt?: number;
   token?: number;
   enableExtraChoices?: boolean;
+  // Tune 专属字段
   bonus?: number;
   isBoostPeriod?: boolean;
+  // Tour 专属字段
+  itemProgress?: number; // 道具进度（0-19）
+  liveProgress?: number; // Live 进度
+  // isBoostPeriod 同时用于 Tune（活动折返）和 Tour（已折返/可5倍）
 }
 
 // Parking 计算结果项
@@ -127,6 +132,8 @@ export interface EventTheaterChoice {
   token: number;
   extra?: boolean;
   // Tune 活动专用字段
-  neededForStep?: string; // '体力' | '打工票' | '活动曲'
+  neededForStep?: string; // '体力' | '打工票' | '活动曲' | 'trigger' | 'life' | 'life1.2'
   mag?: string; // 倍率标记（打工票倍率 或 活动曲消费倍率）
+  // Tour 活动专用字段
+  progress?: number; // Live 进度增加值
 }
