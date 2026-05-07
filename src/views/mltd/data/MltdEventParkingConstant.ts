@@ -11,9 +11,9 @@ import type { EventTheaterChoice } from '../MltdTypes';
 interface SongConfigForParking {
   /** 歌曲名称（中文） */
   name: string;
-  /** 元气等倍消耗时获得的点数 */
+  /** 体力等倍消耗时获得的积分 */
   value: number;
-  /** 单倍票券消耗所需的票数 */
+  /** 单倍打工票消耗所需的票数 */
   ticket: number;
 }
 
@@ -29,34 +29,34 @@ const SONG_CONFIGS_FOR_PARKING: SongConfigForParking[] = [
 ];
 
 /**
- * 票券消耗倍率配置 - Theater 活动
- * @description 从 10 到 1，每个值乘以 0.7 得到点数倍率
+ * 打工票消耗倍率配置 - Theater 活动
+ * @description 从 10 到 1，每个值乘以 0.7 得到积分倍率
  * 原始倍率：[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
- * 点数倍率：[7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
+ * 积分倍率：[7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
  */
 const TICKET_MULTIPLIER_CONFIG = {
   /** 最大倍率 */
   maxMultiplier: 10,
-  /** 点数计算系数 */
+  /** 积分计算系数 */
   pointCoefficient: 0.7,
 } as const;
 
 /**
- * 票券消耗倍率配置 - Anniversary 活动
- * @description 从 15 到 1，每个值乘以 0.7 得到点数倍率
+ * 打工票消耗倍率配置 - Anniversary 活动
+ * @description 从 15 到 1，每个值乘以 0.7 得到积分倍率
  * 原始倍率：[15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
- * 点数倍率：[10.5, 9.8, 9.1, 8.4, 7.7, 7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
+ * 积分倍率：[10.5, 9.8, 9.1, 8.4, 7.7, 7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
  */
 const ANNIVERSARY_TICKET_CONFIG = {
   /** 最大倍率 */
   maxMultiplier: 15,
-  /** 点数计算系数 */
+  /** 积分计算系数 */
   pointCoefficient: 0.7,
 } as const;
 
 /**
- * Event Live 配置 - Theater 活动
- * @description 消耗活动道具获得大量点数
+ * 活动曲配置 - Theater 活动
+ * @description 消耗活动道具获得大量积分
  */
 const EVENT_LIVE_CONFIG_FOR_PARKING = {
   name: '活动曲',
@@ -66,8 +66,8 @@ const EVENT_LIVE_CONFIG_FOR_PARKING = {
 } as const;
 
 /**
- * Event Live 配置 - Anniversary 活动
- * @description 消耗活动道具获得大量点数（pt 比 Theater 低）
+ * 活动曲配置 - Anniversary 活动
+ * @description 消耗活动道具获得大量积分（pt 比 Theater 低）
  */
 const ANNIVERSARY_EVENT_LIVE_CONFIG = {
   name: '活动曲',
@@ -78,12 +78,12 @@ const ANNIVERSARY_EVENT_LIVE_CONFIG = {
 
 /**
  * Trust 活动分数加成倍率
- * @description Trust 活动固定 1.5 倍分数加成，只对积分有效，对道具无效
+ * @description Trust 活动固定 1.5 倍分数加成，只对积分有效，对活动道具无效
  */
 const TRUST_POINT_BONUS = 1.5;
 
 /**
- * Event Live 配置 - Trust 活动
+ * 活动曲配置 - Trust 活动
  * @description Trust 活动有 1倍/2倍/4倍 三个版本
  */
 const TRUST_EVENT_LIVE_CONFIGS = [
@@ -93,19 +93,19 @@ const TRUST_EVENT_LIVE_CONFIGS = [
 ] as const;
 
 /**
- * 计算票券消耗时的点数
- * @param basePoint 基础点数
- * @param multiplier 票券倍率
- * @returns 向上取整后的点数
+ * 计算打工票消耗时的积分
+ * @param basePoint 基础积分
+ * @param multiplier 打工票倍率
+ * @returns 向上取整后的积分
  */
 function calculateTicketPoint(basePoint: number, multiplier: number): number {
   return Math.ceil(basePoint * multiplier * TICKET_MULTIPLIER_CONFIG.pointCoefficient);
 }
 
 /**
- * 计算票券消耗所需的票数
- * @param multiplier 票券倍率
- * @param ticket 单倍票券消耗所需的票数
+ * 计算打工票消耗所需的票数
+ * @param multiplier 打工票倍率
+ * @param ticket 单倍打工票消耗所需的票数
  * @returns 票数
  */
 function calculateTicketCount(multiplier: number, ticket: number): number {
@@ -113,7 +113,7 @@ function calculateTicketCount(multiplier: number, ticket: number): number {
 }
 
 /**
- * 生成票券消耗倍率数组（从大到小）
+ * 生成打工票消耗倍率数组（从大到小）
  * @param x 最大倍率数
  * @returns 倍率数组
  */
@@ -134,17 +134,17 @@ function extractSongBaseName(name: string): string {
  * 生成 Anniversary 活动的完整游玩选项列表
  *
  * Anniversary 特点：
- * 1. 票券倍率范围更大：15→1 × 0.7
- * 2. 有推荐曲（1.2倍元气消费，PUSH 系统）
- * 3. Million Mix 推荐曲可 PUSH + 票券组合
- * 4. Event Live 点数较低：537（Theater 是 634）
+ * 1. 打工票倍率范围更大：15→1 × 0.7
+ * 2. 有推荐曲（1.2倍体力消费）
+ * 3. Million Mix 推荐曲可 PUSH + 打工票组合
+ * 4. 活动曲积分较低：537（Theater 是 634）
  *
  * 曲目类型区分：
- * - 通常曲：元气等倍消费，打工票等倍消费
- * - 推荐曲：元气1.2倍消费（PUSH），打工票+PUSH组合（仅MM）
+ * - 通常曲：体力等倍消费，打工票等倍消费
+ * - 推荐曲：体力1.2倍消费，打工票+PUSH组合（仅MM）
  *
  * 生成顺序：
- * 1. 活动曲（消耗道具）
+ * 1. 活动曲（消耗活动道具）
  * 2. 体力消耗-通常曲（按体力消耗大到小）
  * 3. 体力消耗-推荐曲（按体力消耗大到小）
  * 4. 打工票消耗-推荐曲（仅MM，倍率从大到小）- 优先级最高
@@ -155,7 +155,7 @@ function extractSongBaseName(name: string): string {
 function generateAnniversaryChoices(): EventTheaterChoice[] {
   const entries: EventTheaterChoice[] = [];
 
-  // 1. 活动曲（消耗道具获得大量点数）
+  // 1. 活动曲（消耗活动道具获得大量积分）
   entries.push({
     name: ANNIVERSARY_EVENT_LIVE_CONFIG.name,
     type: '',
@@ -164,7 +164,7 @@ function generateAnniversaryChoices(): EventTheaterChoice[] {
     token: ANNIVERSARY_EVENT_LIVE_CONFIG.token,
   });
 
-  // 2. 体力消耗 - 通常曲（元气等倍）
+  // 2. 体力消耗 - 通常曲（体力等倍）
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     const baseName = extractSongBaseName(song.name);
     entries.push({
@@ -176,7 +176,7 @@ function generateAnniversaryChoices(): EventTheaterChoice[] {
     });
   }
 
-  // 3. 体力消耗 - 推荐曲（元气1.2倍，PUSH）
+  // 3. 体力消耗 - 推荐曲（体力1.2倍）
   // 公式：pt = round(value × 1.2)
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     const baseName = extractSongBaseName(song.name);
@@ -236,16 +236,16 @@ function generateAnniversaryChoices(): EventTheaterChoice[] {
  * 生成 Theater 活动的完整游玩选项列表
  *
  * 生成顺序：
- * 1. 活动曲（消耗道具）
- * 2. 体力消耗（元气等倍，按体力消耗大到小）
- * 3. 票券消耗（按体力消耗大到小，倍率从大到小）
+ * 1. 活动曲（消耗活动道具）
+ * 2. 体力消耗（体力等倍，按体力消耗大到小）
+ * 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
  *
  * @returns 按固定顺序生成的选项列表（搜索算法中会按 pt 降序排序）
  */
 function generateTheaterChoices(): EventTheaterChoice[] {
   const entries: EventTheaterChoice[] = [];
 
-  // 1. 活动曲（消耗道具获得大量点数）
+  // 1. 活动曲（消耗活动道具获得大量积分）
   entries.push({
     name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
     type: '',
@@ -254,7 +254,7 @@ function generateTheaterChoices(): EventTheaterChoice[] {
     token: EVENT_LIVE_CONFIG_FOR_PARKING.token,
   });
 
-  // 2. 体力消耗（元气等倍，按体力消耗大到小）
+  // 2. 体力消耗（体力等倍，按体力消耗大到小）
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     entries.push({
       name: song.name,
@@ -265,7 +265,7 @@ function generateTheaterChoices(): EventTheaterChoice[] {
     });
   }
 
-  // 3. 票券消耗（按体力消耗大到小，倍率从大到小）
+  // 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
   const multipliers = generateTicketMultipliers();
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     for (const multiplier of multipliers) {
@@ -289,26 +289,26 @@ function generateTheaterChoices(): EventTheaterChoice[] {
  * 生成 Trust 活动的完整游玩选项列表
  *
  * Trust 特点：
- * 1. 1.5 倍分数加成（只对积分有效，对道具无效）
- * 2. 票券倍率与 Theater 相同：10→1 × 0.7
- * 3. Event Live 有 1倍/2倍/4倍 三个版本
+ * 1. 1.5 倍分数加成（只对积分有效，对活动道具无效）
+ * 2. 打工票倍率与 Theater 相同：10→1 × 0.7
+ * 3. 活动曲有 1倍/2倍/4倍 三个版本
  *
  * 计算规则：
- * - 元气消费：道具 = 基础点数，积分 = ceil(道具 × 1.5)
- * - 票券消费：道具 = ceil(基础点数 × 倍率)，积分 = ceil(道具 × 1.5)
- * - Event Live：直接使用配置值（三个版本）
+ * - 体力消费：活动道具 = 基础积分，积分 = ceil(活动道具 × 1.5)
+ * - 打工票消费：活动道具 = ceil(基础积分 × 倍率)，积分 = ceil(活动道具 × 1.5)
+ * - 活动曲：直接使用配置值（三个版本）
  *
  * 生成顺序：
- * 1. 活动曲（三个版本，消耗道具）
- * 2. 体力消耗（元气等倍，按体力消耗大到小）
- * 3. 票券消耗（按体力消耗大到小，倍率从大到小）
+ * 1. 活动曲（三个版本，消耗活动道具）
+ * 2. 体力消耗（体力等倍，按体力消耗大到小）
+ * 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
  *
  * @returns 按固定顺序生成的选项列表（搜索算法中会按 pt 降序排序）
  */
 function generateTrustChoices(): EventTheaterChoice[] {
   const entries: EventTheaterChoice[] = [];
 
-  // 1. 活动曲（三个版本，消耗道具获得大量点数）
+  // 1. 活动曲（三个版本，消耗活动道具获得大量积分）
   // 注意：活动曲不设置 extra 属性，不参与更多倍率筛选
   for (const config of TRUST_EVENT_LIVE_CONFIGS) {
     entries.push({
@@ -320,8 +320,8 @@ function generateTrustChoices(): EventTheaterChoice[] {
     });
   }
 
-  // 2. 体力消耗（元气等倍）
-  // 道具 = 基础点数，积分 = ceil(道具 × 1.5)
+  // 2. 体力消耗（体力等倍）
+  // 活动道具 = 基础积分，积分 = ceil(活动道具 × 1.5)
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     const pt = Math.ceil(song.value * TRUST_POINT_BONUS);
     entries.push({
@@ -329,12 +329,12 @@ function generateTrustChoices(): EventTheaterChoice[] {
       type: '体力',
       multiplier: '1倍',
       pt: pt,
-      token: song.value, // 道具不受分数加成影响
+      token: song.value, // 活动道具不受分数加成影响
     });
   }
 
-  // 3. 票券消耗
-  // 道具 = ceil(基础点数 × 倍率)，积分 = ceil(道具 × 1.5)
+  // 3. 打工票消耗
+  // 活动道具 = ceil(基础积分 × 倍率)，积分 = ceil(活动道具 × 1.5)
   const multipliers = generateTicketMultipliers();
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     for (const multiplier of multipliers) {
@@ -378,7 +378,7 @@ export const EVENT_PARKING_NOTICES = {
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
   ],
   trust: [
-    '注意：分数加成以 1.5 倍为前提',
+    '注意：积分加成以 1.5 倍为前提',
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
   ],
 } as const;
@@ -388,19 +388,19 @@ export const EVENT_PARKING_NOTICES = {
  */
 export const EVENT_PARKING_TIPS = {
   theater: [
-    '消耗 1 倍体力游玩时获得的点数即为基础点数',
-    '使用打工票游玩普通曲时的计算公式：基础点数 × 打工票倍率（向上取整）',
+    '消耗 1 倍体力游玩时获得的积分即为基础积分',
+    '使用打工票游玩普通曲时的计算公式：基础积分 × 打工票倍率（向上取整）',
   ],
   anniversary: [
-    '消耗 1 倍体力游玩时获得的点数即为基础点数',
-    '使用打工票游玩普通曲时的计算公式：基础点数 × 打工票倍率（向上取整）',
-    '消耗体力游玩推荐曲（PUSH）时的计算公式：基础点数 × 1.2倍奖励（向上取整）',
-    '使用打工票游玩推荐曲（PUSH）时的计算公式：(基础点数 × 1.2倍奖励（向上取整)) × 打工票倍率（向上取整）',
+    '消耗 1 倍体力游玩时获得的积分即为基础积分',
+    '使用打工票游玩普通曲时的计算公式：基础积分 × 打工票倍率（向上取整）',
+    '消耗体力游玩推荐曲（PUSH）时的计算公式：基础积分 × 1.2倍奖励（向上取整）',
+    '使用打工票游玩推荐曲（PUSH）时的计算公式：(基础积分 × 1.2倍奖励（向上取整)) × 打工票倍率（向上取整）',
   ],
   trust: [
-    '消耗 1 倍体力游玩时获得的点数即为基础点数',
-    'Trust 活动有 1.5 倍分数加成，只对积分有效，对道具无效',
-    '消耗体力游玩时的计算公式：基础点数 × 1.5倍分数加成（向上取整）',
-    '使用打工票游玩时的计算公式：(基础点数 × 打工票倍率（向上取整)) × 1.5倍分数加成（向上取整）',
+    '消耗 1 倍体力游玩时获得的积分即为基础积分',
+    'Trust 活动有 1.5 倍分数加成，只对积分有效，对活动道具无效',
+    '消耗体力游玩时的计算公式：基础积分 × 1.5倍分数加成（向上取整）',
+    '使用打工票游玩时的计算公式：(基础积分 × 打工票倍率（向上取整)) × 1.5倍分数加成（向上取整）',
   ],
 } as const;

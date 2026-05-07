@@ -242,11 +242,11 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
 
     // 验证：差距过大
     if (formData.targetPt - formData.pt > 100000) {
-      return { flag: false, message: 'pt差距大于100000，请缩小后重试' };
+      return { flag: false, message: '积分差距大于100000，请缩小后重试' };
     }
 
     // 排序优先级：
-    // 1. 活动曲（消耗道具，token < 0）优先
+    // 1. 活动曲（消耗活动道具，token < 0）优先
     // 2. 其他选项按 pt 降序
     const choices = [...eventTheaterChoices.value].sort((a, b) => {
       const aIsEventLive = a.token < 0;
