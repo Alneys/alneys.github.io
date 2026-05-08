@@ -36,7 +36,6 @@
             <el-row :gutter="16" @keyup.enter="handleSubmit">
               <el-col :span="8" :xs="24">
                 <el-form-item label="目标pt" prop="targetPt">
-                  <template #label><b>目标pt</b></template>
                   <el-input
                     v-model.number="form.targetPt"
                     :min="0"
@@ -88,7 +87,6 @@
             <el-row v-if="form.eventType === 'tune'" :gutter="16">
               <el-col :span="8" :xs="24">
                 <el-form-item label="获得pt加成" prop="bonus">
-                  <template #label><b>获得pt加成</b></template>
                   <el-input
                     v-model.number="form.bonus"
                     :min="0"
@@ -110,7 +108,6 @@
             <el-row v-if="form.eventType === 'treasure'" :gutter="16">
               <el-col :span="8" :xs="24">
                 <el-form-item label="获得pt加成" prop="bonus">
-                  <template #label><b>获得pt加成</b></template>
                   <el-input
                     v-model.number="form.bonus"
                     :min="1.0"
@@ -128,7 +125,6 @@
             <el-row v-if="form.eventType === 'tour'" :gutter="16">
               <el-col :span="8" :xs="24">
                 <el-form-item label="道具进度" prop="itemProgress">
-                  <template #label><b>道具进度</b></template>
                   <el-input
                     v-model.number="form.itemProgress"
                     :min="0"
@@ -174,7 +170,6 @@
             <el-row v-if="form.eventType === 'tale'" :gutter="16">
               <el-col :span="8" :xs="24">
                 <el-form-item label="进度" prop="progress">
-                  <template #label><b>进度</b></template>
                   <el-input
                     v-model.number="form.progress"
                     :min="0"
