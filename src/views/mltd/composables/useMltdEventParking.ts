@@ -476,9 +476,10 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
    * Tour 活动特点：
    * 1. 引入道具进度系统（满 20 转换 1 个道具）
-   * 2. 引入5倍进度系统（上限 40）
-   * 3. 活动曲需要满足5倍进度条件才能使用
-   * 4. 活动曲会重置5倍进度为 0
+   * 2. 引入5倍进度系统
+   * 3. 活动曲需要5倍进度达到 40 才能使用
+   * 4. 3倍活动曲额外需要 isBoostPeriod（已折返）
+   * 5. 活动曲会重置5倍进度为 0
    *
    * @param formData - 表单数据（已预处理，包含 Tour 专属字段）
    * @returns 计算结果
@@ -581,10 +582,10 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
 
       // 活动曲倍率条件检查
       if (isEventLive) {
-        // 3 倍道具消耗需要 isBoostPeriod（已折返）和5倍进度达到 40
-        if (choice.token === -3 && !formData.isBoostPeriod && top.liveProgress < 40) continue;
-        // 2 倍和 1 倍道具消耗需要5倍进度达到 40
-        if ((choice.token === -2 || choice.token === -1) && top.liveProgress < 40) continue;
+        // 需要5倍进度达到40
+        if (top.liveProgress < 40) continue;
+        // 3 倍道具消耗需要 isBoostPeriod
+        if (choice.token === -3 && !formData.isBoostPeriod) continue;
       }
 
       // 3. 计算新状态
