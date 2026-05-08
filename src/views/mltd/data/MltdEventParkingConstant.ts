@@ -573,9 +573,13 @@ function generateTreasureTicketMultipliers(): number[] {
  * 共 4 歌曲 × 10 步 = 40 个选项，按积分降序排列
  *
  * @param bonus 获得pt加成倍率（1.0 ~ 1.7，步进 0.05）
+ * @param isBoostPeriod 活动折返（解锁 2.8倍 打工票），默认 true
  * @returns 按积分降序排列的选项列表
  */
-function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
+function generateTreasureChoices(
+  bonus: number = 1.7,
+  isBoostPeriod: boolean = true,
+): EventTheaterChoice[] {
   const entries: EventTheaterChoice[] = [];
   const ticketMultipliers = generateTreasureTicketMultipliers();
 
@@ -601,6 +605,8 @@ function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
     // 2. 打工票 通常曲（4 档倍率）
     const maxTicketMag = ticketMultipliers[0]; // 2.8（4 × 0.7）
     for (const mag of ticketMultipliers) {
+      // 2.8倍 仅在活动折返后可用
+      if (!isBoostPeriod && mag === maxTicketMag) continue;
       const ticketSongPt = Math.ceil(value * bonus * mag);
       entries.push({
         name: `${name} [单首]`,
@@ -617,6 +623,8 @@ function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
     // 3. 打工票 组曲（4 档倍率）
     // pt = ceil(1500 × bonus × mag) + ceil(value × bonus × mag) × 3
     for (const mag of ticketMultipliers) {
+      // 2.8倍 仅在活动折返后可用
+      if (!isBoostPeriod && mag === maxTicketMag) continue;
       const ticketEventPt = Math.ceil(TREASURE_EVENT_LIVE_BASE_POINT * bonus * mag);
       const ticketSongPt = Math.ceil(value * bonus * mag);
       const total4thPt = ticketEventPt + ticketSongPt * 3;
@@ -908,6 +916,7 @@ export const EVENT_PARKING_NOTICES = {
   treasure: [
     '[单首] 表示单次游玩，[组曲] 表示3首通常曲 + 活动曲的组合',
     '获得pt加成倍率影响所有积分计算（与 Tune 活动的百分比加成不同）',
+    '2.8倍 打工票仅在活动折返后可用',
   ],
 } as const;
 
@@ -952,5 +961,6 @@ export const EVENT_PARKING_TIPS = {
     '使用打工票游玩通常曲：积分 = 基础积分 × 获得pt加成倍率 × 打工票倍率（向上取整）',
     '[组曲] 体力：积分 = 1500 × 加成倍率（向上取整）+ 基础积分 × 加成倍率（向上取整）× 3',
     '[组曲] 打工票：积分 = 1500 × 加成倍率 × 打工票倍率（向上取整）+ 基础积分 × 加成倍率 × 打工票倍率（向上取整）× 3',
+    '打工票倍率 4 档：2.8 / 2.1 / 1.4 / 0.7，其中 2.8倍 仅在活动折返后可用',
   ],
 } as const;

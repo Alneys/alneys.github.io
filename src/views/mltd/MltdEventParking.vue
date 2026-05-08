@@ -121,6 +121,11 @@
                   </el-input>
                 </el-form-item>
               </el-col>
+              <el-col :span="8" :xs="24">
+                <el-form-item label="活动折返">
+                  <el-switch v-model="form.isBoostPeriod" />
+                </el-form-item>
+              </el-col>
             </el-row>
             <el-row v-if="form.eventType === 'tour'" :gutter="16">
               <el-col :span="8" :xs="24">
@@ -535,6 +540,10 @@ const statusTableData = computed(() => {
       {
         item: '获得pt加成',
         value: `${form.value.bonus ?? 1.7} 倍`,
+      },
+      {
+        item: '折返状态',
+        value: form.value.isBoostPeriod ? '已折返' : '未折返',
       },
     ];
   }

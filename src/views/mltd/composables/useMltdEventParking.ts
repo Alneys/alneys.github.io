@@ -55,9 +55,10 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     } else if (form.value.eventType === 'tale') {
       choices = MLTD_PARKING_CONSTANTS.eventTaleChoices;
     } else if (form.value.eventType === 'treasure') {
-      // Treasure 活动需要 bonus 参数（倍率 1.0~1.7）
+      // Treasure 活动需要 bonus 参数（倍率 1.0~1.7）和 isBoostPeriod
       const bonus = form.value.bonus ?? 1.7;
-      choices = MLTD_PARKING_CONSTANTS.generateTreasureChoices(bonus);
+      const isBoostPeriod = form.value.isBoostPeriod ?? false;
+      choices = MLTD_PARKING_CONSTANTS.generateTreasureChoices(bonus, isBoostPeriod);
     } else {
       choices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
     }
@@ -95,6 +96,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
         pt: number;
         token: number;
         bonus: number;
+        isBoostPeriod: boolean;
       }
   >();
 
@@ -157,13 +159,17 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if ('progress' in formSnapshot.value && !('itemProgress' in formSnapshot.value)) {
       form.value.progress = formSnapshot.value.progress;
     }
-    // Treasure 类型需要重置 bonus 字段
+    // Treasure 类型需要重置 bonus 和 isBoostPeriod 字段
     if (
       'bonus' in formSnapshot.value &&
+      'isBoostPeriod' in formSnapshot.value &&
       !('itemProgress' in formSnapshot.value) &&
       !('progress' in formSnapshot.value)
     ) {
       form.value.bonus = (formSnapshot.value as unknown as { bonus: number }).bonus;
+      form.value.isBoostPeriod = (
+        formSnapshot.value as unknown as { isBoostPeriod: boolean }
+      ).isBoostPeriod;
     }
     executedCounts.value = {};
   };
@@ -349,6 +355,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
         pt: form.value.pt ?? 0,
         token: form.value.token ?? 0,
         bonus: form.value.bonus ?? 1.7,
+        isBoostPeriod: form.value.isBoostPeriod ?? false,
       };
       parkingResult.value = await calcParkingTreasure(formSnapshot.value);
     } else {
