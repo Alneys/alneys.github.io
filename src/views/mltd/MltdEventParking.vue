@@ -102,7 +102,7 @@
               </el-col>
             </el-row>
             <el-row v-if="form.eventType === 'tour'" :gutter="16">
-              <el-col :span="6" :xs="24">
+              <el-col :span="8" :xs="24">
                 <el-form-item label="道具进度" prop="itemProgress">
                   <template #label><b>道具进度</b></template>
                   <el-input
@@ -117,8 +117,8 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="6" :xs="24">
-                <el-form-item label="Live进度" prop="liveProgress">
+              <el-col :span="8" :xs="24">
+                <el-form-item label="5倍进度" prop="liveProgress">
                   <el-input
                     v-model.number="form.liveProgress"
                     :min="0"
@@ -131,13 +131,26 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="6" :xs="24">
+            </el-row>
+            <el-row v-if="form.eventType === 'tour'" :gutter="16">
+              <el-col :span="8" :xs="24">
                 <el-form-item label="已折返">
                   <el-switch v-model="form.isBoostPeriod" />
                 </el-form-item>
               </el-col>
             </el-row>
-            <el-form-item label="打工票使用更多倍率（默认只使用最大倍率）">
+            <el-row v-if="form.eventType === 'tour'" :gutter="16">
+              <el-col :span="24" :xs="24">
+                <el-form-item label=" ">
+                  <el-button @click="form.liveProgress = 40">5倍进度设为最大</el-button>
+                  <el-button @click="form.liveProgress = 0">5倍进度设为空</el-button>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item
+              v-if="form.eventType !== 'tour'"
+              label="打工票使用更多倍率（默认只使用最大倍率）"
+            >
               <el-switch v-model="form.enableExtraChoices" />
             </el-form-item>
             <el-form-item label=" ">
@@ -346,7 +359,7 @@ const {
   formSnapshot,
   parkingResultSnapshot,
   executedCounts,
-  eventTheaterChoices,
+  eventChoices,
   handleClear: clearCalculation,
   handleSubmit: submitCalculation,
   executeOperation,
@@ -478,7 +491,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
   if (!parkingResult.value?.result) return [];
 
   const data: PlanTableRow[] = parkingResult.value.result.map((item) => {
-    const choice = eventTheaterChoices.value.find(
+    const choice = eventChoices.value.find(
       (c: EventTheaterChoice) => c.name === item.name && c.multiplier === item.multiplier,
     );
     const remainingCount = getRemainingCount(item);
@@ -522,7 +535,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
     // 计算总进度（从所有歌曲游玩中）
     let totalProgress = 0;
     for (const row of data) {
-      const choice = eventTheaterChoices.value.find(
+      const choice = eventChoices.value.find(
         (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
       );
       if (choice?.progress && choice.progress > 0) {
@@ -535,7 +548,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
     // Event Live 消耗的道具
     const eventLiveToken = data.reduce((sum, row) => {
-      const choice = eventTheaterChoices.value.find(
+      const choice = eventChoices.value.find(
         (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
       );
       if (choice?.token && choice.token < 0) {
@@ -575,7 +588,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
 // 分数表数据
 const pointTableData = computed(() => {
-  return eventTheaterChoices.value.map((choice) => {
+  return eventChoices.value.map((choice) => {
     // Tour 活动：歌曲游玩显示进度带来的道具收益
     let tokenDisplay: string;
     if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
@@ -609,7 +622,7 @@ function monoCellClassName({ column }: { column: any }) {
 // 判断是否为 Tour 活动的 Event Live 行
 function isTourEventLiveRow(row: PlanTableRow): boolean {
   if (form.value.eventType !== 'tour') return false;
-  const choice = eventTheaterChoices.value.find(
+  const choice = eventChoices.value.find(
     (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
   );
   return choice?.neededForStep === 'trigger';

@@ -36,7 +36,7 @@ export const createDefaultParkingForm = (): ParkingForm => ({
  */
 export function useMltdEventParking(form: Ref<ParkingForm>) {
   // 根据活动类型返回对应的选择项列表，并根据开关过滤 extra 选项
-  const eventTheaterChoices = computed<EventTheaterChoice[]>(() => {
+  const eventChoices = computed<EventTheaterChoice[]>(() => {
     let choices: EventTheaterChoice[];
 
     if (form.value.eventType === 'anniversary') {
@@ -146,7 +146,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     );
 
     // 找到对应的 choice 获取 pt/token
-    const choice = eventTheaterChoices.value.find(
+    const choice = eventChoices.value.find(
       (c) => c.name === item.name && c.multiplier === item.multiplier,
     );
     if (!choice) return;
@@ -173,7 +173,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
         form.value.liveProgress = (form.value.liveProgress ?? 0) + choice.progress;
         form.value.token = newToken;
       } else if (isEventLive) {
-        // Event Live：消耗道具，重置 Live 进度
+        // 活动曲：消耗道具，重置5倍进度
         form.value.token = (form.value.token ?? 0) + choice.token;
         form.value.liveProgress = 0;
       }
@@ -197,7 +197,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if ((executedCounts.value[key] ?? 0) <= 0) return;
 
     // 找到对应的 choice 获取 pt/token
-    const choice = eventTheaterChoices.value.find(
+    const choice = eventChoices.value.find(
       (c) => c.name === item.name && c.multiplier === item.multiplier,
     );
     if (!choice) return;
@@ -211,7 +211,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       const currentProgress = form.value.itemProgress ?? 0;
       const progressToUndo = choice.progress;
 
-      // 减少 Live 进度
+      // 减少5倍进度
       form.value.liveProgress = Math.max(0, (form.value.liveProgress ?? 0) - progressToUndo);
 
       // 处理道具进度逆向转换
@@ -337,7 +337,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     // 排序优先级：
     // 1. 活动曲（消耗活动道具，token < 0）优先，pt 获取多的靠前
     // 2. 其他选项按 pt 降序，pt 获取多的靠前
-    const choices = [...eventTheaterChoices.value].sort((a, b) => {
+    const choices = [...eventChoices.value].sort((a, b) => {
       const aIsEventLive = a.token < 0;
       const bIsEventLive = b.token < 0;
 
@@ -476,9 +476,9 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
    * Tour 活动特点：
    * 1. 引入道具进度系统（满 20 转换 1 个道具）
-   * 2. 引入 Live 进度系统（未折返上限 40）
-   * 3. Event Live 需要满足 Live 进度条件才能使用
-   * 4. Event Live 会重置 Live 进度为 0
+   * 2. 引入5倍进度系统（上限 40）
+   * 3. 活动曲需要满足5倍进度条件才能使用
+   * 4. 活动曲会重置5倍进度为 0
    *
    * @param formData - 表单数据（已预处理，包含 Tour 专属字段）
    * @returns 计算结果
@@ -531,7 +531,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       viaStepIndex?: number;
     }
 
-    const choices = [...eventTheaterChoices.value];
+    const choices = [...eventChoices.value];
     let iterations = 0;
     const stack: TourStackNode[] = [
       {
@@ -579,7 +579,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       // Tour 专用约束检查
       const isEventLive = choice.neededForStep === 'trigger';
 
-      // Event Live 倍率条件检查
+      // 活动曲倍率条件检查
       if (isEventLive) {
         // 3 倍道具消耗需要 isBoostPeriod（已折返）
         if (choice.token === -3 && !formData.isBoostPeriod) continue;
@@ -609,7 +609,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
         continue;
       }
 
-      // 6. Event Live 重置 Live 进度
+      // 6. 活动曲重置5倍进度
       if (isEventLive) {
         newLiveProgress = 0;
       }
@@ -674,7 +674,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     formSnapshot,
     parkingResultSnapshot,
     executedCounts,
-    eventTheaterChoices,
+    eventChoices,
     preprocessingForm,
     handleClear,
     handleSubmit,

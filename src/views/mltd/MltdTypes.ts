@@ -103,7 +103,7 @@ export interface ParkingForm {
   isBoostPeriod?: boolean;
   // Tour 专属字段
   itemProgress?: number; // 道具进度（0-19）
-  liveProgress?: number; // Live 进度
+  liveProgress?: number; // 5倍进度
   // isBoostPeriod 同时用于 Tune（活动折返）和 Tour（已折返/可5倍）
 }
 
@@ -135,5 +135,5 @@ export interface EventTheaterChoice {
   neededForStep?: string; // '体力' | '打工票' | '活动曲' | 'trigger' | 'life' | 'life1.2'
   mag?: string; // 倍率标记（打工票倍率 或 活动曲消费倍率）
   // Tour 活动专用字段
-  progress?: number; // Live 进度增加值
+  progress?: number; // 5倍进度增加值
 }

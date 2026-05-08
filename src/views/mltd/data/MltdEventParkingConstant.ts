@@ -521,26 +521,26 @@ const TOUR_SONG_CONFIGS = [
 ] as const;
 
 /**
- * Tour Event Live 配置（消耗道具）
+ * Tour 活动曲配置（消耗道具）
  * @description 消耗活动道具获得大量积分
  */
 const TOUR_EVENT_LIVE_CONFIGS = [
-  { name: 'Event Live', point: 720, trigger: -1, mag: '1' },
-  { name: 'Event Live', point: 1440, trigger: -2, mag: '2' },
-  { name: 'Event Live', point: 2160, trigger: -3, mag: '3' },
+  { name: '活动曲', point: 720, trigger: -1, mag: '1' },
+  { name: '活动曲', point: 1440, trigger: -2, mag: '2' },
+  { name: '活动曲', point: 2160, trigger: -3, mag: '3' },
 ] as const;
 
 /**
  * 生成 Tour 活动的游玩选项列表
  *
  * Tour 特点：
- * 1. Event Live 消耗道具获得大量积分，需要 Live 进度满足条件
- * 2. 歌曲游玩获得积分并增加 Live 进度
+ * 1. 活动曲消耗道具获得大量积分，需要5倍进度满足条件
+ * 2. 歌曲游玩获得积分并增加5倍进度
  * 3. 道具进度满 20 转换 1 个道具
- * 4. 未折返时 Live 进度上限 40
+ * 4. 5倍进度上限 40
  *
  * 生成顺序：
- * 1. Event Live（消耗道具，按积分降序）
+ * 1. 活动曲（消耗道具，按积分降序）
  * 2. 歌曲游玩（不消耗道具，按积分降序）
  *
  * @returns 按积分降序排列的选项列表
@@ -548,17 +548,17 @@ const TOUR_EVENT_LIVE_CONFIGS = [
 function generateTourChoices(): EventTheaterChoice[] {
   const entries: EventTheaterChoice[] = [];
 
-  // 1. Event Live（消耗道具）
+  // 1. 活动曲（消耗道具）
   for (const config of TOUR_EVENT_LIVE_CONFIGS) {
     entries.push({
       name: config.name,
-      type: '活动曲',
+      type: '',
       multiplier: `${config.mag}倍`,
       pt: config.point,
       token: config.trigger,
       neededForStep: 'trigger',
       mag: config.mag,
-      progress: 0, // Event Live 不增加 Live 进度
+      progress: 0, // 活动曲不增加5倍进度
     });
   }
 
@@ -651,7 +651,7 @@ export const EVENT_PARKING_TIPS = {
     '活动曲积分公式：基础积分 × 消费倍率 × (100 + 获得pt加成百分比) / 100（向上取整）',
   ],
   tour: [
-    '歌曲游玩不消耗道具，获得积分并增加 Live 进度',
-    'Event Live 消耗道具获得大量积分，并重置 Live 进度为 0',
+    '歌曲游玩不消耗道具，获得积分并增加5倍进度',
+    '活动曲消耗道具获得大量积分，并重置5倍进度为 0',
   ],
 } as const;
