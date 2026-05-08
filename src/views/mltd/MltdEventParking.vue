@@ -13,6 +13,7 @@
                 <el-option label="Anniversary" value="anniversary"></el-option>
                 <el-option label="Trust" value="trust"></el-option>
                 <el-option label="Tune" value="tune"></el-option>
+                <el-option label="Tale" value="tale"></el-option>
                 <el-option label="其他活动开发中" value="disabled" disabled></el-option>
                 <!-- 1: Showtime -->
                 <!-- 2: Millicolle! -->
@@ -64,7 +65,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="道具数" prop="token">
+                <el-form-item v-if="form.eventType !== 'tale'" label="道具数" prop="token">
                   <el-input
                     v-model.number="form.token"
                     :min="0"
@@ -147,8 +148,23 @@
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-row v-if="form.eventType === 'tale'" :gutter="16">
+              <el-col :span="8" :xs="24">
+                <el-form-item label="进度" prop="progress">
+                  <template #label><b>进度</b></template>
+                  <el-input
+                    v-model.number="form.progress"
+                    :min="0"
+                    :max="999"
+                    type="number"
+                    inputmode="numeric"
+                    placeholder="0"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-form-item
-              v-if="form.eventType !== 'tour'"
+              v-if="form.eventType !== 'tour' && form.eventType !== 'tale'"
               label="打工票使用更多倍率（默认只使用最大倍率）"
             >
               <el-switch v-model="form.enableExtraChoices" />
@@ -232,7 +248,7 @@
                   />
                   <el-table-column
                     prop="token"
-                    label="道具"
+                    :label="form.eventType === 'tale' ? '进度' : '道具'"
                     header-align="center"
                     align="right"
                     min-width="70"
@@ -300,7 +316,12 @@
                   />
                   <el-table-column prop="count" label="次数" header-align="center" align="right" />
                   <el-table-column prop="pt" label="pt" header-align="center" align="right" />
-                  <el-table-column prop="token" label="道具" header-align="center" align="right" />
+                  <el-table-column
+                    prop="token"
+                    :label="form.eventType === 'tale' ? '进度' : '道具'"
+                    header-align="center"
+                    align="right"
+                  />
                   <el-table-column label="操作" header-align="center" align="center" min-width="80">
                     <template #default="{ row }">
                       <el-button-group v-if="!row.highlight && row.rawItem">
@@ -404,7 +425,8 @@ const currentNotices = computed(() => {
     eventType === 'anniversary' ||
     eventType === 'trust' ||
     eventType === 'tune' ||
-    eventType === 'tour'
+    eventType === 'tour' ||
+    eventType === 'tale'
   ) {
     return EVENT_PARKING_NOTICES[eventType];
   }
@@ -419,7 +441,8 @@ const currentTips = computed(() => {
     eventType === 'anniversary' ||
     eventType === 'trust' ||
     eventType === 'tune' ||
-    eventType === 'tour'
+    eventType === 'tour' ||
+    eventType === 'tale'
   ) {
     return EVENT_PARKING_TIPS[eventType];
   }
@@ -458,6 +481,20 @@ const statusTableData = computed(() => {
     ];
   }
 
+  // Tale 活动专属状态行
+  if (form.value.eventType === 'tale') {
+    return [
+      {
+        item: 'pt差距',
+        value: `${formatNumber(targetPt - pt)} pt`,
+      },
+      {
+        item: '当前进度',
+        value: `${formatNumber(form.value.progress ?? 0)}`,
+      },
+    ];
+  }
+
   // 其他活动类型的标准状态行
   return [
     {
@@ -485,6 +522,7 @@ interface PlanTableRow {
   isRecommended?: boolean;
   // 用于操作列
   rawItem?: ParkingResultItem;
+  itemType?: string; // Tale 活动区分阶段
 }
 
 const planTableData = computed<PlanTableRow[]>(() => {
@@ -492,7 +530,10 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
   const data: PlanTableRow[] = parkingResult.value.result.map((item) => {
     const choice = eventChoices.value.find(
-      (c: EventTheaterChoice) => c.name === item.name && c.multiplier === item.multiplier,
+      (c: EventTheaterChoice) =>
+        c.name === item.name &&
+        c.multiplier === item.multiplier &&
+        (item.type === undefined || c.type === item.type),
     );
     const remainingCount = getRemainingCount(item);
     const ptTotal = (choice?.pt ?? 0) * remainingCount;
@@ -505,6 +546,10 @@ const planTableData = computed<PlanTableRow[]>(() => {
       const progressTotal = choice.progress * remainingCount;
       tokenTotal = Math.floor(progressTotal / 20); // 完整道具数量
       tokenDisplay = `+${progressTotal}/20`;
+    } else if (form.value.eventType === 'tale') {
+      // Tale 活动：显示进度变化总和
+      tokenTotal = (choice?.progress ?? 0) * remainingCount;
+      tokenDisplay = formatToken(tokenTotal);
     } else {
       tokenTotal = (choice?.token ?? 0) * remainingCount;
       tokenDisplay = formatToken(tokenTotal);
@@ -520,6 +565,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
       ptRaw: ptTotal,
       tokenRaw: tokenTotal,
       rawItem: item,
+      itemType: item.type,
       isRecommended: form.value.eventType === 'anniversary' && item.name.includes('推荐曲'),
     };
   });
@@ -594,6 +640,9 @@ const pointTableData = computed(() => {
     if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
       // 歌曲游玩增加进度，显示为 "+进度/20"
       tokenDisplay = `+${choice.progress}/20`;
+    } else if (form.value.eventType === 'tale') {
+      // Tale 活动：显示进度变化
+      tokenDisplay = formatToken(choice.progress ?? 0);
     } else {
       tokenDisplay = formatToken(choice.token);
     }
@@ -619,11 +668,14 @@ function monoCellClassName({ column }: { column: any }) {
   return monoColumnProps.includes(column.property) ? 'font-mono' : '';
 }
 
-// 判断是否为 Tour 活动的 Event Live 行
+// 判断是否为 Tour 或 Tale 活动的 Event Live 行
 function isTourEventLiveRow(row: PlanTableRow): boolean {
-  if (form.value.eventType !== 'tour') return false;
+  if (form.value.eventType !== 'tour' && form.value.eventType !== 'tale') return false;
   const choice = eventChoices.value.find(
-    (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
+    (c: EventTheaterChoice) =>
+      c.name === row.name &&
+      c.multiplier === row.multiplier &&
+      (row.itemType === undefined || c.type === row.itemType),
   );
   return choice?.neededForStep === 'trigger';
 }

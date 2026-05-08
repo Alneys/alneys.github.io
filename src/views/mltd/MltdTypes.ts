@@ -105,6 +105,8 @@ export interface ParkingForm {
   itemProgress?: number; // 道具进度（0-19）
   liveProgress?: number; // 5倍进度
   // isBoostPeriod 同时用于 Tune（活动折返）和 Tour（已折返/可5倍）
+  // Tale 专属字段
+  progress?: number; // 进度（0-99+，≥100 表示 Event Live 已出现）
 }
 
 // Parking 计算结果项
@@ -112,6 +114,7 @@ export interface ParkingResultItem {
   name: string;
   multiplier: string;
   value: number;
+  type?: string; // Tale 活动区分阶段（1st/2nd/3rd/""），其他活动类型为空
 }
 
 // Parking 计算结果

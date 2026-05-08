@@ -531,6 +531,157 @@ const TOUR_EVENT_LIVE_CONFIGS = [
 ] as const;
 
 /**
+ * Tale 活动步骤配置
+ * @description Platinum Star Tale 活动中所有可用的游玩方式及其对应的积分和进度变化
+ *
+ * 说明：
+ * - "进度"为活动进度条，每首 3rd 歌曲增加 20-50 进度
+ * - 当进度达到 100 时，Event Live 出现，消耗 100 进度获得 3000 pt
+ * - 1st/2nd 标注表示需要在该曲目后退出组曲，进度 +0
+ * - 3rd 曲目正常游玩并增加进度
+ */
+const TALE_CHOICE_CONFIGS = [
+  // Event Live（消耗进度，获得大量积分）
+  {
+    name: '活动曲',
+    type: '',
+    multiplier: '1倍',
+    pt: 3000,
+    neededForStep: 'trigger' as const,
+    progress: -100,
+  },
+  // 3rd 阶段（正常游玩，增加进度）
+  {
+    name: 'Million Mix',
+    type: '3rd',
+    multiplier: '1倍',
+    pt: 600,
+    neededForStep: 'life' as const,
+    progress: 50,
+  },
+  {
+    name: '6 Mix',
+    type: '3rd',
+    multiplier: '1倍',
+    pt: 540,
+    neededForStep: 'life' as const,
+    progress: 40,
+  },
+  {
+    name: '4 Mix',
+    type: '3rd',
+    multiplier: '1倍',
+    pt: 483,
+    neededForStep: 'life' as const,
+    progress: 30,
+  },
+  {
+    name: '2 Mix',
+    type: '3rd',
+    multiplier: '1倍',
+    pt: 426,
+    neededForStep: 'life' as const,
+    progress: 20,
+  },
+  // 2nd 阶段（2曲游玩后退出组曲，进度不变）
+  {
+    name: 'Million Mix',
+    type: '2nd',
+    multiplier: '1倍',
+    pt: 400,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  {
+    name: '6 Mix',
+    type: '2nd',
+    multiplier: '1倍',
+    pt: 360,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  {
+    name: '4 Mix',
+    type: '2nd',
+    multiplier: '1倍',
+    pt: 322,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  {
+    name: '2 Mix',
+    type: '2nd',
+    multiplier: '1倍',
+    pt: 284,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  // 1st 阶段（1曲游玩后退出组曲，进度不变）
+  {
+    name: 'Million Mix',
+    type: '1st',
+    multiplier: '1倍',
+    pt: 200,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  {
+    name: '6 Mix',
+    type: '1st',
+    multiplier: '1倍',
+    pt: 180,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  {
+    name: '4 Mix',
+    type: '1st',
+    multiplier: '1倍',
+    pt: 161,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+  {
+    name: '2 Mix',
+    type: '1st',
+    multiplier: '1倍',
+    pt: 142,
+    neededForStep: 'life' as const,
+    progress: 0,
+  },
+] as const;
+
+/**
+ * 生成 Tale 活动的游玩选项列表
+ *
+ * Tale 特点：
+ * 1. 不使用道具系统，使用进度（進捗）系统
+ * 2. 进度 < 100 时不能打活动曲（Event Live）
+ * 3. 进度 ≥ 100 时必须先打活动曲消耗进度
+ * 4. 1st/2nd 退出组曲策略：获得积分但不增加进度
+ * 5. 3rd 正常游玩：获得积分并增加进度
+ *
+ * 生成顺序：
+ * 1. 活动曲（消耗进度）
+ * 2. 3rd 阶段（增加进度，按 pt 降序）
+ * 3. 2nd 阶段（进度不变，按 pt 降序）
+ * 4. 1st 阶段（进度不变，按 pt 降序）
+ *
+ * @returns 按原始顺序生成的选项列表（搜索算法中会按 pt 降序排序）
+ */
+function generateTaleChoices(): EventTheaterChoice[] {
+  return TALE_CHOICE_CONFIGS.map((c) => ({
+    name: c.name,
+    type: c.type,
+    multiplier: c.multiplier,
+    pt: c.pt,
+    token: 0, // Tale 不使用道具系统
+    neededForStep: c.neededForStep,
+    progress: c.progress,
+  }));
+}
+
+/**
  * 生成 Tour 活动的游玩选项列表
  *
  * Tour 特点：
@@ -598,6 +749,9 @@ export const MLTD_PARKING_CONSTANTS = {
 
   /** Tour 活动剧场选择项列表（动态生成） */
   eventTourChoices: generateTourChoices(),
+
+  /** Tale 活动剧场选择项列表（动态生成） */
+  eventTaleChoices: generateTaleChoices(),
 } as const;
 
 /**
@@ -621,6 +775,12 @@ export const EVENT_PARKING_NOTICES = {
     '活动曲需要在5倍进度达到 40 后才能使用',
     '3倍活动曲额外需要在活动折返后才能使用',
     '道具进度满 20 自动转换 1 个道具',
+  ],
+  tale: [
+    '活动曲在进度达到 100 后出现，消耗 100 进度获得 3000pt',
+    '1st/2nd 表示退出组曲策略，进度不变但获得较少积分',
+    '3rd 会增加进度并获得更多积分',
+    '进度 ≥ 100 时，溢出的进度不显示，此时强烈建议先打活动曲消耗进度，否则可能导致错误的输入和计算结果',
   ],
 } as const;
 
@@ -654,5 +814,11 @@ export const EVENT_PARKING_TIPS = {
     '歌曲游玩不消耗道具，获得积分并增加5倍进度',
     '活动曲需要在5倍进度达到 40 后才能使用，消耗道具获得大量积分，并重置5倍进度为 0',
     '3倍活动曲额外需要在活动折返后才能使用',
+  ],
+  tale: [
+    '1st 阶段：1曲游玩后退出组曲，进度不变',
+    '2nd 阶段：2曲游玩后退出组曲，进度不变',
+    '3rd 阶段：正常游玩，进度增加 20-50',
+    'Event Live：消耗 100 进度，获得 3000pt',
   ],
 } as const;
