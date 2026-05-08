@@ -531,6 +531,125 @@ const TOUR_EVENT_LIVE_CONFIGS = [
 ] as const;
 
 /**
+ * Treasure 活动歌曲配置
+ * @description Platinum Star Treasure 活动中所有可用的游玩方式
+ */
+const TREASURE_SONG_CONFIGS: { name: string; value: number }[] = [
+  { name: '2 Mix', value: 71 },
+  { name: '4 Mix', value: 203 },
+  { name: '6 Mix', value: 335 },
+  { name: 'Million Mix', value: 467 },
+];
+
+/** Treasure 活动曲基础积分（元気等倍，不计 bonus） */
+const TREASURE_EVENT_LIVE_BASE_POINT = 1500;
+
+/** Treasure 打工票倍率配置（从 4 到 1，每个乘以 0.7） */
+const TREASURE_TICKET_CONFIG = {
+  maxMultiplier: 4,
+  pointCoefficient: 0.7,
+} as const;
+
+/**
+ * 生成 Treasure 打工票倍率数组（降序：[2.8, 2.1, 1.4, 0.7]）
+ */
+function generateTreasureTicketMultipliers(): number[] {
+  const multipliers: number[] = [];
+  for (let i = TREASURE_TICKET_CONFIG.maxMultiplier; i >= 1; i--) {
+    multipliers.push(i * TREASURE_TICKET_CONFIG.pointCoefficient);
+  }
+  return multipliers;
+}
+
+/**
+ * 生成 Treasure 活动的完整游玩选项列表
+ *
+ * 生成顺序（每首歌曲循环）：
+ * 1. 体力 通常曲（1 个）
+ * 2. 打工票 通常曲（4 个，倍率从大到小）
+ * 3. 打工票 4th（4 个，倍率从大到小）
+ * 4. 体力 4th（1 个）
+ *
+ * 共 4 歌曲 × 10 步 = 40 个选项，按积分降序排列
+ *
+ * @param bonus 获得pt加成倍率（1.0 ~ 1.7，步进 0.05）
+ * @returns 按积分降序排列的选项列表
+ */
+function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
+  const entries: EventTheaterChoice[] = [];
+  const ticketMultipliers = generateTreasureTicketMultipliers();
+
+  for (const song of TREASURE_SONG_CONFIGS) {
+    const { name, value } = song;
+
+    // 体力 通常曲 pt = ceil(基础积分 × bonus)
+    const lifePoint = Math.ceil(value * bonus);
+
+    // 活动曲 体力 pt = ceil(1500 × bonus)
+    const eventLifePoint = Math.ceil(TREASURE_EVENT_LIVE_BASE_POINT * bonus);
+
+    // 1. 体力 通常曲
+    entries.push({
+      name,
+      type: '体力',
+      multiplier: '1倍',
+      pt: lifePoint,
+      token: 0,
+      neededForStep: '体力',
+    });
+
+    // 2. 打工票 通常曲（4 档倍率）
+    const maxTicketMag = ticketMultipliers[0]; // 2.8（4 × 0.7）
+    for (const mag of ticketMultipliers) {
+      const ticketSongPt = Math.ceil(value * bonus * mag);
+      entries.push({
+        name,
+        type: '打工票',
+        multiplier: `${mag.toFixed(1)}倍`,
+        pt: ticketSongPt,
+        token: 0,
+        neededForStep: '打工票',
+        mag: mag.toFixed(1),
+        extra: mag !== maxTicketMag,
+      });
+    }
+
+    // 3. 打工票 4th（4 档倍率）
+    // pt = ceil(1500 × bonus × mag) + ceil(value × bonus × mag) × 3
+    for (const mag of ticketMultipliers) {
+      const ticketEventPt = Math.ceil(TREASURE_EVENT_LIVE_BASE_POINT * bonus * mag);
+      const ticketSongPt = Math.ceil(value * bonus * mag);
+      const total4thPt = ticketEventPt + ticketSongPt * 3;
+      entries.push({
+        name: `${name} [4th]`,
+        type: '打工票',
+        multiplier: `${mag.toFixed(1)}倍`,
+        pt: total4thPt,
+        token: 0,
+        neededForStep: '打工票',
+        mag: mag.toFixed(1),
+        extra: mag !== maxTicketMag,
+      });
+    }
+
+    // 4. 体力 4th
+    // pt = ceil(1500 × bonus) + ceil(value × bonus) × 3
+    const life4thPt = eventLifePoint + lifePoint * 3;
+    entries.push({
+      name: `${name} [4th]`,
+      type: '体力',
+      multiplier: '1倍',
+      pt: life4thPt,
+      token: 0,
+      neededForStep: '体力',
+    });
+  }
+
+  // 按积分降序排列
+  return entries.sort((a, b) => b.pt - a.pt);
+}
+
+/**
  * Tale 活动步骤配置
  * @description Platinum Star Tale 活动中所有可用的游玩方式及其对应的积分和进度变化
  *
@@ -752,6 +871,9 @@ export const MLTD_PARKING_CONSTANTS = {
 
   /** Tale 活动剧场选择项列表（动态生成） */
   eventTaleChoices: generateTaleChoices(),
+
+  /** Treasure 活动剧场选择项生成器（需要 bonus 参数） */
+  generateTreasureChoices,
 } as const;
 
 /**
@@ -781,6 +903,12 @@ export const EVENT_PARKING_NOTICES = {
     '1st/2nd 表示退出组曲策略，进度不变但获得较少积分',
     '3rd 会增加进度并获得更多积分',
     '进度 ≥ 100 时，溢出的进度不显示，此时强烈建议先打活动曲消耗进度，否则可能导致错误的输入和计算结果',
+  ],
+  treasure: [
+    'Treasure 活动无道具系统，所有游玩方式均为正积分（token 始终为 0）',
+    '4th 表示活动曲 + 通常曲×3 的捆绑套装，曲目名称中带有 [4th] 后缀',
+    '获得pt加成倍率影响所有积分计算，注意与 Tune 活动的百分比加成区分',
+    '体力 4th ≠ 体力通常曲 × 4（因向上取整时机不同）',
   ],
 } as const;
 
@@ -820,5 +948,12 @@ export const EVENT_PARKING_TIPS = {
     '2nd 阶段：2曲游玩后退出组曲，进度不变',
     '3rd 阶段：正常游玩，进度增加 20-50',
     'Event Live：消耗 100 进度，获得 3000pt',
+  ],
+  treasure: [
+    '消耗 1 倍体力游玩通常曲时：积分 = ceil(基础积分 × 获得pt加成倍率)',
+    '使用打工票游玩通常曲时：积分 = ceil(基础积分 × 获得pt加成倍率 × 打工票倍率)',
+    '4th 体力：积分 = ceil(1500 × 加成倍率) + ceil(基础积分 × 加成倍率) × 3',
+    '4th 打工票：积分 = ceil(1500 × 加成倍率 × 打工票倍率) + ceil(基础积分 × 加成倍率 × 打工票倍率) × 3',
+    '打工票倍率固定为 4 档：[2.8, 2.1, 1.4, 0.7]',
   ],
 } as const;

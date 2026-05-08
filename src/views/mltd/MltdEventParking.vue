@@ -14,6 +14,7 @@
                 <el-option label="Trust" value="trust"></el-option>
                 <el-option label="Tune" value="tune"></el-option>
                 <el-option label="Tale" value="tale"></el-option>
+                <el-option label="Treasure" value="treasure"></el-option>
                 <el-option label="其他活动开发中" value="disabled" disabled></el-option>
                 <!-- 1: Showtime -->
                 <!-- 2: Millicolle! -->
@@ -65,7 +66,11 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item v-if="form.eventType !== 'tale'" label="道具数" prop="token">
+                <el-form-item
+                  v-if="form.eventType !== 'tale' && form.eventType !== 'treasure'"
+                  label="道具数"
+                  prop="token"
+                >
                   <el-input
                     v-model.number="form.token"
                     :min="0"
@@ -99,6 +104,24 @@
               <el-col :span="8" :xs="24">
                 <el-form-item label="活动折返">
                   <el-switch v-model="form.isBoostPeriod" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row v-if="form.eventType === 'treasure'" :gutter="16">
+              <el-col :span="8" :xs="24">
+                <el-form-item label="获得pt加成" prop="bonus">
+                  <template #label><b>获得pt加成</b></template>
+                  <el-input
+                    v-model.number="form.bonus"
+                    :min="1.0"
+                    :max="1.7"
+                    :step="0.05"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="1.7"
+                  >
+                    <template #append>倍</template>
+                  </el-input>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -164,7 +187,11 @@
               </el-col>
             </el-row>
             <el-form-item
-              v-if="form.eventType !== 'tour' && form.eventType !== 'tale'"
+              v-if="
+                form.eventType !== 'tour' &&
+                form.eventType !== 'tale' &&
+                form.eventType !== 'treasure'
+              "
               label="打工票使用更多倍率（默认只使用最大倍率）"
             >
               <el-switch v-model="form.enableExtraChoices" />
@@ -317,6 +344,7 @@
                   <el-table-column prop="count" label="次数" header-align="center" align="right" />
                   <el-table-column prop="pt" label="pt" header-align="center" align="right" />
                   <el-table-column
+                    v-if="form.eventType !== 'treasure'"
                     prop="token"
                     :label="form.eventType === 'tale' ? '进度' : '道具'"
                     header-align="center"
@@ -426,7 +454,8 @@ const currentNotices = computed(() => {
     eventType === 'trust' ||
     eventType === 'tune' ||
     eventType === 'tour' ||
-    eventType === 'tale'
+    eventType === 'tale' ||
+    eventType === 'treasure'
   ) {
     return EVENT_PARKING_NOTICES[eventType];
   }
@@ -442,7 +471,8 @@ const currentTips = computed(() => {
     eventType === 'trust' ||
     eventType === 'tune' ||
     eventType === 'tour' ||
-    eventType === 'tale'
+    eventType === 'tale' ||
+    eventType === 'treasure'
   ) {
     return EVENT_PARKING_TIPS[eventType];
   }
@@ -491,6 +521,20 @@ const statusTableData = computed(() => {
       {
         item: '当前进度',
         value: `${formatNumber(form.value.progress ?? 0)}`,
+      },
+    ];
+  }
+
+  // Treasure 活动专属状态行
+  if (form.value.eventType === 'treasure') {
+    return [
+      {
+        item: 'pt差距',
+        value: `${formatNumber(targetPt - pt)} pt`,
+      },
+      {
+        item: '获得pt加成',
+        value: `${form.value.bonus ?? 1.7} 倍`,
       },
     ];
   }
@@ -550,6 +594,10 @@ const planTableData = computed<PlanTableRow[]>(() => {
       // Tale 活动：显示进度变化总和
       tokenTotal = (choice?.progress ?? 0) * remainingCount;
       tokenDisplay = formatToken(tokenTotal);
+    } else if (form.value.eventType === 'treasure') {
+      // Treasure 活动：无道具系统
+      tokenTotal = 0;
+      tokenDisplay = '0';
     } else {
       tokenTotal = (choice?.token ?? 0) * remainingCount;
       tokenDisplay = formatToken(tokenTotal);
@@ -643,6 +691,9 @@ const pointTableData = computed(() => {
     } else if (form.value.eventType === 'tale') {
       // Tale 活动：显示进度变化
       tokenDisplay = formatToken(choice.progress ?? 0);
+    } else if (form.value.eventType === 'treasure') {
+      // Treasure 活动：无道具系统
+      tokenDisplay = '0';
     } else {
       tokenDisplay = formatToken(choice.token);
     }
