@@ -448,7 +448,7 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, computed, useTemplateRef } from 'vue';
 
-import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from './MltdConstant';
+import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from './data/MltdAnniversaryConstant';
 import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
 import type { AnniversaryForm } from './MltdTypes';
 import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';

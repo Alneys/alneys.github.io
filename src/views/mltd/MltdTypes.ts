@@ -86,3 +86,57 @@ export interface AnniversaryResult {
   totalTokenAccumulateTimeSpent: ComputedRef<number>;
   totalPlays: ComputedRef<number>;
 }
+
+/**
+ * MLTD 活动控分计算器类型定义
+ */
+
+// Parking 表单类型
+export interface ParkingForm {
+  eventType: string;
+  targetPt?: number;
+  pt?: number;
+  token?: number;
+  enableExtraChoices?: boolean;
+  // Tune 专属字段
+  bonus?: number;
+  isBoostPeriod?: boolean;
+  // Tour 专属字段
+  itemProgress?: number; // 道具进度（0-19）
+  liveProgress?: number; // 5倍进度
+  // isBoostPeriod 同时用于 Tune（活动折返）和 Tour（已折返/可5倍）
+  // Tale 专属字段
+  progress?: number; // 进度（0-99+，≥100 表示 Event Live 已出现）
+}
+
+// Parking 计算结果项
+export interface ParkingResultItem {
+  name: string;
+  multiplier: string;
+  value: number;
+  type?: string; // Tale 活动区分阶段（1st/2nd/3rd/""），其他活动类型为空
+}
+
+// Parking 计算结果
+export interface ParkingResult {
+  flag: boolean;
+  message?: string;
+  result?: ParkingResultItem[];
+}
+
+/**
+ * MLTD 活动剧场选择项类型定义
+ */
+export interface EventTheaterChoice {
+  name: string;
+  type?: string;
+  multiplier: string;
+  pt: number;
+  token: number;
+  extra?: boolean;
+  // Tune 活动专用字段
+  neededForStep?: string; // '体力' | '打工票' | '活动曲' | 'trigger' | 'life' | 'life1.2'
+  mag?: string; // 倍率标记（打工票倍率 或 活动曲消费倍率）
+  // Tour 活动专用字段
+  progress?: number; // 5倍进度增加值
+}

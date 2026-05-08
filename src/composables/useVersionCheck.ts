@@ -6,7 +6,7 @@ import { ElButton } from 'element-plus';
  */
 const VERSION_ENDPOINT = '/version.json';
 const FIRST_CHECK_DELAY = 10_000; // 首次检测延迟：10 秒
-const CHECK_INTERVAL = 30 * 60 * 1000; // 定时轮询间隔：30 分钟
+const CHECK_INTERVAL = 20 * 60 * 1000; // 定时轮询间隔：20 分钟
 const CHECK_COOLDOWN = 60_000; // 检测冷却时间：60 秒
 
 /**
@@ -18,11 +18,11 @@ export interface VersionInfo {
 }
 
 /**
- * 版本检测 composable
+ * 版本检测组合式函数
  *
  * 检测逻辑：
  * 1. 页面加载后延迟 10 秒进行首次检测
- * 2. 每 30 分钟定时检测一次
+ * 2. 每 20 分钟定时检测一次
  * 3. 页面重新可见时检测（visibilitychange）
  * 4. 检测冷却时间 60 秒，避免频繁请求
  */
