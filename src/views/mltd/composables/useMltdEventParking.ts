@@ -581,9 +581,9 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
 
       // 活动曲倍率条件检查
       if (isEventLive) {
-        // 3 倍道具消耗需要 isBoostPeriod（已折返）
-        if (choice.token === -3 && !formData.isBoostPeriod) continue;
-        // 2 倍和 1 倍道具消耗需要 Live 进度达到 40
+        // 3 倍道具消耗需要 isBoostPeriod（已折返）和5倍进度达到 40
+        if (choice.token === -3 && !formData.isBoostPeriod && top.liveProgress < 40) continue;
+        // 2 倍和 1 倍道具消耗需要5倍进度达到 40
         if ((choice.token === -2 || choice.token === -1) && top.liveProgress < 40) continue;
       }
 
