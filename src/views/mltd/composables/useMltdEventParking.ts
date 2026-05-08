@@ -56,13 +56,9 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       choices = MLTD_PARKING_CONSTANTS.generateTuneChoices(bonus, isBoostPeriod);
     } else if (form.value.eventType === 'tour') {
       const isBoostPeriod = form.value.isBoostPeriod ?? false;
-      choices = MLTD_PARKING_CONSTANTS.eventTourChoices.filter((c) => {
-        // 3倍活动曲仅在活动折返后可用
-        if (c.token === -3 && !isBoostPeriod) return false;
-        return true;
-      });
+      choices = MLTD_PARKING_CONSTANTS.generateTourChoices(isBoostPeriod);
     } else if (form.value.eventType === 'tale') {
-      choices = MLTD_PARKING_CONSTANTS.eventTaleChoices;
+      choices = MLTD_PARKING_CONSTANTS.generateTaleChoices();
     } else if (form.value.eventType === 'treasure') {
       // Treasure 活动需要 bonus 参数（倍率 1.0~1.7）和 isBoostPeriod
       const bonus = form.value.bonus ?? 1.7;
@@ -400,7 +396,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * 活动控分计算算法（Theater / Anniversary / Trust / Tune 通用）
    *
    * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
-   * 各活动类型的差异仅体现在选择项（choices）的生成上（见 eventTheaterChoices），
+   * 各活动类型的差异仅体现在选择项（choices）的生成上（见 generateTheaterChoices），
    * 搜索算法本身无需区分活动类型。
    *
    * @param formData - 表单数据（已预处理）
