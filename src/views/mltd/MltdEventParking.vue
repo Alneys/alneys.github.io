@@ -99,12 +99,8 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="24">
-                <el-form-item label="活动折返">
-                  <el-switch v-model="form.isBoostPeriod" />
-                </el-form-item>
-              </el-col>
             </el-row>
+
             <el-row v-if="form.eventType === 'treasure'" :gutter="16">
               <el-col :span="8" :xs="24">
                 <el-form-item label="获得pt加成" prop="bonus">
@@ -119,11 +115,6 @@
                   >
                     <template #append>倍</template>
                   </el-input>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8" :xs="24">
-                <el-form-item label="活动折返">
-                  <el-switch v-model="form.isBoostPeriod" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -158,13 +149,6 @@
               </el-col>
             </el-row>
             <el-row v-if="form.eventType === 'tour'" :gutter="16">
-              <el-col :span="8" :xs="24">
-                <el-form-item label="已折返">
-                  <el-switch v-model="form.isBoostPeriod" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row v-if="form.eventType === 'tour'" :gutter="16">
               <el-col :span="24" :xs="24">
                 <el-form-item label=" ">
                   <el-button @click="form.liveProgress = 40">5倍进度设为最大</el-button>
@@ -178,24 +162,36 @@
                   <el-input
                     v-model.number="form.progress"
                     :min="0"
-                    :max="999"
+                    :max="200"
+                    :step="10"
                     type="number"
                     inputmode="numeric"
                     placeholder="0"
-                  />
+                    ><template #append>/100</template>
+                  </el-input>
                 </el-form-item>
               </el-col>
             </el-row>
-            <el-form-item
-              v-if="
-                form.eventType !== 'tour' &&
-                form.eventType !== 'tale' &&
-                form.eventType !== 'treasure'
-              "
-              label="打工票使用更多倍率（默认只使用最大倍率）"
-            >
-              <el-switch v-model="form.enableExtraChoices" />
-            </el-form-item>
+            <el-row :gutter="16">
+              <el-col :span="8" :xs="24" v-if="form.eventType !== 'tale'">
+                <el-form-item label="活动折返">
+                  <el-switch v-model="form.isBoostPeriod" />
+                </el-form-item>
+              </el-col>
+              <el-col
+                :span="8"
+                :xs="24"
+                v-if="
+                  form.eventType !== 'tour' &&
+                  form.eventType !== 'tale' &&
+                  form.eventType !== 'treasure'
+                "
+              >
+                <el-form-item label="打工票使用更多倍率（默认只使用最大倍率）">
+                  <el-switch v-model="form.enableExtraChoices" />
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-form-item label=" ">
               <el-space wrap>
                 <el-button type="primary" @click="handleSubmit">开始计算</el-button>
@@ -548,7 +544,61 @@ const statusTableData = computed(() => {
     ];
   }
 
-  // 其他活动类型的标准状态行
+  // Theater 活动专属状态行
+  if (form.value.eventType === 'theater') {
+    return [
+      {
+        item: 'pt差距',
+        value: `${formatNumber(targetPt - pt)} pt`,
+      },
+      {
+        item: '当前道具',
+        value: `${formatNumber(token)} 个`,
+      },
+      {
+        item: '折返状态',
+        value: form.value.isBoostPeriod ? '已折返' : '未折返',
+      },
+    ];
+  }
+
+  // Anniversary 活动专属状态行
+  if (form.value.eventType === 'anniversary') {
+    return [
+      {
+        item: 'pt差距',
+        value: `${formatNumber(targetPt - pt)} pt`,
+      },
+      {
+        item: '当前道具',
+        value: `${formatNumber(token)} 个`,
+      },
+      {
+        item: '折返状态',
+        value: form.value.isBoostPeriod ? '已折返' : '未折返',
+      },
+    ];
+  }
+
+  // Trust 活动专属状态行
+  if (form.value.eventType === 'trust') {
+    return [
+      {
+        item: 'pt差距',
+        value: `${formatNumber(targetPt - pt)} pt`,
+      },
+      {
+        item: '当前道具',
+        value: `${formatNumber(token)} 个`,
+      },
+      {
+        item: '折返状态',
+        value: form.value.isBoostPeriod ? '已折返' : '未折返',
+      },
+    ];
+  }
+
+  // 其他活动类型（Tune）的标准状态行
   return [
     {
       item: 'pt差距',

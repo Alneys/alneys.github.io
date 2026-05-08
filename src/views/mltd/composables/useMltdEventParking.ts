@@ -42,16 +42,25 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     let choices: EventTheaterChoice[];
 
     if (form.value.eventType === 'anniversary') {
-      choices = MLTD_PARKING_CONSTANTS.eventAnniversaryChoices;
+      // Anniversary 活动需要 isBoostPeriod 参数
+      const isBoostPeriod = form.value.isBoostPeriod ?? false;
+      choices = MLTD_PARKING_CONSTANTS.generateAnniversaryChoices(isBoostPeriod);
     } else if (form.value.eventType === 'trust') {
-      choices = MLTD_PARKING_CONSTANTS.eventTrustChoices;
+      // Trust 活动需要 isBoostPeriod 参数
+      const isBoostPeriod = form.value.isBoostPeriod ?? false;
+      choices = MLTD_PARKING_CONSTANTS.generateTrustChoices(isBoostPeriod);
     } else if (form.value.eventType === 'tune') {
       // Tune 活动需要 bonus 和 isBoostPeriod 参数
       const bonus = form.value.bonus ?? 30;
       const isBoostPeriod = form.value.isBoostPeriod ?? false;
       choices = MLTD_PARKING_CONSTANTS.generateTuneChoices(bonus, isBoostPeriod);
     } else if (form.value.eventType === 'tour') {
-      choices = MLTD_PARKING_CONSTANTS.eventTourChoices;
+      const isBoostPeriod = form.value.isBoostPeriod ?? false;
+      choices = MLTD_PARKING_CONSTANTS.eventTourChoices.filter((c) => {
+        // 3倍活动曲仅在活动折返后可用
+        if (c.token === -3 && !isBoostPeriod) return false;
+        return true;
+      });
     } else if (form.value.eventType === 'tale') {
       choices = MLTD_PARKING_CONSTANTS.eventTaleChoices;
     } else if (form.value.eventType === 'treasure') {
@@ -60,7 +69,9 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
       const isBoostPeriod = form.value.isBoostPeriod ?? false;
       choices = MLTD_PARKING_CONSTANTS.generateTreasureChoices(bonus, isBoostPeriod);
     } else {
-      choices = MLTD_PARKING_CONSTANTS.eventTheaterChoices;
+      // Theater 活动需要 isBoostPeriod 参数
+      const isBoostPeriod = form.value.isBoostPeriod ?? false;
+      choices = MLTD_PARKING_CONSTANTS.generateTheaterChoices(isBoostPeriod);
     }
 
     // 当禁用更多倍率时，过滤掉 extra: true 的选项
