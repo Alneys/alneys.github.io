@@ -415,11 +415,16 @@ const {
 
 const formRef = useTemplateRef('formRef');
 
-// 监听活动类型变化，清空计算结果
+// 监听活动类型变化，清空计算结果并自动设置默认加成
 watch(
   () => form.value.eventType,
-  () => {
+  (newType) => {
     clearCalculation();
+    if (newType === 'treasure') {
+      form.value.bonus = 1.7;
+    } else if (newType === 'tune') {
+      form.value.bonus = 30;
+    }
   },
 );
 

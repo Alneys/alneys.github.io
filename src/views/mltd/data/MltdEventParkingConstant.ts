@@ -567,8 +567,8 @@ function generateTreasureTicketMultipliers(): number[] {
  * 生成顺序（每首歌曲循环）：
  * 1. 体力 通常曲（1 个）
  * 2. 打工票 通常曲（4 个，倍率从大到小）
- * 3. 打工票 4th（4 个，倍率从大到小）
- * 4. 体力 4th（1 个）
+ * 3. 打工票 组曲（4 个，倍率从大到小）
+ * 4. 体力 组曲（1 个）
  *
  * 共 4 歌曲 × 10 步 = 40 个选项，按积分降序排列
  *
@@ -590,7 +590,7 @@ function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
 
     // 1. 体力 通常曲
     entries.push({
-      name,
+      name: `${name} [单首]`,
       type: '体力',
       multiplier: '1倍',
       pt: lifePoint,
@@ -603,7 +603,7 @@ function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
     for (const mag of ticketMultipliers) {
       const ticketSongPt = Math.ceil(value * bonus * mag);
       entries.push({
-        name,
+        name: `${name} [单首]`,
         type: '打工票',
         multiplier: `${mag.toFixed(1)}倍`,
         pt: ticketSongPt,
@@ -614,14 +614,14 @@ function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
       });
     }
 
-    // 3. 打工票 4th（4 档倍率）
+    // 3. 打工票 组曲（4 档倍率）
     // pt = ceil(1500 × bonus × mag) + ceil(value × bonus × mag) × 3
     for (const mag of ticketMultipliers) {
       const ticketEventPt = Math.ceil(TREASURE_EVENT_LIVE_BASE_POINT * bonus * mag);
       const ticketSongPt = Math.ceil(value * bonus * mag);
       const total4thPt = ticketEventPt + ticketSongPt * 3;
       entries.push({
-        name: `${name} [4th]`,
+        name: `${name} [组曲]`,
         type: '打工票',
         multiplier: `${mag.toFixed(1)}倍`,
         pt: total4thPt,
@@ -632,11 +632,11 @@ function generateTreasureChoices(bonus: number = 1.7): EventTheaterChoice[] {
       });
     }
 
-    // 4. 体力 4th
+    // 4. 体力 组曲
     // pt = ceil(1500 × bonus) + ceil(value × bonus) × 3
     const life4thPt = eventLifePoint + lifePoint * 3;
     entries.push({
-      name: `${name} [4th]`,
+      name: `${name} [组曲]`,
       type: '体力',
       multiplier: '1倍',
       pt: life4thPt,
@@ -882,7 +882,7 @@ export const MLTD_PARKING_CONSTANTS = {
 export const EVENT_PARKING_NOTICES = {
   theater: ['由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样'],
   anniversary: [
-    '注意：周年活动有每日推荐曲和普通曲的区别',
+    '周年活动有每日推荐曲和普通曲的区别，推荐曲有 1.2 倍奖励',
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
   ],
   trust: [
@@ -890,7 +890,8 @@ export const EVENT_PARKING_NOTICES = {
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
   ],
   tune: [
-    '注意：积分加成最大为 1.3 倍',
+    '获得pt加成最大为 30%，仅对活动曲积分有效',
+    '活动曲 2倍/4倍 消费仅在活动折返后可用',
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
   ],
   tour: [
@@ -899,16 +900,14 @@ export const EVENT_PARKING_NOTICES = {
     '道具进度满 20 自动转换 1 个道具',
   ],
   tale: [
-    '活动曲在进度达到 100 后出现，消耗 100 进度获得 3000pt',
-    '1st/2nd 表示退出组曲策略，进度不变但获得较少积分',
-    '3rd 会增加进度并获得更多积分',
+    '活动进度达到 100 后出现活动曲，消耗 100 进度获得 3000pt',
+    '1st/2nd 阶段退出组曲，进度不变但获得较少积分',
+    '完成 3rd 阶段会增加进度并获得更多积分',
     '进度 ≥ 100 时，溢出的进度不显示，此时强烈建议先打活动曲消耗进度，否则可能导致错误的输入和计算结果',
   ],
   treasure: [
-    'Treasure 活动无道具系统，所有游玩方式均为正积分（token 始终为 0）',
-    '4th 表示活动曲 + 通常曲×3 的捆绑套装，曲目名称中带有 [4th] 后缀',
-    '获得pt加成倍率影响所有积分计算，注意与 Tune 活动的百分比加成区分',
-    '体力 4th ≠ 体力通常曲 × 4（因向上取整时机不同）',
+    '[单首] 表示单次游玩，[组曲] 表示3首通常曲 + 活动曲的组合',
+    '获得pt加成倍率影响所有积分计算（与 Tune 活动的百分比加成不同）',
   ],
 } as const;
 
@@ -922,19 +921,18 @@ export const EVENT_PARKING_TIPS = {
   ],
   anniversary: [
     '消耗 1 倍体力游玩时获得的积分即为基础积分',
-    '使用打工票游玩普通曲时的计算公式：基础积分 × 打工票倍率（向上取整）',
-    '消耗体力游玩推荐曲（PUSH）时的计算公式：基础积分 × 1.2倍奖励（向上取整）',
-    '使用打工票游玩推荐曲（PUSH）时的计算公式：(基础积分 × 1.2倍奖励（向上取整)) × 打工票倍率（向上取整）',
+    '使用打工票游玩普通曲时：基础积分 × 打工票倍率（向上取整）',
+    '消耗体力游玩推荐曲时：基础积分 × 1.2（向上取整）',
+    '使用打工票游玩推荐曲时：(基础积分 × 1.2（向上取整）) × 打工票倍率（向上取整）',
   ],
   trust: [
     '消耗 1 倍体力游玩时获得的积分即为基础积分',
-    'Trust 活动有 1.5 倍分数加成，只对积分有效，对活动道具无效',
-    '消耗体力游玩时的计算公式：基础积分 × 1.5倍分数加成（向上取整）',
-    '使用打工票游玩时的计算公式：(基础积分 × 打工票倍率（向上取整)) × 1.5倍分数加成（向上取整）',
+    '所有积分享受 1.5 倍分数加成（向上取整），道具不受影响',
+    '消耗体力游玩时：基础积分 × 1.5（向上取整）',
+    '使用打工票游玩时：(基础积分 × 打工票倍率（向上取整）) × 1.5（向上取整）',
   ],
   tune: [
     '消耗 1 倍体力游玩时获得的积分即为基础积分',
-    'Trust 活动有最大 1.3 倍分数加成，只对活动曲积分有效，对普通曲无效',
     '使用打工票游玩时的计算公式：基础积分 × 打工票倍率（向上取整）',
     '活动曲积分公式：基础积分 × 消费倍率 × (100 + 获得pt加成百分比) / 100（向上取整）',
   ],
@@ -944,16 +942,15 @@ export const EVENT_PARKING_TIPS = {
     '3倍活动曲额外需要在活动折返后才能使用',
   ],
   tale: [
-    '1st 阶段：1曲游玩后退出组曲，进度不变',
-    '2nd 阶段：2曲游玩后退出组曲，进度不变',
-    '3rd 阶段：正常游玩，进度增加 20-50',
-    'Event Live：消耗 100 进度，获得 3000pt',
+    '1st：1曲后退出组曲，进度不变',
+    '2nd：2曲后退出组曲，进度不变',
+    '3rd：正常游玩，进度增加 20-50',
+    '活动曲：消耗 100 进度，获得 3000pt',
   ],
   treasure: [
-    '消耗 1 倍体力游玩通常曲时：积分 = ceil(基础积分 × 获得pt加成倍率)',
-    '使用打工票游玩通常曲时：积分 = ceil(基础积分 × 获得pt加成倍率 × 打工票倍率)',
-    '4th 体力：积分 = ceil(1500 × 加成倍率) + ceil(基础积分 × 加成倍率) × 3',
-    '4th 打工票：积分 = ceil(1500 × 加成倍率 × 打工票倍率) + ceil(基础积分 × 加成倍率 × 打工票倍率) × 3',
-    '打工票倍率固定为 4 档：[2.8, 2.1, 1.4, 0.7]',
+    '消耗 1 倍体力游玩通常曲：积分 = 基础积分 × 获得pt加成倍率（向上取整）',
+    '使用打工票游玩通常曲：积分 = 基础积分 × 获得pt加成倍率 × 打工票倍率（向上取整）',
+    '[组曲] 体力：积分 = 1500 × 加成倍率（向上取整）+ 基础积分 × 加成倍率（向上取整）× 3',
+    '[组曲] 打工票：积分 = 1500 × 加成倍率 × 打工票倍率（向上取整）+ 基础积分 × 加成倍率 × 打工票倍率（向上取整）× 3',
   ],
 } as const;
