@@ -18,6 +18,9 @@
       <router-link to="/tools/hmac-calculator">
         <el-card shadow="hover">HMAC 消息验证码计算器</el-card>
       </router-link>
+      <router-link to="/tools/key-generator">
+        <el-card shadow="hover">密钥生成器</el-card>
+      </router-link>
     </div>
   </div>
 </template>

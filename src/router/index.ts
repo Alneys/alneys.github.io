@@ -83,6 +83,11 @@ const router = createRouter({
               name: 'tools-hmac-calculator',
               component: () => import('@/views/tools/HmacCalculator.vue'),
             },
+            {
+              path: 'key-generator',
+              name: 'tools-key-generator',
+              component: () => import('@/views/tools/KeyGenerator.vue'),
+            },
           ],
         },
         {
