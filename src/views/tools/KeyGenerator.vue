@@ -16,6 +16,7 @@
             <el-radio-button value="EdDSA">EdDSA (推荐)</el-radio-button>
             <el-radio-button value="ECDSA">ECDSA</el-radio-button>
             <el-radio-button value="RSA">RSA</el-radio-button>
+            <el-radio-button value="AES">AES（对称密钥）</el-radio-button>
           </el-radio-group>
         </div>
 
@@ -43,12 +44,59 @@
           :loading="isGenerating"
           class="generate-button"
         >
-          生成密钥对
+          {{ algorithmType === 'AES' ? '生成密钥' : '生成密钥对' }}
         </el-button>
       </el-card>
 
+      <!-- AES 密钥输出 -->
       <div
-        v-if="isGenerating || hasPublicKey"
+        v-if="algorithmType === 'AES' && (isGenerating || hasAesKey)"
+        v-loading="isGenerating"
+        element-loading-text="正在生成密钥..."
+      >
+        <div class="key-output">
+          <div class="output-header">
+            <span class="output-label">AES 密钥 - 请妥善保管，切勿泄露</span>
+            <el-button size="small" @click="copyAesKey" :icon="aesKeyCopyIcon">
+              {{ aesKeyCopyText }}
+            </el-button>
+          </div>
+
+          <el-tabs v-model="aesKeyTab">
+            <el-tab-pane label="Hex" name="hex">
+              <el-input
+                :model-value="aesKeyHex"
+                type="textarea"
+                :rows="10"
+                readonly
+                class="mono-output font-mono"
+              />
+            </el-tab-pane>
+            <el-tab-pane label="Base64" name="base64">
+              <el-input
+                :model-value="aesKeyBase64"
+                type="textarea"
+                :rows="10"
+                readonly
+                class="mono-output font-mono"
+              />
+            </el-tab-pane>
+            <el-tab-pane label="JWK" name="jwk">
+              <el-input
+                :model-value="aesKeyJwk"
+                type="textarea"
+                :rows="10"
+                readonly
+                class="mono-output font-mono"
+              />
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      </div>
+
+      <!-- 非对称密钥输出 -->
+      <div
+        v-if="algorithmType !== 'AES' && (isGenerating || hasPublicKey)"
         v-loading="isGenerating"
         element-loading-text="正在生成密钥..."
       >
@@ -125,13 +173,7 @@
       </div>
 
       <!-- 安全提示 -->
-      <el-alert
-        v-if="isGenerating || hasPrivateKey"
-        title="安全提示"
-        type="warning"
-        :closable="false"
-        class="security-alert"
-      >
+      <el-alert title="安全提示" type="warning" :closable="false" class="security-alert">
         <ul class="security-tips">
           <li>私钥具有高度敏感性，请妥善保管，切勿泄露给他人</li>
           <li>建议将私钥保存到安全的密钥管理器或加密存储中</li>
@@ -149,9 +191,11 @@
         <li><strong>Ed25519</strong>: 现代高效签名算法，SSH/Git/GPG 广泛使用，推荐使用</li>
         <li><strong>ECDSA</strong>: 椭圆曲线签名算法，TLS/SSL 证书常用</li>
         <li><strong>RSA</strong>: 传统签名算法，兼容性最广，但密钥较大</li>
+        <li><strong>AES</strong>: 对称加密算法，用于数据加密/解密，推荐 256 位</li>
         <li><strong>PEM 格式</strong>: 标准格式，OpenSSL 兼容</li>
         <li><strong>SSH 格式</strong>: OpenSSH 兼容公钥格式，可直接添加到 authorized_keys</li>
         <li><strong>JWK 格式</strong>: JSON Web Key，适合 Web 应用</li>
+        <li><strong>Hex/Base64 格式</strong>: AES 密钥常用格式，便于存储和传输</li>
       </ul>
     </div>
   </div>
@@ -161,8 +205,8 @@
 import { ref, computed, shallowRef, watch } from 'vue';
 import { CopyDocument, Check } from '@element-plus/icons-vue';
 
-type AlgorithmType = 'EdDSA' | 'ECDSA' | 'RSA';
-type KeyParams = 'Ed25519' | 'P-256' | 'P-384' | 'P-521' | '2048' | '4096';
+type AlgorithmType = 'EdDSA' | 'ECDSA' | 'RSA' | 'AES';
+type KeyParams = 'Ed25519' | 'P-256' | 'P-384' | 'P-521' | '2048' | '4096' | '128' | '192' | '256';
 
 // 算法类型
 const algorithmType = ref<AlgorithmType>('EdDSA');
@@ -192,6 +236,12 @@ const keyParamsOptions = computed(() => {
       { label: '2048 位', value: '2048' },
       { label: '4096 位 (推荐)', value: '4096' },
     ];
+  } else if (algorithmType.value === 'AES') {
+    return [
+      { label: '128 位', value: '128' },
+      { label: '192 位', value: '192' },
+      { label: '256 位 (推荐)', value: '256' },
+    ];
   }
   return [];
 });
@@ -204,6 +254,8 @@ watch(algorithmType, (newType) => {
     keyParams.value = 'P-256';
   } else if (newType === 'RSA') {
     keyParams.value = '4096';
+  } else if (newType === 'AES') {
+    keyParams.value = '256';
   }
 });
 
@@ -219,9 +271,16 @@ const publicKeySsh = ref('');
 const privateKeyPem = ref('');
 const privateKeyJwk = ref('');
 
+// AES 密钥输出
+const aesKeyHex = ref('');
+const aesKeyBase64 = ref('');
+const aesKeyJwk = ref('');
+const aesKeyTab = ref('hex');
+
 // 是否有输出
 const hasPublicKey = computed(() => publicKeyPem.value || publicKeyJwk.value || publicKeySsh.value);
 const hasPrivateKey = computed(() => privateKeyPem.value || privateKeyJwk.value);
+const hasAesKey = computed(() => aesKeyHex.value || aesKeyBase64.value || aesKeyJwk.value);
 
 // 复制状态 - 公钥
 const publicKeyCopyIcon = shallowRef<typeof CopyDocument>(CopyDocument);
@@ -231,12 +290,16 @@ const publicKeyCopyText = ref('复制');
 const privateKeyCopyIcon = shallowRef<typeof CopyDocument>(CopyDocument);
 const privateKeyCopyText = ref('复制');
 
+// 复制状态 - AES 密钥
+const aesKeyCopyIcon = shallowRef<typeof CopyDocument>(CopyDocument);
+const aesKeyCopyText = ref('复制');
+
 // 是否支持 SSH 格式
 function supportsSshFormat(): boolean {
   if (algorithmType.value === 'EdDSA') return true;
   if (algorithmType.value === 'ECDSA') return true; // P-256, P-384, P-521 都支持
   if (algorithmType.value === 'RSA') return true;
-  return false;
+  return false; // AES 不支持 SSH 格式
 }
 
 // 检查浏览器是否支持 Ed25519
@@ -259,6 +322,39 @@ async function generateKeyPair(): Promise<void> {
   // 不清空之前的输出，保持显示旧值 + loading 效果
 
   try {
+    // AES 对称密钥
+    if (algorithmType.value === 'AES') {
+      const aesKey = await crypto.subtle.generateKey(
+        {
+          name: 'AES-GCM',
+          length: parseInt(keyParams.value),
+        },
+        true,
+        ['encrypt', 'decrypt'],
+      );
+
+      // 导出 Raw -> Hex
+      const rawKey = await crypto.subtle.exportKey('raw', aesKey);
+      const hexBytes = new Uint8Array(rawKey);
+      aesKeyHex.value = Array.from(hexBytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // Raw -> Base64
+      aesKeyBase64.value = arrayBufferToBase64(rawKey);
+
+      // JWK
+      const jwk = await crypto.subtle.exportKey('jwk', aesKey);
+      aesKeyJwk.value = JSON.stringify(jwk, null, 2);
+
+      // 重置复制状态
+      aesKeyCopyIcon.value = CopyDocument;
+      aesKeyCopyText.value = '复制';
+
+      return;
+    }
+
+    // 非对称密钥
     let keyPair: CryptoKeyPair;
     let algorithmName: string;
 
@@ -384,6 +480,34 @@ function copyPrivateKey(): void {
       setTimeout(() => {
         privateKeyCopyIcon.value = CopyDocument;
         privateKeyCopyText.value = '复制';
+      }, 2000);
+    })
+    .catch(() => {
+      ElMessage.error('复制失败，请手动复制');
+    });
+}
+
+// 复制 AES 密钥
+function copyAesKey(): void {
+  let text = '';
+  if (aesKeyTab.value === 'hex' && aesKeyHex.value) {
+    text = aesKeyHex.value;
+  } else if (aesKeyTab.value === 'base64' && aesKeyBase64.value) {
+    text = aesKeyBase64.value;
+  } else if (aesKeyTab.value === 'jwk' && aesKeyJwk.value) {
+    text = aesKeyJwk.value;
+  }
+
+  if (!text) return;
+
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      aesKeyCopyIcon.value = Check;
+      aesKeyCopyText.value = '已复制!';
+      setTimeout(() => {
+        aesKeyCopyIcon.value = CopyDocument;
+        aesKeyCopyText.value = '复制';
       }, 2000);
     })
     .catch(() => {
