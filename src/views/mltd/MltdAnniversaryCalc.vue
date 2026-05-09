@@ -575,14 +575,8 @@ const keyInfoTableData = computed(() => [
   {
     item: '总次数',
     value: formatNumber(result.totalPlays),
-    time: `/`,
+    time: `${result.totalTimeSpent.toFixed(2)}分钟 / ${(result.totalTimeSpent / 60).toFixed(2)}小时`,
     highlight: true,
-  },
-  {
-    item: '所有项目总时间',
-    value: `${result.totalTimeSpent.toFixed(2)}分钟 / ${(result.totalTimeSpent / 60).toFixed(2)}小时`,
-    time: '',
-    colSpan: true,
   },
   {
     item: '平均每日所需时间',
