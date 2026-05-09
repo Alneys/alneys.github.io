@@ -350,13 +350,6 @@
                 :clear-local-storage="clearLocalStorage"
               />
             </el-form-item>
-            <el-alert type="info">
-              <p>TODO：</p>
-              <ol style="line-height: 1.5">
-                <li>详细说明</li>
-                <li>更加严格地检测输入</li>
-              </ol>
-            </el-alert>
           </el-form>
         </el-col>
         <el-col :span="0.1" class="hidden-sm-and-down">
