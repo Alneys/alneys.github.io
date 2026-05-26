@@ -1,5 +1,4 @@
 import { ref, onMounted, onUnmounted, h } from 'vue';
-import { ElButton } from 'element-plus';
 
 /**
  * 版本检测配置
@@ -17,6 +16,41 @@ export interface VersionInfo {
   publishedAt: string;
 }
 
+// ============================================================================
+// 模块级单例状态
+// ============================================================================
+
+/** 共享的响应式状态 */
+const currentBuildId = ref('');
+const latestBuildId = ref('');
+const latestPublishedAt = ref('');
+
+/** 定时器引用 */
+let checkTimer: ReturnType<typeof setInterval> | null = null;
+let firstCheckTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** 实例计数器，用于引用计数 */
+let instanceCount = 0;
+
+/** 轮询是否已启动 */
+let isPollingStarted = false;
+
+/** 检测状态锁，防止并发检测 */
+let checking = false;
+
+/** 上次检测时间戳，用于冷却时间控制 */
+let lastCheckAt = 0;
+
+/** 用户忽略的版本 ID */
+let dismissedBuildId = '';
+
+/** 通知实例 */
+let notificationInstance: ReturnType<typeof ElNotification> | null = null;
+
+// ============================================================================
+// 版本检测组合式函数
+// ============================================================================
+
 /**
  * 版本检测组合式函数
  *
@@ -25,19 +59,11 @@ export interface VersionInfo {
  * 2. 每 20 分钟定时检测一次
  * 3. 页面重新可见时检测（visibilitychange）
  * 4. 检测冷却时间 60 秒，避免频繁请求
+ *
+ * 单例保证：
+ * - 全局只启动一个轮询实例，多个组件调用共享同一状态
  */
 export function useVersionCheck() {
-  const currentBuildId = ref('');
-  const latestBuildId = ref('');
-  const latestPublishedAt = ref('');
-
-  let dismissedBuildId = '';
-  let checkTimer: ReturnType<typeof setInterval> | null = null;
-  let firstCheckTimer: ReturnType<typeof setTimeout> | null = null;
-  let checking = false;
-  let lastCheckAt = 0;
-  let notificationInstance: ReturnType<typeof ElNotification> | null = null;
-
   /**
    * 获取本地版本信息（构建时注入到 window.__APP_VERSION__）
    */
@@ -203,53 +229,78 @@ export function useVersionCheck() {
   };
 
   onMounted(() => {
+    instanceCount++;
+
+    // 初始化本地版本
     const local = getLocalVersion();
-    if (local) {
+    if (local && !currentBuildId.value) {
       currentBuildId.value = local.buildId;
       console.log('[version-check] 初始化，本地版本:', local.buildId);
     }
 
-    // 延迟首次检测
-    firstCheckTimer = setTimeout(() => {
-      firstCheckTimer = null;
-      checkForUpdate(true);
-    }, FIRST_CHECK_DELAY);
+    // 仅在首个实例时启动轮询
+    if (!isPollingStarted) {
+      isPollingStarted = true;
 
-    // 定时轮询检测
-    checkTimer = setInterval(() => {
-      checkForUpdate(false);
-    }, CHECK_INTERVAL);
+      // 延迟首次检测
+      firstCheckTimer = setTimeout(() => {
+        firstCheckTimer = null;
+        checkForUpdate(true);
+      }, FIRST_CHECK_DELAY);
 
-    // 页面可见性变化检测
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+      // 定时轮询检测
+      checkTimer = setInterval(() => {
+        checkForUpdate(false);
+      }, CHECK_INTERVAL);
+
+      // 页面可见性变化检测
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      if (import.meta.env.DEV) {
+        console.log(
+          '[version-check] 轮询已启动，首次检测延迟:',
+          FIRST_CHECK_DELAY / 1000,
+          '秒，轮询间隔:',
+          CHECK_INTERVAL / 60000,
+          '分钟',
+        );
+      }
+    }
 
     if (import.meta.env.DEV) {
-      console.log(
-        '[version-check] 已启动，首次检测延迟:',
-        FIRST_CHECK_DELAY / 1000,
-        '秒，轮询间隔:',
-        CHECK_INTERVAL / 60000,
-        '分钟',
-      );
+      console.log('[version-check] 实例挂载，当前实例数:', instanceCount);
     }
   });
 
   onUnmounted(() => {
-    if (checkTimer) {
-      clearInterval(checkTimer);
-      checkTimer = null;
-    }
-    if (firstCheckTimer) {
-      clearTimeout(firstCheckTimer);
-      firstCheckTimer = null;
-    }
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    if (notificationInstance) {
-      notificationInstance.close();
-      notificationInstance = null;
-    }
+    instanceCount--;
+
     if (import.meta.env.DEV) {
-      console.log('[version-check] 已停止');
+      console.log('[version-check] 实例卸载，当前实例数:', instanceCount);
+    }
+
+    // 只有当所有实例都卸载时才停止轮询
+    if (instanceCount <= 0) {
+      instanceCount = 0;
+
+      if (checkTimer) {
+        clearInterval(checkTimer);
+        checkTimer = null;
+      }
+      if (firstCheckTimer) {
+        clearTimeout(firstCheckTimer);
+        firstCheckTimer = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (notificationInstance) {
+        notificationInstance.close();
+        notificationInstance = null;
+      }
+      isPollingStarted = false;
+
+      if (import.meta.env.DEV) {
+        console.log('[version-check] 轮询已停止（所有实例已卸载）');
+      }
     }
   });
 

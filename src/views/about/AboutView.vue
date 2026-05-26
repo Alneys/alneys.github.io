@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import svgCG from '@/assets/svg/imas-cinderella-girls.svg?raw';
 import svgML from '@/assets/svg/imas-million-live.svg?raw';
 import svgSC from '@/assets/svg/imas-shiny-colors.svg?raw';
@@ -6,15 +7,25 @@ import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
 import { useVersionCheck } from '@/composables/useVersionCheck';
 
 const env = import.meta.env;
+const router = useRouter();
 
 const { showUpdateNotification } = env.DEV
   ? useVersionCheck()
   : { showUpdateNotification: () => {} };
+
+function goBack() {
+  router.push('/');
+}
 </script>
 
 <template>
   <div>
-    <h1 class="view-title">关于</h1>
+    <el-page-header class="view-page-header" @back="goBack">
+      <template #content>
+        <h1>关于</h1>
+      </template>
+    </el-page-header>
+
     <div class="al-divider"></div>
     <h2>Alneys</h2>
     <div class="shields-io-collections">

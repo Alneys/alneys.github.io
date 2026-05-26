@@ -908,11 +908,13 @@ function generateTaleChoices(): EventTheaterChoice[] {
  *
  * @returns 按积分降序排列的选项列表
  */
-function generateTourChoices(): EventTheaterChoice[] {
+function generateTourChoices(isBoostPeriod: boolean = true): EventTheaterChoice[] {
   const entries: EventTheaterChoice[] = [];
 
   // 1. 活动曲（消耗道具）
   for (const config of TOUR_EVENT_LIVE_CONFIGS) {
+    // 3倍活动曲仅在活动折返后可用
+    if (config.trigger === -3 && !isBoostPeriod) continue;
     entries.push({
       name: config.name,
       type: '',
@@ -944,23 +946,14 @@ function generateTourChoices(): EventTheaterChoice[] {
 }
 
 /**
- * MLTD 活动控分相关常量定义
+ * MLTD 活动控分相关函数
  */
 export const MLTD_PARKING_CONSTANTS = {
-  /** Theater 活动剧场选择项列表（动态生成，无折返参数版本，保留兼容） */
-  eventTheaterChoices: generateTheaterChoices(),
-
   /** Theater 活动剧场选择项生成器（需要 isBoostPeriod 参数） */
   generateTheaterChoices,
 
-  /** Anniversary 活动剧场选择项列表（动态生成，无折返参数版本，保留兼容） */
-  eventAnniversaryChoices: generateAnniversaryChoices(),
-
   /** Anniversary 活动剧场选择项生成器（需要 isBoostPeriod 参数） */
   generateAnniversaryChoices,
-
-  /** Trust 活动剧场选择项列表（动态生成，无折返参数版本，保留兼容） */
-  eventTrustChoices: generateTrustChoices(),
 
   /** Trust 活动剧场选择项生成器（需要 isBoostPeriod 参数） */
   generateTrustChoices,
@@ -968,11 +961,11 @@ export const MLTD_PARKING_CONSTANTS = {
   /** Tune 活动剧场选择项生成器（需要 bonus 和 isBoostPeriod 参数） */
   generateTuneChoices,
 
-  /** Tour 活动剧场选择项列表（动态生成） */
-  eventTourChoices: generateTourChoices(),
+  /** Tour 活动剧场选择项生成器 */
+  generateTourChoices,
 
-  /** Tale 活动剧场选择项列表（动态生成） */
-  eventTaleChoices: generateTaleChoices(),
+  /** Tale 活动剧场选择项生成器 */
+  generateTaleChoices,
 
   /** Treasure 活动剧场选择项生成器（需要 bonus 参数） */
   generateTreasureChoices,
