@@ -12,12 +12,7 @@
 
 import { computed, type Ref } from 'vue';
 import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
-import type {
-  ParkingForm,
-  ParkingResult,
-  ParkingResultItem,
-  EventTheaterChoice,
-} from '../MltdTypes';
+import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
  * Treasure 活动控分计算子组合式
@@ -28,7 +23,7 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
   // ============ 选择项生成 ============
 
   /** 生成 Treasure 活动的游玩选择列表 */
-  const eventChoices = computed<EventTheaterChoice[]>(() => {
+  const eventChoices = computed<EventChoice[]>(() => {
     const bonus = form.value.bonus ?? 1.7;
     const isBoostPeriod = form.value.isBoostPeriod ?? false;
     return MLTD_PARKING_CONSTANTS.generateTreasureChoices(bonus, isBoostPeriod);
@@ -42,7 +37,7 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
    * Treasure 活动无道具系统，仅需更新 pt。
    * @param choice - 游玩选择项
    */
-  const execute = (choice: EventTheaterChoice) => {
+  const execute = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) + choice.pt;
   };
 
@@ -50,7 +45,7 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
    * 撤销一次操作（逆向修改表单状态）
    * @param choice - 游玩选择项
    */
-  const undo = (choice: EventTheaterChoice) => {
+  const undo = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) - choice.pt;
   };
 
@@ -105,7 +100,7 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
    * @returns 计算结果
    */
   async function calc(
-    choices: EventTheaterChoice[],
+    choices: EventChoice[],
     formData: {
       targetPt: number;
       pt: number;

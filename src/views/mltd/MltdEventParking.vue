@@ -393,7 +393,7 @@ import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
 import { EVENT_PARKING_TIPS, EVENT_PARKING_NOTICES } from './data/MltdEventParkingConstant';
-import type { ParkingForm, EventTheaterChoice, ParkingResultItem } from './MltdTypes';
+import type { ParkingForm, EventChoice, ParkingResultItem } from './MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
 const activeCollapse = ref<string[]>([]);
@@ -633,7 +633,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
   const data: PlanTableRow[] = parkingResult.value.result.map((item) => {
     const choice = eventChoices.value.find(
-      (c: EventTheaterChoice) =>
+      (c: EventChoice) =>
         c.name === item.name &&
         c.multiplier === item.multiplier &&
         (item.type === undefined || c.type === item.type),
@@ -689,7 +689,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
     let totalProgress = 0;
     for (const row of data) {
       const choice = eventChoices.value.find(
-        (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
+        (c: EventChoice) => c.name === row.name && c.multiplier === row.multiplier,
       );
       if (choice?.progress && choice.progress > 0) {
         totalProgress += choice.progress * row.count;
@@ -702,7 +702,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
     // Event Live 消耗的道具
     const eventLiveToken = data.reduce((sum, row) => {
       const choice = eventChoices.value.find(
-        (c: EventTheaterChoice) => c.name === row.name && c.multiplier === row.multiplier,
+        (c: EventChoice) => c.name === row.name && c.multiplier === row.multiplier,
       );
       if (choice?.token && choice.token < 0) {
         return sum + choice.token * row.count;
@@ -782,12 +782,12 @@ function monoCellClassName({ column }: { column: any }) {
 function isTourEventLiveRow(row: PlanTableRow): boolean {
   if (form.value.eventType !== 'tour' && form.value.eventType !== 'tale') return false;
   const choice = eventChoices.value.find(
-    (c: EventTheaterChoice) =>
+    (c: EventChoice) =>
       c.name === row.name &&
       c.multiplier === row.multiplier &&
       (row.itemType === undefined || c.type === row.itemType),
   );
-  return choice?.neededForStep === 'trigger';
+  return choice?.type === '活动曲';
 }
 
 function handleClear() {

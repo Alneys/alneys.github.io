@@ -16,7 +16,7 @@
 
 import { ref, computed, type Ref } from 'vue';
 import type { ParkingForm, ParkingResult, ParkingResultItem } from '../MltdTypes';
-import type { EventTheaterChoice } from '../MltdTypes';
+import type { EventChoice } from '../MltdTypes';
 import { useMltdEventParkingTheater } from './useMltdEventParkingTheater';
 import { useMltdEventParkingTour } from './useMltdEventParkingTour';
 import { useMltdEventParkingTale } from './useMltdEventParkingTale';
@@ -120,7 +120,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   /**
    * 根据活动类型返回对应的选择项列表，并根据开关过滤 extra 选项
    */
-  const eventChoices = computed<EventTheaterChoice[]>(() => {
+  const eventChoices = computed<EventChoice[]>(() => {
     let choices = active.value.eventChoices.value;
 
     // 当禁用更多倍率时，过滤掉 extra: true 的选项

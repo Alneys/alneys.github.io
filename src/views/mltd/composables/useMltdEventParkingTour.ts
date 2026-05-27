@@ -12,12 +12,7 @@
 
 import { computed, type Ref } from 'vue';
 import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
-import type {
-  ParkingForm,
-  ParkingResult,
-  ParkingResultItem,
-  EventTheaterChoice,
-} from '../MltdTypes';
+import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
  * Tour 活动控分计算子组合式
@@ -28,7 +23,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
   // ============ 选择项生成 ============
 
   /** 生成 Tour 活动的游玩选择列表 */
-  const eventChoices = computed<EventTheaterChoice[]>(() => {
+  const eventChoices = computed<EventChoice[]>(() => {
     const isBoostPeriod = form.value.isBoostPeriod ?? false;
     return MLTD_PARKING_CONSTANTS.generateTourChoices(isBoostPeriod);
   });
@@ -44,10 +39,10 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
    *
    * @param choice - 游玩选择项
    */
-  const execute = (choice: EventTheaterChoice) => {
+  const execute = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) + choice.pt;
 
-    const isEventLive = choice.neededForStep === 'trigger';
+    const isEventLive = choice.type === '活动曲';
 
     if (!isEventLive && choice.progress && choice.progress > 0) {
       // 歌曲游玩：增加进度，处理道具转换
@@ -77,7 +72,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
    *
    * @param choice - 游玩选择项
    */
-  const undo = (choice: EventTheaterChoice) => {
+  const undo = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) - choice.pt;
 
     if (choice.progress && choice.progress > 0) {
@@ -150,7 +145,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
    * @returns 计算结果
    */
   async function calc(
-    choices: EventTheaterChoice[],
+    choices: EventChoice[],
     formData: {
       targetPt: number;
       pt: number;
@@ -246,7 +241,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       }
 
       // Tour 专用约束检查
-      const isEventLive = choice.neededForStep === 'trigger';
+      const isEventLive = choice.type === '活动曲';
 
       // 活动曲倍率条件检查
       if (isEventLive) {

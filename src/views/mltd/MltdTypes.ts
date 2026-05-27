@@ -114,7 +114,7 @@ export interface ParkingResultItem {
   name: string;
   multiplier: string;
   value: number;
-  type?: string; // Tale 活动区分阶段（1st/2nd/3rd/""），其他活动类型为空
+  type?: string; // Tale 活动区分阶段（1st/2nd/3rd/"活动曲"），其他活动类型为空
 }
 
 // Parking 计算结果
@@ -127,16 +127,13 @@ export interface ParkingResult {
 /**
  * MLTD 活动剧场选择项类型定义
  */
-export interface EventTheaterChoice {
+export interface EventChoice {
   name: string;
   type?: string;
   multiplier: string;
   pt: number;
   token: number;
   extra?: boolean;
-  // Tune 活动专用字段
-  neededForStep?: string; // '体力' | '打工票' | '活动曲' | 'trigger' | 'life' | 'life1.2'
-  mag?: string; // 倍率标记（打工票倍率 或 活动曲消费倍率）
   // Tour 活动专用字段
   progress?: number; // 5倍进度增加值
 }

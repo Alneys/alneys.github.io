@@ -8,12 +8,7 @@
 
 import { computed, type Ref } from 'vue';
 import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
-import type {
-  ParkingForm,
-  ParkingResult,
-  ParkingResultItem,
-  EventTheaterChoice,
-} from '../MltdTypes';
+import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
  * Theater 组控分计算子组合式
@@ -24,7 +19,7 @@ export function useMltdEventParkingTheater(form: Ref<ParkingForm>) {
   // ============ 选择项生成 ============
 
   /** 根据活动子类型生成游玩选择列表 */
-  const eventChoices = computed<EventTheaterChoice[]>(() => {
+  const eventChoices = computed<EventChoice[]>(() => {
     if (form.value.eventType === 'anniversary') {
       const isBoostPeriod = form.value.isBoostPeriod ?? false;
       return MLTD_PARKING_CONSTANTS.generateAnniversaryChoices(isBoostPeriod);
@@ -48,7 +43,7 @@ export function useMltdEventParkingTheater(form: Ref<ParkingForm>) {
    * 执行一次操作（修改表单状态）
    * @param choice - 游玩选择项
    */
-  const execute = (choice: EventTheaterChoice) => {
+  const execute = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) + choice.pt;
     form.value.token = (form.value.token ?? 0) + choice.token;
   };
@@ -57,7 +52,7 @@ export function useMltdEventParkingTheater(form: Ref<ParkingForm>) {
    * 撤销一次操作（逆向修改表单状态）
    * @param choice - 游玩选择项
    */
-  const undo = (choice: EventTheaterChoice) => {
+  const undo = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) - choice.pt;
     form.value.token = (form.value.token ?? 0) - choice.token;
   };
@@ -101,7 +96,7 @@ export function useMltdEventParkingTheater(form: Ref<ParkingForm>) {
    * @returns 计算结果
    */
   async function calc(
-    choices: EventTheaterChoice[],
+    choices: EventChoice[],
     formData: { targetPt: number; pt: number; token: number },
   ): Promise<ParkingResult> {
     // 验证：负数参数

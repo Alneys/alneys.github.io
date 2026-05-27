@@ -12,12 +12,7 @@
 
 import { computed, type Ref } from 'vue';
 import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
-import type {
-  ParkingForm,
-  ParkingResult,
-  ParkingResultItem,
-  EventTheaterChoice,
-} from '../MltdTypes';
+import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
  * Tale 活动控分计算子组合式
@@ -28,7 +23,7 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
   // ============ 选择项生成 ============
 
   /** 生成 Tale 活动的游玩选择列表 */
-  const eventChoices = computed<EventTheaterChoice[]>(() => {
+  const eventChoices = computed<EventChoice[]>(() => {
     return MLTD_PARKING_CONSTANTS.generateTaleChoices();
   });
 
@@ -38,7 +33,7 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
    * 执行一次操作（修改表单状态）
    * @param choice - 游玩选择项
    */
-  const execute = (choice: EventTheaterChoice) => {
+  const execute = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) + choice.pt;
     form.value.progress = (form.value.progress ?? 0) + (choice.progress ?? 0);
   };
@@ -47,7 +42,7 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
    * 撤销一次操作（逆向修改表单状态）
    * @param choice - 游玩选择项
    */
-  const undo = (choice: EventTheaterChoice) => {
+  const undo = (choice: EventChoice) => {
     form.value.pt = (form.value.pt ?? 0) - choice.pt;
     form.value.progress = Math.max(0, (form.value.progress ?? 0) - (choice.progress ?? 0));
   };
@@ -100,7 +95,7 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
    * @returns 计算结果
    */
   async function calc(
-    choices: EventTheaterChoice[],
+    choices: EventChoice[],
     formData: { targetPt: number; pt: number; token: number; progress: number },
   ): Promise<ParkingResult> {
     // 验证：负数参数
@@ -119,11 +114,11 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
     }
 
     // 排序优先级：
-    // 1. 活动曲（消耗进度，neededForStep === 'trigger'）优先，pt 获取多的靠前
+    // 1. 活动曲（消耗进度，type === '活动曲'）优先，pt 获取多的靠前
     // 2. 其他选项按 pt 降序
     const sortedChoices = [...choices].sort((a, b) => {
-      const aIsEventLive = a.neededForStep === 'trigger';
-      const bIsEventLive = b.neededForStep === 'trigger';
+      const aIsEventLive = a.type === '活动曲';
+      const bIsEventLive = b.type === '活动曲';
 
       if (aIsEventLive && !bIsEventLive) return -1;
       if (!aIsEventLive && bIsEventLive) return 1;
@@ -139,7 +134,7 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
      * 1. 初始化状态栈，包含 pt 差距（负数表示还需要多少）和进度
      * 2. 遍历选择项列表中的每个游玩方式
      * 3. 检查约束条件：
-     *    - 进度 < 100 时不能打活动曲（neededForStep === 'trigger'）
+     *    - 进度 < 100 时不能打活动曲（type === '活动曲'）
      *    - 进度 ≥ 100 时必须先打活动曲（不能打普通曲）
      *    - 积分不能超过目标
      * 4. 使用 visited / pathSet 进行状态去重，避免循环
@@ -205,13 +200,13 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
         continue;
       }
 
-      // 约束 1：进度 < 100 时不能打活动曲（neededForStep === 'trigger'）
-      if (top.progress < 100 && choice.neededForStep === 'trigger') {
+      // 约束 1：进度 < 100 时不能打活动曲（type === '活动曲'）
+      if (top.progress < 100 && choice.type === '活动曲') {
         continue;
       }
 
       // 约束 2：进度 ≥ 100 时必须先打活动曲（不能打普通曲）
-      if (top.progress >= 100 && choice.neededForStep !== 'trigger') {
+      if (top.progress >= 100 && choice.type !== '活动曲') {
         continue;
       }
 
