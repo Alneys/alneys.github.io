@@ -21,8 +21,7 @@ export function useMltdEventParkingTheater(form: Ref<ParkingForm>) {
   /** 根据活动子类型生成游玩选择列表 */
   const eventChoices = computed<EventChoice[]>(() => {
     if (form.value.eventType === 'anniversary') {
-      const isBoostPeriod = form.value.isBoostPeriod ?? false;
-      return MLTD_PARKING_CONSTANTS.generateAnniversaryChoices(isBoostPeriod);
+      return MLTD_PARKING_CONSTANTS.generateAnniversaryChoices();
     } else if (form.value.eventType === 'trust') {
       const isBoostPeriod = form.value.isBoostPeriod ?? false;
       return MLTD_PARKING_CONSTANTS.generateTrustChoices(isBoostPeriod);

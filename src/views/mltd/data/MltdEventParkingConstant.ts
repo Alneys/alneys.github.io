@@ -179,6 +179,7 @@ function calculateTicketCount(multiplier: number, ticket: number): number {
  * 2. 有推荐曲（1.2倍体力消费）
  * 3. Million Mix 推荐曲可 PUSH + 打工票组合
  * 4. 活动曲积分较低：537（Theater 是 634）
+ * 5. 活动曲所有倍率始终可用，不依赖活动折返
  *
  * 曲目类型区分：
  * - 通常曲：体力等倍消费，打工票等倍消费
@@ -193,33 +194,29 @@ function calculateTicketCount(multiplier: number, ticket: number): number {
  *
  * @returns 按固定顺序生成的选项列表（搜索算法中会按 pt 降序排序）
  */
-function generateAnniversaryChoices(isBoostPeriod: boolean = true): EventChoice[] {
+function generateAnniversaryChoices(): EventChoice[] {
   const entries: EventChoice[] = [];
 
   // 1. 活动曲（消耗活动道具获得大量积分）
-  // 1a. 活动曲（4倍消费，仅活动折返后可用）
-  if (isBoostPeriod) {
-    entries.push({
-      name: ANNIVERSARY_EVENT_LIVE_CONFIG.name,
-      type: '活动曲',
-      multiplier: '4倍',
-      pt: ANNIVERSARY_EVENT_LIVE_CONFIG.pt * 4,
-      token: ANNIVERSARY_EVENT_LIVE_CONFIG.token * 4,
-    });
-  }
+  // 1a. 活动曲（4倍消费）
+  entries.push({
+    name: ANNIVERSARY_EVENT_LIVE_CONFIG.name,
+    type: '活动曲',
+    multiplier: '4倍',
+    pt: ANNIVERSARY_EVENT_LIVE_CONFIG.pt * 4,
+    token: ANNIVERSARY_EVENT_LIVE_CONFIG.token * 4,
+  });
 
-  // 1b. 活动曲（2倍消费，仅活动折返后可用）
-  if (isBoostPeriod) {
-    entries.push({
-      name: ANNIVERSARY_EVENT_LIVE_CONFIG.name,
-      type: '活动曲',
-      multiplier: '2倍',
-      pt: ANNIVERSARY_EVENT_LIVE_CONFIG.pt * 2,
-      token: ANNIVERSARY_EVENT_LIVE_CONFIG.token * 2,
-    });
-  }
+  // 1b. 活动曲（2倍消费）
+  entries.push({
+    name: ANNIVERSARY_EVENT_LIVE_CONFIG.name,
+    type: '活动曲',
+    multiplier: '2倍',
+    pt: ANNIVERSARY_EVENT_LIVE_CONFIG.pt * 2,
+    token: ANNIVERSARY_EVENT_LIVE_CONFIG.token * 2,
+  });
 
-  // 1c. 活动曲（1倍消费，始终可用）
+  // 1c. 活动曲（1倍消费）
   entries.push({
     name: ANNIVERSARY_EVENT_LIVE_CONFIG.name,
     type: '活动曲',
@@ -945,7 +942,6 @@ export const EVENT_PARKING_NOTICES = {
   ],
   anniversary: [
     '周年活动有每日推荐曲和普通曲的区别，推荐曲有 1.2 倍奖励',
-    '活动曲 2倍/4倍 消费仅在活动折返后可用',
     '由于向上取整，消耗1倍打工票游玩两次，与消耗2倍打工票游玩一次的结果可能并不一样',
   ],
   trust: [
@@ -990,7 +986,7 @@ export const EVENT_PARKING_TIPS = {
     '使用打工票游玩普通曲时：基础积分 × 打工票倍率（向上取整）',
     '消耗体力游玩推荐曲时：基础积分 × 1.2（向上取整）',
     '使用打工票游玩推荐曲时：(基础积分 × 1.2（向上取整）) × 打工票倍率（向上取整）',
-    '活动曲有 1倍/2倍/4倍 三种消费倍率，2倍/4倍仅在活动折返后可用',
+    '活动曲有 1倍/2倍/4倍 三种消费倍率',
   ],
   trust: [
     '消耗 1 倍体力游玩时获得的积分即为基础积分',
