@@ -134,9 +134,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8" :xs="24">
-                <el-form-item label="5倍进度" prop="liveProgress">
+                <el-form-item label="5倍进度" prop="eventLiveProgress">
                   <el-input
-                    v-model.number="form.liveProgress"
+                    v-model.number="form.eventLiveProgress"
                     :min="0"
                     :max="40"
                     type="number"
@@ -151,8 +151,8 @@
             <el-row v-if="form.eventType === 'tour'" :gutter="16">
               <el-col :span="24" :xs="24">
                 <el-form-item label=" ">
-                  <el-button @click="form.liveProgress = 40">5倍进度设为最大</el-button>
-                  <el-button @click="form.liveProgress = 0">5倍进度设为空</el-button>
+                  <el-button @click="form.eventLiveProgress = 40">5倍进度设为最大</el-button>
+                  <el-button @click="form.eventLiveProgress = 0">5倍进度设为空</el-button>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -503,7 +503,7 @@ const statusTableData = computed(() => {
       },
       {
         item: 'Live进度',
-        value: `${form.value.liveProgress ?? 0}`,
+        value: `${form.value.eventLiveProgress ?? 0}`,
       },
       {
         item: '折返状态',

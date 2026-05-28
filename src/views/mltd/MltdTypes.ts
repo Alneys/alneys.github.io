@@ -103,7 +103,7 @@ export interface ParkingForm {
   isBoostPeriod?: boolean;
   // Tour 专属字段
   itemProgress?: number; // 道具进度（0-19）
-  liveProgress?: number; // 5倍进度
+  eventLiveProgress?: number; // 5倍进度
   // isBoostPeriod 同时用于 Tune（活动折返）和 Tour（已折返/可5倍）
   // Tale 专属字段
   progress?: number; // 进度（0-99+，≥100 表示 Event Live 已出现）
@@ -134,6 +134,5 @@ export interface EventChoice {
   pt: number;
   token: number;
   extra?: boolean;
-  // Tour 活动专用字段
-  progress?: number; // 5倍进度增加值
+  progress?: number;
 }

@@ -56,12 +56,12 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       }
 
       form.value.itemProgress = newItemProgress;
-      form.value.liveProgress = (form.value.liveProgress ?? 0) + choice.progress;
+      form.value.eventLiveProgress = (form.value.eventLiveProgress ?? 0) + choice.progress;
       form.value.token = newToken;
     } else if (isEventLive) {
       // 活动曲：消耗道具，重置 5 倍进度
       form.value.token = (form.value.token ?? 0) + choice.token;
-      form.value.liveProgress = 0;
+      form.value.eventLiveProgress = 0;
     }
   };
 
@@ -81,7 +81,10 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       const progressToUndo = choice.progress;
 
       // 减少 5 倍进度
-      form.value.liveProgress = Math.max(0, (form.value.liveProgress ?? 0) - progressToUndo);
+      form.value.eventLiveProgress = Math.max(
+        0,
+        (form.value.eventLiveProgress ?? 0) - progressToUndo,
+      );
 
       // 处理道具进度逆向转换
       if (currentProgress >= progressToUndo) {
@@ -104,7 +107,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
     pt: form.value.pt ?? 0,
     token: form.value.token ?? 0,
     itemProgress: form.value.itemProgress ?? 0,
-    liveProgress: form.value.liveProgress ?? 0,
+    eventLiveProgress: form.value.eventLiveProgress ?? 0,
     isBoostPeriod: form.value.isBoostPeriod ?? false,
   });
 
@@ -117,13 +120,13 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
     pt: number;
     token: number;
     itemProgress: number;
-    liveProgress: number;
+    eventLiveProgress: number;
     isBoostPeriod: boolean;
   }) => {
     form.value.pt = snapshot.pt;
     form.value.token = snapshot.token;
     form.value.itemProgress = snapshot.itemProgress;
-    form.value.liveProgress = snapshot.liveProgress;
+    form.value.eventLiveProgress = snapshot.eventLiveProgress;
     form.value.isBoostPeriod = snapshot.isBoostPeriod;
   };
 
@@ -151,7 +154,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       pt: number;
       token: number;
       itemProgress: number;
-      liveProgress: number;
+      eventLiveProgress: number;
       isBoostPeriod: boolean;
     },
   ): Promise<ParkingResult> {
@@ -161,7 +164,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       formData.pt < 0 ||
       formData.token < 0 ||
       formData.itemProgress < 0 ||
-      formData.liveProgress < 0
+      formData.eventLiveProgress < 0
     ) {
       return { flag: false, message: '参数不能为负数' };
     }
@@ -184,13 +187,13 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
     /**
      * Tour 栈节点结构
      *
-     * 扩展状态：ptDiff, token, itemProgress, liveProgress
+     * 扩展状态：ptDiff, token, itemProgress, eventLiveProgress
      */
     interface TourStackNode {
       ptDiff: number;
       token: number;
       itemProgress: number;
-      liveProgress: number;
+      eventLiveProgress: number;
       stepIndex: number;
       viaStepIndex?: number;
     }
@@ -202,7 +205,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
         ptDiff: formData.pt - formData.targetPt,
         token: formData.token,
         itemProgress: formData.itemProgress,
-        liveProgress: formData.liveProgress,
+        eventLiveProgress: formData.eventLiveProgress,
         stepIndex: 0,
       },
     ];
@@ -246,7 +249,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       // 活动曲倍率条件检查
       if (isEventLive) {
         // 需要 5 倍进度达到 40
-        if (top.liveProgress < 40) continue;
+        if (top.eventLiveProgress < 40) continue;
         // 3 倍道具消耗需要 isBoostPeriod
         if (choice.token === -3 && !formData.isBoostPeriod) continue;
       }
@@ -255,7 +258,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       let newItem = top.token + choice.token;
       const newPtDiff = top.ptDiff + choice.pt;
       let newItemProgress = top.itemProgress + (choice.progress ?? 0);
-      let newLiveProgress = top.liveProgress + (choice.progress ?? 0);
+      let newLiveProgress = top.eventLiveProgress + (choice.progress ?? 0);
 
       // 道具进度满 20 转换 1 个道具
       if (newItemProgress >= 20) {
@@ -284,7 +287,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
           ptDiff: newPtDiff,
           token: newItem,
           itemProgress: newItemProgress,
-          liveProgress: newLiveProgress,
+          eventLiveProgress: newLiveProgress,
           stepIndex: 0,
           viaStepIndex: currentStepIndex,
         });
@@ -296,7 +299,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
         ptDiff: newPtDiff,
         token: newItem,
         itemProgress: newItemProgress,
-        liveProgress: newLiveProgress,
+        eventLiveProgress: newLiveProgress,
         stepIndex: 0,
         viaStepIndex: currentStepIndex,
       });

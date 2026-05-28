@@ -33,7 +33,7 @@ type ParkingSnapshot =
       pt: number;
       token: number;
       itemProgress: number;
-      liveProgress: number;
+      eventLiveProgress: number;
       isBoostPeriod: boolean;
     }
   | { targetPt: number; pt: number; token: number; progress: number }
@@ -59,7 +59,7 @@ export const createDefaultParkingForm = (): ParkingForm => ({
   isBoostPeriod: true,
   // Tour 专属字段默认值
   itemProgress: 0,
-  liveProgress: 0,
+  eventLiveProgress: 0,
   // Tale 专属字段默认值
   progress: 0,
 });
