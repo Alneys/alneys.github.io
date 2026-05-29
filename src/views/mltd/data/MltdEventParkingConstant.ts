@@ -907,6 +907,17 @@ function generateTourChoices(isBoostPeriod: boolean = true): EventChoice[] {
 }
 
 /**
+ * DFS 搜索参数配置
+ * @description 用于所有活动类型的控分计算算法
+ */
+export const DFS_CONFIG = {
+  /** 每隔多少次迭代执行一次异步暂停 */
+  iterationPauseInterval: 100000,
+  /** 最大迭代次数限制（防止无限循环） */
+  maxIterations: 10000000,
+} as const;
+
+/**
  * MLTD 活动控分相关函数
  */
 export const MLTD_PARKING_CONSTANTS = {

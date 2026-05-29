@@ -7,7 +7,7 @@
  */
 
 import { computed, type Ref } from 'vue';
-import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
+import { MLTD_PARKING_CONSTANTS, DFS_CONFIG } from '../data/MltdEventParkingConstant';
 import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
@@ -75,14 +75,6 @@ export function useMltdEventParkingTheater(form: Ref<ParkingForm>) {
   };
 
   // ============ DFS 计算算法 ============
-
-  /** DFS 搜索参数配置 */
-  const DFS_CONFIG = {
-    /** 每隔多少次迭代执行一次异步暂停 */
-    iterationPauseInterval: 100000,
-    /** 最大迭代次数限制（防止无限循环） */
-    maxIterations: 10000000,
-  } as const;
 
   /**
    * 活动控分计算算法（Theater / Anniversary / Trust / Tune 通用）

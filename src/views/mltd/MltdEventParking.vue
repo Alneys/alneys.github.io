@@ -350,7 +350,7 @@
                     <template #default="{ row }">
                       <el-button-group v-if="!row.highlight && row.rawItem">
                         <el-button
-                          v-if="!isTourEventLiveRow(row)"
+                          v-if="!isEventLiveRow(row)"
                           :icon="Plus"
                           size="small"
                           :disabled="row.count >= getInitialCount(row.rawItem)"
@@ -448,36 +448,12 @@ const hasExecutedOperations = computed(() => {
 
 // 当前活动类型的注意事项
 const currentNotices = computed(() => {
-  const eventType = form.value.eventType;
-  if (
-    eventType === 'theater' ||
-    eventType === 'anniversary' ||
-    eventType === 'trust' ||
-    eventType === 'tune' ||
-    eventType === 'tour' ||
-    eventType === 'tale' ||
-    eventType === 'treasure'
-  ) {
-    return EVENT_PARKING_NOTICES[eventType];
-  }
-  return [];
+  return (EVENT_PARKING_NOTICES as Record<string, readonly string[]>)[form.value.eventType] ?? [];
 });
 
 // 当前活动类型的提示信息
 const currentTips = computed(() => {
-  const eventType = form.value.eventType;
-  if (
-    eventType === 'theater' ||
-    eventType === 'anniversary' ||
-    eventType === 'trust' ||
-    eventType === 'tune' ||
-    eventType === 'tour' ||
-    eventType === 'tale' ||
-    eventType === 'treasure'
-  ) {
-    return EVENT_PARKING_TIPS[eventType];
-  }
-  return [];
+  return (EVENT_PARKING_TIPS as Record<string, readonly string[]>)[form.value.eventType] ?? [];
 });
 
 // 当前状态表格数据
@@ -773,13 +749,13 @@ function highlightRowClassName({ row }: { row: PlanTableRow }) {
 }
 
 // 表格单元格样式
-function monoCellClassName({ column }: { column: any }) {
+function monoCellClassName({ column }: { column: { property: string } }) {
   const monoColumnProps = ['value', 'count', 'pt', 'token'];
   return monoColumnProps.includes(column.property) ? 'font-mono' : '';
 }
 
 // 判断是否为 Tour 或 Tale 活动的 Event Live 行
-function isTourEventLiveRow(row: PlanTableRow): boolean {
+function isEventLiveRow(row: PlanTableRow): boolean {
   if (form.value.eventType !== 'tour' && form.value.eventType !== 'tale') return false;
   const choice = eventChoices.value.find(
     (c: EventChoice) =>

@@ -11,7 +11,7 @@
  */
 
 import { computed, type Ref } from 'vue';
-import { MLTD_PARKING_CONSTANTS } from '../data/MltdEventParkingConstant';
+import { MLTD_PARKING_CONSTANTS, DFS_CONFIG } from '../data/MltdEventParkingConstant';
 import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
@@ -73,12 +73,6 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
   };
 
   // ============ DFS 计算算法 ============
-
-  /** DFS 搜索参数配置 */
-  const DFS_CONFIG = {
-    iterationPauseInterval: 100000,
-    maxIterations: 10000000,
-  } as const;
 
   /**
    * Tale 活动控分计算算法

@@ -172,19 +172,27 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   };
 
   /**
+   * 在初始快照中查找对应方案项
+   * @param item - 方案项
+   * @returns 匹配的快照项（如有）
+   */
+  const findSnapshotItem = (item: ParkingResultItem) => {
+    return parkingResultSnapshot.value.find(
+      (s) =>
+        s.name === item.name &&
+        s.multiplier === item.multiplier &&
+        (item.type === undefined || s.type === item.type),
+    );
+  };
+
+  /**
    * 获取方案项的剩余次数
    * @param item - 方案项
    * @returns 剩余次数
    */
   const getRemainingCount = (item: ParkingResultItem): number => {
     const key = getOperationKey(item);
-    const snapshotItem = parkingResultSnapshot.value.find(
-      (s) =>
-        s.name === item.name &&
-        s.multiplier === item.multiplier &&
-        (item.type === undefined || s.type === item.type),
-    );
-    const initialCount = snapshotItem?.value ?? 0;
+    const initialCount = findSnapshotItem(item)?.value ?? 0;
     const executed = executedCounts.value[key] ?? 0;
     return initialCount - executed;
   };
@@ -195,13 +203,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * @returns 初始次数
    */
   const getInitialCount = (item: ParkingResultItem): number => {
-    const snapshotItem = parkingResultSnapshot.value.find(
-      (s) =>
-        s.name === item.name &&
-        s.multiplier === item.multiplier &&
-        (item.type === undefined || s.type === item.type),
-    );
-    return snapshotItem?.value ?? 0;
+    return findSnapshotItem(item)?.value ?? 0;
   };
 
   // ================================================================
