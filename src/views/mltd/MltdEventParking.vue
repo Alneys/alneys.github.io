@@ -172,6 +172,14 @@
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-row v-if="form.eventType === 'tale'" :gutter="16">
+              <el-col :span="24" :xs="24">
+                <el-form-item label=" ">
+                  <el-button @click="form.progress = 100">进度设为100</el-button>
+                  <el-button @click="form.progress = 0">进度设为0</el-button>
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-row :gutter="16">
               <el-col :span="8" :xs="24" v-if="form.eventType !== 'tale'">
                 <el-form-item label="活动折返">
