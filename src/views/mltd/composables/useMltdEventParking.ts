@@ -74,27 +74,27 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   // 1. 实例化所有子组合式
   // ================================================================
 
-  const theater = useMltdEventParkingTheater(form);
-  const tour = useMltdEventParkingTour(form);
-  const tale = useMltdEventParkingTale(form);
-  const treasure = useMltdEventParkingTreasure(form);
+  const useTheater = useMltdEventParkingTheater(form);
+  const useTour = useMltdEventParkingTour(form);
+  const useTale = useMltdEventParkingTale(form);
+  const useTreasure = useMltdEventParkingTreasure(form);
 
   // ================================================================
   // 2. 根据 eventType 选择当前活跃的子组合式
   // ================================================================
 
   /** 当前活动类型对应的子组合式实例 */
-  const active = computed(() => {
+  const activeEventParkingComposable = computed(() => {
     switch (form.value.eventType) {
       case 'tour':
-        return tour;
+        return useTour;
       case 'tale':
-        return tale;
+        return useTale;
       case 'treasure':
-        return treasure;
+        return useTreasure;
       default:
         // theater / anniversary / trust / tune
-        return theater;
+        return useTheater;
     }
   });
 
@@ -121,7 +121,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * 根据活动类型返回对应的选择项列表，并根据开关过滤 extra 选项
    */
   const eventChoices = computed<EventChoice[]>(() => {
-    let choices = active.value.eventChoices.value;
+    let choices = activeEventParkingComposable.value.eventChoices.value;
 
     // 当禁用更多倍率时，过滤掉 extra: true 的选项
     if (form.value.enableExtraChoices === false) {
@@ -227,7 +227,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if (!choice) return;
 
     // 委托给活跃子组合式执行类型相关的表单变更
-    active.value.execute(choice);
+    activeEventParkingComposable.value.execute(choice);
 
     // 更新执行次数
     executedCounts.value[key] = (executedCounts.value[key] ?? 0) + 1;
@@ -253,7 +253,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if (!choice) return;
 
     // 委托给活跃子组合式执行类型相关的逆向变更
-    active.value.undo(choice);
+    activeEventParkingComposable.value.undo(choice);
 
     // 更新执行次数
     executedCounts.value[key] = (executedCounts.value[key] ?? 0) - 1;
@@ -272,26 +272,13 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     preprocessingForm();
 
     const choices = eventChoices.value;
+    const comp = activeEventParkingComposable.value;
+    const snapshot = comp.createSnapshot();
+    formSnapshot.value = snapshot as ParkingSnapshot;
 
-    // 按活动类型路由到对应的计算函数
-    if (form.value.eventType === 'tour') {
-      const snapshot = tour.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await tour.calc(choices, snapshot);
-    } else if (form.value.eventType === 'tale') {
-      const snapshot = tale.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await tale.calc(choices, snapshot);
-    } else if (form.value.eventType === 'treasure') {
-      const snapshot = treasure.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await treasure.calc(choices, snapshot);
-    } else {
-      // theater / anniversary / trust / tune
-      const snapshot = theater.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await theater.calc(choices, snapshot);
-    }
+    // 使用类型断言绕过不同子组合式的 calc 签名差异
+    type CalcFn = (c: EventChoice[], s: ParkingSnapshot) => Promise<ParkingResult>;
+    parkingResult.value = await (comp.calc as CalcFn)(choices, snapshot);
 
     // 保存初始方案快照并重置执行状态
     if (parkingResult.value?.flag && parkingResult.value.result) {
@@ -311,19 +298,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   const resetToInitial = () => {
     if (!formSnapshot.value) return;
 
-    // 按活动类型委托给对应的子组合式恢复快照
-    if (form.value.eventType === 'tour') {
-      tour.resetToSnapshot(formSnapshot.value as Parameters<typeof tour.resetToSnapshot>[0]);
-    } else if (form.value.eventType === 'tale') {
-      tale.resetToSnapshot(formSnapshot.value as Parameters<typeof tale.resetToSnapshot>[0]);
-    } else if (form.value.eventType === 'treasure') {
-      treasure.resetToSnapshot(
-        formSnapshot.value as Parameters<typeof treasure.resetToSnapshot>[0],
-      );
-    } else {
-      theater.resetToSnapshot(formSnapshot.value as Parameters<typeof theater.resetToSnapshot>[0]);
-    }
-
+    type ResetFn = (s: ParkingSnapshot) => void;
+    (activeEventParkingComposable.value.resetToSnapshot as ResetFn)(formSnapshot.value);
     executedCounts.value = {};
   };
 

@@ -449,6 +449,49 @@ function formatToken(n: number): string {
   return formatNumber(n); // 负数已经带有负号
 }
 
+// 在 eventChoices 中查找匹配的游玩选择项
+function findEventChoice(name: string, multiplier: string, type?: string): EventChoice | undefined {
+  return eventChoices.value.find((c) => {
+    if (c.name !== name || c.multiplier !== multiplier) return false;
+    if (type !== undefined && c.type !== type) return false;
+    return true;
+  });
+}
+
+// 根据活动类型获取单次游玩的 token/进度显示文本
+function getTokenDisplayForChoice(choice: EventChoice): string {
+  if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
+    return `+${choice.progress}/20`;
+  }
+  if (form.value.eventType === 'tale') {
+    return formatToken(choice.progress ?? 0);
+  }
+  if (form.value.eventType === 'treasure') {
+    return '0';
+  }
+  return formatToken(choice.token);
+}
+
+// 根据活动类型获取总 token/进度数值与显示文本
+function getTotalTokenDisplay(
+  choice: EventChoice | undefined,
+  count: number,
+): { total: number; display: string } {
+  if (form.value.eventType === 'tour' && choice?.progress && choice.progress > 0) {
+    const progressTotal = choice.progress * count;
+    return { total: Math.floor(progressTotal / 20), display: `+${progressTotal}/20` };
+  }
+  if (form.value.eventType === 'tale') {
+    const total = (choice?.progress ?? 0) * count;
+    return { total, display: formatToken(total) };
+  }
+  if (form.value.eventType === 'treasure') {
+    return { total: 0, display: '0' };
+  }
+  const total = (choice?.token ?? 0) * count;
+  return { total, display: formatToken(total) };
+}
+
 // 是否有已执行的操作（用于重置按钮的禁用状态）
 const hasExecutedOperations = computed(() => {
   return Object.values(executedCounts.value).some((count) => count > 0);
@@ -616,35 +659,14 @@ const planTableData = computed<PlanTableRow[]>(() => {
   if (!parkingResult.value?.result) return [];
 
   const data: PlanTableRow[] = parkingResult.value.result.map((item) => {
-    const choice = eventChoices.value.find(
-      (c: EventChoice) =>
-        c.name === item.name &&
-        c.multiplier === item.multiplier &&
-        (item.type === undefined || c.type === item.type),
-    );
+    const choice = findEventChoice(item.name, item.multiplier, item.type);
     const remainingCount = getRemainingCount(item);
     const ptTotal = (choice?.pt ?? 0) * remainingCount;
 
-    // Tour 活动：歌曲游玩显示进度带来的道具收益
-    let tokenTotal: number;
-    let tokenDisplay: string;
-    if (form.value.eventType === 'tour' && choice?.progress && choice.progress > 0) {
-      // 歌曲游玩增加进度，计算总进度
-      const progressTotal = choice.progress * remainingCount;
-      tokenTotal = Math.floor(progressTotal / 20); // 完整道具数量
-      tokenDisplay = `+${progressTotal}/20`;
-    } else if (form.value.eventType === 'tale') {
-      // Tale 活动：显示进度变化总和
-      tokenTotal = (choice?.progress ?? 0) * remainingCount;
-      tokenDisplay = formatToken(tokenTotal);
-    } else if (form.value.eventType === 'treasure') {
-      // Treasure 活动：无道具系统
-      tokenTotal = 0;
-      tokenDisplay = '0';
-    } else {
-      tokenTotal = (choice?.token ?? 0) * remainingCount;
-      tokenDisplay = formatToken(tokenTotal);
-    }
+    const { total: tokenTotal, display: tokenDisplay } = getTotalTokenDisplay(
+      choice,
+      remainingCount,
+    );
 
     return {
       name: item.name,
@@ -672,9 +694,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
     // 计算总进度（从所有歌曲游玩中）
     let totalProgress = 0;
     for (const row of data) {
-      const choice = eventChoices.value.find(
-        (c: EventChoice) => c.name === row.name && c.multiplier === row.multiplier,
-      );
+      const choice = findEventChoice(row.name, row.multiplier);
       if (choice?.progress && choice.progress > 0) {
         totalProgress += choice.progress * row.count;
       }
@@ -685,9 +705,7 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
     // Event Live 消耗的道具
     const eventLiveToken = data.reduce((sum, row) => {
-      const choice = eventChoices.value.find(
-        (c: EventChoice) => c.name === row.name && c.multiplier === row.multiplier,
-      );
+      const choice = findEventChoice(row.name, row.multiplier);
       if (choice?.token && choice.token < 0) {
         return sum + choice.token * row.count;
       }
@@ -725,30 +743,13 @@ const planTableData = computed<PlanTableRow[]>(() => {
 
 // 分数表数据
 const pointTableData = computed(() => {
-  return eventChoices.value.map((choice) => {
-    // Tour 活动：歌曲游玩显示进度带来的道具收益
-    let tokenDisplay: string;
-    if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
-      // 歌曲游玩增加进度，显示为 "+进度/20"
-      tokenDisplay = `+${choice.progress}/20`;
-    } else if (form.value.eventType === 'tale') {
-      // Tale 活动：显示进度变化
-      tokenDisplay = formatToken(choice.progress ?? 0);
-    } else if (form.value.eventType === 'treasure') {
-      // Treasure 活动：无道具系统
-      tokenDisplay = '0';
-    } else {
-      tokenDisplay = formatToken(choice.token);
-    }
-
-    return {
-      name: choice.name,
-      type: choice.type ?? '',
-      multiplier: choice.multiplier,
-      pt: choice.pt.toLocaleString('en-US'),
-      token: tokenDisplay,
-    };
-  });
+  return eventChoices.value.map((choice) => ({
+    name: choice.name,
+    type: choice.type ?? '',
+    multiplier: choice.multiplier,
+    pt: formatNumber(choice.pt),
+    token: getTokenDisplayForChoice(choice),
+  }));
 });
 
 // 表格行样式
@@ -765,12 +766,7 @@ function monoCellClassName({ column }: { column: { property: string } }) {
 // 判断是否为 Tour 或 Tale 活动的 Event Live 行
 function isEventLiveRow(row: PlanTableRow): boolean {
   if (form.value.eventType !== 'tour' && form.value.eventType !== 'tale') return false;
-  const choice = eventChoices.value.find(
-    (c: EventChoice) =>
-      c.name === row.name &&
-      c.multiplier === row.multiplier &&
-      (row.itemType === undefined || c.type === row.itemType),
-  );
+  const choice = findEventChoice(row.name, row.multiplier, row.itemType);
   return choice?.type === '活动曲';
 }
 

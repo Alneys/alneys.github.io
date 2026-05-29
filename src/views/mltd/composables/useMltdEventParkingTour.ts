@@ -319,6 +319,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
             name: choice.name,
             multiplier: choice.multiplier,
             value,
+            type: choice.type || undefined,
           });
         }
       }
