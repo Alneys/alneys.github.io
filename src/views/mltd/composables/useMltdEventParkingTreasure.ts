@@ -82,10 +82,9 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
   /**
    * 活动控分计算算法（Treasure 专用）
    *
-   * 使用深度优先搜索（DFS）+ 状态去重算法找到从当前积分到目标积分的游玩路径。
+   * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的游玩路径。
    *
-   * 状态特征：pt 单向递增，无消耗系统（所有选项 token = 0），搜索空间无循环风险。
-   * 使用 visited Set + pathSet Set 按 ptDiff 值去重，防止不同路径到达相同 ptDiff 时的重复探索。
+   * 状态特征：pt 单向递增，无消耗系统（所有选项 token = 0）。
    *
    * @param choices - 游玩选择项列表
    * @param formData - 表单数据（已预处理）
@@ -134,17 +133,10 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
       viaStepIndex?: number;
     }
 
-    // ---- 状态去重 ----
-    // visited: 已完全探索过的 ptDiff 值（所有子步骤都已回溯）
-    const visited = new Set<number>();
-    // pathSet: 当前 DFS 路径上的 ptDiff 值（防止不同路径到达相同状态）
-    const pathSet = new Set<number>();
-
     // ---- 搜索初始化 ----
     let iterations = 0;
     const startPtDiff = formData.pt - formData.targetPt;
     const stack: StackNode[] = [{ ptDiff: startPtDiff, stepIndex: 0 }];
-    pathSet.add(startPtDiff);
 
     // ---- DFS 主体循环 ----
     while (stack.length > 0) {
@@ -169,8 +161,6 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
 
       // 所有步骤都已尝试 → 回溯
       if (top.stepIndex >= sortedChoices.length) {
-        visited.add(top.ptDiff);
-        pathSet.delete(top.ptDiff);
         stack.pop();
         continue;
       }
@@ -188,12 +178,8 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
       // 积分不能超过目标
       if (newPtDiff > 0) continue;
 
-      // 状态去重：如果新 ptDiff 已访问或在当前路径上，跳过
-      if (visited.has(newPtDiff) || pathSet.has(newPtDiff)) continue;
-
       // 找到解
       if (newPtDiff === 0) {
-        pathSet.add(newPtDiff);
         stack.push({
           ptDiff: newPtDiff,
           stepIndex: 0,
@@ -203,7 +189,6 @@ export function useMltdEventParkingTreasure(form: Ref<ParkingForm>) {
       }
 
       // 继续深入搜索
-      pathSet.add(newPtDiff);
       stack.push({
         ptDiff: newPtDiff,
         stepIndex: 0,

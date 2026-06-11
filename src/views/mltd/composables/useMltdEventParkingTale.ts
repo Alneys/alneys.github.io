@@ -77,11 +77,9 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
   /**
    * 活动控分计算算法（Tale 专用）
    *
-   * 使用深度优先搜索（DFS）+ 状态去重算法找到从当前积分到目标积分的游玩路径。
+   * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
    *
-   * 状态特征：pt 单向递增，进度可增可减（3rd 增加、活动曲减少），
-   * 搜索空间存在循环可能性，因此使用 visited Set + pathSet Set 双重状态去重。
-   * 状态哈希键为 `${ptDiff}:${progress}`。
+   * 状态特征：pt 单向递增，进度可增可减（3rd 增加、活动曲减少）。
    *
    * @param choices - 游玩选择项列表
    * @param formData - 表单数据（已预处理）
@@ -128,18 +126,10 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
       viaStepIndex?: number;
     }
 
-    // ---- 状态去重 ----
-    // visited: 已完全探索过的状态（所有子步骤都已回溯）
-    const visited = new Set<string>();
-    // pathSet: 当前 DFS 路径上的状态（防止环）
-    const pathSet = new Set<string>();
-
     // ---- 搜索初始化 ----
     let iterations = 0;
     const startPtDiff = formData.pt - formData.targetPt;
-    const startHash = `${startPtDiff}:${formData.progress}`;
     const stack: StackNode[] = [{ ptDiff: startPtDiff, progress: formData.progress, stepIndex: 0 }];
-    pathSet.add(startHash);
 
     // ---- DFS 主体循环 ----
     while (stack.length > 0) {
@@ -164,9 +154,6 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
 
       // 所有步骤都已尝试 → 回溯
       if (top.stepIndex >= sortedChoices.length) {
-        const hash = `${top.ptDiff}:${top.progress}`;
-        visited.add(hash);
-        pathSet.delete(hash);
         stack.pop();
         continue;
       }
@@ -191,13 +178,8 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
       // 积分不能超过目标
       if (newPtDiff > 0) continue;
 
-      // 状态去重：如果新状态已访问或在当前路径上，跳过
-      const newHash = `${newPtDiff}:${newProgress}`;
-      if (visited.has(newHash) || pathSet.has(newHash)) continue;
-
       // 找到解
       if (newPtDiff === 0) {
-        pathSet.add(newHash);
         stack.push({
           ptDiff: newPtDiff,
           progress: newProgress,
@@ -208,7 +190,6 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
       }
 
       // 继续深入搜索
-      pathSet.add(newHash);
       stack.push({
         ptDiff: newPtDiff,
         progress: newProgress,
