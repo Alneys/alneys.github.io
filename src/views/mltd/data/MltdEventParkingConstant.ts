@@ -42,19 +42,6 @@ const TICKET_MULTIPLIER_CONFIG = {
 } as const;
 
 /**
- * 打工票消耗倍率配置 - Anniversary 活动
- * @description 从 15 到 1，每个值乘以 0.7 得到积分倍率
- * 原始倍率：[15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
- * 积分倍率：[10.5, 9.8, 9.1, 8.4, 7.7, 7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
- */
-const ANNIVERSARY_TICKET_CONFIG = {
-  /** 最大倍率 */
-  maxMultiplier: 15,
-  /** 积分计算系数 */
-  pointCoefficient: 0.7,
-} as const;
-
-/**
  * 活动曲配置 - Theater 活动
  * @description 消耗活动道具获得大量积分
  */
@@ -64,74 +51,6 @@ const EVENT_LIVE_CONFIG_FOR_PARKING = {
   pt: 634,
   token: -180,
 } as const;
-
-/**
- * 活动曲配置 - Anniversary 活动
- * @description 消耗活动道具获得大量积分（pt 比 Theater 低）
- */
-const ANNIVERSARY_EVENT_LIVE_CONFIG = {
-  name: '活动曲',
-  multiplier: '1倍',
-  pt: 537,
-  token: -180,
-} as const;
-
-/**
- * Trust 活动分数加成倍率
- * @description Trust 活动固定 1.5 倍分数加成，只对积分有效，对活动道具无效
- */
-const TRUST_POINT_BONUS = 1.5;
-
-/**
- * 活动曲配置 - Trust 活动
- * @description Trust 活动有 1倍/2倍/4倍 三个版本
- */
-const TRUST_EVENT_LIVE_CONFIGS = [
-  { name: '活动曲', multiplier: '4倍', pt: 3708, token: -720 },
-  { name: '活动曲', multiplier: '2倍', pt: 1854, token: -360 },
-  { name: '活动曲', multiplier: '1倍', pt: 927, token: -180 },
-] as const;
-
-/**
- * MLTD 活动控分 - Tune 歌曲配置
- * @description 用于动态生成游玩选项
- * Tune 活动曲目配置（体力等倍消耗时获得的积分）
- */
-interface SongConfigForTune {
-  name: string;
-  value: number;
-}
-
-const TUNE_SONG_CONFIGS: SongConfigForTune[] = [
-  { name: 'Million Mix', value: 75 },
-  { name: '6 Mix', value: 54 },
-  { name: '2 Mix+', value: 52 },
-  { name: '4 Mix', value: 39 },
-  { name: '2 Mix', value: 25 },
-];
-
-/**
- * 打工票消耗倍率配置 - Tune 活动
- * @description 从 1 到 10，每个值乘以 0.7 得到积分倍率
- * 原始倍率：[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
- * 积分倍率：[0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6, 6.3, 7.0]
- * 与其他活动相反：Tune 使用升序（1→10），其他活动使用降序（10→1）
- */
-const TUNE_TICKET_CONFIG = {
-  maxMultiplier: 10,
-  pointCoefficient: 0.7,
-} as const;
-
-/**
- * 活动曲基础积分（加成前）
- */
-const TUNE_EVENT_LIVE_BASE_POINT = 490;
-
-/**
- * 活动曲道具消耗基础值
- * 1倍 = -140, 2倍 = -280, 4倍 = -560
- */
-const TUNE_EVENT_LIVE_TRIGGER_BASE = 140;
 
 /**
  * 生成打工票消耗倍率数组（从大到小）
@@ -170,6 +89,112 @@ function calculateTicketPoint(basePoint: number, multiplier: number): number {
 function calculateTicketCount(multiplier: number, ticket: number): number {
   return multiplier * ticket;
 }
+
+/**
+ * 生成 Theater 活动的完整游玩选项列表
+ *
+ * 生成顺序：
+ * 1. 活动曲（消耗活动道具）
+ * 2. 体力消耗（体力等倍，按体力消耗大到小）
+ * 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
+ *
+ * @returns 按固定顺序生成的选项列表（搜索算法中会按 pt 降序排序）
+ */
+function generateTheaterChoices(isBoostPeriod: boolean = true): EventChoice[] {
+  const entries: EventChoice[] = [];
+
+  // 1. 活动曲（消耗活动道具获得大量积分）
+  // 1a. 活动曲（4倍消费，仅活动折返后可用）
+  if (isBoostPeriod) {
+    entries.push({
+      name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
+      type: '活动曲',
+      multiplier: '4倍',
+      pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt * 4,
+      token: EVENT_LIVE_CONFIG_FOR_PARKING.token * 4,
+    });
+  }
+
+  // 1b. 活动曲（2倍消费，仅活动折返后可用）
+  if (isBoostPeriod) {
+    entries.push({
+      name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
+      type: '活动曲',
+      multiplier: '2倍',
+      pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt * 2,
+      token: EVENT_LIVE_CONFIG_FOR_PARKING.token * 2,
+    });
+  }
+
+  // 1c. 活动曲（1倍消费，始终可用）
+  entries.push({
+    name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
+    type: '活动曲',
+    multiplier: '1倍',
+    pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt,
+    token: EVENT_LIVE_CONFIG_FOR_PARKING.token,
+  });
+
+  // 2. 体力消耗（体力等倍，按体力消耗大到小）
+  for (const song of SONG_CONFIGS_FOR_PARKING) {
+    entries.push({
+      name: song.name,
+      type: '体力',
+      multiplier: '1倍',
+      pt: song.value,
+      token: song.value,
+    });
+  }
+
+  // 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
+  const multipliers = generateTicketMultipliers();
+  for (const song of SONG_CONFIGS_FOR_PARKING) {
+    for (const multiplier of multipliers) {
+      const ticketPoint = calculateTicketPoint(song.value, multiplier);
+      const ticketCount = calculateTicketCount(multiplier, song.ticket);
+      entries.push({
+        name: song.name,
+        type: '打工票',
+        multiplier: `${(multiplier * 0.7).toFixed(1)} 倍`,
+        pt: ticketPoint,
+        token: ticketPoint,
+        extra: multiplier < TICKET_MULTIPLIER_CONFIG.maxMultiplier,
+      });
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * --------------------------------------------------------
+ * Anniversary 活动
+ * --------------------------------------------------------
+ */
+
+/**
+ * 打工票消耗倍率配置 - Anniversary 活动
+ * @description 从 15 到 1，每个值乘以 0.7 得到积分倍率
+ * 原始倍率：[15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+ * 积分倍率：[10.5, 9.8, 9.1, 8.4, 7.7, 7.0, 6.3, 5.6, 4.9, 4.2, 3.5, 2.8, 2.1, 1.4, 0.7]
+ */
+const ANNIVERSARY_TICKET_CONFIG = {
+  /** 最大倍率 */
+  maxMultiplier: 15,
+  /** 积分计算系数 */
+  pointCoefficient: 0.7,
+} as const;
+
+/**
+ * 活动曲配置 - Anniversary 活动
+ * @description 消耗活动道具获得大量积分（pt 比 Theater 低）
+ */
+const ANNIVERSARY_EVENT_LIVE_CONFIG = {
+  name: '活动曲',
+  multiplier: '1倍',
+  pt: 537,
+  token: -180,
+} as const;
 
 /**
  * 生成 Anniversary 活动的完整游玩选项列表
@@ -294,80 +319,26 @@ function generateAnniversaryChoices(): EventChoice[] {
 }
 
 /**
- * 生成 Theater 活动的完整游玩选项列表
- *
- * 生成顺序：
- * 1. 活动曲（消耗活动道具）
- * 2. 体力消耗（体力等倍，按体力消耗大到小）
- * 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
- *
- * @returns 按固定顺序生成的选项列表（搜索算法中会按 pt 降序排序）
+ * --------------------------------------------------------
+ * Trust 活动
+ * --------------------------------------------------------
  */
-function generateTheaterChoices(isBoostPeriod: boolean = true): EventChoice[] {
-  const entries: EventChoice[] = [];
 
-  // 1. 活动曲（消耗活动道具获得大量积分）
-  // 1a. 活动曲（4倍消费，仅活动折返后可用）
-  if (isBoostPeriod) {
-    entries.push({
-      name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
-      type: '活动曲',
-      multiplier: '4倍',
-      pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt * 4,
-      token: EVENT_LIVE_CONFIG_FOR_PARKING.token * 4,
-    });
-  }
+/**
+ * Trust 活动分数加成倍率
+ * @description Trust 活动固定 1.5 倍分数加成，只对积分有效，对活动道具无效
+ */
+const TRUST_POINT_BONUS = 1.5;
 
-  // 1b. 活动曲（2倍消费，仅活动折返后可用）
-  if (isBoostPeriod) {
-    entries.push({
-      name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
-      type: '活动曲',
-      multiplier: '2倍',
-      pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt * 2,
-      token: EVENT_LIVE_CONFIG_FOR_PARKING.token * 2,
-    });
-  }
-
-  // 1c. 活动曲（1倍消费，始终可用）
-  entries.push({
-    name: EVENT_LIVE_CONFIG_FOR_PARKING.name,
-    type: '活动曲',
-    multiplier: '1倍',
-    pt: EVENT_LIVE_CONFIG_FOR_PARKING.pt,
-    token: EVENT_LIVE_CONFIG_FOR_PARKING.token,
-  });
-
-  // 2. 体力消耗（体力等倍，按体力消耗大到小）
-  for (const song of SONG_CONFIGS_FOR_PARKING) {
-    entries.push({
-      name: song.name,
-      type: '体力',
-      multiplier: '1倍',
-      pt: song.value,
-      token: song.value,
-    });
-  }
-
-  // 3. 打工票消耗（按体力消耗大到小，倍率从大到小）
-  const multipliers = generateTicketMultipliers();
-  for (const song of SONG_CONFIGS_FOR_PARKING) {
-    for (const multiplier of multipliers) {
-      const ticketPoint = calculateTicketPoint(song.value, multiplier);
-      const ticketCount = calculateTicketCount(multiplier, song.ticket);
-      entries.push({
-        name: song.name,
-        type: '打工票',
-        multiplier: `${(multiplier * 0.7).toFixed(1)} 倍`,
-        pt: ticketPoint,
-        token: ticketPoint,
-        extra: multiplier < TICKET_MULTIPLIER_CONFIG.maxMultiplier,
-      });
-    }
-  }
-
-  return entries;
-}
+/**
+ * 活动曲配置 - Trust 活动
+ * @description Trust 活动有 1倍/2倍/4倍 三个版本
+ */
+const TRUST_EVENT_LIVE_CONFIGS = [
+  { name: '活动曲', multiplier: '4倍', pt: 3708, token: -720 },
+  { name: '活动曲', multiplier: '2倍', pt: 1854, token: -360 },
+  { name: '活动曲', multiplier: '1倍', pt: 927, token: -180 },
+] as const;
 
 /**
  * 生成 Trust 活动的完整游玩选项列表
@@ -469,6 +440,53 @@ function generateTrustChoices(isBoostPeriod: boolean = true): EventChoice[] {
 }
 
 /**
+ * --------------------------------------------------------
+ * Tune 活动
+ * --------------------------------------------------------
+ */
+
+/**
+ * MLTD 活动控分 - Tune 歌曲配置
+ * @description 用于动态生成游玩选项
+ * Tune 活动曲目配置（体力等倍消耗时获得的积分）
+ */
+interface SongConfigForTune {
+  name: string;
+  value: number;
+}
+
+const TUNE_SONG_CONFIGS: SongConfigForTune[] = [
+  { name: 'Million Mix', value: 75 },
+  { name: '6 Mix', value: 54 },
+  { name: '2 Mix+', value: 52 },
+  { name: '4 Mix', value: 39 },
+  { name: '2 Mix', value: 25 },
+];
+
+/**
+ * 打工票消耗倍率配置 - Tune 活动
+ * @description 从 1 到 10，每个值乘以 0.7 得到积分倍率
+ * 原始倍率：[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+ * 积分倍率：[0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6, 6.3, 7.0]
+ * 与其他活动相反：Tune 使用升序（1→10），其他活动使用降序（10→1）
+ */
+const TUNE_TICKET_CONFIG = {
+  maxMultiplier: 10,
+  pointCoefficient: 0.7,
+} as const;
+
+/**
+ * 活动曲基础积分（加成前）
+ */
+const TUNE_EVENT_LIVE_BASE_POINT = 490;
+
+/**
+ * 活动曲道具消耗基础值
+ * 1倍 = -140, 2倍 = -280, 4倍 = -560
+ */
+const TUNE_EVENT_LIVE_TRIGGER_BASE = 140;
+
+/**
  * 生成 Tune 活动的完整游玩选项列表
  *
  * Tune 特点：
@@ -568,6 +586,12 @@ function generateTuneChoices(bonus: number = 30, isBoostPeriod: boolean = true):
 }
 
 /**
+ * --------------------------------------------------------
+ * Tour 活动
+ * --------------------------------------------------------
+ */
+
+/**
  * Tour 活动歌曲配置
  * @description 用于动态生成游玩选项
  */
@@ -591,6 +615,60 @@ const TOUR_EVENT_LIVE_CONFIGS = [
   { name: '活动曲', point: 1440, trigger: -2, multiplier: '2倍' },
   { name: '活动曲', point: 2160, trigger: -3, multiplier: '3倍' },
 ] as const;
+
+/**
+ * 生成 Tour 活动的游玩选项列表
+ *
+ * Tour 特点：
+ * 1. 活动曲消耗道具获得大量积分，需要5倍进度满足条件
+ * 2. 歌曲游玩获得积分并增加5倍进度
+ * 3. 道具进度满 20 转换 1 个道具
+ * 4. 5倍进度上限 40
+ *
+ * 生成顺序：
+ * 1. 活动曲（消耗道具，按积分降序）
+ * 2. 歌曲游玩（不消耗道具，按积分降序）
+ *
+ * @returns 按积分降序排列的选项列表
+ */
+function generateTourChoices(isBoostPeriod: boolean = true): EventChoice[] {
+  const entries: EventChoice[] = [];
+
+  // 1. 活动曲（消耗道具）
+  for (const config of TOUR_EVENT_LIVE_CONFIGS) {
+    // 3倍活动曲仅在活动折返后可用
+    if (config.trigger === -3 && !isBoostPeriod) continue;
+    entries.push({
+      name: config.name,
+      type: '活动曲',
+      multiplier: config.multiplier,
+      pt: config.point,
+      token: config.trigger,
+      progress: 0, // 活动曲不增加5倍进度
+    });
+  }
+
+  // 2. 歌曲游玩（不消耗道具，获得积分和进度）
+  for (const song of TOUR_SONG_CONFIGS) {
+    entries.push({
+      name: song.name,
+      type: '体力',
+      multiplier: `${song.multiplier}倍`,
+      pt: song.point,
+      token: 0, // 不消耗道具
+      progress: song.progress,
+    });
+  }
+
+  // 按积分降序排序
+  return entries.sort((a, b) => b.pt - a.pt);
+}
+
+/**
+ * --------------------------------------------------------
+ * Treasure 活动
+ * --------------------------------------------------------
+ */
 
 /**
  * Treasure 活动歌曲配置
@@ -720,6 +798,12 @@ function generateTreasureChoices(
 
   return entries;
 }
+
+/**
+ * --------------------------------------------------------
+ * Tale 活动
+ * --------------------------------------------------------
+ */
 
 /**
  * Tale 活动步骤配置
@@ -859,52 +943,10 @@ function generateTaleChoices(): EventChoice[] {
 }
 
 /**
- * 生成 Tour 活动的游玩选项列表
- *
- * Tour 特点：
- * 1. 活动曲消耗道具获得大量积分，需要5倍进度满足条件
- * 2. 歌曲游玩获得积分并增加5倍进度
- * 3. 道具进度满 20 转换 1 个道具
- * 4. 5倍进度上限 40
- *
- * 生成顺序：
- * 1. 活动曲（消耗道具，按积分降序）
- * 2. 歌曲游玩（不消耗道具，按积分降序）
- *
- * @returns 按积分降序排列的选项列表
+ * --------------------------------------------------------
+ * 通用配置与导出
+ * --------------------------------------------------------
  */
-function generateTourChoices(isBoostPeriod: boolean = true): EventChoice[] {
-  const entries: EventChoice[] = [];
-
-  // 1. 活动曲（消耗道具）
-  for (const config of TOUR_EVENT_LIVE_CONFIGS) {
-    // 3倍活动曲仅在活动折返后可用
-    if (config.trigger === -3 && !isBoostPeriod) continue;
-    entries.push({
-      name: config.name,
-      type: '活动曲',
-      multiplier: config.multiplier,
-      pt: config.point,
-      token: config.trigger,
-      progress: 0, // 活动曲不增加5倍进度
-    });
-  }
-
-  // 2. 歌曲游玩（不消耗道具，获得积分和进度）
-  for (const song of TOUR_SONG_CONFIGS) {
-    entries.push({
-      name: song.name,
-      type: '体力',
-      multiplier: `${song.multiplier}倍`,
-      pt: song.point,
-      token: 0, // 不消耗道具
-      progress: song.progress,
-    });
-  }
-
-  // 按积分降序排序
-  return entries.sort((a, b) => b.pt - a.pt);
-}
 
 /**
  * DFS 搜索参数配置
