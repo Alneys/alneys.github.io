@@ -75,13 +75,12 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
   // ============ DFS 计算算法 ============
 
   /**
-   * Tale 活动控分计算算法
+   * 活动控分计算算法（Tale 专用）
    *
    * 使用深度优先搜索（DFS）+ 状态去重算法找到从当前积分到目标积分的游玩路径。
    *
-   * 算法特点（与 Theater/Tour 不同）：
-   * 由于进度可以增减（打普通曲增加、活动曲减少），搜索空间存在循环可能性，
-   * 因此使用 visited Set + pathSet Set 双重状态去重，防止无限循环。
+   * 状态特征：pt 单向递增，进度可增可减（3rd 增加、活动曲减少），
+   * 搜索空间存在循环可能性，因此使用 visited Set + pathSet Set 双重状态去重。
    * 状态哈希键为 `${ptDiff}:${progress}`。
    *
    * @param choices - 游玩选择项列表
@@ -92,24 +91,25 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
     choices: EventChoice[],
     formData: { targetPt: number; pt: number; token: number; progress: number },
   ): Promise<ParkingResult> {
-    // 验证：负数参数
+    // ---- 输入验证 ----
+
+    // 负数参数
     if (formData.targetPt < 0 || formData.pt < 0 || formData.progress < 0) {
       return { flag: false, message: '参数不能为负数' };
     }
 
-    // 验证：已达标（语义修正为成功）
+    // 已达标
     if (formData.pt >= formData.targetPt) {
       return { flag: true, result: [] };
     }
 
-    // 验证：差距过大
+    // 差距过大
     if (formData.targetPt - formData.pt > 100000) {
       return { flag: false, message: '积分差距大于100000，请缩小后重试' };
     }
 
-    // 排序优先级：
-    // 1. 活动曲（消耗进度，type === '活动曲'）优先，pt 获取多的靠前
-    // 2. 其他选项按 pt 降序
+    // ---- 选择项排序 ----
+    // 优先级：活动曲（type === '活动曲'）优先 → 按 pt 降序
     const sortedChoices = [...choices].sort((a, b) => {
       const aIsEventLive = a.type === '活动曲';
       const bIsEventLive = b.type === '活动曲';
@@ -117,49 +117,33 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
       if (aIsEventLive && !bIsEventLive) return -1;
       if (!aIsEventLive && bIsEventLive) return 1;
 
-      // 相同类型：按 pt 降序
       return b.pt - a.pt;
     });
 
-    /**
-     * Tale 栈节点结构
-     *
-     * 算法说明：
-     * 1. 初始化状态栈，包含 pt 差距（负数表示还需要多少）和进度
-     * 2. 遍历选择项列表中的每个游玩方式
-     * 3. 检查约束条件：
-     *    - 进度 < 100 时不能打活动曲（type === '活动曲'）
-     *    - 进度 ≥ 100 时必须先打活动曲（不能打普通曲）
-     *    - 积分不能超过目标
-     * 4. 使用 visited / pathSet 进行状态去重，避免循环
-     * 5. 如果恰好到达目标积分，返回步骤路径
-     * 6. 否则将新状态压入栈中继续搜索
-     */
-    interface TaleStackNode {
+    // ---- 栈节点类型定义 ----
+    interface StackNode {
       ptDiff: number;
       progress: number;
       stepIndex: number;
       viaStepIndex?: number;
     }
 
+    // ---- 状态去重 ----
     // visited: 已完全探索过的状态（所有子步骤都已回溯）
     const visited = new Set<string>();
     // pathSet: 当前 DFS 路径上的状态（防止环）
     const pathSet = new Set<string>();
-    let iterations = 0;
 
-    const startHash = `${formData.pt - formData.targetPt}:${formData.progress}`;
-    const stack: TaleStackNode[] = [
-      {
-        ptDiff: formData.pt - formData.targetPt,
-        progress: formData.progress,
-        stepIndex: 0,
-      },
-    ];
+    // ---- 搜索初始化 ----
+    let iterations = 0;
+    const startPtDiff = formData.pt - formData.targetPt;
+    const startHash = `${startPtDiff}:${formData.progress}`;
+    const stack: StackNode[] = [{ ptDiff: startPtDiff, progress: formData.progress, stepIndex: 0 }];
     pathSet.add(startHash);
 
+    // ---- DFS 主体循环 ----
     while (stack.length > 0) {
-      // 检查迭代限制
+      // 迭代限制检查
       if (iterations >= DFS_CONFIG.maxIterations) {
         return { flag: false, message: '达到最大迭代次数限制，搜索终止' };
       }
@@ -171,12 +155,14 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
       }
 
       const top = stack[stack.length - 1];
+
+      // 空节点保护
       if (!top) {
         stack.pop();
         continue;
       }
 
-      // 所有步骤都尝试过了，标记已访问并回溯
+      // 所有步骤都已尝试 → 回溯
       if (top.stepIndex >= sortedChoices.length) {
         const hash = `${top.ptDiff}:${top.progress}`;
         visited.add(hash);
@@ -185,39 +171,29 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
         continue;
       }
 
-      // 获取当前要尝试的步骤
+      // 获取当前尝试的步骤
       const currentStepIndex = top.stepIndex;
       top.stepIndex++;
 
       const choice = sortedChoices[currentStepIndex];
-      if (!choice) {
-        continue;
-      }
+      if (!choice) continue;
 
-      // 约束 1：进度 < 100 时不能打活动曲（type === '活动曲'）
-      if (top.progress < 100 && choice.type === '活动曲') {
-        continue;
-      }
+      // ---- 活动约束检查 ----
+      // 进度 < 100 时不能打活动曲
+      if (top.progress < 100 && choice.type === '活动曲') continue;
+      // 进度 ≥ 100 时必须先打活动曲（不能打普通曲）
+      if (top.progress >= 100 && choice.type !== '活动曲') continue;
 
-      // 约束 2：进度 ≥ 100 时必须先打活动曲（不能打普通曲）
-      if (top.progress >= 100 && choice.type !== '活动曲') {
-        continue;
-      }
-
-      // 计算新状态
+      // ---- 计算新状态 ----
       const newPtDiff = top.ptDiff + choice.pt;
       const newProgress = top.progress + (choice.progress ?? 0);
 
-      // 约束 3：积分不能超过目标
-      if (newPtDiff > 0) {
-        continue;
-      }
+      // 积分不能超过目标
+      if (newPtDiff > 0) continue;
 
       // 状态去重：如果新状态已访问或在当前路径上，跳过
       const newHash = `${newPtDiff}:${newProgress}`;
-      if (visited.has(newHash) || pathSet.has(newHash)) {
-        continue;
-      }
+      if (visited.has(newHash) || pathSet.has(newHash)) continue;
 
       // 找到解
       if (newPtDiff === 0) {
@@ -241,10 +217,9 @@ export function useMltdEventParkingTale(form: Ref<ParkingForm>) {
       });
     }
 
-    // 提取结果
+    // ---- 提取结果 ----
     const lastNode = stack[stack.length - 1];
     if (stack.length > 0 && lastNode && lastNode.ptDiff === 0) {
-      // 统计每个步骤使用的次数
       const record: Record<string, number> = {};
       for (const node of stack) {
         if (node.viaStepIndex !== undefined) {

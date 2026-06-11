@@ -133,9 +133,11 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
   // ============ DFS 计算算法 ============
 
   /**
-   * Tour 活动专用计算算法
+   * 活动控分计算算法（Tour 专用）
    *
    * 使用深度优先搜索（DFS）算法找到从当前积分到目标积分的最优游玩路径。
+   *
+   * 状态特征：pt 单向递增，道具进度和 5 倍进度可循环但路径单调，无需状态去重。
    *
    * @param choices - 游玩选择项列表
    * @param formData - 表单数据（已预处理，包含 Tour 专属字段）
@@ -152,7 +154,9 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       isBoostPeriod: boolean;
     },
   ): Promise<ParkingResult> {
-    // 验证：负数参数
+    // ---- 输入验证 ----
+
+    // 负数参数
     if (
       formData.targetPt < 0 ||
       formData.pt < 0 ||
@@ -163,27 +167,27 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       return { flag: false, message: '参数不能为负数' };
     }
 
-    // 验证：道具进度范围
+    // 道具进度范围
     if (formData.itemProgress > 19) {
       return { flag: false, message: '道具进度必须在 0-19 之间' };
     }
 
-    // 验证：已达标
+    // 已达标
     if (formData.pt >= formData.targetPt) {
       return { flag: true, result: [] };
     }
 
-    // 验证：差距过大
+    // 差距过大
     if (formData.targetPt - formData.pt > 100000) {
       return { flag: false, message: '积分差距大于100000，请缩小后重试' };
     }
 
-    /**
-     * Tour 栈节点结构
-     *
-     * 扩展状态：ptDiff, token, itemProgress, eventLiveProgress
-     */
-    interface TourStackNode {
+    // ---- 选择项排序 ----
+    // 直接使用已排序的选项（generateTourChoices 已按 pt 降序排列）
+    const sortedChoices = [...choices];
+
+    // ---- 栈节点类型定义 ----
+    interface StackNode {
       ptDiff: number;
       token: number;
       itemProgress: number;
@@ -192,11 +196,12 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       viaStepIndex?: number;
     }
 
-    const tourChoices = [...choices];
+    // ---- 搜索初始化 ----
     let iterations = 0;
-    const stack: TourStackNode[] = [
+    const startPtDiff = formData.pt - formData.targetPt;
+    const stack: StackNode[] = [
       {
-        ptDiff: formData.pt - formData.targetPt,
+        ptDiff: startPtDiff,
         token: formData.token,
         itemProgress: formData.itemProgress,
         eventLiveProgress: formData.eventLiveProgress,
@@ -204,8 +209,9 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       },
     ];
 
-    while (stack.length) {
-      // 检查迭代限制
+    // ---- DFS 主体循环 ----
+    while (stack.length > 0) {
+      // 迭代限制检查
       if (iterations >= DFS_CONFIG.maxIterations) {
         return { flag: false, message: '达到最大迭代次数限制，搜索终止' };
       }
@@ -217,71 +223,61 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       }
 
       const top = stack[stack.length - 1];
+
+      // 空节点保护
       if (!top) {
         stack.pop();
         continue;
       }
 
-      // 所有步骤都尝试过了，回溯
-      if (top.stepIndex >= tourChoices.length) {
+      // 所有步骤都已尝试 → 回溯
+      if (top.stepIndex >= sortedChoices.length) {
         stack.pop();
         continue;
       }
 
-      // 获取当前要尝试的步骤
+      // 获取当前尝试的步骤
       const currentStepIndex = top.stepIndex;
       top.stepIndex++;
 
-      const choice = tourChoices[currentStepIndex];
-      if (!choice) {
-        continue;
-      }
+      const choice = sortedChoices[currentStepIndex];
+      if (!choice) continue;
 
-      // Tour 专用约束检查
+      // ---- 活动约束检查 ----
       const isEventLive = choice.type === '活动曲';
+      if (isEventLive && top.eventLiveProgress < 40) continue;
+      if (isEventLive && choice.token === -3 && !formData.isBoostPeriod) continue;
 
-      // 活动曲倍率条件检查
-      if (isEventLive) {
-        // 需要 5 倍进度达到 40
-        if (top.eventLiveProgress < 40) continue;
-        // 3 倍道具消耗需要 isBoostPeriod
-        if (choice.token === -3 && !formData.isBoostPeriod) continue;
-      }
-
-      // 计算新状态
-      let newItem = top.token + choice.token;
+      // ---- 计算新状态 ----
       const newPtDiff = top.ptDiff + choice.pt;
+      let newToken = top.token + choice.token;
       let newItemProgress = top.itemProgress + (choice.progress ?? 0);
-      let newLiveProgress = top.eventLiveProgress + (choice.progress ?? 0);
+      let newEventLiveProgress = top.eventLiveProgress + (choice.progress ?? 0);
 
       // 道具进度满 20 转换 1 个道具
       if (newItemProgress >= 20) {
-        newItem++;
+        newToken++;
         newItemProgress -= 20;
-      }
-
-      // 道具数量不能为负
-      if (newItem < 0) {
-        continue;
-      }
-
-      // 积分不能超过目标
-      if (newPtDiff > 0) {
-        continue;
       }
 
       // 活动曲重置 5 倍进度
       if (isEventLive) {
-        newLiveProgress = 0;
+        newEventLiveProgress = 0;
       }
+
+      // Token 不能为负
+      if (newToken < 0) continue;
+
+      // 积分不能超过目标
+      if (newPtDiff > 0) continue;
 
       // 找到解
       if (newPtDiff === 0) {
         stack.push({
           ptDiff: newPtDiff,
-          token: newItem,
+          token: newToken,
           itemProgress: newItemProgress,
-          eventLiveProgress: newLiveProgress,
+          eventLiveProgress: newEventLiveProgress,
           stepIndex: 0,
           viaStepIndex: currentStepIndex,
         });
@@ -291,18 +287,17 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       // 继续深入搜索
       stack.push({
         ptDiff: newPtDiff,
-        token: newItem,
+        token: newToken,
         itemProgress: newItemProgress,
-        eventLiveProgress: newLiveProgress,
+        eventLiveProgress: newEventLiveProgress,
         stepIndex: 0,
         viaStepIndex: currentStepIndex,
       });
     }
 
-    // 提取结果
+    // ---- 提取结果 ----
     const lastNode = stack[stack.length - 1];
-    if (stack.length && lastNode && lastNode.ptDiff === 0) {
-      // 统计每个步骤使用的次数
+    if (stack.length > 0 && lastNode && lastNode.ptDiff === 0) {
       const record: Record<string, number> = {};
       for (const node of stack) {
         if (node.viaStepIndex !== undefined) {
@@ -313,7 +308,7 @@ export function useMltdEventParkingTour(form: Ref<ParkingForm>) {
       const result: ParkingResultItem[] = [];
       for (const [key, value] of Object.entries(record)) {
         if (value > 0) {
-          const choice = tourChoices[Number(key)];
+          const choice = sortedChoices[Number(key)];
           if (!choice) continue;
           result.push({
             name: choice.name,

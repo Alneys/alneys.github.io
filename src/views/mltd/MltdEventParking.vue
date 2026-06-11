@@ -101,23 +101,6 @@
               </el-col>
             </el-row>
 
-            <el-row v-if="form.eventType === 'treasure'" :gutter="16">
-              <el-col :span="8" :xs="24">
-                <el-form-item label="获得pt加成" prop="bonus">
-                  <el-input
-                    v-model.number="form.bonus"
-                    :min="1.0"
-                    :max="1.7"
-                    :step="0.05"
-                    type="number"
-                    inputmode="decimal"
-                    placeholder="1.7"
-                  >
-                    <template #append>倍</template>
-                  </el-input>
-                </el-form-item>
-              </el-col>
-            </el-row>
             <el-row v-if="form.eventType === 'tour'" :gutter="16">
               <el-col :span="8" :xs="24">
                 <el-form-item label="道具进度" prop="itemProgress">
@@ -153,6 +136,23 @@
                 <el-form-item label=" ">
                   <el-button @click="form.eventLiveProgress = 40">5倍进度设为最大</el-button>
                   <el-button @click="form.eventLiveProgress = 0">5倍进度设为空</el-button>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row v-if="form.eventType === 'treasure'" :gutter="16">
+              <el-col :span="8" :xs="24">
+                <el-form-item label="获得pt加成" prop="bonus">
+                  <el-input
+                    v-model.number="form.bonus"
+                    :min="1.0"
+                    :max="1.7"
+                    :step="0.05"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="1.7"
+                  >
+                    <template #append>倍</template>
+                  </el-input>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -460,14 +460,18 @@ function findEventChoice(name: string, multiplier: string, type?: string): Event
 
 // 根据活动类型获取单次游玩的 token/进度显示文本
 function getTokenDisplayForChoice(choice: EventChoice): string {
+  // theater / anniversary / trust / tune：显示 token 数值
+  // tour：有 progress 时显示进度，否则显示 token
+  // treasure：始终显示 0
+  // tale：显示 progress 数值
   if (form.value.eventType === 'tour' && choice.progress && choice.progress > 0) {
     return `+${choice.progress}/20`;
   }
-  if (form.value.eventType === 'tale') {
-    return formatToken(choice.progress ?? 0);
-  }
   if (form.value.eventType === 'treasure') {
     return '0';
+  }
+  if (form.value.eventType === 'tale') {
+    return formatToken(choice.progress ?? 0);
   }
   return formatToken(choice.token);
 }
@@ -477,16 +481,20 @@ function getTotalTokenDisplay(
   choice: EventChoice | undefined,
   count: number,
 ): { total: number; display: string } {
+  // theater / anniversary / trust / tune：计算 token 总量
+  // tour：有 progress 时计算进度，否则计算 token
+  // treasure：始终返回 0
+  // tale：计算 progress 总量
   if (form.value.eventType === 'tour' && choice?.progress && choice.progress > 0) {
     const progressTotal = choice.progress * count;
     return { total: Math.floor(progressTotal / 20), display: `+${progressTotal}/20` };
   }
+  if (form.value.eventType === 'treasure') {
+    return { total: 0, display: '0' };
+  }
   if (form.value.eventType === 'tale') {
     const total = (choice?.progress ?? 0) * count;
     return { total, display: formatToken(total) };
-  }
-  if (form.value.eventType === 'treasure') {
-    return { total: 0, display: '0' };
   }
   const total = (choice?.token ?? 0) * count;
   return { total, display: formatToken(total) };
@@ -507,135 +515,68 @@ const currentTips = computed(() => {
   return (EVENT_PARKING_TIPS as Record<string, readonly string[]>)[form.value.eventType] ?? [];
 });
 
+// ---- 状态表格行配置（按常量文件活动出现顺序） ----
+interface StatusRowBuilder {
+  item: string;
+  getValue: (targetPt: number, pt: number, token: number, f: ParkingForm) => string;
+}
+
+const STATUS_TABLE_BUILDERS: Record<string, StatusRowBuilder[]> = {
+  // Theater: pt差距 / 当前道具 / 折返状态
+  theater: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '当前道具', getValue: (t, p, tk) => `${formatNumber(tk)} 个` },
+    { item: '折返状态', getValue: (t, p, tk, f) => (f.isBoostPeriod ? '已折返' : '未折返') },
+  ],
+  // Anniversary: 同 Theater
+  anniversary: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '当前道具', getValue: (t, p, tk) => `${formatNumber(tk)} 个` },
+    { item: '折返状态', getValue: (t, p, tk, f) => (f.isBoostPeriod ? '已折返' : '未折返') },
+  ],
+  // Trust: 同 Theater
+  trust: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '当前道具', getValue: (t, p, tk) => `${formatNumber(tk)} 个` },
+    { item: '折返状态', getValue: (t, p, tk, f) => (f.isBoostPeriod ? '已折返' : '未折返') },
+  ],
+  // Tune: pt差距 / 当前道具（无折返状态）
+  tune: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '当前道具', getValue: (t, p, tk) => `${formatNumber(tk)} 个` },
+  ],
+  // Tour: pt差距 / 当前道具 / 道具进度 / Live进度 / 折返状态
+  tour: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '当前道具', getValue: (t, p, tk) => `${formatNumber(tk)} 个` },
+    { item: '道具进度', getValue: (t, p, tk, f) => `${f.itemProgress ?? 0}/20` },
+    { item: 'Live进度', getValue: (t, p, tk, f) => `${f.eventLiveProgress ?? 0}` },
+    { item: '折返状态', getValue: (t, p, tk, f) => (f.isBoostPeriod ? '已折返' : '未折返') },
+  ],
+  // Treasure: pt差距 / 获得pt加成 / 折返状态
+  treasure: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '获得pt加成', getValue: (t, p, tk, f) => `${f.bonus ?? 1.7} 倍` },
+    { item: '折返状态', getValue: (t, p, tk, f) => (f.isBoostPeriod ? '已折返' : '未折返') },
+  ],
+  // Tale: pt差距 / 当前进度
+  tale: [
+    { item: 'pt差距', getValue: (t, p) => `${formatNumber(t - p)} pt` },
+    { item: '当前进度', getValue: (t, p, tk, f) => `${formatNumber(f.progress ?? 0)}` },
+  ],
+};
+
 // 当前状态表格数据
 const statusTableData = computed(() => {
   const targetPt = formSnapshot.value?.targetPt ?? form.value.targetPt ?? 0;
   const pt = form.value.pt ?? 0;
   const token = form.value.token ?? 0;
-
-  // Tour 活动专属状态行
-  if (form.value.eventType === 'tour') {
-    return [
-      {
-        item: 'pt差距',
-        value: `${formatNumber(targetPt - pt)} pt`,
-      },
-      {
-        item: '当前道具',
-        value: `${formatNumber(token)} 个`,
-      },
-      {
-        item: '道具进度',
-        value: `${form.value.itemProgress ?? 0}/20`,
-      },
-      {
-        item: 'Live进度',
-        value: `${form.value.eventLiveProgress ?? 0}`,
-      },
-      {
-        item: '折返状态',
-        value: form.value.isBoostPeriod ? '已折返' : '未折返',
-      },
-    ];
-  }
-
-  // Tale 活动专属状态行
-  if (form.value.eventType === 'tale') {
-    return [
-      {
-        item: 'pt差距',
-        value: `${formatNumber(targetPt - pt)} pt`,
-      },
-      {
-        item: '当前进度',
-        value: `${formatNumber(form.value.progress ?? 0)}`,
-      },
-    ];
-  }
-
-  // Treasure 活动专属状态行
-  if (form.value.eventType === 'treasure') {
-    return [
-      {
-        item: 'pt差距',
-        value: `${formatNumber(targetPt - pt)} pt`,
-      },
-      {
-        item: '获得pt加成',
-        value: `${form.value.bonus ?? 1.7} 倍`,
-      },
-      {
-        item: '折返状态',
-        value: form.value.isBoostPeriod ? '已折返' : '未折返',
-      },
-    ];
-  }
-
-  // Theater 活动专属状态行
-  if (form.value.eventType === 'theater') {
-    return [
-      {
-        item: 'pt差距',
-        value: `${formatNumber(targetPt - pt)} pt`,
-      },
-      {
-        item: '当前道具',
-        value: `${formatNumber(token)} 个`,
-      },
-      {
-        item: '折返状态',
-        value: form.value.isBoostPeriod ? '已折返' : '未折返',
-      },
-    ];
-  }
-
-  // Anniversary 活动专属状态行
-  if (form.value.eventType === 'anniversary') {
-    return [
-      {
-        item: 'pt差距',
-        value: `${formatNumber(targetPt - pt)} pt`,
-      },
-      {
-        item: '当前道具',
-        value: `${formatNumber(token)} 个`,
-      },
-      {
-        item: '折返状态',
-        value: form.value.isBoostPeriod ? '已折返' : '未折返',
-      },
-    ];
-  }
-
-  // Trust 活动专属状态行
-  if (form.value.eventType === 'trust') {
-    return [
-      {
-        item: 'pt差距',
-        value: `${formatNumber(targetPt - pt)} pt`,
-      },
-      {
-        item: '当前道具',
-        value: `${formatNumber(token)} 个`,
-      },
-      {
-        item: '折返状态',
-        value: form.value.isBoostPeriod ? '已折返' : '未折返',
-      },
-    ];
-  }
-
-  // 其他活动类型（Tune）的标准状态行
-  return [
-    {
-      item: 'pt差距',
-      value: `${formatNumber(targetPt - pt)} pt`,
-    },
-    {
-      item: '当前道具',
-      value: `${formatNumber(token)} 个`,
-    },
-  ];
+  const builders = STATUS_TABLE_BUILDERS[form.value.eventType];
+  if (!builders) return [];
+  return builders.map((b) => ({
+    item: b.item,
+    value: b.getValue(targetPt, pt, token, form.value),
+  }));
 });
 
 // 控分方案表格数据
