@@ -16,18 +16,25 @@ const { showUpdateNotification } = env.DEV
 function goBack() {
   router.push('/');
 }
+
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(`已复制: ${text}`);
+  } catch {
+    ElMessage.error('复制失败');
+  }
+}
 </script>
 
 <template>
   <div>
-    <el-page-header class="view-page-header" @back="goBack">
-      <template #content>
-        <h1>关于</h1>
-      </template>
-    </el-page-header>
-
+    <h1 class="view-title">关于</h1>
     <div class="al-divider"></div>
     <h2>Alneys</h2>
+    <p>At last nothing exists, you see.</p>
+    <el-button @click="goBack">点击左上角可以返回首页</el-button>
+    <div class="al-divider"></div>
     <div class="shields-io-collections">
       <a href="https://github.com/Alneys" target="_blank">
         <img
@@ -60,21 +67,21 @@ function goBack() {
         />
       </a>
     </div>
-    <div class="al-divider"></div>
+
     <div class="game-ids">
-      <div class="game-id">
+      <div class="game-id" @click="copyToClipboard('468992182')">
         <div v-html="svgCG" class="game-icon"></div>
         <span>468992182</span>
       </div>
-      <div class="game-id">
+      <div class="game-id" @click="copyToClipboard('UR8HH9JU')">
         <div v-html="svgML" class="game-icon"></div>
         <span>UR8HH9JU</span>
       </div>
-      <div class="game-id">
+      <div class="game-id" @click="copyToClipboard('PYGK9YBFH')">
         <div v-html="svgSC" class="game-icon"></div>
         <span>PYGK9YBFH</span>
       </div>
-      <div class="game-id">
+      <div class="game-id" @click="copyToClipboard('2FKGLHGR')">
         <div v-html="svgGK" class="game-icon"></div>
         <span>2FKGLHGR</span>
       </div>
@@ -177,6 +184,12 @@ function goBack() {
     align-items: center;
     gap: 0.5em;
     // margin: 0.25em 0;
+    cursor: pointer;
+    width: fit-content;
+
+    &:hover span {
+      color: var(--el-color-primary);
+    }
 
     .game-icon {
       width: 32px;

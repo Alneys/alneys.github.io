@@ -16,7 +16,7 @@
 
 import { ref, computed, type Ref } from 'vue';
 import type { ParkingForm, ParkingResult, ParkingResultItem } from '../MltdTypes';
-import type { EventTheaterChoice } from '../MltdTypes';
+import type { EventChoice } from '../MltdTypes';
 import { useMltdEventParkingTheater } from './useMltdEventParkingTheater';
 import { useMltdEventParkingTour } from './useMltdEventParkingTour';
 import { useMltdEventParkingTale } from './useMltdEventParkingTale';
@@ -33,7 +33,7 @@ type ParkingSnapshot =
       pt: number;
       token: number;
       itemProgress: number;
-      liveProgress: number;
+      eventLiveProgress: number;
       isBoostPeriod: boolean;
     }
   | { targetPt: number; pt: number; token: number; progress: number }
@@ -59,7 +59,7 @@ export const createDefaultParkingForm = (): ParkingForm => ({
   isBoostPeriod: true,
   // Tour 专属字段默认值
   itemProgress: 0,
-  liveProgress: 0,
+  eventLiveProgress: 0,
   // Tale 专属字段默认值
   progress: 0,
 });
@@ -74,27 +74,27 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   // 1. 实例化所有子组合式
   // ================================================================
 
-  const theater = useMltdEventParkingTheater(form);
-  const tour = useMltdEventParkingTour(form);
-  const tale = useMltdEventParkingTale(form);
-  const treasure = useMltdEventParkingTreasure(form);
+  const useTheater = useMltdEventParkingTheater(form);
+  const useTour = useMltdEventParkingTour(form);
+  const useTale = useMltdEventParkingTale(form);
+  const useTreasure = useMltdEventParkingTreasure(form);
 
   // ================================================================
   // 2. 根据 eventType 选择当前活跃的子组合式
   // ================================================================
 
   /** 当前活动类型对应的子组合式实例 */
-  const active = computed(() => {
+  const activeEventParkingComposable = computed(() => {
     switch (form.value.eventType) {
       case 'tour':
-        return tour;
+        return useTour;
       case 'tale':
-        return tale;
+        return useTale;
       case 'treasure':
-        return treasure;
+        return useTreasure;
       default:
         // theater / anniversary / trust / tune
-        return theater;
+        return useTheater;
     }
   });
 
@@ -120,8 +120,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   /**
    * 根据活动类型返回对应的选择项列表，并根据开关过滤 extra 选项
    */
-  const eventChoices = computed<EventTheaterChoice[]>(() => {
-    let choices = active.value.eventChoices.value;
+  const eventChoices = computed<EventChoice[]>(() => {
+    let choices = activeEventParkingComposable.value.eventChoices.value;
 
     // 当禁用更多倍率时，过滤掉 extra: true 的选项
     if (form.value.enableExtraChoices === false) {
@@ -172,19 +172,27 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   };
 
   /**
+   * 在初始快照中查找对应方案项
+   * @param item - 方案项
+   * @returns 匹配的快照项（如有）
+   */
+  const findSnapshotItem = (item: ParkingResultItem) => {
+    return parkingResultSnapshot.value.find(
+      (s) =>
+        s.name === item.name &&
+        s.multiplier === item.multiplier &&
+        (item.type === undefined || s.type === item.type),
+    );
+  };
+
+  /**
    * 获取方案项的剩余次数
    * @param item - 方案项
    * @returns 剩余次数
    */
   const getRemainingCount = (item: ParkingResultItem): number => {
     const key = getOperationKey(item);
-    const snapshotItem = parkingResultSnapshot.value.find(
-      (s) =>
-        s.name === item.name &&
-        s.multiplier === item.multiplier &&
-        (item.type === undefined || s.type === item.type),
-    );
-    const initialCount = snapshotItem?.value ?? 0;
+    const initialCount = findSnapshotItem(item)?.value ?? 0;
     const executed = executedCounts.value[key] ?? 0;
     return initialCount - executed;
   };
@@ -195,13 +203,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
    * @returns 初始次数
    */
   const getInitialCount = (item: ParkingResultItem): number => {
-    const snapshotItem = parkingResultSnapshot.value.find(
-      (s) =>
-        s.name === item.name &&
-        s.multiplier === item.multiplier &&
-        (item.type === undefined || s.type === item.type),
-    );
-    return snapshotItem?.value ?? 0;
+    return findSnapshotItem(item)?.value ?? 0;
   };
 
   // ================================================================
@@ -225,7 +227,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if (!choice) return;
 
     // 委托给活跃子组合式执行类型相关的表单变更
-    active.value.execute(choice);
+    activeEventParkingComposable.value.execute(choice);
 
     // 更新执行次数
     executedCounts.value[key] = (executedCounts.value[key] ?? 0) + 1;
@@ -251,7 +253,7 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     if (!choice) return;
 
     // 委托给活跃子组合式执行类型相关的逆向变更
-    active.value.undo(choice);
+    activeEventParkingComposable.value.undo(choice);
 
     // 更新执行次数
     executedCounts.value[key] = (executedCounts.value[key] ?? 0) - 1;
@@ -270,26 +272,13 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
     preprocessingForm();
 
     const choices = eventChoices.value;
+    const comp = activeEventParkingComposable.value;
+    const snapshot = comp.createSnapshot();
+    formSnapshot.value = snapshot as ParkingSnapshot;
 
-    // 按活动类型路由到对应的计算函数
-    if (form.value.eventType === 'tour') {
-      const snapshot = tour.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await tour.calc(choices, snapshot);
-    } else if (form.value.eventType === 'tale') {
-      const snapshot = tale.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await tale.calc(choices, snapshot);
-    } else if (form.value.eventType === 'treasure') {
-      const snapshot = treasure.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await treasure.calc(choices, snapshot);
-    } else {
-      // theater / anniversary / trust / tune
-      const snapshot = theater.createSnapshot();
-      formSnapshot.value = snapshot;
-      parkingResult.value = await theater.calc(choices, snapshot);
-    }
+    // 使用类型断言绕过不同子组合式的 calc 签名差异
+    type CalcFn = (c: EventChoice[], s: ParkingSnapshot) => Promise<ParkingResult>;
+    parkingResult.value = await (comp.calc as CalcFn)(choices, snapshot);
 
     // 保存初始方案快照并重置执行状态
     if (parkingResult.value?.flag && parkingResult.value.result) {
@@ -309,19 +298,8 @@ export function useMltdEventParking(form: Ref<ParkingForm>) {
   const resetToInitial = () => {
     if (!formSnapshot.value) return;
 
-    // 按活动类型委托给对应的子组合式恢复快照
-    if (form.value.eventType === 'tour') {
-      tour.resetToSnapshot(formSnapshot.value as Parameters<typeof tour.resetToSnapshot>[0]);
-    } else if (form.value.eventType === 'tale') {
-      tale.resetToSnapshot(formSnapshot.value as Parameters<typeof tale.resetToSnapshot>[0]);
-    } else if (form.value.eventType === 'treasure') {
-      treasure.resetToSnapshot(
-        formSnapshot.value as Parameters<typeof treasure.resetToSnapshot>[0],
-      );
-    } else {
-      theater.resetToSnapshot(formSnapshot.value as Parameters<typeof theater.resetToSnapshot>[0]);
-    }
-
+    type ResetFn = (s: ParkingSnapshot) => void;
+    (activeEventParkingComposable.value.resetToSnapshot as ResetFn)(formSnapshot.value);
     executedCounts.value = {};
   };
 

@@ -53,6 +53,11 @@ const router = createRouter({
               name: 'endfield-gacha',
               component: () => import('@/views/endfield/EndfieldGachaChart.vue'),
             },
+            {
+              path: 'trial-of-swordmancy',
+              name: 'endfield-trial-of-swordmancy',
+              component: () => import('@/views/endfield/EndfieldTrialOfSwordmancy.vue'),
+            },
           ],
         },
         {
