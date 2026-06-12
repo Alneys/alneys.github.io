@@ -1,9 +1,9 @@
-/** 单个抽取组合的结果 */
+/** 单个抽取组合的结果（单局 DP，不考虑翻倍与多局） */
 export interface SolverResultEntry {
   combination: string;
   current_reward: number;
   expected_continue_reward: number | null;
-  optimal_action: 'stop' | 'continue' | 'must_continue' | 'must_stop';
+  optimal_action: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double';
   drawn: number;
 }
 
@@ -11,7 +11,14 @@ export interface SolverResultEntry {
 export interface AdviceResult {
   current_reward: number;
   expected_continue_reward: number | null;
-  optimal_action: 'stop' | 'continue' | 'must_continue' | 'must_stop';
+  expected_today: number;
+  optimal_action: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double';
+  /** 各行动的今日总期望（含未来局数），null 表示该行动不可用 */
+  draw_total: number | null;
+  double_total: number | null;
+  stop_total: number | null;
+  /** 结算本局后剩余局数的期望 */
+  expected_after_stop: number;
 }
 
 /**
@@ -201,41 +208,190 @@ export function solve(deck: number[], rewards: number[]): SolverResultEntry[] {
   return results;
 }
 
-/** 获取当前已抽牌状态下的最优行动建议 */
+/**
+ * 多局 + 翻倍 DP 求解：计算当前状态的最优行动建议
+ *
+ * 状态 (r_tuple, M, P, B)：
+ *   r_tuple = (r1,r2,r3,r4,r5) 各等级剩余牌数
+ *   M = 当前局倍率 (1 或 2)
+ *   P = 今日剩余游玩次数 (含当前局)
+ *   B = 今日剩余翻倍次数
+ *
+ * 每一步可选行动：
+ *   - 继续抽牌：抽一张，状态转移到 (r_tuple - 1_i, M, P, B)
+ *   - 开启翻倍：M 置为 2，B 减 1（条件：已抽 < 3、M=1、B>0）
+ *   - 结算本局：获得当前奖励，进入下一局 (deckInit, 1, P-1, B)
+ *
+ * 决策规则：优先选择翻倍（期望相同时翻倍优先于继续/停止）
+ */
 export function getCurrentAdvice(
   drawnCounts: number[],
   deck: number[],
   rewards: number[],
+  doubled: boolean,
+  remainingGames: number,
+  remainingDoubles: number,
 ): AdviceResult | null {
-  const drawn = drawnCounts.reduce((a, b) => a + b, 0);
-
   const modValue = rewards.length;
+  const maxDraws = 5;
+  const totalCards = deck.reduce((a, b) => a + b, 0);
+  const initialTotal = deck.reduce((sum, count, i) => sum + count * (i + 1), 0);
+  const deckInit = [...deck];
+
+  const drawn = drawnCounts.reduce((a, b) => a + b, 0);
   const drawnValue = drawnCounts.reduce((sum, count, i) => sum + count * (i + 1), 0);
   const s = ((drawnValue % modValue) + modValue) % modValue;
-  const currentReward = safeReward(rewards, s);
+  const M = doubled ? 2 : 1;
+  const currentReward = safeReward(rewards, s) * M;
 
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
+  const P = remainingGames;
+  const B = remainingDoubles;
 
-  // 无法继续抽牌的情况
-  if (drawn >= 5 || totalRemaining === 0) {
+  const memo = new Map<string, number>();
+
+  function dpDaily(
+    r1: number,
+    r2: number,
+    r3: number,
+    r4: number,
+    r5: number,
+    Mv: number,
+    P: number,
+    B: number,
+  ): number {
+    const key = `${r1},${r2},${r3},${r4},${r5},${Mv},${P},${B}`;
+    const cached = memo.get(key);
+    if (cached !== undefined) return cached;
+
+    if (P === 0) {
+      memo.set(key, 0);
+      return 0;
+    }
+
+    const rem = r1 + r2 + r3 + r4 + r5;
+    const drn = totalCards - rem;
+    const dv = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
+    const sp = ((dv % modValue) + modValue) % modValue;
+    const cr = safeReward(rewards, sp) * Mv;
+
+    if (drn === maxDraws || rem === 0) {
+      const val =
+        cr +
+        dpDaily(deckInit[0]!, deckInit[1]!, deckInit[2]!, deckInit[3]!, deckInit[4]!, 1, P - 1, B);
+      memo.set(key, val);
+      return val;
+    }
+
+    const cannotStop = drn === 0; // 未抽任何牌时必须继续
+    const rs = [r1, r2, r3, r4, r5];
+
+    let vDraw = 0;
+    for (let i = 0; i < 5; i++) {
+      if (rs[i]! > 0) {
+        const prob = rs[i]! / rem;
+        const next = [...rs];
+        next[i]!--;
+        vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, P, B);
+      }
+    }
+
+    // 翻倍：仅在已抽 < 3、本局未翻倍、有剩余次数时可用
+    // 效果：Mv 置为 2，消耗一次翻倍次数，不改变牌池
+    let vDouble = -Infinity;
+    if (drn < 3 && Mv === 1 && B > 0) {
+      vDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, B - 1);
+    }
+
+    // 停止：获得当前奖励，牌池重置，进入下一局
+    let vStop = -Infinity;
+    if (!cannotStop) {
+      vStop =
+        cr +
+        dpDaily(deckInit[0]!, deckInit[1]!, deckInit[2]!, deckInit[3]!, deckInit[4]!, 1, P - 1, B);
+    }
+
+    let result: number;
+    if (cannotStop) {
+      result = Math.max(vDraw, vDouble);
+    } else {
+      result = Math.max(vStop, vDraw, vDouble);
+    }
+
+    memo.set(key, result);
+    return result;
+  }
+
+  const futureValue =
+    P > 0
+      ? dpDaily(deckInit[0]!, deckInit[1]!, deckInit[2]!, deckInit[3]!, deckInit[4]!, 1, P - 1, B)
+      : 0;
+
+  if (drawn >= maxDraws || totalRemaining === 0) {
+    const expectedToday = Math.round((currentReward + futureValue) * 100) / 100;
     return {
       current_reward: currentReward,
       expected_continue_reward: null,
+      expected_today: expectedToday,
       optimal_action: 'must_stop',
+      draw_total: null,
+      double_total: null,
+      stop_total: Math.round((currentReward + futureValue) * 100) / 100,
+      expected_after_stop: Math.round(futureValue * 100) / 100,
     };
   }
 
-  // 从求解结果中查找当前组合，返回建议
-  const results = solve(deck, rewards);
-  const entry = results.find(
-    (r) => r.combination === drawnCounts.map((c, i) => String(i + 1).repeat(c)).join(''),
-  );
-  if (!entry) return null;
+  const r = remaining;
+  const rState = [r[0]!, r[1]!, r[2]!, r[3]!, r[4]!];
+
+  let vDraw = 0;
+  for (let i = 0; i < 5; i++) {
+    if (r[i]! > 0) {
+      const prob = r[i]! / totalRemaining;
+      const next = [...rState];
+      next[i]!--;
+      vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, M, P, B);
+    }
+  }
+
+  let vDouble = -Infinity;
+  if (drawn < 3 && !doubled && B > 0) {
+    vDouble = dpDaily(rState[0]!, rState[1]!, rState[2]!, rState[3]!, rState[4]!, 2, P, B - 1);
+  }
+
+  let vStop = -Infinity;
+  if (drawn > 0) {
+    vStop = currentReward + futureValue;
+  }
+
+  const evContinue = Math.max(vDraw, vDouble);
+  const expectedContinueReward = Math.round((evContinue - futureValue) * 100) / 100;
+  const expectedToday = Math.round(Math.max(vStop, evContinue) * 100) / 100;
+
+  // 使用 >= 使翻倍在期望相同时优先（翻倍不消耗局数，长期价值更高）
+  const isDoubleOptimal = drawn < 3 && M === 1 && B > 0 && vDouble >= vDraw && vDouble >= vStop;
+
+  // 行动优先级：翻倍 > 继续 > 停止；未抽牌时必须继续
+  let optimalAction: AdviceResult['optimal_action'];
+  if (drawn === 0 && !isDoubleOptimal) {
+    optimalAction = 'must_continue';
+  } else if (isDoubleOptimal) {
+    optimalAction = 'double';
+  } else if (evContinue > vStop) {
+    optimalAction = 'continue';
+  } else {
+    optimalAction = 'stop';
+  }
 
   return {
-    current_reward: entry.current_reward,
-    expected_continue_reward: entry.expected_continue_reward,
-    optimal_action: entry.optimal_action,
+    current_reward: currentReward,
+    expected_continue_reward: expectedContinueReward,
+    expected_today: expectedToday,
+    optimal_action: optimalAction,
+    draw_total: Math.round(vDraw * 100) / 100,
+    double_total: drawn < 3 && !doubled && B > 0 ? Math.round(vDouble * 100) / 100 : null,
+    stop_total: drawn > 0 ? Math.round(vStop * 100) / 100 : null,
+    expected_after_stop: Math.round(futureValue * 100) / 100,
   };
 }

@@ -123,23 +123,94 @@
         </div>
       </el-card>
 
+      <el-card class="daily-card">
+        <template #header>
+          <span>今日状态</span>
+        </template>
+        <div class="daily-grid">
+          <div class="daily-item">
+            <span class="daily-label">剩余游玩</span>
+            <el-input-number
+              v-model="remainingGames"
+              :min="0"
+              :max="3"
+              size="small"
+              class="daily-input"
+            />
+            <span class="daily-suffix">/ 3</span>
+          </div>
+          <div class="daily-item">
+            <span class="daily-label">剩余翻倍</span>
+            <el-input-number
+              v-model="remainingDoubles"
+              :min="0"
+              :max="2"
+              size="small"
+              class="daily-input"
+            />
+            <span class="daily-suffix">/ 2</span>
+          </div>
+          <el-button size="small" @click="setSingleSimulation" class="daily-single-btn">
+            设为单次模拟
+          </el-button>
+        </div>
+      </el-card>
+
       <el-card class="advice-card">
         <template #header>
           <span>最优策略建议</span>
         </template>
         <div v-if="currentAdvice" class="advice-content">
           <div class="advice-row">
-            <span class="advice-label">当前奖励</span>
+            <span class="advice-label">本局当前奖励</span>
             <span class="advice-value">{{ currentAdvice.current_reward.toLocaleString() }}</span>
           </div>
           <div class="advice-row">
-            <span class="advice-label">继续期望</span>
+            <span class="advice-label">本局继续期望</span>
             <span class="advice-value">{{
               currentAdvice.expected_continue_reward != null
                 ? currentAdvice.expected_continue_reward.toLocaleString()
                 : '—'
             }}</span>
           </div>
+
+          <el-divider style="margin: 8px 0" />
+          <div class="advice-row">
+            <span class="advice-label">各行动今日总期望：</span>
+            <span class="advice-value"></span>
+          </div>
+          <div class="advice-row">
+            <span class="advice-label">继续抽牌</span>
+            <span class="advice-value">{{
+              currentAdvice.draw_total != null ? currentAdvice.draw_total.toLocaleString() : '—'
+            }}</span>
+          </div>
+          <div class="advice-row">
+            <span class="advice-label">开启翻倍</span>
+            <span class="advice-value">{{
+              currentAdvice.double_total != null ? currentAdvice.double_total.toLocaleString() : '—'
+            }}</span>
+          </div>
+          <div class="advice-row">
+            <span class="advice-label">结算本局</span>
+            <span class="advice-value">{{
+              currentAdvice.stop_total != null ? currentAdvice.stop_total.toLocaleString() : '—'
+            }}</span>
+          </div>
+          <div class="advice-row">
+            <span class="advice-label" style="margin-left: 0.5em">- 结算本局后的期望</span>
+            <span class="advice-value">{{
+              currentAdvice.expected_after_stop.toLocaleString()
+            }}</span>
+          </div>
+          <el-divider style="margin: 8px 0" />
+          <div class="advice-row">
+            <span class="advice-label">今日总期望</span>
+            <span class="advice-value advice-today-value">{{
+              currentAdvice.expected_today.toLocaleString()
+            }}</span>
+          </div>
+
           <el-divider style="margin: 8px 0" />
           <div
             class="advice-decision"
@@ -152,7 +223,10 @@
                 currentAdvice.optimal_action === 'must_stop',
             }"
           >
-            <template v-if="currentAdvice.optimal_action === 'continue'">
+            <template v-if="currentAdvice.optimal_action === 'double'">
+              建议先开启翻倍再继续
+            </template>
+            <template v-else-if="currentAdvice.optimal_action === 'continue'">
               建议继续抽牌（期望更高）
             </template>
             <template v-else-if="currentAdvice.optimal_action === 'stop'">
@@ -171,6 +245,9 @@
 
       <el-collapse v-model="strategyCollapse" class="strategy-panel">
         <el-collapse-item title="完整策略表" name="strategy">
+          <div class="strategy-note">
+            注：以下为单局最优策略（未考虑翻倍和每日多局统筹），建议面板已考虑完整全局最优
+          </div>
           <el-input
             v-model="strategySearch"
             placeholder="搜索组合（如 123、55）"
@@ -240,29 +317,44 @@
         <el-button
           type="primary"
           @click="drawCard"
-          :disabled="!canDraw"
+          :disabled="!canDraw || remainingGames === 0"
           size="large"
           class="action-btn"
         >
           {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
         </el-button>
         <el-button
-          v-show="false"
-          :type="doubled ? 'warning' : 'default'"
+          type="warning"
           @click="toggleDouble"
           :disabled="!canDouble"
           size="large"
           class="action-btn"
         >
-          {{ doubled ? '已开启翻倍' : '开启翻倍' }}
+          {{ doubled ? '已翻倍' : '开启翻倍' }}
         </el-button>
-        <el-button type="info" @click="reset" size="large" class="action-btn"> 新一局 </el-button>
+        <el-button
+          type="info"
+          :disabled="remainingGames === 0 || activeDrawCount === 0"
+          @click="activeDrawCount > 0 ? endGame() : resetGame()"
+          size="large"
+          class="action-btn"
+        >
+          <template v-if="activeDrawCount > 0">结算本局</template>
+          <template v-else>新一局</template>
+        </el-button>
+        <el-button type="danger" @click="resetToday" size="large" class="action-btn">
+          重置今日
+        </el-button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+// 逻辑三部分：
+//   1. 铭牌配置 & 游戏操作（抽牌/翻倍/结算）
+//   2. 奖励计算（战力点 → 档位）
+//   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed, watch } from 'vue';
 import { solve, getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
 import type { SolverResultEntry, AdviceResult } from './EndfieldTrialSwordmancySolver';
@@ -334,10 +426,14 @@ const pool = ref<Plaque[]>([]);
 const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
 /** 是否已开启奖励翻倍 */
 const doubled = ref(false);
+/** 今日剩余游玩次数 */
+const remainingGames = ref(3);
+/** 今日剩余翻倍次数 */
+const remainingDoubles = ref(2);
 /** 手动设置时牌池不足的警告标记 */
 const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
 
-/** 各等级已抽数量 */
+/** 各等级已抽数量（索引 0-4 对应等级 1-5） */
 const drawnCounts = computed(() => {
   const counts = [0, 0, 0, 0, 0];
   for (const card of drawnCards.value) {
@@ -392,12 +488,33 @@ function applyConfig() {
   doubled.value = false;
 }
 
-/** 新一局，重置游戏 */
-function reset() {
+/** 重置本局牌库/已抽/翻倍 */
+function resetGame() {
   nextId = 0;
   pool.value = buildPool();
   initDrawnCards();
   doubled.value = false;
+}
+
+/** 结算本局，进入下一局（消耗一次游玩次数） */
+function endGame() {
+  if (remainingGames.value <= 0) return;
+  remainingGames.value--;
+  resetGame();
+}
+
+/** 重置今日全部状态 */
+function resetToday() {
+  remainingGames.value = 3;
+  remainingDoubles.value = 2;
+  resetGame();
+}
+
+/** 设置为单次模拟（P=1, B=0） */
+function setSingleSimulation() {
+  remainingGames.value = 1;
+  remainingDoubles.value = 0;
+  resetGame();
 }
 
 /** 重置铭牌分布为默认值 */
@@ -427,7 +544,8 @@ const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
 
 const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + (c?.power ?? 0), 0));
 
-/** 战力点（超过 10 时取模 11） */
+/** 战力点 → 奖励档位索引
+ *  0-10 直接映射；超过 10 则模 11 循环 */
 const rewardIndex = computed(() => {
   if (totalPower.value > 10) {
     return totalPower.value % 11;
@@ -449,8 +567,9 @@ const canDraw = computed(() => {
   return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
 });
 
+/** 可翻倍条件：已抽 < 3、本局未翻倍、今日有剩余次数 */
 const canDouble = computed(() => {
-  return activeDrawCount.value < 3 && !doubled.value;
+  return activeDrawCount.value < 3 && !doubled.value && remainingDoubles.value > 0;
 });
 
 // ── 游戏操作 ──
@@ -505,6 +624,7 @@ function onlyLevel(value: string): boolean {
 function toggleDouble() {
   if (!canDouble.value) return;
   doubled.value = true;
+  remainingDoubles.value--;
 }
 
 // ── UI 辅助 ──
@@ -528,7 +648,7 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
   value: i,
 }));
 
-/** OTP 输入框的字符串值（按抽牌顺序排列） */
+/** OTP 输入框的字符串值（按抽牌顺序排列，空位为 ''） */
 const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join(''));
 
 const hasWarning = computed(() => slotWarnings.some(Boolean));
@@ -553,12 +673,19 @@ const solverResults = computed<SolverResultEntry[]>(() => {
   return solve(deck, rewards);
 });
 
-/** 当前状态的最优行动建议 */
+/** 当前状态的最优行动建议（含多局/翻倍） */
 const currentAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
   const rewards = rewardArray.value;
   if (deck.some((c) => c < 0)) return null;
-  return getCurrentAdvice(drawnCounts.value, deck, rewards);
+  return getCurrentAdvice(
+    drawnCounts.value,
+    deck,
+    rewards,
+    doubled.value,
+    remainingGames.value,
+    remainingDoubles.value,
+  );
 });
 
 // ── 策略表面板搜索与筛选 ──
@@ -599,6 +726,7 @@ function tableRowClassName({ row }: { row: SolverResultEntry }) {
 }
 
 // ── OTP 手动输入处理 ──
+// 先将所有已抽牌归还牌池，再按 OTP 顺序依次取出指定等级
 
 function handleOtpChange(val: string | number) {
   const s = String(val);
@@ -864,6 +992,59 @@ function handleOtpChange(val: string | number) {
     color: var(--el-color-warning);
   }
 
+  // ── 今日状态 ──
+
+  .daily-card {
+    :deep(.el-card__header) {
+      font-weight: 600;
+      padding: 10px 16px;
+    }
+    :deep(.el-card__body) {
+      padding: 12px 16px;
+    }
+  }
+
+  .daily-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .daily-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .daily-label {
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    white-space: nowrap;
+  }
+
+  .daily-input {
+    width: 72px;
+  }
+
+  .daily-suffix {
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .daily-single-btn {
+    margin-left: auto;
+  }
+
+  // ── 策略表标注 ──
+
+  .strategy-note {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
   // ── 最优策略建议 ──
 
   .advice-card {
@@ -896,6 +1077,10 @@ function handleOtpChange(val: string | number) {
   .advice-value {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+
+  .advice-today-value {
+    color: var(--el-color-warning);
   }
 
   .advice-decision {
