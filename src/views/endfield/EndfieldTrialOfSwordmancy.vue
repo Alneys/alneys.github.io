@@ -222,6 +222,16 @@
                 <el-tag v-else type="info" size="small"> 必停 </el-tag>
               </template>
             </el-table-column>
+            <el-table-column label="最优期望" width="120">
+              <template #default="{ row }">
+                <span class="num-cell">{{
+                  (row.expected_continue_reward != null
+                    ? Math.max(row.current_reward, row.expected_continue_reward)
+                    : row.current_reward
+                  ).toLocaleString()
+                }}</span>
+              </template>
+            </el-table-column>
           </el-table>
         </el-collapse-item>
       </el-collapse>
@@ -726,13 +736,15 @@ function handleOtpChange(val: string | number) {
 
   .drawn-slot-num {
     font-size: 32px;
-    font-weight: 800;
+    font-weight: bold;
     line-height: 1;
     color: var(--el-color-primary);
   }
 
   .drawn-slot-q {
-    font-size: 24px;
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1;
     color: var(--el-text-color-placeholder);
   }
 
