@@ -104,14 +104,23 @@
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
                   :key="iconIndex"
                   :card="icon.card"
-                  :is-vocal-underlined="isDominantParamUnderline(headerItem, scope.row, 'vocal')"
-                  :is-dance-underlined="isDominantParamUnderline(headerItem, scope.row, 'dance')"
-                  :is-visual-underlined="isDominantParamUnderline(headerItem, scope.row, 'visual')"
+                  :is-vocal-underlined="
+                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'vocal')
+                  "
+                  :is-dance-underlined="
+                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'dance')
+                  "
+                  :is-visual-underlined="
+                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'visual')
+                  "
                 >
                   <img
                     v-show="
-                      !isDominantSpecializeNotMatch(headerItem, scope.row, icon.card) ||
-                      showSpecializeNotMatch
+                      !isDominantSpecializeNotMatch(
+                        headerItem,
+                        scope.row as TableDataRow,
+                        icon.card,
+                      ) || showSpecializeNotMatch
                     "
                     :class="{
                       'cgss-icon': true,
@@ -122,7 +131,7 @@
                       'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
                       'icon-specialize-not-match': isDominantSpecializeNotMatch(
                         headerItem,
-                        scope.row,
+                        scope.row as TableDataRow,
                         icon.card,
                       ),
                       'icon-season-limited':
@@ -131,7 +140,9 @@
                         highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
                     }"
                     :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
-                    @click="onIconClick(scope.row, headerItem.prop, Number(iconIndex))"
+                    @click="
+                      onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
+                    "
                   />
                 </CgssUnitViewerCardTooltip>
                 <div
@@ -399,7 +410,7 @@ const handleDominantSortChange = ({
   order,
 }: {
   column: TableColumnCtx<TableDataRow>;
-  prop: string;
+  prop: string | null;
   order: 'ascending' | 'descending' | null;
 }) => {
   if (prop) {

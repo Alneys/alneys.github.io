@@ -81,7 +81,9 @@
                       'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
                     }"
                     :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
-                    @click="onIconClick(scope.row, headerItem.prop, Number(iconIndex))"
+                    @click="
+                      onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
+                    "
                   />
                 </CgssUnitViewerCardTooltip>
                 <div v-if="scope.row[headerItem.prop].length === 0">x</div>
@@ -256,7 +258,7 @@ const handleResonanceSortChange = ({
   order,
 }: {
   column: TableColumnCtx<TableDataRow>;
-  prop: string;
+  prop: string | null;
   order: 'ascending' | 'descending' | null;
 }) => {
   if (prop) {
