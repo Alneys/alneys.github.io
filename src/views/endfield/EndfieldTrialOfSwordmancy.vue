@@ -150,11 +150,65 @@
             />
             <span class="daily-suffix">/ 2</span>
           </div>
+          <div class="daily-item">
+            <span class="daily-label">剩余放弃</span>
+            <el-input-number
+              v-model="remainingAbandons"
+              :min="0"
+              :max="3"
+              size="small"
+              class="daily-input"
+            />
+            <span class="daily-suffix">/ 3</span>
+          </div>
           <el-button size="small" @click="setSingleSimulation" class="daily-single-btn">
             设为单次模拟
           </el-button>
+          <el-button size="small" type="danger" @click="resetToday" class="daily-reset-btn">
+            重置今日
+          </el-button>
         </div>
       </el-card>
+
+      <div class="actions">
+        <el-button
+          type="primary"
+          @click="drawCard"
+          :disabled="!canDraw || remainingGames === 0"
+          size="large"
+          class="action-btn"
+        >
+          {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
+        </el-button>
+        <el-button
+          type="warning"
+          @click="toggleDouble"
+          :disabled="!canDouble"
+          size="large"
+          class="action-btn"
+        >
+          {{ doubled ? '已翻倍' : '开启翻倍' }}
+        </el-button>
+        <el-button
+          type="danger"
+          @click="abandonGame"
+          :disabled="!canAbandon"
+          size="large"
+          class="action-btn"
+        >
+          放弃本局
+        </el-button>
+        <el-button
+          type="info"
+          :disabled="remainingGames === 0 || activeDrawCount === 0"
+          @click="activeDrawCount > 0 ? endGame() : resetGame()"
+          size="large"
+          class="action-btn"
+        >
+          <template v-if="activeDrawCount > 0">结算本局</template>
+          <template v-else>新一局</template>
+        </el-button>
+      </div>
 
       <el-card class="advice-card">
         <template #header>
@@ -163,13 +217,13 @@
         <div v-if="currentAdvice" class="advice-content">
           <div class="advice-row">
             <span class="advice-label">本局当前奖励</span>
-            <span class="advice-value">{{ currentAdvice.current_reward.toLocaleString() }}</span>
+            <span class="advice-value">{{ formatDecimal(currentAdvice.current_reward) }}</span>
           </div>
           <div class="advice-row">
             <span class="advice-label">本局继续期望</span>
             <span class="advice-value">{{
               currentAdvice.expected_continue_reward != null
-                ? currentAdvice.expected_continue_reward.toLocaleString()
+                ? formatDecimal(currentAdvice.expected_continue_reward)
                 : '—'
             }}</span>
           </div>
@@ -179,35 +233,59 @@
             <span class="advice-label">各行动今日总期望：</span>
             <span class="advice-value"></span>
           </div>
-          <div class="advice-row">
+          <div
+            class="advice-row"
+            :class="{
+              'advice-row-optimal':
+                currentAdvice.optimal_action === 'continue' ||
+                currentAdvice.optimal_action === 'must_continue',
+            }"
+          >
             <span class="advice-label">继续抽牌</span>
             <span class="advice-value">{{
-              currentAdvice.draw_total != null ? currentAdvice.draw_total.toLocaleString() : '—'
+              currentAdvice.draw_total != null ? formatDecimal(currentAdvice.draw_total) : '—'
             }}</span>
           </div>
-          <div class="advice-row">
+          <div
+            class="advice-row"
+            :class="{ 'advice-row-optimal': currentAdvice.optimal_action === 'double' }"
+          >
             <span class="advice-label">开启翻倍</span>
             <span class="advice-value">{{
-              currentAdvice.double_total != null ? currentAdvice.double_total.toLocaleString() : '—'
+              currentAdvice.double_total != null ? formatDecimal(currentAdvice.double_total) : '—'
             }}</span>
           </div>
-          <div class="advice-row">
+          <div
+            class="advice-row"
+            :class="{ 'advice-row-optimal': currentAdvice.optimal_action === 'abandon' }"
+          >
+            <span class="advice-label">放弃本局</span>
+            <span class="advice-value">{{
+              currentAdvice.abandon_total != null ? formatDecimal(currentAdvice.abandon_total) : '—'
+            }}</span>
+          </div>
+          <div
+            class="advice-row"
+            :class="{
+              'advice-row-optimal':
+                currentAdvice.optimal_action === 'stop' ||
+                currentAdvice.optimal_action === 'must_stop',
+            }"
+          >
             <span class="advice-label">结算本局</span>
             <span class="advice-value">{{
-              currentAdvice.stop_total != null ? currentAdvice.stop_total.toLocaleString() : '—'
+              currentAdvice.stop_total != null ? formatDecimal(currentAdvice.stop_total) : '—'
             }}</span>
           </div>
           <div class="advice-row">
             <span class="advice-label" style="margin-left: 0.5em">- 结算本局后的期望</span>
-            <span class="advice-value">{{
-              currentAdvice.expected_after_stop.toLocaleString()
-            }}</span>
+            <span class="advice-value">{{ formatDecimal(currentAdvice.expected_after_stop) }}</span>
           </div>
           <el-divider style="margin: 8px 0" />
           <div class="advice-row">
             <span class="advice-label">今日总期望</span>
             <span class="advice-value advice-today-value">{{
-              currentAdvice.expected_today.toLocaleString()
+              formatDecimal(currentAdvice.expected_today)
             }}</span>
           </div>
 
@@ -221,10 +299,14 @@
               'advice-stop':
                 currentAdvice.optimal_action === 'stop' ||
                 currentAdvice.optimal_action === 'must_stop',
+              'advice-abandon': currentAdvice.optimal_action === 'abandon',
             }"
           >
             <template v-if="currentAdvice.optimal_action === 'double'">
               建议先开启翻倍再继续
+            </template>
+            <template v-else-if="currentAdvice.optimal_action === 'abandon'">
+              建议放弃本局（重开期望更高）
             </template>
             <template v-else-if="currentAdvice.optimal_action === 'continue'">
               建议继续抽牌（期望更高）
@@ -235,7 +317,7 @@
             <template v-else-if="currentAdvice.optimal_action === 'must_continue'">
               必须抽第一张牌
             </template>
-            <template v-else>已无法继续抽牌</template>
+            <template v-else>建议结算</template>
           </div>
         </div>
         <div v-else class="advice-content">
@@ -312,40 +394,6 @@
           </el-table>
         </el-collapse-item>
       </el-collapse>
-
-      <div class="actions">
-        <el-button
-          type="primary"
-          @click="drawCard"
-          :disabled="!canDraw || remainingGames === 0"
-          size="large"
-          class="action-btn"
-        >
-          {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
-        </el-button>
-        <el-button
-          type="warning"
-          @click="toggleDouble"
-          :disabled="!canDouble"
-          size="large"
-          class="action-btn"
-        >
-          {{ doubled ? '已翻倍' : '开启翻倍' }}
-        </el-button>
-        <el-button
-          type="info"
-          :disabled="remainingGames === 0 || activeDrawCount === 0"
-          @click="activeDrawCount > 0 ? endGame() : resetGame()"
-          size="large"
-          class="action-btn"
-        >
-          <template v-if="activeDrawCount > 0">结算本局</template>
-          <template v-else>新一局</template>
-        </el-button>
-        <el-button type="danger" @click="resetToday" size="large" class="action-btn">
-          重置今日
-        </el-button>
-      </div>
     </div>
   </div>
 </template>
@@ -430,6 +478,8 @@ const doubled = ref(false);
 const remainingGames = ref(3);
 /** 今日剩余翻倍次数 */
 const remainingDoubles = ref(2);
+/** 今日剩余放弃次数 */
+const remainingAbandons = ref(3);
 /** 手动设置时牌池不足的警告标记 */
 const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
 
@@ -507,13 +557,15 @@ function endGame() {
 function resetToday() {
   remainingGames.value = 3;
   remainingDoubles.value = 2;
+  remainingAbandons.value = 3;
   resetGame();
 }
 
-/** 设置为单次模拟（P=1, B=0） */
+/** 设置为单次模拟（P=1, B=0, A=0） */
 function setSingleSimulation() {
   remainingGames.value = 1;
   remainingDoubles.value = 0;
+  remainingAbandons.value = 0;
   resetGame();
 }
 
@@ -572,6 +624,11 @@ const canDouble = computed(() => {
   return activeDrawCount.value < 3 && !doubled.value && remainingDoubles.value > 0;
 });
 
+/** 可放弃条件：有放弃次数、已抽至少一张牌、有剩余游玩次数 */
+const canAbandon = computed(() => {
+  return remainingAbandons.value > 0 && activeDrawCount.value > 0 && remainingGames.value > 0;
+});
+
 // ── 游戏操作 ──
 
 /** 随机抽取一张牌 */
@@ -627,7 +684,23 @@ function toggleDouble() {
   remainingDoubles.value--;
 }
 
+/** 放弃本局：不消耗游玩次数，退还翻倍，重置牌局 */
+function abandonGame() {
+  if (!canAbandon.value) return;
+  if (doubled.value) remainingDoubles.value++;
+  remainingAbandons.value--;
+  resetGame();
+}
+
 // ── UI 辅助 ──
+
+/** 格式化数值为固定两位小数 */
+function formatDecimal(value: number): string {
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 /** 格式化奖励数字（显示为简短格式） */
 function formatRewardShort(value: number): string {
@@ -685,6 +758,7 @@ const currentAdvice = computed<AdviceResult | null>(() => {
     doubled.value,
     remainingGames.value,
     remainingDoubles.value,
+    remainingAbandons.value,
   );
 });
 
@@ -1036,6 +1110,10 @@ function handleOtpChange(val: string | number) {
     margin-left: auto;
   }
 
+  .daily-reset-btn {
+    margin-left: 0;
+  }
+
   // ── 策略表标注 ──
 
   .strategy-note {
@@ -1070,6 +1148,13 @@ function handleOtpChange(val: string | number) {
     font-size: 14px;
   }
 
+  .advice-row-optimal {
+    background: var(--el-color-primary-light-9);
+    font-weight: bold;
+
+    font-weight: 600;
+  }
+
   .advice-label {
     color: var(--el-text-color-secondary);
   }
@@ -1096,6 +1181,10 @@ function handleOtpChange(val: string | number) {
 
     &.advice-stop {
       color: var(--el-color-primary);
+    }
+
+    &.advice-abandon {
+      color: var(--el-color-danger);
     }
   }
 

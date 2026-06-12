@@ -12,11 +12,12 @@ export interface AdviceResult {
   current_reward: number;
   expected_continue_reward: number | null;
   expected_today: number;
-  optimal_action: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double';
+  optimal_action: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double' | 'abandon';
   /** 各行动的今日总期望（含未来局数），null 表示该行动不可用 */
   draw_total: number | null;
   double_total: number | null;
   stop_total: number | null;
+  abandon_total: number | null;
   /** 结算本局后剩余局数的期望 */
   expected_after_stop: number;
 }
@@ -231,6 +232,7 @@ export function getCurrentAdvice(
   doubled: boolean,
   remainingGames: number,
   remainingDoubles: number,
+  remainingAbandons: number,
 ): AdviceResult | null {
   const modValue = rewards.length;
   const maxDraws = 5;
@@ -248,6 +250,7 @@ export function getCurrentAdvice(
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
   const P = remainingGames;
   const B = remainingDoubles;
+  const A = remainingAbandons;
 
   const memo = new Map<string, number>();
 
@@ -260,8 +263,9 @@ export function getCurrentAdvice(
     Mv: number,
     P: number,
     B: number,
+    A: number,
   ): number {
-    const key = `${r1},${r2},${r3},${r4},${r5},${Mv},${P},${B}`;
+    const key = `${r1},${r2},${r3},${r4},${r5},${Mv},${P},${B},${A}`;
     const cached = memo.get(key);
     if (cached !== undefined) return cached;
 
@@ -276,48 +280,60 @@ export function getCurrentAdvice(
     const sp = ((dv % modValue) + modValue) % modValue;
     const cr = safeReward(rewards, sp) * Mv;
 
-    if (drn === maxDraws || rem === 0) {
-      const val =
-        cr +
-        dpDaily(deckInit[0]!, deckInit[1]!, deckInit[2]!, deckInit[3]!, deckInit[4]!, 1, P - 1, B);
-      memo.set(key, val);
-      return val;
-    }
-
-    const cannotStop = drn === 0; // 未抽任何牌时必须继续
+    const cannotStop = drn === 0;
     const rs = [r1, r2, r3, r4, r5];
 
-    let vDraw = 0;
-    for (let i = 0; i < 5; i++) {
-      if (rs[i]! > 0) {
-        const prob = rs[i]! / rem;
-        const next = [...rs];
-        next[i]!--;
-        vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, P, B);
+    let vDraw = -Infinity;
+    if (drn < maxDraws && rem > 0) {
+      vDraw = 0;
+      for (let i = 0; i < 5; i++) {
+        if (rs[i]! > 0) {
+          const prob = rs[i]! / rem;
+          const next = [...rs];
+          next[i]!--;
+          vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, P, B, A);
+        }
       }
     }
 
-    // 翻倍：仅在已抽 < 3、本局未翻倍、有剩余次数时可用
-    // 效果：Mv 置为 2，消耗一次翻倍次数，不改变牌池
     let vDouble = -Infinity;
     if (drn < 3 && Mv === 1 && B > 0) {
-      vDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, B - 1);
+      vDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, B - 1, A);
     }
 
-    // 停止：获得当前奖励，牌池重置，进入下一局
     let vStop = -Infinity;
-    if (!cannotStop) {
+    if (drn > 0) {
       vStop =
         cr +
-        dpDaily(deckInit[0]!, deckInit[1]!, deckInit[2]!, deckInit[3]!, deckInit[4]!, 1, P - 1, B);
+        dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P - 1,
+          B,
+          A,
+        );
     }
 
-    let result: number;
-    if (cannotStop) {
-      result = Math.max(vDraw, vDouble);
-    } else {
-      result = Math.max(vStop, vDraw, vDouble);
+    let vAbandon = -Infinity;
+    if (A > 0) {
+      vAbandon = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        P,
+        B + (Mv - 1),
+        A - 1,
+      );
     }
+
+    const result = Math.max(vDraw, vDouble, vStop, vAbandon);
 
     memo.set(key, result);
     return result;
@@ -325,19 +341,55 @@ export function getCurrentAdvice(
 
   const futureValue =
     P > 0
-      ? dpDaily(deckInit[0]!, deckInit[1]!, deckInit[2]!, deckInit[3]!, deckInit[4]!, 1, P - 1, B)
+      ? dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P - 1,
+          B,
+          A,
+        )
       : 0;
 
   if (drawn >= maxDraws || totalRemaining === 0) {
-    const expectedToday = Math.round((currentReward + futureValue) * 100) / 100;
+    let vAbandon = -Infinity;
+    if (A > 0 && drawn > 0) {
+      vAbandon = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        P,
+        B + (M - 1),
+        A - 1,
+      );
+    }
+
+    const vStop = currentReward + futureValue;
+    const best = Math.max(vStop, vAbandon);
+    const expectedToday = Math.round(best * 100) / 100;
+
+    let optimalAction: AdviceResult['optimal_action'];
+    if (A > 0 && drawn > 0 && vAbandon >= vStop) {
+      optimalAction = 'abandon';
+    } else {
+      optimalAction = 'must_stop';
+    }
+
     return {
       current_reward: currentReward,
       expected_continue_reward: null,
       expected_today: expectedToday,
-      optimal_action: 'must_stop',
+      optimal_action: optimalAction,
       draw_total: null,
       double_total: null,
-      stop_total: Math.round((currentReward + futureValue) * 100) / 100,
+      stop_total: Math.round(vStop * 100) / 100,
+      abandon_total: A > 0 && drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
       expected_after_stop: Math.round(futureValue * 100) / 100,
     };
   }
@@ -351,13 +403,13 @@ export function getCurrentAdvice(
       const prob = r[i]! / totalRemaining;
       const next = [...rState];
       next[i]!--;
-      vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, M, P, B);
+      vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, M, P, B, A);
     }
   }
 
   let vDouble = -Infinity;
   if (drawn < 3 && !doubled && B > 0) {
-    vDouble = dpDaily(rState[0]!, rState[1]!, rState[2]!, rState[3]!, rState[4]!, 2, P, B - 1);
+    vDouble = dpDaily(rState[0]!, rState[1]!, rState[2]!, rState[3]!, rState[4]!, 2, P, B - 1, A);
   }
 
   let vStop = -Infinity;
@@ -365,19 +417,37 @@ export function getCurrentAdvice(
     vStop = currentReward + futureValue;
   }
 
+  let vAbandon = -Infinity;
+  if (A > 0 && drawn > 0) {
+    vAbandon = dpDaily(
+      deckInit[0]!,
+      deckInit[1]!,
+      deckInit[2]!,
+      deckInit[3]!,
+      deckInit[4]!,
+      1,
+      P,
+      B + (M - 1),
+      A - 1,
+    );
+  }
+
   const evContinue = Math.max(vDraw, vDouble);
   const expectedContinueReward = Math.round((evContinue - futureValue) * 100) / 100;
-  const expectedToday = Math.round(Math.max(vStop, evContinue) * 100) / 100;
+  const expectedToday = Math.round(Math.max(vStop, evContinue, vAbandon) * 100) / 100;
 
-  // 使用 >= 使翻倍在期望相同时优先（翻倍不消耗局数，长期价值更高）
-  const isDoubleOptimal = drawn < 3 && M === 1 && B > 0 && vDouble >= vDraw && vDouble >= vStop;
+  const isDoubleOptimal =
+    drawn < 3 && M === 1 && B > 0 && vDouble >= vDraw && vDouble >= vStop && vDouble >= vAbandon;
+  const isAbandonOptimal =
+    A > 0 && drawn > 0 && vAbandon >= vStop && vAbandon >= evContinue && !isDoubleOptimal;
 
-  // 行动优先级：翻倍 > 继续 > 停止；未抽牌时必须继续
   let optimalAction: AdviceResult['optimal_action'];
-  if (drawn === 0 && !isDoubleOptimal) {
+  if (drawn === 0 && !isDoubleOptimal && !isAbandonOptimal) {
     optimalAction = 'must_continue';
   } else if (isDoubleOptimal) {
     optimalAction = 'double';
+  } else if (isAbandonOptimal) {
+    optimalAction = 'abandon';
   } else if (evContinue > vStop) {
     optimalAction = 'continue';
   } else {
@@ -392,6 +462,7 @@ export function getCurrentAdvice(
     draw_total: Math.round(vDraw * 100) / 100,
     double_total: drawn < 3 && !doubled && B > 0 ? Math.round(vDouble * 100) / 100 : null,
     stop_total: drawn > 0 ? Math.round(vStop * 100) / 100 : null,
+    abandon_total: A > 0 && drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
     expected_after_stop: Math.round(futureValue * 100) / 100,
   };
 }
