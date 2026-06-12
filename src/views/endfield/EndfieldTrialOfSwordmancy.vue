@@ -3,7 +3,11 @@
     <h1 class="view-title">Endfield Trial Of Swordmancy</h1>
     <div class="al-divider"></div>
 
-    <el-collapse v-model="activeCollapse" class="config-panel">
+    <el-collapse
+      v-model="activeCollapse"
+      class="config-panel"
+      style="--el-collapse-header-font-size: 16px"
+    >
       <el-collapse-item title="铭牌分布配置" name="config">
         <div class="config-grid">
           <div v-for="level in 5" :key="level" class="config-item">
@@ -25,7 +29,7 @@
     </el-collapse>
 
     <el-row :gutter="16" class="game-top">
-      <el-col :span="16"
+      <el-col :span="18"
         ><el-card class="drawn-card">
           <template #header>
             <span>已抽铭牌</span>
@@ -41,15 +45,28 @@
                 <span class="drawn-slot-lv">Lv</span>
                 <span class="drawn-slot-num">{{ drawnCards[slotIndex - 1]?.level }}</span>
               </div>
-              <div v-else class="drawn-slot-empty">
-                <span>?</span>
+              <div v-else class="drawn-slot-inner">
+                <span class="drawn-slot-lv">Lv</span>
+                <span class="drawn-slot-q">?</span>
               </div>
             </div>
           </div>
-        </el-card></el-col
-      >
+          <el-divider style="margin: 16px 0"></el-divider>
+          <div class="drawn-manual-input">
+            <div class="manual-input-label">手动设置等级</div>
+            <el-input-otp
+              :model-value="otpValue"
+              :length="5"
+              inputmode="numeric"
+              :validator="onlyLevel"
+              @update:model-value="handleOtpChange"
+            />
+            <span v-if="hasWarning" class="manual-input-warning">牌池不足</span>
+          </div>
+        </el-card>
+      </el-col>
 
-      <el-col :span="8"
+      <el-col :span="6"
         ><el-card class="pool-card">
           <template #header>
             <span>牌池 · 剩余 {{ pool.length }} 张</span>
@@ -65,30 +82,9 @@
     </el-row>
 
     <div class="game-bottom">
-      <el-card class="status-card">
-        <template #header>
-          <span>当前状态</span>
-        </template>
-        <div class="status-grid">
-          <div class="status-row">
-            <span class="status-label">战力总和</span>
-            <span class="status-value">{{ totalPower }}</span>
-          </div>
-          <div class="status-row">
-            <span class="status-label">翻倍状态</span>
-            <span v-if="doubled" class="status-value status-doubled">已开启</span>
-            <span v-else class="status-value status-off">未开启</span>
-          </div>
-          <div class="status-row">
-            <span class="status-label">抽牌进度</span>
-            <span class="status-value">{{ drawnCards.length }} / {{ MAX_DRAWS }}</span>
-          </div>
-        </div>
-      </el-card>
-
       <el-card class="reward-card">
         <template #header>
-          <span>奖励挡位</span>
+          <span>奖励状态</span>
         </template>
         <div class="power-point-section">
           <span class="reward-label">战力点</span>
@@ -121,7 +117,7 @@
             >
             <template v-if="doubled">
               <span class="reward-multiply">×2</span>
-              <span class="final-reward-final">= {{ finalReward.toLocaleString() }}</span>
+              <span class="final-reward-final"> = {{ finalReward.toLocaleString() }} </span>
             </template>
           </div>
         </div>
@@ -135,7 +131,7 @@
           size="large"
           class="action-btn"
         >
-          {{ drawnCards.length === 0 ? '开始抽牌' : '继续抽牌' }}
+          {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
         </el-button>
         <el-button
           :type="doubled ? 'warning' : 'default'"
@@ -204,8 +200,9 @@ const DEFAULT_CONFIG: PlaqueConfig = {
 const activeCollapse = ref<string[]>([]);
 
 const pool = ref<Plaque[]>([]);
-const drawnCards = ref<Plaque[]>([]);
+const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
 const doubled = ref(false);
+const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
 
 let nextId = 0;
 
@@ -230,17 +227,29 @@ function buildPool(): Plaque[] {
   return result;
 }
 
+function initDrawnCards() {
+  drawnCards.value = [null, null, null, null, null];
+  for (let i = 0; i < 5; i++) slotWarnings[i] = false;
+}
+
+function resetDrawn() {
+  for (const card of drawnCards.value) {
+    if (card) pool.value.push(card);
+  }
+  initDrawnCards();
+}
+
 function applyConfig() {
   nextId = 0;
   pool.value = buildPool();
-  drawnCards.value = [];
+  initDrawnCards();
   doubled.value = false;
 }
 
 function reset() {
   nextId = 0;
   pool.value = buildPool();
-  drawnCards.value = [];
+  initDrawnCards();
   doubled.value = false;
 }
 
@@ -262,7 +271,9 @@ const poolByLevel = computed(() => {
   return groups;
 });
 
-const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + c.power, 0));
+const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
+
+const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + (c?.power ?? 0), 0));
 
 const rewardIndex = computed(() => {
   if (totalPower.value > 10) {
@@ -278,18 +289,55 @@ const finalReward = computed(() => {
 });
 
 const canDraw = computed(() => {
-  return drawnCards.value.length < MAX_DRAWS && pool.value.length > 0;
+  return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
 });
 
 const canDouble = computed(() => {
-  return drawnCards.value.length < 3 && !doubled.value;
+  return activeDrawCount.value < 3 && !doubled.value;
 });
 
 function drawCard() {
   if (!canDraw.value) return;
+  const emptyIndex = drawnCards.value.findIndex((c) => c == null);
+  if (emptyIndex === -1) return;
   const index = Math.floor(Math.random() * pool.value.length);
   const plaque = pool.value.splice(index, 1)[0]!;
-  drawnCards.value.push(plaque);
+  drawnCards.value[emptyIndex] = plaque;
+}
+
+function takeFromPool(level: number): Plaque | null {
+  const idx = pool.value.findIndex((p) => p.level === level);
+  if (idx === -1) return null;
+  return pool.value.splice(idx, 1)[0]!;
+}
+
+function updateSlotLevel(slotIndex: number, level: number) {
+  if (slotIndex < 0 || slotIndex >= MAX_DRAWS) return;
+
+  const old = drawnCards.value[slotIndex];
+  if (old) pool.value.push(old);
+  drawnCards.value[slotIndex] = null;
+  slotWarnings[slotIndex] = false;
+
+  const plaque = takeFromPool(level);
+  if (plaque) {
+    drawnCards.value[slotIndex] = plaque;
+  } else {
+    drawnCards.value[slotIndex] = createPlaque(level);
+    slotWarnings[slotIndex] = true;
+  }
+}
+
+function clearSlot(slotIndex: number) {
+  if (slotIndex < 0 || slotIndex >= MAX_DRAWS) return;
+  const old = drawnCards.value[slotIndex];
+  if (old) pool.value.push(old);
+  drawnCards.value[slotIndex] = null;
+  slotWarnings[slotIndex] = false;
+}
+
+function onlyLevel(value: string): boolean {
+  return value === '' || (value >= '1' && value <= '5');
 }
 
 function toggleDouble() {
@@ -314,6 +362,31 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
   label: String(i),
   value: i,
 }));
+
+const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join(''));
+
+const hasWarning = computed(() => slotWarnings.some(Boolean));
+
+function handleOtpChange(val: string | number) {
+  const s = String(val);
+  for (const card of drawnCards.value) {
+    if (card) pool.value.push(card);
+  }
+  initDrawnCards();
+  for (let i = 0; i < MAX_DRAWS; i++) {
+    const ch = s[i];
+    if (ch && ch >= '1' && ch <= '5') {
+      const level = Number(ch);
+      const plaque = takeFromPool(level);
+      if (plaque) {
+        drawnCards.value[i] = plaque;
+      } else {
+        drawnCards.value[i] = createPlaque(level);
+        slotWarnings[i] = true;
+      }
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -368,7 +441,6 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
 
   .drawn-card,
   .pool-card,
-  .status-card,
   .reward-card {
     :deep(.el-card__header) {
       font-weight: 600;
@@ -392,6 +464,8 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
   .drawn-slots {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .drawn-slot {
@@ -431,9 +505,26 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
     color: var(--el-color-primary);
   }
 
-  .drawn-slot-empty {
+  .drawn-slot-q {
     font-size: 24px;
     color: var(--el-text-color-placeholder);
+  }
+
+  .drawn-manual-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .manual-input-label {
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    margin-right: 8px;
+  }
+
+  .manual-input-warning {
+    color: var(--el-color-danger);
   }
 
   .pool-list {
@@ -463,37 +554,6 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
     color: var(--el-text-color-primary);
   }
 
-  .status-grid {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-
-  .status-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .status-label {
-    font-size: 14px;
-    color: var(--el-text-color-secondary);
-  }
-
-  .status-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--el-text-color-primary);
-  }
-
-  .status-doubled {
-    color: var(--el-color-warning);
-  }
-
-  .status-off {
-    color: var(--el-text-color-placeholder);
-  }
-
   .reward-label {
     font-size: 14px;
     font-weight: 600;
@@ -504,7 +564,7 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 
     .reward-label {
       margin-bottom: 0;
@@ -514,6 +574,7 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
 
     .el-segmented {
       flex-grow: 1;
+      --el-border-radius-base: 0px;
     }
   }
 
@@ -545,18 +606,18 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
   }
 
   .base-reward {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
   }
 
   .reward-multiply {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--el-color-warning);
     font-weight: 600;
   }
 
   .final-reward-final {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--el-color-warning);
   }
