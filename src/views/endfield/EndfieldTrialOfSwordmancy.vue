@@ -123,6 +123,109 @@
         </div>
       </el-card>
 
+      <el-card class="advice-card">
+        <template #header>
+          <span>最优策略建议</span>
+        </template>
+        <div v-if="currentAdvice" class="advice-content">
+          <div class="advice-row">
+            <span class="advice-label">当前奖励</span>
+            <span class="advice-value">{{ currentAdvice.current_reward.toLocaleString() }}</span>
+          </div>
+          <div class="advice-row">
+            <span class="advice-label">继续期望</span>
+            <span class="advice-value">{{
+              currentAdvice.expected_continue_reward != null
+                ? currentAdvice.expected_continue_reward.toLocaleString()
+                : '—'
+            }}</span>
+          </div>
+          <el-divider style="margin: 8px 0" />
+          <div
+            class="advice-decision"
+            :class="{
+              'advice-continue':
+                currentAdvice.optimal_action === 'continue' ||
+                currentAdvice.optimal_action === 'must_continue',
+              'advice-stop':
+                currentAdvice.optimal_action === 'stop' ||
+                currentAdvice.optimal_action === 'must_stop',
+            }"
+          >
+            <template v-if="currentAdvice.optimal_action === 'continue'">
+              建议继续抽牌（期望更高）
+            </template>
+            <template v-else-if="currentAdvice.optimal_action === 'stop'">
+              建议停止（当前奖励更高）
+            </template>
+            <template v-else-if="currentAdvice.optimal_action === 'must_continue'">
+              必须抽第一张牌
+            </template>
+            <template v-else>已无法继续抽牌</template>
+          </div>
+        </div>
+        <div v-else class="advice-content">
+          <div class="advice-empty">正在计算策略数据…</div>
+        </div>
+      </el-card>
+
+      <el-collapse v-model="strategyCollapse" class="strategy-panel">
+        <el-collapse-item title="完整策略表" name="strategy">
+          <el-input
+            v-model="strategySearch"
+            placeholder="搜索组合（如 123、55）"
+            clearable
+            class="strategy-search"
+          />
+          <el-table
+            :data="filteredResults"
+            size="small"
+            max-height="400"
+            :row-class-name="tableRowClassName"
+            style="width: 100%"
+          >
+            <el-table-column label="组合" width="120">
+              <template #default="{ row }">
+                <span v-if="row.combination === ''" class="strategy-empty">(初始)</span>
+                <span v-else>{{ row.combination }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="drawn" label="已抽" width="80" />
+            <el-table-column label="当前奖励">
+              <template #default="{ row }">
+                <span class="num-cell">{{ row.current_reward.toLocaleString() }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="继续期望">
+              <template #default="{ row }">
+                <span v-if="row.expected_continue_reward != null" class="num-cell">{{
+                  row.expected_continue_reward.toLocaleString()
+                }}</span>
+                <span v-else class="strategy-na">—</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="行动" width="80">
+              <template #default="{ row }">
+                <el-tag v-if="row.optimal_action === 'continue'" type="success" size="small">
+                  继续
+                </el-tag>
+                <el-tag v-else-if="row.optimal_action === 'stop'" type="primary" size="small">
+                  停止
+                </el-tag>
+                <el-tag
+                  v-else-if="row.optimal_action === 'must_continue'"
+                  type="warning"
+                  size="small"
+                >
+                  必抽
+                </el-tag>
+                <el-tag v-else type="info" size="small"> 必停 </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-collapse-item>
+      </el-collapse>
+
       <div class="actions">
         <el-button
           type="primary"
@@ -134,6 +237,7 @@
           {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
         </el-button>
         <el-button
+          v-show="false"
           :type="doubled ? 'warning' : 'default'"
           @click="toggleDouble"
           :disabled="!canDouble"
@@ -149,10 +253,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref, computed, watch } from 'vue';
+import { solve, getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
+import type { SolverResultEntry, AdviceResult } from './EndfieldTrialSwordmancySolver';
 
+/** 最多抽取张数 */
 const MAX_DRAWS = 5;
 
+/** 默认战力点 → 奖励对照表（索引 = 战力点） */
 const REWARD_TABLE: Record<number, number> = {
   0: 0,
   1: 2000,
@@ -167,6 +275,7 @@ const REWARD_TABLE: Record<number, number> = {
   10: 320000,
 };
 
+/** 各等级牌数量配置 */
 interface PlaqueConfig {
   level1: number;
   level2: number;
@@ -175,11 +284,14 @@ interface PlaqueConfig {
   level5: number;
 }
 
+/** 单张铭牌 */
 interface Plaque {
   id: number;
   level: number;
   power: number;
 }
+
+// ── 牌库配置 ──
 
 const config = reactive<PlaqueConfig>({
   level1: 5,
@@ -199,10 +311,30 @@ const DEFAULT_CONFIG: PlaqueConfig = {
 
 const activeCollapse = ref<string[]>([]);
 
+// ── DP 策略表面板状态 ──
+
+const strategyCollapse = ref<string[]>([]);
+const strategySearch = ref('');
+
+// ── 游戏核心状态 ──
+
+/** 牌池（剩余未抽的铭牌） */
 const pool = ref<Plaque[]>([]);
+/** 已抽的 5 个槽位 */
 const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
+/** 是否已开启奖励翻倍 */
 const doubled = ref(false);
+/** 手动设置时牌池不足的警告标记 */
 const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
+
+/** 各等级已抽数量 */
+const drawnCounts = computed(() => {
+  const counts = [0, 0, 0, 0, 0];
+  for (const card of drawnCards.value) {
+    if (card) counts[card.level - 1]!++;
+  }
+  return counts;
+});
 
 let nextId = 0;
 
@@ -210,6 +342,7 @@ function createPlaque(level: number): Plaque {
   return { id: nextId++, level, power: level };
 }
 
+/** 根据当前配置构建初始牌池 */
 function buildPool(): Plaque[] {
   const result: Plaque[] = [];
   const entries: [number, number][] = [
@@ -227,11 +360,13 @@ function buildPool(): Plaque[] {
   return result;
 }
 
+/** 清空已抽槽位 */
 function initDrawnCards() {
   drawnCards.value = [null, null, null, null, null];
   for (let i = 0; i < 5; i++) slotWarnings[i] = false;
 }
 
+/** 将已抽牌放回牌池 */
 function resetDrawn() {
   for (const card of drawnCards.value) {
     if (card) pool.value.push(card);
@@ -239,6 +374,7 @@ function resetDrawn() {
   initDrawnCards();
 }
 
+/** 应用配置新配置并重置牌池 */
 function applyConfig() {
   nextId = 0;
   pool.value = buildPool();
@@ -246,6 +382,7 @@ function applyConfig() {
   doubled.value = false;
 }
 
+/** 新一局，重置游戏 */
 function reset() {
   nextId = 0;
   pool.value = buildPool();
@@ -253,6 +390,7 @@ function reset() {
   doubled.value = false;
 }
 
+/** 重置铭牌分布为默认值 */
 function resetConfig() {
   config.level1 = DEFAULT_CONFIG.level1;
   config.level2 = DEFAULT_CONFIG.level2;
@@ -263,6 +401,8 @@ function resetConfig() {
 
 pool.value = buildPool();
 
+// ── 牌池展示 ──
+
 const poolByLevel = computed(() => {
   const groups: Record<number, Plaque[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
   for (const plaque of pool.value) {
@@ -271,10 +411,13 @@ const poolByLevel = computed(() => {
   return groups;
 });
 
+// ── 奖励计算 ──
+
 const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
 
 const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + (c?.power ?? 0), 0));
 
+/** 战力点（超过 10 时取模 11） */
 const rewardIndex = computed(() => {
   if (totalPower.value > 10) {
     return totalPower.value % 11;
@@ -282,11 +425,15 @@ const rewardIndex = computed(() => {
   return totalPower.value;
 });
 
+/** 翻倍前的基础奖励 */
 const baseReward = computed(() => REWARD_TABLE[rewardIndex.value] ?? 0);
 
+/** 最终奖励（含翻倍） */
 const finalReward = computed(() => {
   return doubled.value ? baseReward.value * 2 : baseReward.value;
 });
+
+// ── 按钮可用状态 ──
 
 const canDraw = computed(() => {
   return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
@@ -296,6 +443,9 @@ const canDouble = computed(() => {
   return activeDrawCount.value < 3 && !doubled.value;
 });
 
+// ── 游戏操作 ──
+
+/** 随机抽取一张牌 */
 function drawCard() {
   if (!canDraw.value) return;
   const emptyIndex = drawnCards.value.findIndex((c) => c == null);
@@ -305,6 +455,7 @@ function drawCard() {
   drawnCards.value[emptyIndex] = plaque;
 }
 
+/** 从牌池中取出一张指定等级的牌（返回 null 表示牌池不足） */
 function takeFromPool(level: number): Plaque | null {
   const idx = pool.value.findIndex((p) => p.level === level);
   if (idx === -1) return null;
@@ -336,6 +487,7 @@ function clearSlot(slotIndex: number) {
   slotWarnings[slotIndex] = false;
 }
 
+/** OTP 输入校验：只允许 1-5 和空 */
 function onlyLevel(value: string): boolean {
   return value === '' || (value >= '1' && value <= '5');
 }
@@ -345,6 +497,9 @@ function toggleDouble() {
   doubled.value = true;
 }
 
+// ── UI 辅助 ──
+
+/** 格式化奖励数字（显示为简短格式） */
 function formatRewardShort(value: number): string {
   if (value === 0) return '0';
   if (value >= 1000) return `${Math.round(value / 1000)}K`;
@@ -363,9 +518,77 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
   value: i,
 }));
 
+/** OTP 输入框的字符串值（按抽牌顺序排列） */
 const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join(''));
 
 const hasWarning = computed(() => slotWarnings.some(Boolean));
+
+// ── DP 求解器集成 ──
+
+/** 将配置对象转为数组形式供求解器使用 */
+const deckConfigArray = computed(() => [
+  config.level1,
+  config.level2,
+  config.level3,
+  config.level4,
+  config.level5,
+]);
+const rewardArray = computed(() => Object.values(REWARD_TABLE).slice(0, 11));
+
+/** 完整策略表结果（配置变化时自动重新计算） */
+const solverResults = computed<SolverResultEntry[]>(() => {
+  const deck = deckConfigArray.value;
+  const rewards = rewardArray.value;
+  if (deck.some((c) => c < 0)) return [];
+  return solve(deck, rewards);
+});
+
+/** 当前状态的最优行动建议 */
+const currentAdvice = computed<AdviceResult | null>(() => {
+  const deck = deckConfigArray.value;
+  const rewards = rewardArray.value;
+  if (deck.some((c) => c < 0)) return null;
+  return getCurrentAdvice(drawnCounts.value, deck, rewards);
+});
+
+// ── 策略表面板搜索与筛选 ──
+
+/** 子序列匹配（输入顺序无关，内部自动排序后比较） */
+function isSubsequence(raw: string, target: string): boolean {
+  const query = raw.split('').sort().join('');
+  let qi = 0;
+  for (let ti = 0; ti < target.length && qi < query.length; ti++) {
+    if (target[ti] === query[qi]) qi++;
+  }
+  return qi === query.length;
+}
+
+/** 按搜索词过滤策略表结果 */
+const filteredResults = computed(() => {
+  const query = strategySearch.value.trim();
+  if (!query) return solverResults.value;
+  return solverResults.value.filter((r) => isSubsequence(query, r.combination));
+});
+
+/** 当前已抽组合（排序后，用于表格行高亮匹配） */
+const currentCombinationStr = computed(() =>
+  drawnCounts.value.map((c, i) => String(i + 1).repeat(c)).join(''),
+);
+
+/** 抽牌或手动输入后，自动将搜索框同步为当前组合 */
+watch(otpValue, (val) => {
+  strategySearch.value = val;
+});
+
+/** el-table 行高亮回调 */
+function tableRowClassName({ row }: { row: SolverResultEntry }) {
+  if (row.combination === currentCombinationStr.value) {
+    return 'table-row-highlight';
+  }
+  return '';
+}
+
+// ── OTP 手动输入处理 ──
 
 function handleOtpChange(val: string | number) {
   const s = String(val);
@@ -390,6 +613,7 @@ function handleOtpChange(val: string | number) {
 </script>
 
 <style lang="scss" scoped>
+// ── 布局与通用 ──
 #view-endfield-trial-of-swordmancy {
   .config-panel {
     margin-bottom: 16px;
@@ -438,6 +662,8 @@ function handleOtpChange(val: string | number) {
     flex-direction: column;
     gap: 16px;
   }
+
+  // ── 已抽铭牌区域 ──
 
   .drawn-card,
   .pool-card,
@@ -527,6 +753,8 @@ function handleOtpChange(val: string | number) {
     color: var(--el-color-danger);
   }
 
+  // ── 牌池展示 ──
+
   .pool-list {
     display: flex;
     flex-direction: column;
@@ -565,6 +793,8 @@ function handleOtpChange(val: string | number) {
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
+
+    // ── 奖励状态 ──
 
     .reward-label {
       margin-bottom: 0;
@@ -621,6 +851,94 @@ function handleOtpChange(val: string | number) {
     font-weight: 700;
     color: var(--el-color-warning);
   }
+
+  // ── 最优策略建议 ──
+
+  .advice-card {
+    :deep(.el-card__header) {
+      font-weight: 600;
+      padding: 10px 16px;
+    }
+    :deep(.el-card__body) {
+      padding: 12px 16px;
+    }
+  }
+
+  .advice-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .advice-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .advice-label {
+    color: var(--el-text-color-secondary);
+  }
+
+  .advice-value {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .advice-decision {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 6px 0;
+    border-radius: 6px;
+
+    &.advice-continue {
+      color: var(--el-color-success);
+    }
+
+    &.advice-stop {
+      color: var(--el-color-primary);
+    }
+  }
+
+  // ── 策略表 ──
+
+  .strategy-panel {
+    margin-bottom: 0;
+
+    :deep(.el-collapse-item__header) {
+      font-weight: 600;
+      font-size: 16px;
+    }
+  }
+
+  .strategy-search {
+    margin-bottom: 8px;
+  }
+
+  .num-cell {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .strategy-empty {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .strategy-na {
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(.table-row-highlight) {
+    background: var(--el-color-primary-light-9);
+    font-weight: 600;
+  }
+
+  :deep(.el-table__body tr.table-row-highlight:hover td) {
+    background: var(--el-color-primary-light-9);
+  }
+
+  // ── 操作按钮 ──
 
   .actions {
     display: flex;
