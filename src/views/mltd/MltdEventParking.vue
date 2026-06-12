@@ -358,7 +358,7 @@
                     <template #default="{ row }">
                       <el-button-group v-if="!row.highlight && row.rawItem">
                         <el-button
-                          v-if="!isEventLiveRow(row)"
+                          v-if="!isEventLiveRow(row as PlanTableRow)"
                           :icon="Plus"
                           size="small"
                           :disabled="row.count >= getInitialCount(row.rawItem)"
