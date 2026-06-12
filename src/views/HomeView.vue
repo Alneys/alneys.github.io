@@ -26,6 +26,9 @@ const env = import.meta.env;
       <router-link v-if="env.DEV" to="/endfield/gacha">
         <el-card shadow="hover">Endfield gacha info</el-card>
       </router-link>
+      <router-link v-if="env.DEV" to="/endfield/trial-of-swordmancy">
+        <el-card shadow="hover">Endfield Trial Of Swordmancy</el-card>
+      </router-link>
       <router-link to="/tools">
         <el-card shadow="hover">开发者工具</el-card>
       </router-link>
