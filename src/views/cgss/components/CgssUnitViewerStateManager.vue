@@ -7,22 +7,22 @@
       </el-button>
     </div>
     <div>
-      <el-button @click="exportCidsToClipboard" type="success" size="default">
+      <el-button type="success" size="default" @click="exportCidsToClipboard">
         导出当前状态到剪切板
       </el-button>
     </div>
     <div>
-      <el-button @click="importCidsFromToClipboard" type="warning" size="default">
+      <el-button type="warning" size="default" @click="importCidsFromToClipboard">
         从剪切板导入
       </el-button>
     </div>
     <div>
-      <el-button @click="exportCidsToLocalStorage" type="success" size="default">
+      <el-button type="success" size="default" @click="exportCidsToLocalStorage">
         保存当前状态到浏览器
       </el-button>
     </div>
     <div>
-      <el-button @click="importCidsFromLocalStorage" type="warning" size="default">
+      <el-button type="warning" size="default" @click="importCidsFromLocalStorage">
         从浏览器读取
       </el-button>
     </div>

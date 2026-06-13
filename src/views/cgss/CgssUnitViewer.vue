@@ -20,9 +20,9 @@
       <div class="al-divider"></div>
       <CgssUnitViewerResonanceTable
         ref="resonanceTableRef"
-        :skill-data="skillData"
         v-model:table-data="resonanceTableData"
         v-model:show-extra-columns="switchShowExtraColumns"
+        :skill-data="skillData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
@@ -32,7 +32,6 @@
       <div class="al-divider"></div>
       <CgssUnitViewerDominantTable
         ref="dominantTableRef"
-        :skill-data="skillData"
         v-model:table-data="dominantTableData"
         v-model:show-extra-columns="switchShowExtraColumns"
         v-model:show-overload-overdrive="switchShowOverloadOverdrive"
@@ -40,6 +39,7 @@
         v-model:show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
         v-model:show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
         v-model:highlight-season-limited="switchHighlightSeasonLimited"
+        :skill-data="skillData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"

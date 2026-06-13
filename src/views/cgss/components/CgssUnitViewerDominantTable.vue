@@ -1,6 +1,6 @@
 <template>
   <div class="cgss-unit-viewer-dominant-table">
-    <div class="unit-title" id="unit-dominant" style="font-weight: bold">双色 Dominant</div>
+    <div id="unit-dominant" class="unit-title" style="font-weight: bold">双色 Dominant</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
         <el-switch v-model="showExtraColumns" active-text="额外技能" />
