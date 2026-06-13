@@ -1,3 +1,11 @@
+/** 溢出厌恶心理模型参数 */
+export interface OverflowParams {
+  /** 比例衰减系数 0~1，每溢出 1 圈奖励乘以此值 */
+  aversionFactor: number;
+  /** 固定扣除值，每溢出 1 圈扣除一次，结果可为负 */
+  fixedPenalty: number;
+}
+
 /** 单个抽取组合的结果（单局 DP，不考虑翻倍与多局） */
 export interface SolverResultEntry {
   combination: string;
@@ -65,6 +73,18 @@ function safeReward(rewards: number[], s: number): number {
   return rewards[idx]!;
 }
 
+/** 计算调整后奖励（溢出厌恶模型） */
+function computeAdjustedReward(
+  rawReward: number,
+  drawnValue: number,
+  modValue: number,
+  params?: OverflowParams,
+): number {
+  if (!params || (params.aversionFactor === 1 && params.fixedPenalty === 0)) return rawReward;
+  const k = Math.floor(drawnValue / modValue);
+  return rawReward * Math.pow(params.aversionFactor, k) - k * params.fixedPenalty;
+}
+
 /**
  * DP 求解最优策略下的完整结果表
  *
@@ -75,8 +95,14 @@ function safeReward(rewards: number[], s: number): number {
  *   V(c) = max(R(s), E[V(c')])   已抽 1~4 张，可停可抽
  *   V(c) = E[V(c')]               未抽牌，必须抽
  *   V(c) = R(s)                   已抽 5 张，必须停
+ *
+ * @param overflowParams 可选，传入时使用溢出厌恶模型调整奖励
  */
-export function solve(deck: number[], rewards: number[]): SolverResultEntry[] {
+export function solve(
+  deck: number[],
+  rewards: number[],
+  overflowParams?: OverflowParams,
+): SolverResultEntry[] {
   const modValue = rewards.length;
   const maxDraws = 5;
   const totalCards = deck.reduce((a, b) => a + b, 0);
@@ -102,12 +128,13 @@ export function solve(deck: number[], rewards: number[]): SolverResultEntry[] {
     const drawn = totalCards - remaining;
     const drawnValue = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
     const s = ((drawnValue % modValue) + modValue) % modValue;
+    const rawReward = safeReward(rewards, s);
+    const adjustedReward = computeAdjustedReward(rawReward, drawnValue, modValue, overflowParams);
 
-    // 已抽 5 张，必须停止，直接返回当前奖励
+    // 已抽 5 张，必须停止，直接返回当前奖励（可能经过调整）
     if (drawn === maxDraws) {
-      const r = safeReward(rewards, s);
-      memo.set(key, r);
-      return r;
+      memo.set(key, adjustedReward);
+      return adjustedReward;
     }
 
     // 计算继续抽牌的期望值：各等级的加权平均
@@ -123,12 +150,12 @@ export function solve(deck: number[], rewards: number[]): SolverResultEntry[] {
       }
     }
 
-    // 未抽牌必须继续；否则可选择停止（取 max）
+    // 未抽牌必须继续；否则可选择停止（取 max，使用调整后奖励比较）
     let result: number;
     if (drawn === 0) {
       result = evContinue;
     } else {
-      result = Math.max(safeReward(rewards, s), evContinue);
+      result = Math.max(adjustedReward, evContinue);
     }
 
     memo.set(key, result);
@@ -142,6 +169,12 @@ export function solve(deck: number[], rewards: number[]): SolverResultEntry[] {
     const drawnValue = counts.reduce((sum, count, i) => sum + count * (i + 1), 0);
     const s = ((drawnValue % modValue) + modValue) % modValue;
     const currentReward = safeReward(rewards, s);
+    const adjustedReward = computeAdjustedReward(
+      currentReward,
+      drawnValue,
+      modValue,
+      overflowParams,
+    );
 
     const remaining = deck.map((d, i) => d - counts[i]!);
     const totalRemaining = remaining.reduce((a, b) => a + b, 0);
@@ -194,12 +227,13 @@ export function solve(deck: number[], rewards: number[]): SolverResultEntry[] {
         }
       }
       evContinue = Math.round(evContinue * 100) / 100;
-      optimalAction = evContinue > currentReward ? 'continue' : 'stop';
+      // 使用调整后奖励进行比较（有溢出参数时）
+      optimalAction = evContinue > adjustedReward ? 'continue' : 'stop';
     }
 
     results.push({
       combination: comboStr,
-      current_reward: currentReward,
+      current_reward: adjustedReward,
       expected_continue_reward: evContinue,
       optimal_action: optimalAction,
       drawn,
@@ -233,6 +267,7 @@ export function getCurrentAdvice(
   remainingGames: number,
   remainingDoubles: number,
   remainingAbandons: number,
+  overflowParams?: OverflowParams,
 ): AdviceResult | null {
   const modValue = rewards.length;
   const maxDraws = 5;
@@ -244,7 +279,8 @@ export function getCurrentAdvice(
   const drawnValue = drawnCounts.reduce((sum, count, i) => sum + count * (i + 1), 0);
   const s = ((drawnValue % modValue) + modValue) % modValue;
   const M = doubled ? 2 : 1;
-  const currentReward = safeReward(rewards, s) * M;
+  const rawReward = safeReward(rewards, s);
+  const currentReward = computeAdjustedReward(rawReward, drawnValue, modValue, overflowParams) * M;
 
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
@@ -278,7 +314,9 @@ export function getCurrentAdvice(
     const drn = totalCards - rem;
     const dv = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
     const sp = ((dv % modValue) + modValue) % modValue;
-    const cr = safeReward(rewards, sp) * Mv;
+    const rawCr = safeReward(rewards, sp);
+    const adjustedCr = computeAdjustedReward(rawCr, dv, modValue, overflowParams);
+    const cr = adjustedCr * Mv;
 
     const cannotStop = drn === 0;
     const rs = [r1, r2, r3, r4, r5];
@@ -444,18 +482,16 @@ export function getCurrentAdvice(
     vDouble >= vDraw &&
     vDouble >= vStop &&
     vDouble >= vAbandon;
-  const isAbandonOptimal =
-    A > 0 && drawn > 0 && vAbandon >= vStop && vAbandon >= evContinue && !isDoubleOptimal;
 
   let optimalAction: AdviceResult['optimal_action'];
-  if (drawn === 0 && !isDoubleOptimal && !isAbandonOptimal) {
+  if (drawn === 0) {
     optimalAction = 'must_continue';
   } else if (isDoubleOptimal) {
     optimalAction = 'double';
-  } else if (isAbandonOptimal) {
-    optimalAction = 'abandon';
-  } else if (evContinue > vStop) {
+  } else if (vDraw >= vAbandon && vDraw >= vStop) {
     optimalAction = 'continue';
+  } else if (A > 0 && vAbandon >= vStop) {
+    optimalAction = 'abandon';
   } else {
     optimalAction = 'stop';
   }
