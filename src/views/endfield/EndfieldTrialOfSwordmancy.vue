@@ -14,6 +14,7 @@
             <span class="config-label">等级 {{ level }}</span>
             <el-input-number
               v-model="config[`level${level}` as keyof PlaqueConfig]"
+              size="small"
               :min="0"
               :max="99"
             />
@@ -250,9 +251,11 @@
         </el-col>
       </el-row>
 
+      <div class="al-divider"></div>
+
       <el-card class="psycho-card">
         <template #header>
-          <span>心理模型参数（溢出厌恶）</span>
+          <span>心理模型</span>
         </template>
         <div class="psycho-body">
           <el-alert type="info" :closable="false" show-icon>
@@ -317,6 +320,33 @@
               <span>最优策略建议</span>
             </template>
             <div v-if="currentAdvice" class="advice-content">
+              <div
+                class="advice-decision"
+                :class="{
+                  'advice-continue':
+                    decisionAction === 'continue' || decisionAction === 'must_continue',
+                  'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
+                  'advice-abandon': decisionAction === 'abandon',
+                }"
+              >
+                <template v-if="decisionAction === 'double'">
+                  {{ decisionPrefix }}建议先开启翻倍再继续
+                </template>
+                <template v-else-if="decisionAction === 'abandon'">
+                  {{ decisionPrefix }}建议放弃本局（重开期望更高）
+                </template>
+                <template v-else-if="decisionAction === 'continue'">
+                  {{ decisionPrefix }}建议继续抽牌（期望更高）
+                </template>
+                <template v-else-if="decisionAction === 'stop'">
+                  {{ decisionPrefix }}建议停止（当前奖励更高）
+                </template>
+                <template v-else-if="decisionAction === 'must_continue'">
+                  {{ decisionPrefix }}必须抽第一张牌
+                </template>
+                <template v-else>{{ decisionPrefix }}建议结算</template>
+              </div>
+              <el-divider style="margin: 8px 0" />
               <div v-if="showAdjustedCol" class="advice-row advice-header">
                 <span class="advice-label" />
                 <span class="advice-value">原始期望</span>
@@ -368,6 +398,16 @@
                     ? formatDecimal(adjustedAdvice.drawTotal)
                     : '—'
                 }}</span>
+              </div>
+              <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
+                <span class="advice-label" style="text-indent: 1.5em">等级 {{ item.level }}</span>
+                <span class="advice-value">{{ item.ev != null ? formatDiff(item.ev) : '—' }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—'
+                }}</span>
+                <span class="advice-sep">|</span>
+                <span class="advice-value advice-prob">{{ (item.prob * 100).toFixed(1) }}%</span>
               </div>
               <div
                 class="advice-row"
@@ -441,34 +481,6 @@
                 <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
                   adjustedAdvice ? formatDecimal(adjustedAdvice.expectedToday) : '—'
                 }}</span>
-              </div>
-
-              <el-divider style="margin: 8px 0" />
-              <div
-                class="advice-decision"
-                :class="{
-                  'advice-continue':
-                    decisionAction === 'continue' || decisionAction === 'must_continue',
-                  'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
-                  'advice-abandon': decisionAction === 'abandon',
-                }"
-              >
-                <template v-if="decisionAction === 'double'">
-                  {{ decisionPrefix }}建议先开启翻倍再继续
-                </template>
-                <template v-else-if="decisionAction === 'abandon'">
-                  {{ decisionPrefix }}建议放弃本局（重开期望更高）
-                </template>
-                <template v-else-if="decisionAction === 'continue'">
-                  {{ decisionPrefix }}建议继续抽牌（期望更高）
-                </template>
-                <template v-else-if="decisionAction === 'stop'">
-                  {{ decisionPrefix }}建议停止（当前奖励更高）
-                </template>
-                <template v-else-if="decisionAction === 'must_continue'">
-                  {{ decisionPrefix }}必须抽第一张牌
-                </template>
-                <template v-else>{{ decisionPrefix }}建议结算</template>
               </div>
             </div>
             <div v-else class="advice-content">
@@ -717,7 +729,7 @@ function setSingleSimulation() {
   resetGame();
 }
 
-/** 重置铭牌分布为默认值 */
+/** 重置铭牌分布为默认值，并应用配置 */
 function resetConfig() {
   clearSolverCache();
   config.level1 = DEFAULT_CONFIG.level1;
@@ -725,6 +737,7 @@ function resetConfig() {
   config.level3 = DEFAULT_CONFIG.level3;
   config.level4 = DEFAULT_CONFIG.level4;
   config.level5 = DEFAULT_CONFIG.level5;
+  applyConfig();
 }
 
 pool.value = buildPool();
@@ -842,6 +855,11 @@ function formatDecimal(value: number): string {
   });
 }
 
+function formatDiff(value: number): string {
+  const prefix = value > 0 ? '+' : '';
+  return prefix + formatDecimal(value);
+}
+
 /** 格式化奖励数字（显示为简短格式） */
 function formatRewardShort(value: number): string {
   const abs = Math.abs(value);
@@ -944,6 +962,58 @@ const adjustedAdvice = computed<AdviceResult | null>(() => {
     remainingAbandons.value,
     overflowParams.value,
   );
+});
+
+/** 下一张抽到各等级后的概率与期望（通过调用 getCurrentAdvice 获取） */
+const perLevelAdvice = computed(() => {
+  const deck = deckConfigArray.value;
+  const rewards = rewardArray.value;
+  const dc = drawnCounts.value;
+  if (deck.some((c) => c < 0)) return [];
+  const remaining = deck.map((d, i) => d - dc[i]!);
+  const totalRemaining = remaining.reduce((a, b) => a + b, 0);
+  if (totalRemaining === 0) return [];
+
+  const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
+    [];
+  const currentExp = currentAdvice.value?.expectedToday ?? 0;
+  const currentExpAdj = adjustedAdvice.value?.expectedToday ?? currentExp;
+  for (let i = 0; i < 5; i++) {
+    if (remaining[i]! > 0) {
+      const prob = remaining[i]! / totalRemaining;
+      const nextDrawn = [...dc];
+      nextDrawn[i]!++;
+      const raw = getCurrentAdvice(
+        nextDrawn,
+        deck,
+        rewards,
+        doubled.value,
+        remainingGames.value,
+        remainingDoubles.value,
+        remainingAbandons.value,
+      );
+      let adj: AdviceResult | null = null;
+      if (overflowParams.value) {
+        adj = getCurrentAdvice(
+          nextDrawn,
+          deck,
+          rewards,
+          doubled.value,
+          remainingGames.value,
+          remainingDoubles.value,
+          remainingAbandons.value,
+          overflowParams.value,
+        );
+      }
+      result.push({
+        level: i + 1,
+        prob: Math.round(prob * 10000) / 10000,
+        ev: raw ? Math.round((raw.expectedToday - currentExp) * 100) / 100 : null,
+        evAdjusted: adj ? Math.round((adj.expectedToday - currentExpAdj) * 100) / 100 : null,
+      });
+    }
+  }
+  return result;
 });
 
 const distributionTableData = computed(() => {
@@ -1424,7 +1494,7 @@ function handleOtpChange(val: string | number) {
 
   .advice-label {
     color: var(--el-text-color-secondary);
-    min-width: 160px;
+    min-width: 144px;
   }
 
   .advice-row-optimal {
@@ -1442,7 +1512,8 @@ function handleOtpChange(val: string | number) {
   .advice-value {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    min-width: 80px;
+    min-width: 88px;
+    text-align: right;
   }
 
   .advice-sep {
@@ -1452,6 +1523,10 @@ function handleOtpChange(val: string | number) {
 
   .advice-adjusted {
     color: var(--el-color-danger);
+  }
+
+  .advice-prob {
+    min-width: 48px;
   }
 
   .advice-header {
