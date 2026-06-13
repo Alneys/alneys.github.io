@@ -297,7 +297,7 @@ export function getCurrentAdvice(
     }
 
     let vDouble = -Infinity;
-    if (drn < 3 && Mv === 1 && B > 0) {
+    if (drn > 0 && drn < 3 && Mv === 1 && B > 0) {
       vDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, B - 1, A);
     }
 
@@ -408,7 +408,7 @@ export function getCurrentAdvice(
   }
 
   let vDouble = -Infinity;
-  if (drawn < 3 && !doubled && B > 0) {
+  if (drawn > 0 && drawn < 3 && !doubled && B > 0) {
     vDouble = dpDaily(rState[0]!, rState[1]!, rState[2]!, rState[3]!, rState[4]!, 2, P, B - 1, A);
   }
 
@@ -437,7 +437,13 @@ export function getCurrentAdvice(
   const expectedToday = Math.round(Math.max(vStop, evContinue, vAbandon) * 100) / 100;
 
   const isDoubleOptimal =
-    drawn < 3 && M === 1 && B > 0 && vDouble >= vDraw && vDouble >= vStop && vDouble >= vAbandon;
+    drawn > 0 &&
+    drawn < 3 &&
+    M === 1 &&
+    B > 0 &&
+    vDouble >= vDraw &&
+    vDouble >= vStop &&
+    vDouble >= vAbandon;
   const isAbandonOptimal =
     A > 0 && drawn > 0 && vAbandon >= vStop && vAbandon >= evContinue && !isDoubleOptimal;
 
@@ -460,7 +466,8 @@ export function getCurrentAdvice(
     expected_today: expectedToday,
     optimal_action: optimalAction,
     draw_total: Math.round(vDraw * 100) / 100,
-    double_total: drawn < 3 && !doubled && B > 0 ? Math.round(vDouble * 100) / 100 : null,
+    double_total:
+      drawn > 0 && drawn < 3 && !doubled && B > 0 ? Math.round(vDouble * 100) / 100 : null,
     stop_total: drawn > 0 ? Math.round(vStop * 100) / 100 : null,
     abandon_total: A > 0 && drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
     expected_after_stop: Math.round(futureValue * 100) / 100,

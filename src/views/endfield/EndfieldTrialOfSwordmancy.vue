@@ -28,6 +28,53 @@
       </el-collapse-item>
     </el-collapse>
 
+    <el-card class="daily-card" style="margin-bottom: 16px">
+      <template #header>
+        <span>今日状态</span>
+      </template>
+      <div class="daily-grid">
+        <div class="daily-item">
+          <span class="daily-label">剩余游玩</span>
+          <el-input-number
+            v-model="remainingGames"
+            :min="0"
+            :max="3"
+            size="small"
+            class="daily-input"
+          />
+          <span class="daily-suffix">/ 3</span>
+        </div>
+        <div class="daily-item">
+          <span class="daily-label">剩余翻倍</span>
+          <el-input-number
+            v-model="remainingDoubles"
+            :min="0"
+            :max="2"
+            size="small"
+            class="daily-input"
+          />
+          <span class="daily-suffix">/ 2</span>
+        </div>
+        <div class="daily-item">
+          <span class="daily-label">剩余放弃</span>
+          <el-input-number
+            v-model="remainingAbandons"
+            :min="0"
+            :max="3"
+            size="small"
+            class="daily-input"
+          />
+          <span class="daily-suffix">/ 3</span>
+        </div>
+        <el-button size="small" @click="setSingleSimulation" class="daily-single-btn">
+          设为单次模拟
+        </el-button>
+        <el-button size="small" type="danger" @click="resetToday" class="daily-reset-btn">
+          重置今日
+        </el-button>
+      </div>
+    </el-card>
+
     <el-row :gutter="16" class="game-top">
       <el-col :span="18"
         ><el-card class="drawn-card">
@@ -123,92 +170,68 @@
         </div>
       </el-card>
 
-      <el-card class="daily-card">
-        <template #header>
-          <span>今日状态</span>
-        </template>
-        <div class="daily-grid">
-          <div class="daily-item">
-            <span class="daily-label">剩余游玩</span>
-            <el-input-number
-              v-model="remainingGames"
-              :min="0"
-              :max="3"
-              size="small"
-              class="daily-input"
-            />
-            <span class="daily-suffix">/ 3</span>
+      <el-row :gutter="16" class="actions-row">
+        <el-col :span="12">
+          <div class="actions-row-left"></div>
+        </el-col>
+        <el-col :span="12">
+          <div class="actions-row-right">
+            <el-button
+              type="primary"
+              @click="drawCard"
+              :disabled="!canDraw || remainingGames === 0"
+              size="large"
+              class="action-btn"
+            >
+              {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
+            </el-button>
           </div>
-          <div class="daily-item">
-            <span class="daily-label">剩余翻倍</span>
-            <el-input-number
-              v-model="remainingDoubles"
-              :min="0"
-              :max="2"
-              size="small"
-              class="daily-input"
-            />
-            <span class="daily-suffix">/ 2</span>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16" class="actions-row">
+        <el-col :span="12">
+          <div class="actions-row-left">
+            <el-button
+              type="danger"
+              @click="abandonGame"
+              :disabled="!canAbandon"
+              size="large"
+              class="action-btn"
+            >
+              放弃本局<br />（剩余{{ remainingAbandons }}次）
+            </el-button>
           </div>
-          <div class="daily-item">
-            <span class="daily-label">剩余放弃</span>
-            <el-input-number
-              v-model="remainingAbandons"
-              :min="0"
-              :max="3"
-              size="small"
-              class="daily-input"
+        </el-col>
+        <el-col :span="12">
+          <div class="actions-row-right">
+            <span class="action-switch-label"
+              ><span class="action-switch-remaining">（剩余{{ remainingDoubles }}次）</span
+              ><span class="action-switch-warning">奖励翻倍</span></span
+            >
+            <el-switch
+              :model-value="doubled"
+              :disabled="!canToggleDouble"
+              inactive-text="关"
+              active-text="开"
+              size="large"
+              class="action-switch"
+              @change="handleDoubleSwitch"
             />
-            <span class="daily-suffix">/ 3</span>
+            <el-button
+              type="info"
+              :disabled="remainingGames === 0 || activeDrawCount === 0"
+              @click="activeDrawCount > 0 ? endGame() : resetGame()"
+              size="large"
+              class="action-btn"
+            >
+              <template v-if="activeDrawCount > 0"
+                >结算本局<br />（剩余{{ remainingGames }}次）</template
+              >
+              <template v-else>新一局<br />（剩余{{ remainingGames }}次）</template>
+            </el-button>
           </div>
-          <el-button size="small" @click="setSingleSimulation" class="daily-single-btn">
-            设为单次模拟
-          </el-button>
-          <el-button size="small" type="danger" @click="resetToday" class="daily-reset-btn">
-            重置今日
-          </el-button>
-        </div>
-      </el-card>
-
-      <div class="actions">
-        <el-button
-          type="primary"
-          @click="drawCard"
-          :disabled="!canDraw || remainingGames === 0"
-          size="large"
-          class="action-btn"
-        >
-          {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
-        </el-button>
-        <el-button
-          type="warning"
-          @click="toggleDouble"
-          :disabled="!canDouble"
-          size="large"
-          class="action-btn"
-        >
-          {{ doubled ? '已翻倍' : '开启翻倍' }}
-        </el-button>
-        <el-button
-          type="danger"
-          @click="abandonGame"
-          :disabled="!canAbandon"
-          size="large"
-          class="action-btn"
-        >
-          放弃本局
-        </el-button>
-        <el-button
-          type="info"
-          :disabled="remainingGames === 0 || activeDrawCount === 0"
-          @click="activeDrawCount > 0 ? endGame() : resetGame()"
-          size="large"
-          class="action-btn"
-        >
-          <template v-if="activeDrawCount > 0">结算本局</template>
-          <template v-else>新一局</template>
-        </el-button>
-      </div>
+        </el-col>
+      </el-row>
 
       <el-card class="advice-card">
         <template #header>
@@ -619,9 +642,14 @@ const canDraw = computed(() => {
   return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
 });
 
-/** 可翻倍条件：已抽 < 3、本局未翻倍、今日有剩余次数 */
+/** 可翻倍条件：本局未翻倍、今日有剩余次数 */
 const canDouble = computed(() => {
-  return activeDrawCount.value < 3 && !doubled.value && remainingDoubles.value > 0;
+  return !doubled.value && remainingDoubles.value > 0;
+});
+
+/** 开关可用条件：已翻倍 或 今日有剩余次数 */
+const canToggleDouble = computed(() => {
+  return doubled.value || remainingDoubles.value > 0;
 });
 
 /** 可放弃条件：有放弃次数、已抽至少一张牌、有剩余游玩次数 */
@@ -684,6 +712,17 @@ function toggleDouble() {
   remainingDoubles.value--;
 }
 
+function handleDoubleSwitch(val: string | number | boolean) {
+  if (val) {
+    if (!doubled.value) toggleDouble();
+  } else {
+    if (doubled.value) {
+      doubled.value = false;
+      remainingDoubles.value++;
+    }
+  }
+}
+
 /** 放弃本局：不消耗游玩次数，退还翻倍，重置牌局 */
 function abandonGame() {
   if (!canAbandon.value) return;
@@ -705,13 +744,14 @@ function formatDecimal(value: number): string {
 /** 格式化奖励数字（显示为简短格式） */
 function formatRewardShort(value: number): string {
   if (value === 0) return '0';
-  if (value >= 1000) return `${Math.round(value / 1000)}K`;
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace(/\.0$/, '')}K`;
   return String(value);
 }
 
 const rewardOptions = computed(() =>
   Array.from({ length: 11 }, (_, i) => ({
-    label: formatRewardShort(REWARD_TABLE[i]!),
+    label: formatRewardShort(doubled.value ? REWARD_TABLE[i]! * 2 : REWARD_TABLE[i]!),
     value: i,
   })),
 );
@@ -1149,10 +1189,8 @@ function handleOtpChange(val: string | number) {
   }
 
   .advice-row-optimal {
-    background: var(--el-color-primary-light-9);
+    background: var(--el-color-primary-light-8);
     font-weight: bold;
-
-    font-weight: 600;
   }
 
   .advice-label {
@@ -1226,15 +1264,40 @@ function handleOtpChange(val: string | number) {
 
   // ── 操作按钮 ──
 
-  .actions {
+  .actions-row-left {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .actions-row-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     gap: 12px;
   }
 
   .action-btn {
-    flex: 1;
     min-width: 120px;
+    line-height: 1.2;
+  }
+
+  .action-switch-label {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .action-switch-remaining {
+    color: var(--el-text-color-secondary);
+  }
+
+  .action-switch-warning {
+    color: var(--el-color-warning);
+  }
+
+  .action-switch {
+    min-width: 100px;
+    justify-content: center;
   }
 }
 </style>
