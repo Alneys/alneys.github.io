@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCurrentAdvice, solve } from './EndfieldTrialSwordmancySolver';
+import { getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
 
 const rewards = [0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000];
 const deck = [5, 5, 5, 8, 6];
@@ -127,43 +127,6 @@ describe('EndfieldTrialSwordmancySolver', () => {
       });
       expect(withOverflow).not.toBeNull();
       expect(withOverflow!.expectedToday).toBeLessThan(raw!.expectedToday);
-    });
-
-    it('solve() 默认参数应与原始一致', () => {
-      const raw = solve(deck, rewards);
-      const withDefault = solve(deck, rewards, { aversionFactor: 1.0, fixedPenalty: 0 });
-      expect(withDefault.length).toBe(raw.length);
-      for (let i = 0; i < raw.length; i++) {
-        expect(withDefault[i]!.currentReward).toBe(raw[i]!.currentReward);
-        expect(withDefault[i]!.optimalAction).toBe(raw[i]!.optimalAction);
-      }
-    });
-
-    it('solve() 带溢出参数时的奖励应降低或不变', () => {
-      const withOverflow = solve(deck, rewards, { aversionFactor: 0.9, fixedPenalty: 20000 });
-      // 组合 "55555" 总战力 = 25, k = 2, S = 3
-      // adjusted = 4000 * 0.9^2 - 2*20000 = 3240 - 40000 = -36760
-      const combo55555 = withOverflow.find((r) => r.combination === '55555');
-      expect(combo55555).toBeDefined();
-      expect(combo55555!.currentReward).toBe(-36760);
-
-      // 组合 "555" 总战力 = 15, k = 1, S = 4
-      // adjusted = 7500 * 0.9^1 - 1*20000 = 6750 - 20000 = -13250
-      const combo555 = withOverflow.find((r) => r.combination === '555');
-      expect(combo555).toBeDefined();
-      expect(combo555!.currentReward).toBe(-13250);
-
-      // 组合 "55" 总战力 = 10, k = 0, S = 10
-      // adjusted = 160000 - 0 = 160000 (k=0，不受影响)
-      const combo55 = withOverflow.find((r) => r.combination === '55');
-      expect(combo55).toBeDefined();
-      expect(combo55!.currentReward).toBe(160000);
-
-      // 组合 "5" (1张5) 总战力 = 5, k = 0, S = 5
-      // adjusted = 12000 - 0 = 12000 (k=0，不受影响)
-      const combo5 = withOverflow.find((r) => r.combination === '5');
-      expect(combo5).toBeDefined();
-      expect(combo5!.currentReward).toBe(12000);
     });
   });
 
