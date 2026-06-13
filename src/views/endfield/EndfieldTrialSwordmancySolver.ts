@@ -42,6 +42,67 @@ interface DpResult {
 }
 
 /**
+ * 简易 LRU 缓存，最多存放 maxSize 个条目，超限时淘汰最久未访问的条目
+ */
+class LRUCache<V> {
+  private maxSize: number;
+  private map: Map<string, { value: V; lastAccessed: number }>;
+
+  constructor(maxSize: number) {
+    this.maxSize = maxSize;
+    this.map = new Map();
+  }
+
+  get(key: string): V | undefined {
+    const entry = this.map.get(key);
+    if (entry) {
+      entry.lastAccessed = Date.now();
+      return entry.value;
+    }
+    return undefined;
+  }
+
+  set(key: string, value: V): void {
+    if (this.map.has(key)) {
+      this.map.get(key)!.value = value;
+      this.map.get(key)!.lastAccessed = Date.now();
+      return;
+    }
+    if (this.map.size >= this.maxSize) {
+      let lruKey: string | null = null;
+      let lruTime = Infinity;
+      for (const [k, v] of this.map) {
+        if (v.lastAccessed < lruTime) {
+          lruTime = v.lastAccessed;
+          lruKey = k;
+        }
+      }
+      if (lruKey) this.map.delete(lruKey);
+    }
+    this.map.set(key, { value, lastAccessed: Date.now() });
+  }
+
+  clear(): void {
+    this.map.clear();
+  }
+}
+
+/** 缓存键：由牌组、奖励表、溢出参数唯一决定一组 DP 结果 */
+function cacheKey(deck: number[], rewards: number[], overflowParams?: OverflowParams): string {
+  const deckK = deck.join(',');
+  const rewardK = rewards.join(',');
+  const paramK = overflowParams
+    ? `${overflowParams.aversionFactor},${overflowParams.fixedPenalty}`
+    : '';
+  return `${deckK}|${rewardK}|${paramK}`;
+}
+
+/** 最多缓存 10 种不同（牌组 + 奖励表 + 溢出参数）组合 */
+const MAX_CACHED_CONFIGS = 10;
+const solveMemoCache = new LRUCache<Map<string, number>>(MAX_CACHED_CONFIGS);
+const adviceMemoCache = new LRUCache<Map<string, DpResult>>(MAX_CACHED_CONFIGS);
+
+/**
  * 生成所有可能的抽取组合（可重复组合，字典序非递减）
  * 例如牌池足够时：""、"1"、"11"、"12"、……、"55555"
  */
@@ -127,7 +188,10 @@ export function solve(
     return 0;
   });
 
-  const memo = new Map<string, number>();
+  const solveKey = cacheKey(deck, rewards, overflowParams);
+  const existingSolveMemo = solveMemoCache.get(solveKey);
+  const memo = existingSolveMemo ?? new Map<string, number>();
+  if (!existingSolveMemo) solveMemoCache.set(solveKey, memo);
 
   /** 记忆化搜索，逆向归纳计算最优期望奖励 */
   function dp(r1: number, r2: number, r3: number, r4: number, r5: number): number {
@@ -299,7 +363,10 @@ export function getCurrentAdvice(
   const B = remainingDoubles;
   const A = remainingAbandons;
 
-  const memo = new Map<string, DpResult>();
+  const adviceKey = cacheKey(deck, rewards, overflowParams);
+  const existingAdviceMemo = adviceMemoCache.get(adviceKey);
+  const memo = existingAdviceMemo ?? new Map<string, DpResult>();
+  if (!existingAdviceMemo) adviceMemoCache.set(adviceKey, memo);
 
   function dpDaily(
     r1: number,
@@ -620,4 +687,10 @@ export function getCurrentAdvice(
     distribution: currentResult.distribution.map((p) => Math.round(p * 10000) / 10000),
     abandonProb: Math.round(currentResult.abandonProb * 10000) / 10000,
   };
+}
+
+/** 手动清除所有缓存（铭牌配置或奖励表变化时可调用） */
+export function clearSolverCache(): void {
+  solveMemoCache.clear();
+  adviceMemoCache.clear();
 }

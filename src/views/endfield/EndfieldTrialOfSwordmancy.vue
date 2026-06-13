@@ -631,7 +631,7 @@
 //   2. 奖励计算（战力点 → 档位）
 //   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed, watch } from 'vue';
-import { solve, getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
+import { solve, getCurrentAdvice, clearSolverCache } from './EndfieldTrialSwordmancySolver';
 import type {
   SolverResultEntry,
   AdviceResult,
@@ -785,6 +785,7 @@ function resetDrawn() {
 
 /** 应用配置新配置并重置牌池 */
 function applyConfig() {
+  clearSolverCache();
   nextId = 0;
   pool.value = buildPool();
   initDrawnCards();
@@ -824,6 +825,7 @@ function setSingleSimulation() {
 
 /** 重置铭牌分布为默认值 */
 function resetConfig() {
+  clearSolverCache();
   config.level1 = DEFAULT_CONFIG.level1;
   config.level2 = DEFAULT_CONFIG.level2;
   config.level3 = DEFAULT_CONFIG.level3;
