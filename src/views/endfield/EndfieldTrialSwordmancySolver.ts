@@ -509,3 +509,343 @@ export function getCurrentAdvice(
     expected_after_stop: Math.round(futureValue * 100) / 100,
   };
 }
+
+/**
+ * 有效战力点分布结果
+ */
+export interface PowerDistributionResult {
+  /** 长度为 11 的概率数组（索引 = 有效战力点 0~10） */
+  distribution: number[];
+  /** 放弃本局的概率 */
+  abandonProb: number;
+}
+
+/**
+ * 计算当前状态的最优策略有效战力点概率分布（含放弃）
+ *
+ * 按照全局最优策略（含放弃决策），计算本局结束时各有效战力点 (totalPower % 11) 的概率分布。
+ * 内部使用多局 DP（期望值 + 分布），与 getCurrentAdvice() 使用相同的策略逻辑。
+ *
+ * @param drawnCounts      当前各等级已抽数量 [c1,c2,c3,c4,c5]
+ * @param deck              各等级总配置数量
+ * @param rewards           奖励对照表（长度 11）
+ * @param overflowParams    可选，溢出厌恶参数
+ * @param remainingGames    现有剩余游玩次数（含当前局）
+ * @param remainingDoubles  现有剩余翻倍次数
+ * @param remainingAbandons 现有剩余放弃次数
+ * @returns { distribution, abandonProb }，无效状态返回 null
+ */
+export function getPowerDistribution(
+  drawnCounts: number[],
+  deck: number[],
+  rewards: number[],
+  overflowParams?: OverflowParams,
+  remainingGames: number = 0,
+  remainingDoubles: number = 0,
+  remainingAbandons: number = 0,
+  doubled: boolean = false,
+): PowerDistributionResult | null {
+  const modValue = rewards.length;
+  const maxDraws = 5;
+  const totalCards = deck.reduce((a, b) => a + b, 0);
+  const initialTotal = deck.reduce((sum, count, i) => sum + count * (i + 1), 0);
+  const deckInit = [...deck];
+
+  const drawn = drawnCounts.reduce((a, b) => a + b, 0);
+  if (drawn > maxDraws) return null;
+  if (deck.some((d, i) => d < drawnCounts[i]!)) return null;
+
+  const remaining = deck.map((d, i) => d - drawnCounts[i]!);
+  const totalRemaining = remaining.reduce((a, b) => a + b, 0);
+
+  const P = remainingGames;
+  const B = remainingDoubles;
+  const A = remainingAbandons;
+  const M = doubled ? 2 : 1;
+
+  // ── DP 1：多局期望值（用于最优策略决策） ──
+
+  const evMemo = new Map<string, number>();
+
+  function dpDaily(
+    r1: number,
+    r2: number,
+    r3: number,
+    r4: number,
+    r5: number,
+    Mv: number,
+    Pv: number,
+    Bv: number,
+    Av: number,
+  ): number {
+    const key = `${r1},${r2},${r3},${r4},${r5},${Mv},${Pv},${Bv},${Av}`;
+    const cached = evMemo.get(key);
+    if (cached !== undefined) return cached;
+
+    if (Pv === 0) {
+      evMemo.set(key, 0);
+      return 0;
+    }
+
+    const rem = r1 + r2 + r3 + r4 + r5;
+    const drn = totalCards - rem;
+    const dv = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
+    const sp = ((dv % modValue) + modValue) % modValue;
+    const rawCr = safeReward(rewards, sp);
+    const adjustedCr = computeAdjustedReward(rawCr, dv, modValue, overflowParams);
+    const cr = adjustedCr * Mv;
+
+    const cannotStop = drn === 0;
+    const rs = [r1, r2, r3, r4, r5];
+
+    let vDraw = -Infinity;
+    if (drn < maxDraws && rem > 0) {
+      vDraw = 0;
+      for (let i = 0; i < 5; i++) {
+        if (rs[i]! > 0) {
+          const prob = rs[i]! / rem;
+          const next = [...rs];
+          next[i]!--;
+          vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, Pv, Bv, Av);
+        }
+      }
+    }
+
+    let vDouble = -Infinity;
+    if (drn > 0 && drn < 3 && Mv === 1 && Bv > 0) {
+      vDouble = dpDaily(r1, r2, r3, r4, r5, 2, Pv, Bv - 1, Av);
+    }
+
+    let vStop = -Infinity;
+    if (!cannotStop) {
+      vStop =
+        cr +
+        dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          Pv - 1,
+          Bv,
+          Av,
+        );
+    }
+
+    let vAbandon = -Infinity;
+    if (Av > 0 && !cannotStop) {
+      vAbandon = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        Pv,
+        Bv + (Mv - 1),
+        Av - 1,
+      );
+    }
+
+    const result = Math.max(vDraw, vDouble, vStop, vAbandon);
+    evMemo.set(key, result);
+    return result;
+  }
+
+  // ── DP 2：概率分布（含放弃） ──
+
+  const distMemo = new Map<string, { distribution: number[]; abandonProb: number }>();
+
+  function dpDist(
+    r1: number,
+    r2: number,
+    r3: number,
+    r4: number,
+    r5: number,
+    Mv: number,
+    Pv: number,
+    Bv: number,
+    Av: number,
+  ): { distribution: number[]; abandonProb: number } {
+    const key = `${r1},${r2},${r3},${r4},${r5},${Mv},${Pv},${Bv},${Av}`;
+    const cached = distMemo.get(key);
+    if (cached !== undefined) return cached;
+
+    if (Pv === 0) {
+      const r: { distribution: number[]; abandonProb: number } = {
+        distribution: new Array<number>(modValue).fill(0),
+        abandonProb: 0,
+      };
+      distMemo.set(key, r);
+      return r;
+    }
+
+    const rem = r1 + r2 + r3 + r4 + r5;
+    const drn = totalCards - rem;
+    const dv = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
+    const s = ((dv % modValue) + modValue) % modValue;
+    const rawReward = safeReward(rewards, s);
+    const adjustedReward = computeAdjustedReward(rawReward, dv, modValue, overflowParams);
+    const reward = adjustedReward * Mv;
+
+    // 已抽满 5 张或牌池空 → 考虑放弃或停止
+    if (drn === maxDraws || rem === 0) {
+      let r: { distribution: number[]; abandonProb: number };
+      if (Av > 0 && drn > 0) {
+        const vAbandon = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          Pv,
+          Bv + (Mv - 1),
+          Av - 1,
+        );
+        const vStop =
+          reward +
+          dpDaily(
+            deckInit[0]!,
+            deckInit[1]!,
+            deckInit[2]!,
+            deckInit[3]!,
+            deckInit[4]!,
+            1,
+            Pv - 1,
+            Bv,
+            Av,
+          );
+        if (vAbandon >= vStop) {
+          r = { distribution: new Array<number>(modValue).fill(0), abandonProb: 1 };
+        } else {
+          const dist = new Array<number>(modValue).fill(0);
+          dist[s] = 1;
+          r = { distribution: dist, abandonProb: 0 };
+        }
+      } else {
+        const dist = new Array<number>(modValue).fill(0);
+        dist[s] = 1;
+        r = { distribution: dist, abandonProb: 0 };
+      }
+      distMemo.set(key, r);
+      return r;
+    }
+
+    const cannotStop = drn === 0;
+    const rs = [r1, r2, r3, r4, r5];
+
+    // 计算各行动期望值以确定最优决策
+    let vDraw = -Infinity;
+    if (drn < maxDraws && rem > 0) {
+      vDraw = 0;
+      for (let i = 0; i < 5; i++) {
+        if (rs[i]! > 0) {
+          const prob = rs[i]! / rem;
+          const next = [...rs];
+          next[i]!--;
+          vDraw += prob * dpDaily(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, Pv, Bv, Av);
+        }
+      }
+    }
+
+    let vDouble = -Infinity;
+    if (drn > 0 && drn < 3 && Mv === 1 && Bv > 0) {
+      vDouble = dpDaily(r1, r2, r3, r4, r5, 2, Pv, Bv - 1, Av);
+    }
+
+    let vStop = -Infinity;
+    if (!cannotStop) {
+      vStop =
+        reward +
+        dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          Pv - 1,
+          Bv,
+          Av,
+        );
+    }
+
+    let vAbandon = -Infinity;
+    if (Av > 0 && !cannotStop) {
+      vAbandon = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        Pv,
+        Bv + (Mv - 1),
+        Av - 1,
+      );
+    }
+
+    const best = Math.max(vDraw, vDouble, vStop, vAbandon);
+
+    // 优先判定非必须停的翻倍、放弃、停止（与 getCurrentAdvice 优先级一致）
+    const canDoubleOpt = !cannotStop && drn < 3 && Mv === 1 && Bv > 0;
+    const canAbandonOpt = Av > 0 && !cannotStop;
+    const canStopOpt = !cannotStop;
+
+    let r: { distribution: number[]; abandonProb: number };
+
+    if (canDoubleOpt && vDouble === best && vDouble >= vAbandon && vDouble >= vStop) {
+      // 翻倍后继续：分布等同 M=2 的子状态
+      r = dpDist(r1, r2, r3, r4, r5, 2, Pv, Bv - 1, Av);
+    } else if (canAbandonOpt && vAbandon === best && vAbandon >= vStop && vAbandon >= vDraw) {
+      // 放弃：本局结束时无有效战力点
+      r = { distribution: new Array<number>(modValue).fill(0), abandonProb: 1 };
+    } else if (canStopOpt && vStop === best && vStop >= vDraw) {
+      // 停止：当前有效战力点的点分布
+      const dist = new Array<number>(modValue).fill(0);
+      dist[s] = 1;
+      r = { distribution: dist, abandonProb: 0 };
+    } else if (drn === 0) {
+      // 未抽牌，必须继续
+      r = { distribution: new Array<number>(modValue).fill(0), abandonProb: 0 };
+      for (let i = 0; i < 5; i++) {
+        if (rs[i]! > 0) {
+          const prob = rs[i]! / rem;
+          const next = [...rs];
+          next[i]!--;
+          const child = dpDist(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, Pv, Bv, Av);
+          for (let j = 0; j < modValue; j++) {
+            r.distribution[j]! += prob * child.distribution[j]!;
+          }
+          r.abandonProb += prob * child.abandonProb;
+        }
+      }
+    } else {
+      // 继续抽牌：子节点概率分布的加权平均
+      r = { distribution: new Array<number>(modValue).fill(0), abandonProb: 0 };
+      for (let i = 0; i < 5; i++) {
+        if (rs[i]! > 0) {
+          const prob = rs[i]! / rem;
+          const next = [...rs];
+          next[i]!--;
+          const child = dpDist(next[0]!, next[1]!, next[2]!, next[3]!, next[4]!, Mv, Pv, Bv, Av);
+          for (let j = 0; j < modValue; j++) {
+            r.distribution[j]! += prob * child.distribution[j]!;
+          }
+          r.abandonProb += prob * child.abandonProb;
+        }
+      }
+    }
+
+    distMemo.set(key, r);
+    return r;
+  }
+
+  const r = remaining;
+  const result = dpDist(r[0]!, r[1]!, r[2]!, r[3]!, r[4]!, M, P, B, A);
+  result.distribution = result.distribution.map((p) => Math.round(p * 10000) / 10000);
+  result.abandonProb = Math.round(result.abandonProb * 10000) / 10000;
+  return result;
+}

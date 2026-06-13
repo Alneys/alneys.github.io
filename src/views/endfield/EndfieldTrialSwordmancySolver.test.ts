@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCurrentAdvice, solve } from './EndfieldTrialSwordmancySolver';
+import { getCurrentAdvice, getPowerDistribution, solve } from './EndfieldTrialSwordmancySolver';
 
 const rewards = [0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000];
 const deck = [5, 5, 5, 8, 6];
@@ -164,6 +164,127 @@ describe('EndfieldTrialSwordmancySolver', () => {
       const combo5 = withOverflow.find((r) => r.combination === '5');
       expect(combo5).toBeDefined();
       expect(combo5!.current_reward).toBe(12000);
+    });
+  });
+
+  describe('getPowerDistribution 翻倍状态', () => {
+    it('已翻倍且已抽 531 时分布不应锁定在当前战力点', () => {
+      // 已抽 531 → drawnCounts=[1,0,1,0,1], 总战力=9, 有效战力=9%11=9
+      // 已翻倍 (M=2), remainingDoubles=1 (已用掉一次), P=3, A=3
+      // getCurrentAdvice 建议继续, vDraw=611402.24 > vStop=600899.77
+      const dist = getPowerDistribution(
+        [1, 0, 1, 0, 1],
+        deck,
+        rewards,
+        undefined,
+        3,
+        1,
+        3,
+        true, // doubled
+      );
+      expect(dist).not.toBeNull();
+      // 不应锁定在 9=100%（未传 doubled 时的 bug）
+      expect(dist!.distribution[9]).toBeLessThan(1);
+      // 继续抽牌后存在放弃的可能性
+      expect(dist!.abandonProb).toBeGreaterThan(0);
+    });
+
+    it('已翻倍且已抽 531 时 getCurrentAdvice 建议继续', () => {
+      const advice = getCurrentAdvice(
+        [1, 0, 1, 0, 1],
+        deck,
+        rewards,
+        true, // doubled
+        3,
+        1,
+        3,
+      );
+      expect(advice).not.toBeNull();
+      expect(advice!.optimal_action).toBe('continue');
+      expect(advice!.draw_total).toBeCloseTo(611402.24, 0);
+      expect(advice!.stop_total).toBeCloseTo(600899.77, 0);
+      expect(advice!.abandon_total).toBeCloseTo(591493.6, 0);
+    });
+
+    it('未翻倍时传 doubled=false 应与不传一致', () => {
+      const without = getPowerDistribution([0, 0, 0, 0, 0], deck, rewards, undefined, 3, 2, 3);
+      const withFalse = getPowerDistribution(
+        [0, 0, 0, 0, 0],
+        deck,
+        rewards,
+        undefined,
+        3,
+        2,
+        3,
+        false,
+      );
+      expect(withFalse!.distribution).toEqual(without!.distribution);
+      expect(withFalse!.abandonProb).toEqual(without!.abandonProb);
+    });
+  });
+
+  describe('getPowerDistribution 放弃概率', () => {
+    it('已抽 11451（3张1,1张4,1张5），P=3 B=2 A=3 应显示放弃 100%', () => {
+      // 总战力 = 3*1 + 4 + 5 = 12，有效战力 = 12 % 11 = 1
+      // 放弃期望 = dp(全牌池, 1, 3, 2, 2) = 591493.60
+      // 停止期望 = 1000 + dp(全牌池, 1, 2, 2, 3) = 1000 + 522129.02 = 523129.02
+      // 放弃 > 停止 → 最优策略为放弃
+      const result = getPowerDistribution(
+        [3, 0, 0, 1, 1], // 11451
+        deck,
+        rewards,
+        undefined,
+        3,
+        2,
+        3,
+      );
+      expect(result).not.toBeNull();
+      expect(result!.abandonProb).toBeCloseTo(1, 2);
+      for (let i = 0; i < 11; i++) {
+        expect(result!.distribution[i]).toBeCloseTo(0, 2);
+      }
+    });
+
+    it('已抽满 5 张且放弃更优时 getCurrentAdvice 建议放弃', () => {
+      // 与上一条相同的条件
+      const advice = getCurrentAdvice(
+        [3, 0, 0, 1, 1], // 11451
+        deck,
+        rewards,
+        false,
+        3,
+        2,
+        3,
+      );
+      expect(advice).not.toBeNull();
+      expect(advice!.optimal_action).toBe('abandon');
+      expect(advice!.abandon_total).toBeCloseTo(591493.6, 0);
+      expect(advice!.stop_total).toBeCloseTo(523129.02, 0);
+    });
+
+    it('已抽满 5 张时 getPowerDistribution 的放弃概率应与 getCurrentAdvice 决策一致', () => {
+      // 5 张 1 级，最差情况，A=1 P=1 B=0，应放弃
+      const dist = getPowerDistribution([5, 0, 0, 0, 0], deck, rewards, undefined, 1, 0, 1);
+      expect(dist).not.toBeNull();
+      expect(dist!.abandonProb).toBeCloseTo(1, 2);
+
+      const advice = getCurrentAdvice([5, 0, 0, 0, 0], deck, rewards, false, 1, 0, 1);
+      expect(advice).not.toBeNull();
+      expect(advice!.optimal_action).toBe('abandon');
+    });
+
+    it('无放弃次数时 getPowerDistribution 不会显示放弃', () => {
+      const result = getPowerDistribution(
+        [3, 0, 0, 1, 1], // 11451
+        deck,
+        rewards,
+        undefined,
+        3,
+        2,
+        0, // A=0
+      );
+      expect(result).not.toBeNull();
+      expect(result!.abandonProb).toBe(0);
     });
   });
 });

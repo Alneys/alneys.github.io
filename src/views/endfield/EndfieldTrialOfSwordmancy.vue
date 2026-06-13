@@ -154,11 +154,15 @@
             }"
           />
         </div>
-        <div class="overflow-psych-section" v-if="showAdjustedCol">
+        <div
+          class="overflow-psych-section"
+          :class="{ 'overflow-psych-disabled': !showAdjustedCol }"
+        >
           <span class="reward-label">溢出心理</span>
           <el-segmented
             :model-value="overflowPsychValue"
             :options="overflowPsychOptions"
+            :disabled="!showAdjustedCol"
             block
             class="overflow-psych-segmented"
           />
@@ -251,8 +255,8 @@
         </template>
         <div class="psycho-body">
           <el-alert type="info" :closable="false" show-icon>
-            调整公式：奖励 × 溢出接受值<sup>k</sup> − k × 固定心理落差（k = 总战力 ÷
-            11，向下取整），可为负
+            基于期望效用理论设计，调整公式：奖励 × 溢出接受值<sup>k</sup> − k × 固定心理落差（k =
+            总战力 ÷ 11，向下取整），可为负
           </el-alert>
           <div class="psycho-grid">
             <div class="psycho-item">
@@ -305,165 +309,230 @@
         </div>
       </el-card>
 
-      <el-card class="advice-card">
-        <template #header>
-          <span>最优策略建议</span>
-        </template>
-        <div v-if="currentAdvice" class="advice-content">
-          <div v-if="showAdjustedCol" class="advice-row advice-header">
-            <span class="advice-label" />
-            <span class="advice-value">原始期望</span>
-            <span class="advice-sep">|</span>
-            <span class="advice-value advice-adjusted">调整后期望</span>
-          </div>
-          <div class="advice-row">
-            <span class="advice-label">本局当前奖励</span>
-            <span class="advice-value">{{ formatDecimal(currentAdvice.current_reward) }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-              adjustedAdvice ? formatDecimal(adjustedAdvice.current_reward) : '—'
-            }}</span>
-          </div>
-          <div class="advice-row">
-            <span class="advice-label">本局继续期望</span>
-            <span class="advice-value">{{
-              currentAdvice.expected_continue_reward != null
-                ? formatDecimal(currentAdvice.expected_continue_reward)
-                : '—'
-            }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-              adjustedAdvice && adjustedAdvice.expected_continue_reward != null
-                ? formatDecimal(adjustedAdvice.expected_continue_reward)
-                : '—'
-            }}</span>
-          </div>
+      <el-row :gutter="16" class="advice-and-distribution">
+        <el-col :span="14">
+          <el-card class="advice-card">
+            <template #header>
+              <span>最优策略建议</span>
+            </template>
+            <div v-if="currentAdvice" class="advice-content">
+              <div v-if="showAdjustedCol" class="advice-row advice-header">
+                <span class="advice-label" />
+                <span class="advice-value">原始期望</span>
+                <span class="advice-sep">|</span>
+                <span class="advice-value advice-adjusted">心理模型期望</span>
+              </div>
+              <div class="advice-row">
+                <span class="advice-label">本局当前奖励</span>
+                <span class="advice-value">{{ formatDecimal(currentAdvice.current_reward) }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  adjustedAdvice ? formatDecimal(adjustedAdvice.current_reward) : '—'
+                }}</span>
+              </div>
+              <div class="advice-row">
+                <span class="advice-label">本局继续期望</span>
+                <span class="advice-value">{{
+                  currentAdvice.expected_continue_reward != null
+                    ? formatDecimal(currentAdvice.expected_continue_reward)
+                    : '—'
+                }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  adjustedAdvice && adjustedAdvice.expected_continue_reward != null
+                    ? formatDecimal(adjustedAdvice.expected_continue_reward)
+                    : '—'
+                }}</span>
+              </div>
 
-          <el-divider style="margin: 8px 0" />
-          <div class="advice-row">
-            <span class="advice-label">各行动今日总期望：</span>
-            <span class="advice-value" />
-          </div>
-          <div
-            class="advice-row"
-            :class="{
-              'advice-row-optimal': isRawOptOnly('continue', 'must_continue'),
-              'advice-row-optimal-adjusted': isAdjOpt('continue') || isAdjOpt('must_continue'),
-            }"
-          >
-            <span class="advice-label">继续抽牌</span>
-            <span class="advice-value">{{
-              currentAdvice.draw_total != null ? formatDecimal(currentAdvice.draw_total) : '—'
-            }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-              adjustedAdvice && adjustedAdvice.draw_total != null
-                ? formatDecimal(adjustedAdvice.draw_total)
-                : '—'
-            }}</span>
-          </div>
-          <div
-            class="advice-row"
-            :class="{
-              'advice-row-optimal': isRawOptOnly('double'),
-              'advice-row-optimal-adjusted': isAdjOpt('double'),
-            }"
-          >
-            <span class="advice-label">开启翻倍</span>
-            <span class="advice-value">{{
-              currentAdvice.double_total != null ? formatDecimal(currentAdvice.double_total) : '—'
-            }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-              adjustedAdvice && adjustedAdvice.double_total != null
-                ? formatDecimal(adjustedAdvice.double_total)
-                : '—'
-            }}</span>
-          </div>
-          <div
-            class="advice-row"
-            :class="{
-              'advice-row-optimal': isRawOptOnly('abandon'),
-              'advice-row-optimal-adjusted': isAdjOpt('abandon'),
-            }"
-          >
-            <span class="advice-label">放弃本局</span>
-            <span class="advice-value">{{
-              currentAdvice.abandon_total != null ? formatDecimal(currentAdvice.abandon_total) : '—'
-            }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-              adjustedAdvice && adjustedAdvice.abandon_total != null
-                ? formatDecimal(adjustedAdvice.abandon_total)
-                : '—'
-            }}</span>
-          </div>
-          <div
-            class="advice-row"
-            :class="{
-              'advice-row-optimal': isRawOptOnly('stop', 'must_stop'),
-              'advice-row-optimal-adjusted': isAdjOpt('stop') || isAdjOpt('must_stop'),
-            }"
-          >
-            <span class="advice-label">结算本局</span>
-            <span class="advice-value">{{
-              currentAdvice.stop_total != null ? formatDecimal(currentAdvice.stop_total) : '—'
-            }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-              adjustedAdvice && adjustedAdvice.stop_total != null
-                ? formatDecimal(adjustedAdvice.stop_total)
-                : '—'
-            }}</span>
-          </div>
-          <div class="advice-row">
-            <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
-            <span class="advice-value">{{ formatDecimal(currentAdvice.expected_after_stop) }}</span>
-          </div>
-          <el-divider style="margin: 8px 0" />
-          <div class="advice-row">
-            <span class="advice-label">今日总期望</span>
-            <span class="advice-value advice-today-value">{{
-              formatDecimal(currentAdvice.expected_today)
-            }}</span>
-            <span v-if="showAdjustedCol" class="advice-sep">|</span>
-            <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
-              adjustedAdvice ? formatDecimal(adjustedAdvice.expected_today) : '—'
-            }}</span>
-          </div>
+              <el-divider style="margin: 8px 0" />
+              <div class="advice-row">
+                <span class="advice-label">各行动今日总期望：</span>
+                <span class="advice-value" />
+              </div>
+              <div
+                class="advice-row"
+                :class="{
+                  'advice-row-optimal': isRawOptOnly('continue', 'must_continue'),
+                  'advice-row-optimal-adjusted': isAdjOpt('continue') || isAdjOpt('must_continue'),
+                }"
+              >
+                <span class="advice-label">继续抽牌</span>
+                <span class="advice-value">{{
+                  currentAdvice.draw_total != null ? formatDecimal(currentAdvice.draw_total) : '—'
+                }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  adjustedAdvice && adjustedAdvice.draw_total != null
+                    ? formatDecimal(adjustedAdvice.draw_total)
+                    : '—'
+                }}</span>
+              </div>
+              <div
+                class="advice-row"
+                :class="{
+                  'advice-row-optimal': isRawOptOnly('double'),
+                  'advice-row-optimal-adjusted': isAdjOpt('double'),
+                }"
+              >
+                <span class="advice-label">开启翻倍</span>
+                <span class="advice-value">{{
+                  currentAdvice.double_total != null
+                    ? formatDecimal(currentAdvice.double_total)
+                    : '—'
+                }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  adjustedAdvice && adjustedAdvice.double_total != null
+                    ? formatDecimal(adjustedAdvice.double_total)
+                    : '—'
+                }}</span>
+              </div>
+              <div
+                class="advice-row"
+                :class="{
+                  'advice-row-optimal': isRawOptOnly('abandon'),
+                  'advice-row-optimal-adjusted': isAdjOpt('abandon'),
+                }"
+              >
+                <span class="advice-label">放弃本局</span>
+                <span class="advice-value">{{
+                  currentAdvice.abandon_total != null
+                    ? formatDecimal(currentAdvice.abandon_total)
+                    : '—'
+                }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  adjustedAdvice && adjustedAdvice.abandon_total != null
+                    ? formatDecimal(adjustedAdvice.abandon_total)
+                    : '—'
+                }}</span>
+              </div>
+              <div
+                class="advice-row"
+                :class="{
+                  'advice-row-optimal': isRawOptOnly('stop', 'must_stop'),
+                  'advice-row-optimal-adjusted': isAdjOpt('stop') || isAdjOpt('must_stop'),
+                }"
+              >
+                <span class="advice-label">结算本局</span>
+                <span class="advice-value">{{
+                  currentAdvice.stop_total != null ? formatDecimal(currentAdvice.stop_total) : '—'
+                }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                  adjustedAdvice && adjustedAdvice.stop_total != null
+                    ? formatDecimal(adjustedAdvice.stop_total)
+                    : '—'
+                }}</span>
+              </div>
+              <div class="advice-row">
+                <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
+                <span class="advice-value">{{
+                  formatDecimal(currentAdvice.expected_after_stop)
+                }}</span>
+              </div>
+              <el-divider style="margin: 8px 0" />
+              <div class="advice-row">
+                <span class="advice-label">今日总期望</span>
+                <span class="advice-value advice-today-value">{{
+                  formatDecimal(currentAdvice.expected_today)
+                }}</span>
+                <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
+                  adjustedAdvice ? formatDecimal(adjustedAdvice.expected_today) : '—'
+                }}</span>
+              </div>
 
-          <el-divider style="margin: 8px 0" />
-          <div
-            class="advice-decision"
-            :class="{
-              'advice-continue':
-                decisionAction === 'continue' || decisionAction === 'must_continue',
-              'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
-              'advice-abandon': decisionAction === 'abandon',
-            }"
-          >
-            <template v-if="decisionAction === 'double'">
-              {{ decisionPrefix }}建议先开启翻倍再继续
+              <el-divider style="margin: 8px 0" />
+              <div
+                class="advice-decision"
+                :class="{
+                  'advice-continue':
+                    decisionAction === 'continue' || decisionAction === 'must_continue',
+                  'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
+                  'advice-abandon': decisionAction === 'abandon',
+                }"
+              >
+                <template v-if="decisionAction === 'double'">
+                  {{ decisionPrefix }}建议先开启翻倍再继续
+                </template>
+                <template v-else-if="decisionAction === 'abandon'">
+                  {{ decisionPrefix }}建议放弃本局（重开期望更高）
+                </template>
+                <template v-else-if="decisionAction === 'continue'">
+                  {{ decisionPrefix }}建议继续抽牌（期望更高）
+                </template>
+                <template v-else-if="decisionAction === 'stop'">
+                  {{ decisionPrefix }}建议停止（当前奖励更高）
+                </template>
+                <template v-else-if="decisionAction === 'must_continue'">
+                  {{ decisionPrefix }}必须抽第一张牌
+                </template>
+                <template v-else>{{ decisionPrefix }}建议结算</template>
+              </div>
+            </div>
+            <div v-else class="advice-content">
+              <div class="advice-empty">正在计算策略数据…</div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <el-col :span="10">
+          <el-card class="distribution-card">
+            <template #header>
+              <span>战力点分布</span>
             </template>
-            <template v-else-if="decisionAction === 'abandon'">
-              {{ decisionPrefix }}建议放弃本局（重开期望更高）
-            </template>
-            <template v-else-if="decisionAction === 'continue'">
-              {{ decisionPrefix }}建议继续抽牌（期望更高）
-            </template>
-            <template v-else-if="decisionAction === 'stop'">
-              {{ decisionPrefix }}建议停止（当前奖励更高）
-            </template>
-            <template v-else-if="decisionAction === 'must_continue'">
-              {{ decisionPrefix }}必须抽第一张牌
-            </template>
-            <template v-else>{{ decisionPrefix }}建议结算</template>
-          </div>
-        </div>
-        <div v-else class="advice-content">
-          <div class="advice-empty">正在计算策略数据…</div>
-        </div>
-      </el-card>
+            <el-table
+              v-if="distributionTableData.length > 0"
+              :data="distributionTableData"
+              size="small"
+              height="auto"
+              :row-class-name="distributionRowClassName"
+              style="width: 100%"
+            >
+              <el-table-column label="战力点" width="72">
+                <template #default="{ row }">
+                  <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
+                  <span
+                    v-else
+                    class="distribution-value"
+                    :class="{ 'distribution-current-value': row.isCurrent }"
+                    >{{ row.value }}</span
+                  >
+                </template>
+              </el-table-column>
+              <el-table-column label="概率" width="90">
+                <template #default="{ row }">
+                  <span
+                    class="distribution-prob"
+                    :class="{ 'distribution-prob-abandon': row.isAbandon }"
+                    >{{ (row.prob * 100).toFixed(2) + '%' }}</span
+                  >
+                </template>
+              </el-table-column>
+              <el-table-column label="分布条">
+                <template #default="{ row }">
+                  <el-progress
+                    :percentage="Math.max(Math.round(row.prob * 100), 1)"
+                    :stroke-width="14"
+                    :show-text="false"
+                    :color="
+                      row.isAbandon
+                        ? 'var(--el-color-danger)'
+                        : row.isCurrent
+                          ? 'var(--el-color-primary)'
+                          : 'var(--el-color-primary-light-5)'
+                    "
+                    :striped="row.isAbandon"
+                  />
+                </template>
+              </el-table-column>
+            </el-table>
+            <div v-else class="distribution-empty">正在计算…</div>
+          </el-card>
+        </el-col>
+      </el-row>
 
       <el-collapse v-model="strategyCollapse" class="strategy-panel">
         <el-collapse-item title="完整策略表" name="strategy">
@@ -564,11 +633,12 @@
 //   2. 奖励计算（战力点 → 档位）
 //   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed, watch } from 'vue';
-import { solve, getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
+import { solve, getCurrentAdvice, getPowerDistribution } from './EndfieldTrialSwordmancySolver';
 import type {
   SolverResultEntry,
   AdviceResult,
   OverflowParams,
+  PowerDistributionResult,
 } from './EndfieldTrialSwordmancySolver';
 
 /** 最多抽取张数 */
@@ -1024,6 +1094,44 @@ const adjustedAdvice = computed<AdviceResult | null>(() => {
   );
 });
 
+// ── 有效战力点分布 ──
+
+const powerDistribution = computed<PowerDistributionResult | null>(() => {
+  const deck = deckConfigArray.value;
+  const rewards = rewardArray.value;
+  if (deck.some((c) => c < 0)) return null;
+  return getPowerDistribution(
+    drawnCounts.value,
+    deck,
+    rewards,
+    overflowParams.value,
+    remainingGames.value,
+    remainingDoubles.value,
+    remainingAbandons.value,
+    doubled.value,
+  );
+});
+
+const distributionTableData = computed(() => {
+  const result = powerDistribution.value;
+  if (!result) return [];
+  const { distribution: dist, abandonProb } = result;
+  const currentS = rewardIndex.value;
+  const rows = dist.map((p, i) => ({
+    value: i,
+    prob: p,
+    isCurrent: i === currentS && dist.some((d) => d > 0),
+    isAbandon: false,
+  }));
+  rows.push({
+    value: -1,
+    prob: abandonProb,
+    isCurrent: false,
+    isAbandon: true,
+  });
+  return rows;
+});
+
 // ── 策略表面板搜索与筛选 ──
 
 /** 子序列匹配（输入顺序无关，内部自动排序后比较） */
@@ -1065,6 +1173,12 @@ function tableRowClassName({ row }: { row: any }) {
   if (row.combination === currentCombinationStr.value) {
     return 'table-row-highlight';
   }
+  return '';
+}
+
+/** 分布表行高亮回调 */
+function distributionRowClassName({ row }: { row: any }) {
+  if (row.isCurrent) return 'distribution-row-highlight';
   return '';
 }
 
@@ -1267,6 +1381,17 @@ function handleOtpChange(val: string | number) {
     }
   }
 
+  .advice-and-distribution {
+    :deep(.el-col) {
+      display: flex;
+    }
+    .advice-card,
+    .distribution-card {
+      flex: 1;
+      width: 100%;
+    }
+  }
+
   .game-bottom {
     display: flex;
     flex-direction: column;
@@ -1435,6 +1560,13 @@ function handleOtpChange(val: string | number) {
       flex-grow: 1;
       --el-border-radius-base: 0px;
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
+    }
+
+    &.overflow-psych-disabled {
+      opacity: 0.5;
+      .reward-label {
+        color: var(--el-text-color-placeholder);
+      }
     }
   }
 
@@ -1700,6 +1832,61 @@ function handleOtpChange(val: string | number) {
   }
 
   :deep(.el-table__body tr.table-row-highlight:hover td) {
+    background: var(--el-color-primary-light-9);
+  }
+
+  // ── 有效战力点分布 ──
+
+  .distribution-card {
+    :deep(.el-card__header) {
+      font-weight: 600;
+      padding: 10px 16px;
+    }
+    :deep(.el-card__body) {
+      padding: 12px 16px;
+    }
+  }
+
+  .distribution-empty {
+    text-align: center;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+    padding: 8px 0;
+  }
+
+  .distribution-value {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .distribution-current-value {
+    color: var(--el-color-primary);
+    font-weight: 700;
+  }
+
+  .distribution-prob {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .distribution-prob-abandon {
+    color: var(--el-color-danger);
+  }
+
+  .distribution-abandon-label {
+    color: var(--el-color-danger);
+    font-size: 12px;
+  }
+
+  :deep(.distribution-card .el-progress) {
+    width: 100%;
+  }
+
+  :deep(.distribution-row-highlight) {
+    background: var(--el-color-primary-light-9);
+    font-weight: 600;
+  }
+
+  :deep(.el-table__body tr.distribution-row-highlight:hover td) {
     background: var(--el-color-primary-light-9);
   }
 
