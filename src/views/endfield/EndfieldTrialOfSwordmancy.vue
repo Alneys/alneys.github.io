@@ -324,23 +324,23 @@
               </div>
               <div class="advice-row">
                 <span class="advice-label">本局当前奖励</span>
-                <span class="advice-value">{{ formatDecimal(currentAdvice.current_reward) }}</span>
+                <span class="advice-value">{{ formatDecimal(currentAdvice.currentReward) }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice ? formatDecimal(adjustedAdvice.current_reward) : '—'
+                  adjustedAdvice ? formatDecimal(adjustedAdvice.currentReward) : '—'
                 }}</span>
               </div>
               <div class="advice-row">
                 <span class="advice-label">本局继续期望</span>
                 <span class="advice-value">{{
-                  currentAdvice.expected_continue_reward != null
-                    ? formatDecimal(currentAdvice.expected_continue_reward)
+                  currentAdvice.expectedContinueReward != null
+                    ? formatDecimal(currentAdvice.expectedContinueReward)
                     : '—'
                 }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.expected_continue_reward != null
-                    ? formatDecimal(adjustedAdvice.expected_continue_reward)
+                  adjustedAdvice && adjustedAdvice.expectedContinueReward != null
+                    ? formatDecimal(adjustedAdvice.expectedContinueReward)
                     : '—'
                 }}</span>
               </div>
@@ -359,12 +359,12 @@
               >
                 <span class="advice-label">继续抽牌</span>
                 <span class="advice-value">{{
-                  currentAdvice.draw_total != null ? formatDecimal(currentAdvice.draw_total) : '—'
+                  currentAdvice.drawTotal != null ? formatDecimal(currentAdvice.drawTotal) : '—'
                 }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.draw_total != null
-                    ? formatDecimal(adjustedAdvice.draw_total)
+                  adjustedAdvice && adjustedAdvice.drawTotal != null
+                    ? formatDecimal(adjustedAdvice.drawTotal)
                     : '—'
                 }}</span>
               </div>
@@ -377,14 +377,12 @@
               >
                 <span class="advice-label">开启翻倍</span>
                 <span class="advice-value">{{
-                  currentAdvice.double_total != null
-                    ? formatDecimal(currentAdvice.double_total)
-                    : '—'
+                  currentAdvice.doubleTotal != null ? formatDecimal(currentAdvice.doubleTotal) : '—'
                 }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.double_total != null
-                    ? formatDecimal(adjustedAdvice.double_total)
+                  adjustedAdvice && adjustedAdvice.doubleTotal != null
+                    ? formatDecimal(adjustedAdvice.doubleTotal)
                     : '—'
                 }}</span>
               </div>
@@ -397,14 +395,14 @@
               >
                 <span class="advice-label">放弃本局</span>
                 <span class="advice-value">{{
-                  currentAdvice.abandon_total != null
-                    ? formatDecimal(currentAdvice.abandon_total)
+                  currentAdvice.abandonTotal != null
+                    ? formatDecimal(currentAdvice.abandonTotal)
                     : '—'
                 }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.abandon_total != null
-                    ? formatDecimal(adjustedAdvice.abandon_total)
+                  adjustedAdvice && adjustedAdvice.abandonTotal != null
+                    ? formatDecimal(adjustedAdvice.abandonTotal)
                     : '—'
                 }}</span>
               </div>
@@ -417,30 +415,30 @@
               >
                 <span class="advice-label">结算本局</span>
                 <span class="advice-value">{{
-                  currentAdvice.stop_total != null ? formatDecimal(currentAdvice.stop_total) : '—'
+                  currentAdvice.stopTotal != null ? formatDecimal(currentAdvice.stopTotal) : '—'
                 }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.stop_total != null
-                    ? formatDecimal(adjustedAdvice.stop_total)
+                  adjustedAdvice && adjustedAdvice.stopTotal != null
+                    ? formatDecimal(adjustedAdvice.stopTotal)
                     : '—'
                 }}</span>
               </div>
               <div class="advice-row">
                 <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
                 <span class="advice-value">{{
-                  formatDecimal(currentAdvice.expected_after_stop)
+                  formatDecimal(currentAdvice.expectedAfterStop)
                 }}</span>
               </div>
               <el-divider style="margin: 8px 0" />
               <div class="advice-row">
                 <span class="advice-label">今日总期望</span>
                 <span class="advice-value advice-today-value">{{
-                  formatDecimal(currentAdvice.expected_today)
+                  formatDecimal(currentAdvice.expectedToday)
                 }}</span>
                 <span v-if="showAdjustedCol" class="advice-sep">|</span>
                 <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
-                  adjustedAdvice ? formatDecimal(adjustedAdvice.expected_today) : '—'
+                  adjustedAdvice ? formatDecimal(adjustedAdvice.expectedToday) : '—'
                 }}</span>
               </div>
 
@@ -561,7 +559,7 @@
             <el-table-column prop="drawn" label="已抽" width="60" />
             <el-table-column label="当前奖励">
               <template #default="{ row }">
-                <span class="num-cell">{{ row.current_reward.toLocaleString() }}</span>
+                <span class="num-cell">{{ row.currentReward.toLocaleString() }}</span>
               </template>
             </el-table-column>
             <el-table-column v-if="showAdjustedCol" label="调整后奖励" width="110">
@@ -573,8 +571,8 @@
             </el-table-column>
             <el-table-column label="继续期望">
               <template #default="{ row }">
-                <span v-if="row.expected_continue_reward != null" class="num-cell">{{
-                  row.expected_continue_reward.toLocaleString()
+                <span v-if="row.expectedContinueReward != null" class="num-cell">{{
+                  row.expectedContinueReward.toLocaleString()
                 }}</span>
                 <span v-else class="strategy-na">—</span>
               </template>
@@ -591,24 +589,24 @@
             </el-table-column>
             <el-table-column label="行动" width="70">
               <template #default="{ row }">
-                <span :class="actionTagClass(row.optimal_action)">{{
-                  actionTagLabel(row.optimal_action)
+                <span :class="actionTagClass(row.optimalAction)">{{
+                  actionTagLabel(row.optimalAction)
                 }}</span>
               </template>
             </el-table-column>
             <el-table-column v-if="showAdjustedCol" label="调整后行动" width="80">
               <template #default="{ row }">
-                <span :class="actionTagClass(rowAdjusted(row).optimal_action)">{{
-                  actionTagLabel(rowAdjusted(row).optimal_action)
+                <span :class="actionTagClass(rowAdjusted(row).optimalAction)">{{
+                  actionTagLabel(rowAdjusted(row).optimalAction)
                 }}</span>
               </template>
             </el-table-column>
             <el-table-column label="最优期望" width="100">
               <template #default="{ row }">
                 <span class="num-cell">{{
-                  (row.expected_continue_reward != null
-                    ? Math.max(row.current_reward, row.expected_continue_reward)
-                    : row.current_reward
+                  (row.expectedContinueReward != null
+                    ? Math.max(row.currentReward, row.expectedContinueReward)
+                    : row.currentReward
                   ).toLocaleString()
                 }}</span>
               </template>
@@ -633,12 +631,11 @@
 //   2. 奖励计算（战力点 → 档位）
 //   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed, watch } from 'vue';
-import { solve, getCurrentAdvice, getPowerDistribution } from './EndfieldTrialSwordmancySolver';
+import { solve, getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
 import type {
   SolverResultEntry,
   AdviceResult,
   OverflowParams,
-  PowerDistributionResult,
 } from './EndfieldTrialSwordmancySolver';
 
 /** 最多抽取张数 */
@@ -1094,26 +1091,8 @@ const adjustedAdvice = computed<AdviceResult | null>(() => {
   );
 });
 
-// ── 有效战力点分布 ──
-
-const powerDistribution = computed<PowerDistributionResult | null>(() => {
-  const deck = deckConfigArray.value;
-  const rewards = rewardArray.value;
-  if (deck.some((c) => c < 0)) return null;
-  return getPowerDistribution(
-    drawnCounts.value,
-    deck,
-    rewards,
-    overflowParams.value,
-    remainingGames.value,
-    remainingDoubles.value,
-    remainingAbandons.value,
-    doubled.value,
-  );
-});
-
 const distributionTableData = computed(() => {
-  const result = powerDistribution.value;
+  const result = adjustedAdvice.value;
   if (!result) return [];
   const { distribution: dist, abandonProb } = result;
   const currentS = rewardIndex.value;
@@ -1185,21 +1164,21 @@ function distributionRowClassName({ row }: { row: any }) {
 /** 原始最优且调整后非最优时才高亮原始色，避免与调整后高亮冲突 */
 function isRawOptOnly(...actions: string[]): boolean {
   if (!currentAdvice.value) return false;
-  const rawIs = actions.includes(currentAdvice.value.optimal_action);
+  const rawIs = actions.includes(currentAdvice.value.optimalAction);
   if (!rawIs) return false;
   if (!adjustedAdvice.value) return true;
-  return !actions.includes(adjustedAdvice.value.optimal_action);
+  return !actions.includes(adjustedAdvice.value.optimalAction);
 }
 
 /** 调整后最优则优先使用调整后高亮色 */
 function isAdjOpt(...actions: string[]): boolean {
   if (!adjustedAdvice.value) return false;
-  return actions.includes(adjustedAdvice.value.optimal_action);
+  return actions.includes(adjustedAdvice.value.optimalAction);
 }
 
 /** 决策动作优先采用心理模型建议，无模型时回退原始 */
 const decisionAction = computed(
-  () => adjustedAdvice.value?.optimal_action ?? currentAdvice.value?.optimal_action ?? 'stop',
+  () => adjustedAdvice.value?.optimalAction ?? currentAdvice.value?.optimalAction ?? 'stop',
 );
 
 /** 仅心理模型激活时在决策文字前显示标注 */
@@ -1209,30 +1188,30 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 function rowAdjusted(row: any): {
   adjusted_reward: number;
   adjusted_expected_continue: number | null;
-  optimal_action: string;
+  optimalAction: string;
   optimal_expected: number;
 } {
   const combo = row.combination;
   const adjusted = filteredAdjustedResults.value.find((a) => a.combination === combo);
   if (!adjusted) {
     return {
-      adjusted_reward: row.current_reward,
-      adjusted_expected_continue: row.expected_continue_reward ?? null,
-      optimal_action: row.optimal_action ?? 'must_stop',
+      adjusted_reward: row.currentReward,
+      adjusted_expected_continue: row.expectedContinueReward ?? null,
+      optimalAction: row.optimalAction ?? 'must_stop',
       optimal_expected:
-        row.expected_continue_reward != null
-          ? Math.max(row.current_reward, row.expected_continue_reward)
-          : row.current_reward,
+        row.expectedContinueReward != null
+          ? Math.max(row.currentReward, row.expectedContinueReward)
+          : row.currentReward,
     };
   }
   return {
-    adjusted_reward: adjusted.current_reward,
-    adjusted_expected_continue: adjusted.expected_continue_reward,
-    optimal_action: adjusted.optimal_action,
+    adjusted_reward: adjusted.currentReward,
+    adjusted_expected_continue: adjusted.expectedContinueReward,
+    optimalAction: adjusted.optimalAction,
     optimal_expected:
-      adjusted.expected_continue_reward != null
-        ? Math.max(adjusted.current_reward, adjusted.expected_continue_reward)
-        : adjusted.current_reward,
+      adjusted.expectedContinueReward != null
+        ? Math.max(adjusted.currentReward, adjusted.expectedContinueReward)
+        : adjusted.currentReward,
   };
 }
 
