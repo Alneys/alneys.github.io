@@ -347,7 +347,7 @@
     <div class="al-divider"></div>
 
     <el-row :gutter="16" class="game-section" data-tour="result">
-      <el-col :span="14" :xs="24">
+      <el-col :span="15" :xs="24">
         <el-card class="advice-card">
           <template #header>
             <span>策略分析</span>
@@ -526,7 +526,7 @@
         </el-card>
       </el-col>
 
-      <el-col :span="10" :xs="24">
+      <el-col :span="9" :xs="24">
         <el-card class="distribution-card">
           <template #header>
             <span>战力点概率分布</span>
@@ -534,7 +534,6 @@
           <el-table
             v-if="distributionTableData.length > 0"
             :data="distributionTableData"
-            size="small"
             height="auto"
             :row-class-name="distributionRowClassName"
             style="width: 100%"
@@ -550,7 +549,7 @@
                 >
               </template>
             </el-table-column>
-            <el-table-column label="概率" width="90">
+            <el-table-column label="概率" width="80">
               <template #default="{ row }">
                 <span
                   class="distribution-prob"
@@ -563,7 +562,7 @@
               <template #default="{ row }">
                 <el-progress
                   :percentage="Math.max(Math.round(row.prob * 100), 0)"
-                  :stroke-width="14"
+                  :stroke-width="20"
                   :show-text="false"
                   :color="
                     row.isAbandon
@@ -1666,24 +1665,24 @@ function handleOtpChange(val: string | number) {
   .advice-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 12px 18px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 14px 18px;
     }
   }
 
   .advice-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
   .advice-row {
     display: flex;
     align-items: center;
-    font-size: 14px;
-    gap: 6px;
+    font-size: 15px;
+    gap: 8px;
   }
 
   .advice-label {
@@ -1732,7 +1731,7 @@ function handleOtpChange(val: string | number) {
   }
 
   .advice-header {
-    font-size: 12px;
+    font-size: 14px;
 
     .advice-value {
       font-weight: bold;
@@ -1746,9 +1745,9 @@ function handleOtpChange(val: string | number) {
 
   .advice-decision {
     text-align: center;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: bold;
-    padding: 6px 0;
+    padding: 8px 0;
     border-radius: 6px;
 
     &.advice-continue {
@@ -1807,18 +1806,18 @@ function handleOtpChange(val: string | number) {
   .distribution-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 12px 18px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 14px 18px;
     }
   }
 
   .distribution-empty {
     text-align: center;
     color: var(--el-text-color-secondary);
-    font-size: 13px;
-    padding: 8px 0;
+    font-size: 14px;
+    padding: 12px 0;
   }
 
   .distribution-value {
@@ -1841,7 +1840,6 @@ function handleOtpChange(val: string | number) {
 
   .distribution-abandon-label {
     color: var(--el-color-danger);
-    font-size: 12px;
   }
 
   :deep(.distribution-card .el-progress) {
