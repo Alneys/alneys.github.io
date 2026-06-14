@@ -2,6 +2,12 @@
   <div id="view-endfield-trial-of-swordmancy">
     <div class="view-title-row">
       <h1 class="view-title">Endfield Trial Of Swordmancy</h1>
+      <a href="https://space.bilibili.com/13775737" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Alneys-00A1D6?style=flat-square&logo=bilibili&labelColor=eee"
+          alt="BiliBili"
+        />
+      </a>
       <el-button class="tour-trigger-btn" @click="tourOpen = true"> 页面引导 </el-button>
     </div>
     <div class="al-divider"></div>
