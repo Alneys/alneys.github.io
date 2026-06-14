@@ -1,0 +1,8 @@
+@use './palette-mixin' as palette;
+
+@include palette.generate-palette(
+  (
+    'primary': #1890ff,
+    'miya': #d7a96b,
+  )
+);

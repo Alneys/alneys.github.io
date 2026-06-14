@@ -1,0 +1,62 @@
+// Palette generator
+@use 'sass:math';
+@use 'sass:color';
+@use './palette-config';
+
+@function round-color($c) {
+  @return rgba(
+    math.round(color.channel($c, 'red')),
+    math.round(color.channel($c, 'green')),
+    math.round(color.channel($c, 'blue')),
+    color.channel($c, 'alpha')
+  );
+}
+
+/// $colors:       map of name → base color, e.g. (primary: #1890ff, success: #52c41a)
+/// $light-levels: list of light variant numerators (default: (3 5 7 8 9) → 30% 50% 70% 80% 90%)
+/// $dark-level:   dark variant numerator   (default: 2 → 20%)
+/// $dark-bg:      background color used in dark-mode light mixing (default: #141414)
+/// $white-bg:     background color used in dark-mode dark mixing (default: #ffffff)
+/// $prefix:       CSS custom property prefix (default: palette-config.$prefix)
+@mixin generate-palette(
+  $colors,
+  $light-levels: (3, 5, 7, 8, 9),
+  $dark-level: 2,
+  $dark-bg: #141414,
+  $white-bg: #ffffff,
+  $prefix: palette-config.$prefix
+) {
+  // ---- Light mode ----
+  :root {
+    @each $name, $base in $colors {
+      --#{$prefix}-#{$name}: #{$base};
+
+      @each $l in $light-levels {
+        --#{$prefix}-#{$name}-light-#{$l}: #{round-color(
+            color.mix(white, $base, math.percentage(math.div($l, 10)))
+          )};
+      }
+
+      --#{$prefix}-#{$name}-dark-#{$dark-level}: #{round-color(
+          color.mix(black, $base, math.percentage(math.div($dark-level, 10)))
+        )};
+    }
+  }
+
+  // ---- Dark mode ----
+  html.dark {
+    @each $name, $base in $colors {
+      --#{$prefix}-#{$name}: #{$base};
+
+      @each $l in $light-levels {
+        --#{$prefix}-#{$name}-light-#{$l}: #{round-color(
+            color.mix($dark-bg, $base, math.percentage(math.div($l, 10)))
+          )};
+      }
+
+      --#{$prefix}-#{$name}-dark-#{$dark-level}: #{round-color(
+          color.mix($white-bg, $base, math.percentage(math.div($dark-level, 10)))
+        )};
+    }
+  }
+}
