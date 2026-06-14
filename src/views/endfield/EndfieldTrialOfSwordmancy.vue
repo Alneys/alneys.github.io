@@ -228,7 +228,7 @@
                 <template #header>
                   <span>奖励状态</span>
                 </template>
-                <div class="power-point-section">
+                <div class="power-point-section" :class="{ 'reward-penalty': totalPower > 10 }">
                   <span class="reward-label">战力点</span>
                   <el-segmented
                     :model-value="rewardIndex"
@@ -239,9 +239,9 @@
                       'reward-success': rewardIndex === 10,
                     }"
                   />
-                  <span class="xs-value">{{ totalPower }}</span>
+                  <span class="xs-value">{{ rewardIndex }}</span>
                 </div>
-                <div class="reward-tier-section">
+                <div class="reward-tier-section" :class="{ 'reward-penalty': totalPower > 10 }">
                   <span class="reward-label">奖励</span>
                   <el-segmented
                     :model-value="rewardIndex"
@@ -256,7 +256,10 @@
                 </div>
                 <div
                   class="overflow-psych-section"
-                  :class="{ 'overflow-psych-disabled': !showAdjustedCol }"
+                  :class="{
+                    'overflow-psych-disabled': !showAdjustedCol,
+                    'reward-penalty': showAdjustedCol && totalPower > 10,
+                  }"
                 >
                   <span class="reward-label">溢出心理</span>
                   <el-segmented
@@ -266,7 +269,7 @@
                     block
                     class="overflow-psych-segmented"
                   />
-                  <span class="xs-value">{{ overflowPsychValue ?? '—' }}</span>
+                  <span class="xs-value">{{ overflowPsychDisplayValue }}</span>
                 </div>
               </el-card>
             </el-col>
@@ -1075,6 +1078,24 @@ const overflowPsychOptions = computed(() => {
 const overflowPsychValue = computed(() => {
   if (totalPower.value >= 11 && totalPower.value <= 21) return totalPower.value;
   return undefined;
+});
+
+/** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
+const overflowPsychDisplayValue = computed(() => {
+  const params = overflowParams.value;
+  const mult = doubled.value ? 2 : 1;
+  if (totalPower.value >= 11 && totalPower.value <= 21) {
+    const s = totalPower.value % 11;
+    const raw = rewardValues.value[s] ?? 0;
+    let adjusted: number;
+    if (params) {
+      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
+    } else {
+      adjusted = raw * mult;
+    }
+    return formatRewardShort(adjusted);
+  }
+  return '—';
 });
 
 /** OTP 输入框的字符串值（按抽取顺序排列，空位为 ''） */
@@ -2021,6 +2042,10 @@ function handleOtpChange(val: string | number) {
       margin-bottom: 0;
       background: var(--el-fill-color);
       border-radius: 6px;
+
+      &.reward-penalty {
+        background: var(--el-color-danger-light-7);
+      }
 
       .el-segmented {
         display: none;
