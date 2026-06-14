@@ -1608,6 +1608,7 @@ function handleOtpChange(val: string | number) {
       flex-grow: 1;
       --el-border-radius-base: 0px;
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
+      --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
     }
 
     &.overflow-psych-disabled {
