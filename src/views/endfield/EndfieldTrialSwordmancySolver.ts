@@ -138,11 +138,29 @@ export function getCurrentAdvice(
 ): AdviceResult | null {
   const modValue = rewards.length;
   const maxDraws = 5;
+
+  if (
+    drawnCounts.length !== 5 ||
+    deck.length !== 5 ||
+    rewards.length === 0 ||
+    drawnCounts.some((c) => c < 0) ||
+    deck.some((c) => c < 0) ||
+    remainingGames < 0 ||
+    remainingDoubles < 0 ||
+    remainingDoubles - (doubled ? 1 : 0) < 0 ||
+    remainingAbandons < 0 ||
+    drawnCounts.some((c, i) => c > deck[i]!)
+  ) {
+    return null;
+  }
+
   const totalCards = deck.reduce((a, b) => a + b, 0);
   const initialTotal = deck.reduce((sum, count, i) => sum + count * (i + 1), 0);
   const deckInit = [...deck];
 
   const drawn = drawnCounts.reduce((a, b) => a + b, 0);
+  if (drawn > maxDraws) return null;
+
   const drawnValue = drawnCounts.reduce((sum, count, i) => sum + count * (i + 1), 0);
   const s = ((drawnValue % modValue) + modValue) % modValue;
   const M = doubled ? 2 : 1;
@@ -152,7 +170,7 @@ export function getCurrentAdvice(
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
   const P = remainingGames;
-  const B = remainingDoubles;
+  const B = remainingDoubles - (doubled ? 1 : 0);
   const A = remainingAbandons;
 
   const adviceKey = cacheKey(deck, rewards, overflowParams);

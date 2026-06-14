@@ -431,11 +431,16 @@
             </div>
             <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
               <span class="advice-label" style="text-indent: 1.5em">铭牌点数 {{ item.level }}</span>
-              <span class="advice-value">{{ item.ev != null ? formatDiff(item.ev) : '—' }}</span>
-              <span v-if="showAdjustedCol" class="advice-sep">|</span>
-              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—'
+              <span class="advice-value" :class="diffClass(item.ev)">{{
+                item.ev != null ? formatDiff(item.ev) : '—'
               }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span
+                v-if="showAdjustedCol"
+                class="advice-value advice-adjusted"
+                :class="diffClass(item.evAdjusted)"
+                >{{ item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—' }}</span
+              >
               <span class="advice-sep">|</span>
               <span class="advice-value advice-prob">{{ (item.prob * 100).toFixed(1) }}%</span>
             </div>
@@ -495,7 +500,11 @@
             </div>
             <div class="advice-row">
               <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
-              <span class="advice-value">{{ formatDecimal(currentAdvice.expectedAfterStop) }}</span>
+              <span class="advice-value">{{
+                adjustedAdvice && adjustedAdvice.stopTotal != null
+                  ? formatDecimal(currentAdvice.expectedAfterStop)
+                  : '—'
+              }}</span>
             </div>
             <el-divider style="margin: 8px 0" />
             <div class="advice-row">
@@ -881,6 +890,13 @@ function formatDiff(value: number): string {
   return prefix + formatDecimal(value);
 }
 
+function diffClass(value: number | null): string {
+  if (value == null) return '';
+  if (value > 0) return 'diff-positive';
+  if (value < 0) return 'diff-negative';
+  return '';
+}
+
 /** 格式化奖励数字（显示为简短格式） */
 function formatRewardShort(value: number): string {
   const abs = Math.abs(value);
@@ -991,10 +1007,16 @@ const perLevelAdvice = computed(() => {
   const rewards = rewardArray.value;
   const dc = drawnCounts.value;
   if (deck.some((c) => c < 0)) return [];
+  if (!canDraw.value) {
+    return [1, 2, 3, 4, 5].map((level) => ({
+      level,
+      prob: 0,
+      ev: null as number | null,
+      evAdjusted: null as number | null,
+    }));
+  }
   const remaining = deck.map((d, i) => d - dc[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
-  if (totalRemaining === 0) return [];
-
   const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
     [];
   const currentExp = currentAdvice.value?.expectedToday ?? 0;
@@ -1031,6 +1053,13 @@ const perLevelAdvice = computed(() => {
         prob: Math.round(prob * 10000) / 10000,
         ev: raw ? Math.round((raw.expectedToday - currentExp) * 100) / 100 : null,
         evAdjusted: adj ? Math.round((adj.expectedToday - currentExpAdj) * 100) / 100 : null,
+      });
+    } else {
+      result.push({
+        level: i + 1,
+        prob: 0,
+        ev: null,
+        evAdjusted: null,
       });
     }
   }
@@ -1528,6 +1557,14 @@ function handleOtpChange(val: string | number) {
     font-variant-numeric: tabular-nums;
     min-width: 88px;
     text-align: right;
+
+    &.diff-positive {
+      color: var(--el-color-success);
+    }
+
+    &.diff-negative {
+      color: var(--el-color-danger);
+    }
   }
 
   .advice-sep {
@@ -1536,7 +1573,7 @@ function handleOtpChange(val: string | number) {
   }
 
   .advice-adjusted {
-    color: var(--el-color-danger);
+    color: var(--el-text-color-primary);
   }
 
   .advice-prob {
@@ -1552,7 +1589,7 @@ function handleOtpChange(val: string | number) {
   }
 
   .advice-today-adjusted {
-    color: var(--el-color-danger);
+    color: var(--el-text-color-primary);
     font-weight: 700;
   }
 

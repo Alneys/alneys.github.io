@@ -133,14 +133,14 @@ describe('EndfieldTrialSwordmancySolver', () => {
   describe('战力点概率分布（合并到 getCurrentAdvice）', () => {
     it('已翻倍且已抽 531 时分布不应锁定在当前战力点', () => {
       // 已抽 531 → drawnCounts=[1,0,1,0,1], 总战力=9, 战力点=9%11=9
-      // 已翻倍 (M=2), remainingDoubles=1 (已用掉一次), P=3, A=3
+      // 已翻倍 (M=2), 原本剩余翻倍次数=2（已用掉一次, solver 内部扣减）, P=3, A=3
       const advice = getCurrentAdvice(
         [1, 0, 1, 0, 1],
         deck,
         rewards,
         true, // doubled
         3,
-        1,
+        2,
         3,
       );
       expect(advice).not.toBeNull();
@@ -157,7 +157,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
         rewards,
         true, // doubled
         3,
-        1,
+        2,
         3,
       );
       expect(advice).not.toBeNull();
