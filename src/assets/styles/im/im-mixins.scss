@@ -1,6 +1,4 @@
-// Based on 'node_modules/element-plus/theme-chalk/src/mixins/function.scss'
-
-@use './config';
+@use './im-config' as config;
 
 // join-var-name(('button', 'text-color')) => '--im-button-text-color'
 @function join-var-name($list, $namespace: config.$namespace) {
@@ -11,4 +9,10 @@
     }
   }
   @return $res;
+}
+
+// @include set-css-var-value(('color', 'primary'), red);
+// --im-color-primary: red;
+@mixin set-css-var-value($name, $value, $namespace: config.$namespace) {
+  #{join-var-name($name, $namespace)}: #{$value};
 }

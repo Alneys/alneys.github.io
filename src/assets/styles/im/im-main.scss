@@ -3,9 +3,8 @@
 
 @use './im-colors.scss' as *;
 
-@use '../src/config';
-@use '../src/functions' as *;
-@use '../src/mixins' as *;
+@use './im-config';
+@use './im-mixins' as *;
 
 :root {
   // custom colors

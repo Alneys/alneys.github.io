@@ -1,4 +1,4 @@
-@use './palette-mixin' as palette;
+@use './palette-mixins' as palette;
 
 @include palette.generate-palette(
   (
