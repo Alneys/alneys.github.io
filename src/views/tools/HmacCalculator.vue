@@ -432,7 +432,7 @@ function copyToClipboard(): void {
 
   .section-label {
     display: block;
-    font-weight: 500;
+    font-weight: bold;
     margin-bottom: 1em;
   }
 
@@ -498,7 +498,7 @@ function copyToClipboard(): void {
 
   .result-label {
     margin-bottom: 0.5em;
-    font-weight: 500;
+    font-weight: bold;
   }
 
   .hmac-output {

@@ -1175,7 +1175,7 @@ function handleOtpChange(val: string | number) {
 
   .psycho-card {
     :deep(.el-card__header) {
-      font-weight: 600;
+      font-weight: bold;
       padding: 10px 16px;
     }
     :deep(.el-card__body) {
@@ -1252,7 +1252,7 @@ function handleOtpChange(val: string | number) {
   .pool-card,
   .reward-card {
     :deep(.el-card__header) {
-      font-weight: 600;
+      font-weight: bold;
       padding: 10px 16px;
     }
     :deep(.el-card__body) {
@@ -1363,13 +1363,13 @@ function handleOtpChange(val: string | number) {
 
   .pool-level-count {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: bold;
     color: var(--el-text-color-primary);
   }
 
   .reward-label {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: bold;
   }
 
   .power-point-section,
@@ -1447,18 +1447,18 @@ function handleOtpChange(val: string | number) {
 
   .base-reward {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: bold;
   }
 
   .reward-multiply {
     font-size: 14px;
     color: var(--el-color-warning);
-    font-weight: 600;
+    font-weight: bold;
   }
 
   .final-reward-final {
     font-size: 14px;
-    font-weight: 700;
+    font-weight: bold;
     color: var(--el-color-warning);
   }
 
@@ -1466,7 +1466,7 @@ function handleOtpChange(val: string | number) {
 
   .daily-card {
     :deep(.el-card__header) {
-      font-weight: 600;
+      font-weight: bold;
       padding: 10px 16px;
     }
     :deep(.el-card__body) {
@@ -1514,7 +1514,7 @@ function handleOtpChange(val: string | number) {
 
   .advice-card {
     :deep(.el-card__header) {
-      font-weight: 600;
+      font-weight: bold;
       padding: 10px 16px;
     }
     :deep(.el-card__body) {
@@ -1542,18 +1542,18 @@ function handleOtpChange(val: string | number) {
 
   .advice-row-optimal {
     background: var(--el-fill-color);
-    font-weight: 600;
+    font-weight: bold;
     border-radius: 4px;
   }
 
   .advice-row-optimal-adjusted {
     background: var(--el-color-primary-light-8);
-    font-weight: 600;
+    font-weight: bold;
     border-radius: 4px;
   }
 
   .advice-value {
-    font-weight: 700;
+    font-weight: bold;
     font-variant-numeric: tabular-nums;
     min-width: 88px;
     text-align: right;
@@ -1569,7 +1569,7 @@ function handleOtpChange(val: string | number) {
 
   .advice-sep {
     color: var(--el-border-color);
-    font-weight: 200;
+    font-weight: normal;
   }
 
   .advice-adjusted {
@@ -1584,19 +1584,19 @@ function handleOtpChange(val: string | number) {
     font-size: 12px;
 
     .advice-value {
-      font-weight: 600;
+      font-weight: bold;
     }
   }
 
   .advice-today-adjusted {
     color: var(--el-text-color-primary);
-    font-weight: 700;
+    font-weight: bold;
   }
 
   .advice-decision {
     text-align: center;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: bold;
     padding: 6px 0;
     border-radius: 6px;
 
@@ -1655,7 +1655,7 @@ function handleOtpChange(val: string | number) {
 
   .distribution-card {
     :deep(.el-card__header) {
-      font-weight: 600;
+      font-weight: bold;
       padding: 10px 16px;
     }
     :deep(.el-card__body) {
@@ -1671,13 +1671,13 @@ function handleOtpChange(val: string | number) {
   }
 
   .distribution-value {
-    font-weight: 700;
+    font-weight: bold;
     font-variant-numeric: tabular-nums;
   }
 
   .distribution-current-value {
     color: var(--el-color-primary);
-    font-weight: 700;
+    font-weight: bold;
   }
 
   .distribution-prob {
@@ -1699,7 +1699,7 @@ function handleOtpChange(val: string | number) {
 
   :deep(.distribution-row-highlight) {
     background: var(--el-color-primary-light-9);
-    font-weight: 600;
+    font-weight: bold;
   }
 
   :deep(.el-table__body .distribution-row-highlight:hover .el-table__cell) {
@@ -1862,7 +1862,7 @@ function handleOtpChange(val: string | number) {
       .xs-value {
         display: block;
         font-size: 16px;
-        font-weight: 700;
+        font-weight: bold;
       }
     }
 
