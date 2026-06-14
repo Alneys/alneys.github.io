@@ -181,19 +181,19 @@
               </el-col>
             </el-row>
             <el-row :gutter="16">
-              <el-col :span="8" :xs="24" v-if="form.eventType !== 'tale'">
+              <el-col v-if="form.eventType !== 'tale'" :span="8" :xs="24">
                 <el-form-item label="活动折返">
                   <el-switch v-model="form.isBoostPeriod" />
                 </el-form-item>
               </el-col>
               <el-col
-                :span="8"
-                :xs="24"
                 v-if="
                   form.eventType !== 'tour' &&
                   form.eventType !== 'tale' &&
                   form.eventType !== 'treasure'
                 "
+                :span="8"
+                :xs="24"
               >
                 <el-form-item label="打工票使用更多倍率（默认只使用最大倍率）">
                   <el-switch v-model="form.enableExtraChoices" />

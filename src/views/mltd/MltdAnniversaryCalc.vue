@@ -260,8 +260,8 @@
                   }}pt, -{{ formatNumber(result.tokensConsumedByBoost) }}道具
                 </p>
                 <p
-                  class="font-mono"
                   v-if="result.useAutoOptimize && result.optimalUnusedBoostPlays > 0"
+                  class="font-mono"
                 >
                   🔥未使用火 {{ result.optimalUnusedBoostPlays }}次（pt需求较少时节省）
                 </p>

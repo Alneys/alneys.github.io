@@ -765,7 +765,7 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
     margin-bottom: 0.5em;
 
     .output-label {
-      font-weight: 500;
+      font-weight: bold;
     }
   }
 

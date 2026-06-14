@@ -1,6 +1,6 @@
 <template>
   <div class="cgss-unit-viewer-resonance-table">
-    <div class="unit-title" id="unit-resonance" style="font-weight: bold">共鸣 Resonance</div>
+    <div id="unit-resonance" class="unit-title" style="font-weight: bold">共鸣 Resonance</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
         <el-switch v-model="showExtraColumns" active-text="额外技能" />
