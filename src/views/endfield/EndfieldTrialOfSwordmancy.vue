@@ -1,12 +1,16 @@
 ﻿<template>
   <div id="view-endfield-trial-of-swordmancy">
-    <h1 class="view-title">Endfield Trial Of Swordmancy</h1>
+    <div class="view-title-row">
+      <h1 class="view-title">Endfield Trial Of Swordmancy</h1>
+      <el-button class="tour-trigger-btn" @click="tourOpen = true"> 页面引导 </el-button>
+    </div>
     <div class="al-divider"></div>
 
     <el-collapse
       v-model="activeCollapse"
       class="config-panel"
       style="--el-collapse-header-font-size: 16px"
+      data-tour="config"
     >
       <el-collapse-item title="铭牌分布配置" name="config">
         <div class="config-grid">
@@ -31,7 +35,7 @@
 
     <el-row :gutter="16" class="game-section">
       <el-col :span="24">
-        <el-card class="psycho-card">
+        <el-card class="psycho-card" data-tour="psycho">
           <template #header>
             <span>心理模型</span>
           </template>
@@ -78,7 +82,7 @@
                 @click="setPsychoParams(0.6, 60000)"
                 :type="isPresetActive(0.6, 60000) ? 'primary' : ''"
               >
-                预设
+                均衡
               </el-button>
               <el-button
                 size="small"
@@ -93,7 +97,7 @@
       </el-col>
 
       <el-col :span="24">
-        <el-card class="daily-card">
+        <el-card class="daily-card" data-tour="daily">
           <template #header>
             <span>今日状态</span>
           </template>
@@ -139,120 +143,126 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="16" class="game-section">
-      <el-col :span="18" :xs="24"
-        ><el-card class="drawn-card">
-          <template #header>
-            <span>已抽铭牌</span>
-          </template>
-          <div class="drawn-slots">
-            <div
-              v-for="slotIndex in MAX_DRAWS"
-              :key="slotIndex"
-              class="drawn-slot"
-              :class="{ filled: drawnCards[slotIndex - 1] != null }"
-            >
-              <div v-if="drawnCards[slotIndex - 1]" class="drawn-slot-inner">
-                <span class="drawn-slot-lv">Lv</span>
-                <span class="drawn-slot-num">{{ drawnCards[slotIndex - 1]?.level }}</span>
-              </div>
-              <div v-else class="drawn-slot-inner">
-                <span class="drawn-slot-lv">Lv</span>
-                <span class="drawn-slot-q">?</span>
-              </div>
-            </div>
-          </div>
-          <el-divider style="margin: 16px 0"></el-divider>
-          <div class="drawn-manual-input">
-            <div class="manual-input-label">手动设置铭牌点数</div>
-            <el-input-otp
-              :model-value="otpValue"
-              :length="5"
-              inputmode="numeric"
-              :validator="onlyLevel"
-              @update:model-value="handleOtpChange"
-            />
-            <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
-          </div>
-        </el-card>
-      </el-col>
+    <div class="al-divider"></div>
 
-      <el-col :span="6" :xs="24"
-        ><el-card class="pool-card">
-          <template #header>
-            <span>铭牌库剩余 {{ pool.length }} 张</span>
-          </template>
-          <div class="pool-list">
-            <div v-for="level in 5" :key="level" class="pool-level-row">
-              <span class="pool-level-label">Lv.{{ level }}</span>
-              <span class="pool-level-count">{{ poolByLevel[level]?.length ?? 0 }} 张</span>
-            </div>
-          </div>
-          <el-empty v-if="pool.length === 0" description="铭牌库已空" :image-size="48" />
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="16" class="game-section">
-      <el-col :span="24">
-        <el-card class="reward-card">
-          <template #header>
-            <span>奖励状态</span>
-          </template>
-          <div class="power-point-section">
-            <span class="reward-label">战力点</span>
-            <el-segmented
-              :model-value="rewardIndex"
-              :options="powerPointOptions"
-              block
-              :class="{
-                'reward-penalty': totalPower > 10,
-                'reward-success': rewardIndex === 10,
-              }"
-            />
-            <span class="xs-value">{{ totalPower }}</span>
-          </div>
-          <div class="reward-tier-section">
-            <span class="reward-label">奖励</span>
-            <el-segmented
-              :model-value="rewardIndex"
-              :options="rewardOptions"
-              block
-              :class="{
-                'reward-penalty': totalPower > 10,
-                'reward-success': rewardIndex === 10,
-              }"
-            />
-            <span class="xs-value">{{ formatRewardShort(baseReward) }}</span>
-          </div>
-          <div
-            class="overflow-psych-section"
-            :class="{ 'overflow-psych-disabled': !showAdjustedCol }"
-          >
-            <span class="reward-label">溢出心理</span>
-            <el-segmented
-              :model-value="overflowPsychValue"
-              :options="overflowPsychOptions"
-              :disabled="!showAdjustedCol"
-              block
-              class="overflow-psych-segmented"
-            />
-            <span class="xs-value">{{ overflowPsychValue ?? '—' }}</span>
-          </div>
-          <div class="reward-info">
-            <div class="reward-values">
-              <span class="base-reward" :class="{ 'reward-success': rewardIndex === 10 }"
-                >奖励：{{ baseReward.toLocaleString() }}</span
+    <div data-tour="game-state">
+      <el-row :gutter="16" class="game-section">
+        <el-col :span="18" :xs="24">
+          <el-card class="drawn-card">
+            <template #header>
+              <span>已抽铭牌</span>
+            </template>
+            <div class="drawn-slots">
+              <div
+                v-for="slotIndex in MAX_DRAWS"
+                :key="slotIndex"
+                class="drawn-slot"
+                :class="{ filled: drawnCards[slotIndex - 1] != null }"
               >
-              <template v-if="doubled">
-                <span class="reward-multiply">×2</span>
-                <span class="final-reward-final"> = {{ finalReward.toLocaleString() }} </span>
-              </template>
+                <div v-if="drawnCards[slotIndex - 1]" class="drawn-slot-inner">
+                  <span class="drawn-slot-lv">Lv</span>
+                  <span class="drawn-slot-num">{{ drawnCards[slotIndex - 1]?.level }}</span>
+                </div>
+                <div v-else class="drawn-slot-inner">
+                  <span class="drawn-slot-lv">Lv</span>
+                  <span class="drawn-slot-q">?</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </el-card>
-      </el-col>
+            <el-divider style="margin: 16px 0"></el-divider>
+            <div class="drawn-manual-input" data-tour="manual-input">
+              <div class="manual-input-label">手动设置铭牌点数</div>
+              <el-input-otp
+                :model-value="otpValue"
+                :length="5"
+                inputmode="numeric"
+                :validator="onlyLevel"
+                @update:model-value="handleOtpChange"
+              />
+              <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
+            </div>
+          </el-card>
+        </el-col>
 
+        <el-col :span="6" :xs="24"
+          ><el-card class="pool-card">
+            <template #header>
+              <span>铭牌库剩余 {{ pool.length }} 张</span>
+            </template>
+            <div class="pool-list">
+              <div v-for="level in 5" :key="level" class="pool-level-row">
+                <span class="pool-level-label">Lv.{{ level }}</span>
+                <span class="pool-level-count">{{ poolByLevel[level]?.length ?? 0 }} 张</span>
+              </div>
+            </div>
+            <el-empty v-if="pool.length === 0" description="铭牌库已空" :image-size="48" />
+          </el-card>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="16" class="game-section">
+        <el-col :span="24">
+          <el-card class="reward-card">
+            <template #header>
+              <span>奖励状态</span>
+            </template>
+            <div class="power-point-section">
+              <span class="reward-label">战力点</span>
+              <el-segmented
+                :model-value="rewardIndex"
+                :options="powerPointOptions"
+                block
+                :class="{
+                  'reward-penalty': totalPower > 10,
+                  'reward-success': rewardIndex === 10,
+                }"
+              />
+              <span class="xs-value">{{ totalPower }}</span>
+            </div>
+            <div class="reward-tier-section">
+              <span class="reward-label">奖励</span>
+              <el-segmented
+                :model-value="rewardIndex"
+                :options="rewardOptions"
+                block
+                :class="{
+                  'reward-penalty': totalPower > 10,
+                  'reward-success': rewardIndex === 10,
+                }"
+              />
+              <span class="xs-value">{{ formatRewardShort(baseReward) }}</span>
+            </div>
+            <div
+              class="overflow-psych-section"
+              :class="{ 'overflow-psych-disabled': !showAdjustedCol }"
+            >
+              <span class="reward-label">溢出心理</span>
+              <el-segmented
+                :model-value="overflowPsychValue"
+                :options="overflowPsychOptions"
+                :disabled="!showAdjustedCol"
+                block
+                class="overflow-psych-segmented"
+              />
+              <span class="xs-value">{{ overflowPsychValue ?? '—' }}</span>
+            </div>
+            <div class="reward-info">
+              <div class="reward-values">
+                <span class="base-reward" :class="{ 'reward-success': rewardIndex === 10 }"
+                  >奖励：{{ baseReward.toLocaleString() }}</span
+                >
+                <template v-if="doubled">
+                  <span class="reward-multiply">×2</span>
+                  <span class="final-reward-final"> = {{ finalReward.toLocaleString() }} </span>
+                </template>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
+
+    <el-row :gutter="16" class="game-section" data-tour="actions">
       <el-col :span="24">
         <div class="actions-row">
           <div class="actions-row-left">
@@ -346,7 +356,7 @@
 
     <el-row :gutter="16" class="game-section">
       <el-col :span="14" :xs="24">
-        <el-card class="advice-card">
+        <el-card class="advice-card" data-tour="advice">
           <template #header>
             <span>策略分析</span>
           </template>
@@ -525,7 +535,7 @@
       </el-col>
 
       <el-col :span="10" :xs="24">
-        <el-card class="distribution-card">
+        <el-card class="distribution-card" data-tour="distribution">
           <template #header>
             <span>战力点分布</span>
           </template>
@@ -580,6 +590,53 @@
       </el-col>
     </el-row>
   </div>
+
+  <el-tour v-model="tourOpen">
+    <el-tour-step
+      target="[data-tour='game-state']"
+      title="当前游戏状态"
+      description="已抽铭牌、铭牌库、奖励状态"
+    />
+    <el-tour-step
+      target="[data-tour='manual-input']"
+      title="手动设置铭牌点数"
+      description="可通过输入框手动设置已抽铭牌的点数，方便模拟指定情况"
+    />
+    <el-tour-step
+      target="[data-tour='daily']"
+      title="今日状态"
+      description="操作前，先管理今日剩余游玩/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
+    />
+    <el-tour-step
+      target="[data-tour='actions']"
+      title="操作按钮"
+      description="核心操作区：抽取铭牌、开启翻倍、放弃本局、结算进入下一局、重置今日状态"
+    />
+    <el-tour-step
+      target="[data-tour='advice']"
+      title="策略分析"
+      description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与心理模型期望"
+      placement="top"
+      :scroll-into-view-options="{ block: 'end' }"
+    />
+    <el-tour-step
+      target="[data-tour='distribution']"
+      title="战力点分布"
+      description="本局最优行动的概率分布表，高亮当前已抽结果"
+      placement="top"
+      :scroll-into-view-options="{ block: 'end' }"
+    />
+    <el-tour-step
+      target="[data-tour='psycho']"
+      title="心理模型"
+      description="通过溢出接受值和固定心理落差微调策略决策，预设方案可快速切换"
+    />
+    <el-tour-step
+      target="[data-tour='config']"
+      title="铭牌分布配置"
+      description="调整各点数铭牌的初始数量，点击「应用配置」重置铭牌库"
+    />
+  </el-tour>
 </template>
 
 <script setup lang="ts">
@@ -588,6 +645,8 @@
 //   2. 奖励计算（实际战力点 → 奖励）
 //   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed } from 'vue';
+
+const tourOpen = ref(false);
 import { getCurrentAdvice, clearSolverCache } from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolver';
 
@@ -1143,6 +1202,21 @@ function handleOtpChange(val: string | number) {
 <style lang="scss" scoped>
 // ── 布局与通用 ──
 #view-endfield-trial-of-swordmancy {
+  .view-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .view-title {
+    flex: 1;
+  }
+
+  .tour-trigger-btn {
+    flex-shrink: 0;
+  }
+
   .config-panel {
     margin-bottom: 16px;
   }
