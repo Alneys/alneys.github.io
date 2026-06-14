@@ -12,7 +12,7 @@
       style="--el-collapse-header-font-size: 16px"
       data-tour="config"
     >
-      <el-collapse-item title="铭牌分布配置" name="config">
+      <el-collapse-item title="基础参数配置" name="config">
         <div class="config-grid">
           <div v-for="level in 5" :key="level" class="config-item">
             <span class="config-label">铭牌点数 {{ level }}</span>
@@ -25,10 +25,12 @@
           </div>
         </div>
         <div class="config-buttons">
-          <el-button type="primary" class="config-apply-btn" @click="applyConfig">
+          <el-button type="primary" class="config-apply-btn" size="small" @click="applyConfig">
             应用配置（重置铭牌库）
           </el-button>
-          <el-button class="config-reset-btn" @click="resetConfig"> 重置铭牌分布 </el-button>
+          <el-button class="config-reset-btn" size="small" @click="resetConfig">
+            重置铭牌分布
+          </el-button>
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -82,14 +84,14 @@
                 @click="setPsychoParams(0.6, 60000)"
                 :type="isPresetActive(0.6, 60000) ? 'primary' : ''"
               >
-                均衡
+                厌恶溢出
               </el-button>
               <el-button
                 size="small"
                 @click="setPsychoParams(0.01, 640000)"
                 :type="isPresetActive(0.01, 640000) ? 'primary' : ''"
               >
-                绝对厌恶惩罚
+                绝对厌恶溢出
               </el-button>
             </div>
           </div>
@@ -185,12 +187,19 @@
         </el-col>
 
         <el-col :span="6" :xs="24"
-          ><el-card class="pool-card">
+          ><el-card class="pool-card" data-tour="pool">
             <template #header>
-              <span>铭牌库剩余 {{ pool.length }} 张</span>
+              <span>铭牌库剩余 {{ pool.length }} 张（点击可抽取）</span>
             </template>
             <div class="pool-list">
-              <div v-for="level in 5" :key="level" class="pool-level-row">
+              <div
+                v-for="level in 5"
+                :key="level"
+                class="pool-level-row"
+                :class="{ 'pool-level-clickable': getPoolCount(level) > 0 }"
+                :style="getPoolCount(level) > 0 ? 'cursor: pointer' : ''"
+                @click="simulateDrawFromPool(level)"
+              >
                 <span class="pool-level-label">Lv.{{ level }}</span>
                 <span class="pool-level-count">{{ poolByLevel[level]?.length ?? 0 }} 张</span>
               </div>
@@ -266,9 +275,9 @@
       <el-col :span="24">
         <div class="actions-row">
           <div class="actions-row-left">
-            <el-popconfirm title="确认重置今日所有状态？" @confirm="resetToday">
+            <el-popconfirm title="确认重置游戏状态和今日状态？" @confirm="resetToday">
               <template #reference>
-                <el-button type="danger" size="large" class="action-btn"> 重置今日 </el-button>
+                <el-button type="danger" size="large" class="action-btn"> 重置所有 </el-button>
               </template>
             </el-popconfirm>
           </div>
@@ -342,10 +351,7 @@
               type="info"
               @click="activeDrawCount > 0 ? endGame() : resetGame()"
             >
-              <template v-if="activeDrawCount > 0"
-                >结算本局<br />（剩余{{ remainingGames }}次）</template
-              >
-              <template v-else>新一局<br />（剩余{{ remainingGames }}次）</template>
+              结算本局<br />（剩余{{ remainingGames }}次）
             </el-button>
           </div>
         </div>
@@ -354,9 +360,9 @@
 
     <div class="al-divider"></div>
 
-    <el-row :gutter="16" class="game-section">
+    <el-row :gutter="16" class="game-section" data-tour="result">
       <el-col :span="14" :xs="24">
-        <el-card class="advice-card" data-tour="advice">
+        <el-card class="advice-card">
           <template #header>
             <span>策略分析</span>
           </template>
@@ -535,9 +541,9 @@
       </el-col>
 
       <el-col :span="10" :xs="24">
-        <el-card class="distribution-card" data-tour="distribution">
+        <el-card class="distribution-card">
           <template #header>
-            <span>战力点分布</span>
+            <span>战力点概率分布</span>
           </template>
           <el-table
             v-if="distributionTableData.length > 0"
@@ -570,7 +576,7 @@
             <el-table-column label="分布条">
               <template #default="{ row }">
                 <el-progress
-                  :percentage="Math.max(Math.round(row.prob * 100), 1)"
+                  :percentage="Math.max(Math.round(row.prob * 100), 0)"
                   :stroke-width="14"
                   :show-text="false"
                   :color="
@@ -580,7 +586,6 @@
                         ? 'var(--el-color-primary)'
                         : 'var(--el-color-primary-light-5)'
                   "
-                  :striped="row.isAbandon"
                 />
               </template>
             </el-table-column>
@@ -598,14 +603,19 @@
       description="已抽铭牌、铭牌库、奖励状态"
     />
     <el-tour-step
+      target="[data-tour='daily']"
+      title="今日状态"
+      description="操作前，先管理今日剩余游玩/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
+    />
+    <el-tour-step
       target="[data-tour='manual-input']"
       title="手动设置铭牌点数"
       description="可通过输入框手动设置已抽铭牌的点数，方便模拟指定情况"
     />
     <el-tour-step
-      target="[data-tour='daily']"
-      title="今日状态"
-      description="操作前，先管理今日剩余游玩/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
+      target="[data-tour='pool']"
+      title="铭牌库模拟抽取"
+      description="点击铭牌库中的等级可直接模拟抽取对应铭牌"
     />
     <el-tour-step
       target="[data-tour='actions']"
@@ -613,16 +623,9 @@
       description="核心操作区：抽取铭牌、开启翻倍、放弃本局、结算进入下一局、重置今日状态"
     />
     <el-tour-step
-      target="[data-tour='advice']"
+      target="[data-tour='result']"
       title="策略分析"
-      description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与心理模型期望"
-      placement="top"
-      :scroll-into-view-options="{ block: 'end' }"
-    />
-    <el-tour-step
-      target="[data-tour='distribution']"
-      title="战力点分布"
-      description="本局最优行动的概率分布表，高亮当前已抽结果"
+      description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与心理模型期望，并且显示本局最优行动的战力点概率分布表"
       placement="top"
       :scroll-into-view-options="{ block: 'end' }"
     />
@@ -633,7 +636,7 @@
     />
     <el-tour-step
       target="[data-tour='config']"
-      title="铭牌分布配置"
+      title="基础参数配置"
       description="调整各点数铭牌的初始数量，点击「应用配置」重置铭牌库"
     />
   </el-tour>
@@ -902,6 +905,19 @@ function drawCard() {
   drawnCards.value[emptyIndex] = plaque;
 }
 
+/** 点击铭牌库等级行时模拟抽取对应点数的铭牌 */
+function simulateDrawFromPool(level: number) {
+  const emptyIndex = drawnCards.value.findIndex((c) => c == null);
+  if (emptyIndex === -1) {
+    return;
+  }
+  const plaque = takeFromPool(level);
+  if (!plaque) {
+    return;
+  }
+  drawnCards.value[emptyIndex] = plaque;
+}
+
 /** 从铭牌库中取出一张指定铭牌点数的牌（返回 null 表示铭牌库不足） */
 function takeFromPool(level: number): Plaque | null {
   const idx = pool.value.findIndex((p) => p.level === level);
@@ -956,6 +972,11 @@ function diffClass(value: number | null): string {
   return '';
 }
 
+/** 获取铭牌库中指定等级的剩余张数 */
+function getPoolCount(level: number): number {
+  return poolByLevel.value[level]?.length ?? 0;
+}
+
 /** 格式化奖励数字（显示为简短格式） */
 function formatRewardShort(value: number): string {
   const abs = Math.abs(value);
@@ -989,16 +1010,17 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
 /** 溢出心理挡位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
 const overflowPsychOptions = computed(() => {
   const params = overflowParams.value;
+  const mult = doubled.value ? 2 : 1;
   return Array.from({ length: 11 }, (_, i) => {
     const power = 11 + i;
     const s = power % 11; // 战力点
     const raw = REWARD_TABLE[s] ?? 0;
     let label: string;
     if (params) {
-      const adjusted = raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty;
+      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
       label = formatRewardShort(adjusted);
     } else {
-      label = formatRewardShort(raw);
+      label = formatRewardShort(raw * mult);
     }
     return { label, value: power };
   });
@@ -1133,7 +1155,7 @@ const distributionTableData = computed(() => {
   const rows = dist.map((p, i) => ({
     value: i,
     prob: p,
-    isCurrent: i === currentS && dist.some((d) => d > 0),
+    isCurrent: i === currentS,
     isAbandon: false,
   }));
   rows.push({
@@ -1725,7 +1747,7 @@ function handleOtpChange(val: string | number) {
     background: var(--el-color-danger-light-9);
   }
 
-  // ── 战力点分布 ──
+  // ── 战力点概率分布 ──
 
   .distribution-card {
     :deep(.el-card__header) {
