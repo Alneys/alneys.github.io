@@ -13,7 +13,7 @@
     <div class="al-divider"></div>
 
     <el-row :gutter="16">
-      <el-col :span="24" :lg="16" :xs="24">
+      <el-col :span="24" :lg="15" :xs="24">
         <el-collapse
           v-model="activeCollapse"
           class="config-panel"
@@ -363,7 +363,10 @@
           </el-col>
         </el-row>
       </el-col>
-      <el-col :span="24" :lg="8" :xs="24">
+
+      <div class="al-divider hidden-lg-and-up" style="width: 100%"></div>
+
+      <el-col :span="24" :lg="9" :xs="24">
         <el-row :gutter="16" class="game-section" data-tour="result">
           <el-col :span="15" :xs="24" :lg="24">
             <el-card class="advice-card">
@@ -565,7 +568,7 @@
                 :row-class-name="distributionRowClassName"
                 style="width: 100%"
               >
-                <el-table-column label="战力点" width="72">
+                <el-table-column label="" width="56">
                   <template #default="{ row }">
                     <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
                     <span
@@ -1675,7 +1678,7 @@ function handleOtpChange(val: string | number) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
 
   .daily-item {
@@ -1729,7 +1732,7 @@ function handleOtpChange(val: string | number) {
     display: flex;
     align-items: center;
     font-size: 15px;
-    gap: 8px;
+    gap: 4px;
   }
 
   .advice-label {
