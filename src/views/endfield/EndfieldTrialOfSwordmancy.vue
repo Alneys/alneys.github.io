@@ -29,52 +29,118 @@
       </el-collapse-item>
     </el-collapse>
 
-    <el-card class="daily-card" style="margin-bottom: 16px">
-      <template #header>
-        <span>今日状态</span>
-      </template>
-      <div class="daily-grid">
-        <div class="daily-item">
-          <span class="daily-label">剩余游玩</span>
-          <el-input-number
-            v-model="remainingGames"
-            :min="0"
-            :max="3"
-            size="small"
-            class="daily-input"
-          />
-        </div>
-        <div class="daily-item">
-          <span class="daily-label">剩余翻倍</span>
-          <el-input-number
-            v-model="remainingDoubles"
-            :min="0"
-            :max="2"
-            size="small"
-            class="daily-input"
-          />
-        </div>
-        <div class="daily-item">
-          <span class="daily-label">剩余放弃</span>
-          <el-input-number
-            v-model="remainingAbandons"
-            :min="0"
-            :max="3"
-            size="small"
-            class="daily-input"
-          />
-        </div>
-        <el-button class="daily-single-btn" size="small" @click="setSingleSimulation">
-          设为单次模拟
-        </el-button>
-        <el-button class="daily-reset-btn" size="small" type="danger" @click="resetToday">
-          重置今日
-        </el-button>
-      </div>
-    </el-card>
+    <el-row :gutter="16" class="game-section">
+      <el-col :span="24">
+        <el-card class="psycho-card">
+          <template #header>
+            <span>心理模型</span>
+          </template>
+          <div class="psycho-body">
+            <el-alert type="info" :closable="false" show-icon>
+              基于期望效用理论设计，调整公式：奖励 × 溢出接受值<sup>k</sup> − k × 固定心理落差（k =
+              总战力 ÷ 11，向下取整），可为负
+            </el-alert>
+            <div class="psycho-grid">
+              <div class="psycho-item">
+                <span class="psycho-label">溢出接受值</span>
+                <el-slider
+                  v-model="aversionFactor"
+                  :min="0"
+                  :max="1"
+                  :step="0.05"
+                  show-input
+                  input-size="small"
+                  class="psycho-slider"
+                />
+              </div>
+              <div class="psycho-item">
+                <span class="psycho-label">固定心理落差</span>
+                <el-input-number
+                  v-model="fixedPenalty"
+                  :min="0"
+                  :max="1000000"
+                  :step="5000"
+                  size="small"
+                  class="psycho-input"
+                />
+              </div>
+            </div>
+            <div class="psycho-presets">
+              <el-button
+                size="small"
+                @click="setPsychoParams(1.0, 0)"
+                :type="isPresetActive(1.0, 0) ? 'primary' : ''"
+              >
+                收益最大
+              </el-button>
+              <el-button
+                size="small"
+                @click="setPsychoParams(0.6, 60000)"
+                :type="isPresetActive(0.6, 60000) ? 'primary' : ''"
+              >
+                预设
+              </el-button>
+              <el-button
+                size="small"
+                @click="setPsychoParams(0.01, 640000)"
+                :type="isPresetActive(0.01, 640000) ? 'primary' : ''"
+              >
+                绝对厌恶惩罚
+              </el-button>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
 
-    <el-row :gutter="16" class="game-top">
-      <el-col :span="18"
+      <el-col :span="24">
+        <el-card class="daily-card">
+          <template #header>
+            <span>今日状态</span>
+          </template>
+          <div class="daily-grid">
+            <div class="daily-item">
+              <span class="daily-label">剩余游玩</span>
+              <el-input-number
+                v-model="remainingGames"
+                :min="0"
+                :max="3"
+                size="small"
+                class="daily-input"
+              />
+            </div>
+            <div class="daily-item">
+              <span class="daily-label">剩余翻倍</span>
+              <el-input-number
+                v-model="remainingDoubles"
+                :min="0"
+                :max="2"
+                size="small"
+                class="daily-input"
+              />
+            </div>
+            <div class="daily-item">
+              <span class="daily-label">剩余放弃</span>
+              <el-input-number
+                v-model="remainingAbandons"
+                :min="0"
+                :max="3"
+                size="small"
+                class="daily-input"
+              />
+            </div>
+            <el-button class="daily-single-btn" size="small" @click="setSingleSimulation">
+              设为单次模拟
+            </el-button>
+            <el-button class="daily-reset-btn" size="small" type="danger" @click="resetToday">
+              重置今日
+            </el-button>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="16" class="game-section">
+      <el-col :span="18" :xs="24"
         ><el-card class="drawn-card">
           <template #header>
             <span>已抽铭牌</span>
@@ -111,7 +177,7 @@
         </el-card>
       </el-col>
 
-      <el-col :span="6"
+      <el-col :span="6" :xs="24"
         ><el-card class="pool-card">
           <template #header>
             <span>牌池 · 剩余 {{ pool.length }} 张</span>
@@ -127,63 +193,68 @@
       </el-col>
     </el-row>
 
-    <div class="game-bottom">
-      <el-card class="reward-card">
-        <template #header>
-          <span>奖励状态</span>
-        </template>
-        <div class="power-point-section">
-          <span class="reward-label">战力点</span>
-          <el-segmented
-            :model-value="rewardIndex"
-            :options="powerPointOptions"
-            block
-            :class="{
-              'reward-penalty': totalPower > 10,
-              'reward-success': rewardIndex === 10,
-            }"
-          />
-        </div>
-        <div class="reward-tier-section">
-          <span class="reward-label">奖励档位</span>
-          <el-segmented
-            :model-value="rewardIndex"
-            :options="rewardOptions"
-            block
-            :class="{
-              'reward-penalty': totalPower > 10,
-              'reward-success': rewardIndex === 10,
-            }"
-          />
-        </div>
-        <div
-          class="overflow-psych-section"
-          :class="{ 'overflow-psych-disabled': !showAdjustedCol }"
-        >
-          <span class="reward-label">溢出心理</span>
-          <el-segmented
-            :model-value="overflowPsychValue"
-            :options="overflowPsychOptions"
-            :disabled="!showAdjustedCol"
-            block
-            class="overflow-psych-segmented"
-          />
-        </div>
-        <div class="reward-info">
-          <div class="reward-values">
-            <span class="base-reward" :class="{ 'reward-success': rewardIndex === 10 }"
-              >奖励：{{ baseReward.toLocaleString() }}</span
-            >
-            <template v-if="doubled">
-              <span class="reward-multiply">×2</span>
-              <span class="final-reward-final"> = {{ finalReward.toLocaleString() }} </span>
-            </template>
+    <el-row :gutter="16" class="game-section">
+      <el-col :span="24">
+        <el-card class="reward-card">
+          <template #header>
+            <span>奖励状态</span>
+          </template>
+          <div class="power-point-section">
+            <span class="reward-label">战力点</span>
+            <el-segmented
+              :model-value="rewardIndex"
+              :options="powerPointOptions"
+              block
+              :class="{
+                'reward-penalty': totalPower > 10,
+                'reward-success': rewardIndex === 10,
+              }"
+            />
+            <span class="xs-value">{{ totalPower }}</span>
           </div>
-        </div>
-      </el-card>
+          <div class="reward-tier-section">
+            <span class="reward-label">奖励档位</span>
+            <el-segmented
+              :model-value="rewardIndex"
+              :options="rewardOptions"
+              block
+              :class="{
+                'reward-penalty': totalPower > 10,
+                'reward-success': rewardIndex === 10,
+              }"
+            />
+            <span class="xs-value">{{ formatRewardShort(baseReward) }}</span>
+          </div>
+          <div
+            class="overflow-psych-section"
+            :class="{ 'overflow-psych-disabled': !showAdjustedCol }"
+          >
+            <span class="reward-label">溢出心理</span>
+            <el-segmented
+              :model-value="overflowPsychValue"
+              :options="overflowPsychOptions"
+              :disabled="!showAdjustedCol"
+              block
+              class="overflow-psych-segmented"
+            />
+            <span class="xs-value">{{ overflowPsychValue ?? '—' }}</span>
+          </div>
+          <div class="reward-info">
+            <div class="reward-values">
+              <span class="base-reward" :class="{ 'reward-success': rewardIndex === 10 }"
+                >奖励：{{ baseReward.toLocaleString() }}</span
+              >
+              <template v-if="doubled">
+                <span class="reward-multiply">×2</span>
+                <span class="final-reward-final"> = {{ finalReward.toLocaleString() }} </span>
+              </template>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
 
-      <el-row :gutter="16" class="actions-row">
-        <el-col :span="12">
+      <el-col :span="24">
+        <div class="actions-row">
           <div class="actions-row-left">
             <el-popconfirm title="确认重置今日所有状态？" @confirm="resetToday">
               <template #reference>
@@ -191,8 +262,6 @@
               </template>
             </el-popconfirm>
           </div>
-        </el-col>
-        <el-col :span="12">
           <div class="actions-row-right">
             <el-button
               class="action-btn"
@@ -204,24 +273,12 @@
               {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
             </el-button>
           </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="16" class="actions-row">
-        <el-col :span="12">
-          <div class="actions-row-left">
-            <el-button
-              class="action-btn"
-              :disabled="!canAbandon"
-              size="large"
-              type="danger"
-              @click="abandonGame"
-            >
-              放弃本局<br />（剩余{{ remainingAbandons }}次）
-            </el-button>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="actions-row-right">
+        </div>
+      </el-col>
+
+      <el-col :span="24" class="hidden-sm-and-up">
+        <div class="actions-row-center">
+          <div class="action-switch-group">
             <span class="action-switch-label"
               ><span class="action-switch-remaining">（剩余{{ remainingDoubles }}次）</span
               ><span class="action-switch-warning">奖励翻倍</span></span
@@ -235,6 +292,39 @@
               class="action-switch"
               @change="handleDoubleSwitch"
             />
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :span="24">
+        <div class="actions-row">
+          <div class="actions-row-left">
+            <el-button
+              class="action-btn"
+              :disabled="!canAbandon"
+              size="large"
+              type="danger"
+              @click="abandonGame"
+            >
+              放弃本局<br />（剩余{{ remainingAbandons }}次）
+            </el-button>
+          </div>
+          <div class="actions-row-right">
+            <div class="action-switch-group switch-normal-only">
+              <span class="action-switch-label"
+                ><span class="action-switch-remaining">（剩余{{ remainingDoubles }}次）</span
+                ><span class="action-switch-warning">奖励翻倍</span></span
+              >
+              <el-switch
+                :model-value="doubled"
+                :disabled="!canToggleDouble"
+                inactive-text="关"
+                active-text="开"
+                size="large"
+                class="action-switch"
+                @change="handleDoubleSwitch"
+              />
+            </div>
             <el-button
               class="action-btn"
               :disabled="remainingGames === 0 || activeDrawCount === 0"
@@ -248,303 +338,239 @@
               <template v-else>新一局<br />（剩余{{ remainingGames }}次）</template>
             </el-button>
           </div>
-        </el-col>
-      </el-row>
-
-      <div class="al-divider"></div>
-
-      <el-card class="psycho-card">
-        <template #header>
-          <span>心理模型</span>
-        </template>
-        <div class="psycho-body">
-          <el-alert type="info" :closable="false" show-icon>
-            基于期望效用理论设计，调整公式：奖励 × 溢出接受值<sup>k</sup> − k × 固定心理落差（k =
-            总战力 ÷ 11，向下取整），可为负
-          </el-alert>
-          <div class="psycho-grid">
-            <div class="psycho-item">
-              <span class="psycho-label">溢出接受值</span>
-              <el-slider
-                v-model="aversionFactor"
-                :min="0"
-                :max="1"
-                :step="0.05"
-                show-input
-                input-size="small"
-                class="psycho-slider"
-              />
-            </div>
-            <div class="psycho-item">
-              <span class="psycho-label">固定心理落差</span>
-              <el-input-number
-                v-model="fixedPenalty"
-                :min="0"
-                :max="1000000"
-                :step="5000"
-                size="small"
-                class="psycho-input"
-              />
-            </div>
-          </div>
-          <div class="psycho-presets">
-            <el-button
-              size="small"
-              @click="setPsychoParams(1.0, 0)"
-              :type="isPresetActive(1.0, 0) ? 'primary' : ''"
-            >
-              收益最大
-            </el-button>
-            <el-button
-              size="small"
-              @click="setPsychoParams(0.6, 60000)"
-              :type="isPresetActive(0.6, 60000) ? 'primary' : ''"
-            >
-              预设
-            </el-button>
-            <el-button
-              size="small"
-              @click="setPsychoParams(0.01, 640000)"
-              :type="isPresetActive(0.01, 640000) ? 'primary' : ''"
-            >
-              绝对厌恶惩罚
-            </el-button>
-          </div>
         </div>
-      </el-card>
+      </el-col>
+    </el-row>
 
-      <el-row :gutter="16" class="advice-and-distribution">
-        <el-col :span="14">
-          <el-card class="advice-card">
-            <template #header>
-              <span>最优策略建议</span>
-            </template>
-            <div v-if="currentAdvice" class="advice-content">
-              <div
-                class="advice-decision"
-                :class="{
-                  'advice-continue':
-                    decisionAction === 'continue' || decisionAction === 'must_continue',
-                  'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
-                  'advice-abandon': decisionAction === 'abandon',
-                }"
-              >
-                <template v-if="decisionAction === 'double'">
-                  {{ decisionPrefix }}建议先开启翻倍再继续
-                </template>
-                <template v-else-if="decisionAction === 'abandon'">
-                  {{ decisionPrefix }}建议放弃本局（重开期望更高）
-                </template>
-                <template v-else-if="decisionAction === 'continue'">
-                  {{ decisionPrefix }}建议继续抽牌（期望更高）
-                </template>
-                <template v-else-if="decisionAction === 'stop'">
-                  {{ decisionPrefix }}建议停止（当前奖励更高）
-                </template>
-                <template v-else-if="decisionAction === 'must_continue'">
-                  {{ decisionPrefix }}必须抽第一张牌
-                </template>
-                <template v-else>{{ decisionPrefix }}建议结算</template>
-              </div>
-              <el-divider style="margin: 8px 0" />
-              <div v-if="showAdjustedCol" class="advice-row advice-header">
-                <span class="advice-label" />
-                <span class="advice-value">原始期望</span>
-                <span class="advice-sep">|</span>
-                <span class="advice-value advice-adjusted">心理模型期望</span>
-              </div>
-              <div class="advice-row">
-                <span class="advice-label">本局当前奖励</span>
-                <span class="advice-value">{{ formatDecimal(currentAdvice.currentReward) }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice ? formatDecimal(adjustedAdvice.currentReward) : '—'
-                }}</span>
-              </div>
-              <div class="advice-row">
-                <span class="advice-label">本局继续期望</span>
-                <span class="advice-value">{{
-                  currentAdvice.expectedContinueReward != null
-                    ? formatDecimal(currentAdvice.expectedContinueReward)
-                    : '—'
-                }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.expectedContinueReward != null
-                    ? formatDecimal(adjustedAdvice.expectedContinueReward)
-                    : '—'
-                }}</span>
-              </div>
+    <div class="al-divider"></div>
 
-              <el-divider style="margin: 8px 0" />
-              <div class="advice-row">
-                <span class="advice-label">各行动今日总期望：</span>
-                <span class="advice-value" />
-              </div>
-              <div
-                class="advice-row"
-                :class="{
-                  'advice-row-optimal': isRawOptOnly('continue', 'must_continue'),
-                  'advice-row-optimal-adjusted': isAdjOpt('continue') || isAdjOpt('must_continue'),
-                }"
-              >
-                <span class="advice-label">继续抽牌</span>
-                <span class="advice-value">{{
-                  currentAdvice.drawTotal != null ? formatDecimal(currentAdvice.drawTotal) : '—'
-                }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.drawTotal != null
-                    ? formatDecimal(adjustedAdvice.drawTotal)
-                    : '—'
-                }}</span>
-              </div>
-              <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
-                <span class="advice-label" style="text-indent: 1.5em">等级 {{ item.level }}</span>
-                <span class="advice-value">{{ item.ev != null ? formatDiff(item.ev) : '—' }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—'
-                }}</span>
-                <span class="advice-sep">|</span>
-                <span class="advice-value advice-prob">{{ (item.prob * 100).toFixed(1) }}%</span>
-              </div>
-              <div
-                class="advice-row"
-                :class="{
-                  'advice-row-optimal': isRawOptOnly('double'),
-                  'advice-row-optimal-adjusted': isAdjOpt('double'),
-                }"
-              >
-                <span class="advice-label">开启翻倍</span>
-                <span class="advice-value">{{
-                  currentAdvice.doubleTotal != null ? formatDecimal(currentAdvice.doubleTotal) : '—'
-                }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.doubleTotal != null
-                    ? formatDecimal(adjustedAdvice.doubleTotal)
-                    : '—'
-                }}</span>
-              </div>
-              <div
-                class="advice-row"
-                :class="{
-                  'advice-row-optimal': isRawOptOnly('abandon'),
-                  'advice-row-optimal-adjusted': isAdjOpt('abandon'),
-                }"
-              >
-                <span class="advice-label">放弃本局</span>
-                <span class="advice-value">{{
-                  currentAdvice.abandonTotal != null
-                    ? formatDecimal(currentAdvice.abandonTotal)
-                    : '—'
-                }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.abandonTotal != null
-                    ? formatDecimal(adjustedAdvice.abandonTotal)
-                    : '—'
-                }}</span>
-              </div>
-              <div
-                class="advice-row"
-                :class="{
-                  'advice-row-optimal': isRawOptOnly('stop', 'must_stop'),
-                  'advice-row-optimal-adjusted': isAdjOpt('stop') || isAdjOpt('must_stop'),
-                }"
-              >
-                <span class="advice-label">结算本局</span>
-                <span class="advice-value">{{
-                  currentAdvice.stopTotal != null ? formatDecimal(currentAdvice.stopTotal) : '—'
-                }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                  adjustedAdvice && adjustedAdvice.stopTotal != null
-                    ? formatDecimal(adjustedAdvice.stopTotal)
-                    : '—'
-                }}</span>
-              </div>
-              <div class="advice-row">
-                <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
-                <span class="advice-value">{{
-                  formatDecimal(currentAdvice.expectedAfterStop)
-                }}</span>
-              </div>
-              <el-divider style="margin: 8px 0" />
-              <div class="advice-row">
-                <span class="advice-label">今日总期望</span>
-                <span class="advice-value advice-today-value">{{
-                  formatDecimal(currentAdvice.expectedToday)
-                }}</span>
-                <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
-                  adjustedAdvice ? formatDecimal(adjustedAdvice.expectedToday) : '—'
-                }}</span>
-              </div>
-            </div>
-            <div v-else class="advice-content">
-              <div class="advice-empty">正在计算策略数据…</div>
-            </div>
-          </el-card>
-        </el-col>
-
-        <el-col :span="10">
-          <el-card class="distribution-card">
-            <template #header>
-              <span>战力点分布</span>
-            </template>
-            <el-table
-              v-if="distributionTableData.length > 0"
-              :data="distributionTableData"
-              size="small"
-              height="auto"
-              :row-class-name="distributionRowClassName"
-              style="width: 100%"
+    <el-row :gutter="16" class="game-section">
+      <el-col :span="14" :xs="24">
+        <el-card class="advice-card">
+          <template #header>
+            <span>最优策略建议</span>
+          </template>
+          <div v-if="currentAdvice" class="advice-content">
+            <div
+              class="advice-decision"
+              :class="{
+                'advice-continue':
+                  decisionAction === 'continue' || decisionAction === 'must_continue',
+                'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
+                'advice-abandon': decisionAction === 'abandon',
+              }"
             >
-              <el-table-column label="战力点" width="72">
-                <template #default="{ row }">
-                  <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
-                  <span
-                    v-else
-                    class="distribution-value"
-                    :class="{ 'distribution-current-value': row.isCurrent }"
-                    >{{ row.value }}</span
-                  >
-                </template>
-              </el-table-column>
-              <el-table-column label="概率" width="90">
-                <template #default="{ row }">
-                  <span
-                    class="distribution-prob"
-                    :class="{ 'distribution-prob-abandon': row.isAbandon }"
-                    >{{ (row.prob * 100).toFixed(2) + '%' }}</span
-                  >
-                </template>
-              </el-table-column>
-              <el-table-column label="分布条">
-                <template #default="{ row }">
-                  <el-progress
-                    :percentage="Math.max(Math.round(row.prob * 100), 1)"
-                    :stroke-width="14"
-                    :show-text="false"
-                    :color="
-                      row.isAbandon
-                        ? 'var(--el-color-danger)'
-                        : row.isCurrent
-                          ? 'var(--el-color-primary)'
-                          : 'var(--el-color-primary-light-5)'
-                    "
-                    :striped="row.isAbandon"
-                  />
-                </template>
-              </el-table-column>
-            </el-table>
-            <div v-else class="distribution-empty">正在计算…</div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
+              <template v-if="decisionAction === 'double'">
+                {{ decisionPrefix }}建议先开启翻倍再继续
+              </template>
+              <template v-else-if="decisionAction === 'abandon'">
+                {{ decisionPrefix }}建议放弃本局（重开期望更高）
+              </template>
+              <template v-else-if="decisionAction === 'continue'">
+                {{ decisionPrefix }}建议继续抽牌（期望更高）
+              </template>
+              <template v-else-if="decisionAction === 'stop'">
+                {{ decisionPrefix }}建议停止（当前奖励更高）
+              </template>
+              <template v-else-if="decisionAction === 'must_continue'">
+                {{ decisionPrefix }}必须抽第一张牌
+              </template>
+              <template v-else>{{ decisionPrefix }}建议结算</template>
+            </div>
+            <el-divider style="margin: 8px 0" />
+            <div v-if="showAdjustedCol" class="advice-row advice-header">
+              <span class="advice-label" />
+              <span class="advice-value">原始期望</span>
+              <span class="advice-sep">|</span>
+              <span class="advice-value advice-adjusted">心理模型期望</span>
+            </div>
+            <div class="advice-row">
+              <span class="advice-label">本局当前奖励</span>
+              <span class="advice-value">{{ formatDecimal(currentAdvice.currentReward) }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                adjustedAdvice ? formatDecimal(adjustedAdvice.currentReward) : '—'
+              }}</span>
+            </div>
+            <div class="advice-row">
+              <span class="advice-label">本局继续期望</span>
+              <span class="advice-value">{{
+                currentAdvice.expectedContinueReward != null
+                  ? formatDecimal(currentAdvice.expectedContinueReward)
+                  : '—'
+              }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                adjustedAdvice && adjustedAdvice.expectedContinueReward != null
+                  ? formatDecimal(adjustedAdvice.expectedContinueReward)
+                  : '—'
+              }}</span>
+            </div>
+
+            <el-divider style="margin: 8px 0" />
+            <div class="advice-row">
+              <span class="advice-label">各行动今日总期望：</span>
+              <span class="advice-value" />
+            </div>
+            <div
+              class="advice-row"
+              :class="{
+                'advice-row-optimal': isRawOptOnly('continue', 'must_continue'),
+                'advice-row-optimal-adjusted': isAdjOpt('continue') || isAdjOpt('must_continue'),
+              }"
+            >
+              <span class="advice-label">继续抽牌</span>
+              <span class="advice-value">{{
+                currentAdvice.drawTotal != null ? formatDecimal(currentAdvice.drawTotal) : '—'
+              }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                adjustedAdvice && adjustedAdvice.drawTotal != null
+                  ? formatDecimal(adjustedAdvice.drawTotal)
+                  : '—'
+              }}</span>
+            </div>
+            <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
+              <span class="advice-label" style="text-indent: 1.5em">等级 {{ item.level }}</span>
+              <span class="advice-value">{{ item.ev != null ? formatDiff(item.ev) : '—' }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—'
+              }}</span>
+              <span class="advice-sep">|</span>
+              <span class="advice-value advice-prob">{{ (item.prob * 100).toFixed(1) }}%</span>
+            </div>
+            <div
+              class="advice-row"
+              :class="{
+                'advice-row-optimal': isRawOptOnly('double'),
+                'advice-row-optimal-adjusted': isAdjOpt('double'),
+              }"
+            >
+              <span class="advice-label">开启翻倍</span>
+              <span class="advice-value">{{
+                currentAdvice.doubleTotal != null ? formatDecimal(currentAdvice.doubleTotal) : '—'
+              }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                adjustedAdvice && adjustedAdvice.doubleTotal != null
+                  ? formatDecimal(adjustedAdvice.doubleTotal)
+                  : '—'
+              }}</span>
+            </div>
+            <div
+              class="advice-row"
+              :class="{
+                'advice-row-optimal': isRawOptOnly('abandon'),
+                'advice-row-optimal-adjusted': isAdjOpt('abandon'),
+              }"
+            >
+              <span class="advice-label">放弃本局</span>
+              <span class="advice-value">{{
+                currentAdvice.abandonTotal != null ? formatDecimal(currentAdvice.abandonTotal) : '—'
+              }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                adjustedAdvice && adjustedAdvice.abandonTotal != null
+                  ? formatDecimal(adjustedAdvice.abandonTotal)
+                  : '—'
+              }}</span>
+            </div>
+            <div
+              class="advice-row"
+              :class="{
+                'advice-row-optimal': isRawOptOnly('stop', 'must_stop'),
+                'advice-row-optimal-adjusted': isAdjOpt('stop') || isAdjOpt('must_stop'),
+              }"
+            >
+              <span class="advice-label">结算本局</span>
+              <span class="advice-value">{{
+                currentAdvice.stopTotal != null ? formatDecimal(currentAdvice.stopTotal) : '—'
+              }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
+                adjustedAdvice && adjustedAdvice.stopTotal != null
+                  ? formatDecimal(adjustedAdvice.stopTotal)
+                  : '—'
+              }}</span>
+            </div>
+            <div class="advice-row">
+              <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
+              <span class="advice-value">{{ formatDecimal(currentAdvice.expectedAfterStop) }}</span>
+            </div>
+            <el-divider style="margin: 8px 0" />
+            <div class="advice-row">
+              <span class="advice-label">今日总期望</span>
+              <span class="advice-value advice-today-value">{{
+                formatDecimal(currentAdvice.expectedToday)
+              }}</span>
+              <span v-if="showAdjustedCol" class="advice-sep">|</span>
+              <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
+                adjustedAdvice ? formatDecimal(adjustedAdvice.expectedToday) : '—'
+              }}</span>
+            </div>
+          </div>
+          <div v-else class="advice-content">
+            <div class="advice-empty">正在计算策略数据…</div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="10" :xs="24">
+        <el-card class="distribution-card">
+          <template #header>
+            <span>战力点分布</span>
+          </template>
+          <el-table
+            v-if="distributionTableData.length > 0"
+            :data="distributionTableData"
+            size="small"
+            height="auto"
+            :row-class-name="distributionRowClassName"
+            style="width: 100%"
+          >
+            <el-table-column label="战力点" width="72">
+              <template #default="{ row }">
+                <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
+                <span
+                  v-else
+                  class="distribution-value"
+                  :class="{ 'distribution-current-value': row.isCurrent }"
+                  >{{ row.value }}</span
+                >
+              </template>
+            </el-table-column>
+            <el-table-column label="概率" width="90">
+              <template #default="{ row }">
+                <span
+                  class="distribution-prob"
+                  :class="{ 'distribution-prob-abandon': row.isAbandon }"
+                  >{{ (row.prob * 100).toFixed(2) + '%' }}</span
+                >
+              </template>
+            </el-table-column>
+            <el-table-column label="分布条">
+              <template #default="{ row }">
+                <el-progress
+                  :percentage="Math.max(Math.round(row.prob * 100), 1)"
+                  :stroke-width="14"
+                  :show-text="false"
+                  :color="
+                    row.isAbandon
+                      ? 'var(--el-color-danger)'
+                      : row.isCurrent
+                        ? 'var(--el-color-primary)'
+                        : 'var(--el-color-primary-light-5)'
+                  "
+                  :striped="row.isAbandon"
+                />
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-else class="distribution-empty">正在计算…</div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -1172,16 +1198,15 @@ function handleOtpChange(val: string | number) {
     flex-wrap: wrap;
   }
 
-  .game-top {
-    margin-bottom: 16px;
+  .game-section {
+    row-gap: 8px;
+    margin-bottom: 8px;
 
     :deep(.el-col) {
       display: flex;
     }
 
-    .drawn-card,
-    .pool-card {
-      flex: 1;
+    :deep(.el-card) {
       width: 100%;
     }
   }
@@ -1195,12 +1220,6 @@ function handleOtpChange(val: string | number) {
       flex: 1;
       width: 100%;
     }
-  }
-
-  .game-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
   }
 
   // ── 已抽铭牌区域 ──
@@ -1653,6 +1672,14 @@ function handleOtpChange(val: string | number) {
 
   // ── 操作按钮 ──
 
+  .actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+  }
+
   .actions-row-left {
     display: flex;
     align-items: center;
@@ -1687,6 +1714,139 @@ function handleOtpChange(val: string | number) {
   .action-switch {
     min-width: 100px;
     justify-content: center;
+  }
+
+  .action-switch-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .actions-row-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .xs-value {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .game-section {
+      row-gap: 0;
+    }
+
+    .game-section,
+    .advice-and-distribution {
+      :deep(.el-col + .el-col) {
+        margin-top: 8px;
+      }
+    }
+
+    .actions-row {
+      .actions-row-left,
+      .actions-row-right {
+        flex: 1;
+      }
+    }
+
+    .switch-xs-row {
+      display: block;
+    }
+
+    .switch-normal-only {
+      display: none;
+    }
+
+    .action-switch-label {
+      white-space: nowrap;
+    }
+
+    .drawn-slots {
+      display: none;
+    }
+
+    .drawn-card .el-divider {
+      display: none;
+    }
+
+    .manual-input-label {
+      display: none;
+    }
+
+    .actions-row-left {
+      justify-content: stretch;
+    }
+
+    .action-btn {
+      width: 100%;
+    }
+
+    .pool-list {
+      flex-direction: row;
+    }
+
+    .pool-level-row {
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 4px;
+    }
+
+    .pool-level-count {
+      font-size: 14px;
+    }
+
+    .power-point-section,
+    .reward-tier-section,
+    .overflow-psych-section {
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 4px;
+      margin-bottom: 0;
+      background: var(--el-fill-color);
+      border-radius: 6px;
+
+      .el-segmented {
+        display: none;
+      }
+
+      .reward-label {
+        width: auto;
+        margin-bottom: 0;
+        font-size: 13px;
+        color: var(--el-text-color-secondary);
+      }
+
+      .xs-value {
+        display: block;
+        font-size: 16px;
+        font-weight: 700;
+      }
+    }
+
+    .overflow-psych-section.overflow-psych-disabled {
+      opacity: 0.5;
+    }
+
+    .reward-card :deep(.el-card__body) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .reward-info {
+      width: 100%;
+    }
+
+    .reward-values {
+      justify-content: center;
+    }
   }
 }
 </style>
