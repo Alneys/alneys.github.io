@@ -19,13 +19,13 @@ export interface AdviceResult {
   abandonTotal: number | null;
   /** 结算本局后剩余局数的期望 */
   expectedAfterStop: number;
-  /** 各有效战力点 (0~10) 的最优策略概率分布 */
+  /** 各战力点 (0~10) 的最优策略概率分布 */
   distribution: number[];
   /** 放弃本局的概率 */
   abandonProb: number;
 }
 
-/** 内部 DP 复合返回类型：期望值 + 有效战力点概率分布 */
+/** 内部 DP 复合返回类型：期望值 + 战力点概率分布 */
 interface DpResult {
   ev: number;
   distribution: number[];
@@ -120,7 +120,7 @@ function computeAdjustedReward(
  *   B = 今日剩余翻倍次数
  *
  * 每一步可选行动：
- *   - 继续抽牌：抽一张，状态转移到 (r_tuple - 1_i, M, P, B)
+ *   - 继续抽取铭牌：抽一张，状态转移到 (r_tuple - 1_i, M, P, B)
  *   - 开启翻倍：M 置为 2，B 减 1（条件：已抽 < 3、M=1、B>0）
  *   - 结算本局：获得当前奖励，进入下一局 (deckInit, 1, P-1, B)
  *
@@ -254,7 +254,7 @@ export function getCurrentAdvice(
     let abandonProb: number;
 
     if (drn === 0) {
-      // 未抽牌，必须继续 → 子分布加权平均
+      // 未抽取铭牌，必须继续 → 子分布加权平均
       distribution = new Array<number>(modValue).fill(0);
       abandonProb = 0;
       for (let i = 0; i < 5; i++) {

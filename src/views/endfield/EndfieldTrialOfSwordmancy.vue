@@ -11,7 +11,7 @@
       <el-collapse-item title="铭牌分布配置" name="config">
         <div class="config-grid">
           <div v-for="level in 5" :key="level" class="config-item">
-            <span class="config-label">等级 {{ level }}</span>
+            <span class="config-label">铭牌点数 {{ level }}</span>
             <el-input-number
               v-model="config[`level${level}` as keyof PlaqueConfig]"
               size="small"
@@ -22,7 +22,7 @@
         </div>
         <div class="config-buttons">
           <el-button type="primary" class="config-apply-btn" @click="applyConfig">
-            应用配置（重置牌池）
+            应用配置（重置铭牌库）
           </el-button>
           <el-button class="config-reset-btn" @click="resetConfig"> 重置铭牌分布 </el-button>
         </div>
@@ -164,7 +164,7 @@
           </div>
           <el-divider style="margin: 16px 0"></el-divider>
           <div class="drawn-manual-input">
-            <div class="manual-input-label">手动设置等级</div>
+            <div class="manual-input-label">手动设置铭牌点数</div>
             <el-input-otp
               :model-value="otpValue"
               :length="5"
@@ -172,7 +172,7 @@
               :validator="onlyLevel"
               @update:model-value="handleOtpChange"
             />
-            <span v-if="hasWarning" class="manual-input-warning">牌池不足</span>
+            <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
           </div>
         </el-card>
       </el-col>
@@ -180,7 +180,7 @@
       <el-col :span="6" :xs="24"
         ><el-card class="pool-card">
           <template #header>
-            <span>牌池 · 剩余 {{ pool.length }} 张</span>
+            <span>铭牌库剩余 {{ pool.length }} 张</span>
           </template>
           <div class="pool-list">
             <div v-for="level in 5" :key="level" class="pool-level-row">
@@ -188,7 +188,7 @@
               <span class="pool-level-count">{{ poolByLevel[level]?.length ?? 0 }} 张</span>
             </div>
           </div>
-          <el-empty v-if="pool.length === 0" description="牌池已空" :image-size="48" />
+          <el-empty v-if="pool.length === 0" description="铭牌库已空" :image-size="48" />
         </el-card>
       </el-col>
     </el-row>
@@ -213,7 +213,7 @@
             <span class="xs-value">{{ totalPower }}</span>
           </div>
           <div class="reward-tier-section">
-            <span class="reward-label">奖励档位</span>
+            <span class="reward-label">奖励</span>
             <el-segmented
               :model-value="rewardIndex"
               :options="rewardOptions"
@@ -270,7 +270,7 @@
               type="primary"
               @click="drawCard"
             >
-              {{ activeDrawCount === 0 ? '开始抽牌' : '继续抽牌' }}
+              抽取铭牌
             </el-button>
           </div>
         </div>
@@ -348,7 +348,7 @@
       <el-col :span="14" :xs="24">
         <el-card class="advice-card">
           <template #header>
-            <span>最优策略建议</span>
+            <span>策略分析</span>
           </template>
           <div v-if="currentAdvice" class="advice-content">
             <div
@@ -357,25 +357,24 @@
                 'advice-continue':
                   decisionAction === 'continue' || decisionAction === 'must_continue',
                 'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
+                'advice-double': decisionAction === 'double',
                 'advice-abandon': decisionAction === 'abandon',
               }"
             >
-              <template v-if="decisionAction === 'double'">
-                {{ decisionPrefix }}建议先开启翻倍再继续
-              </template>
+              <template v-if="decisionAction === 'double'"> {{ decisionPrefix }}开启翻倍 </template>
               <template v-else-if="decisionAction === 'abandon'">
-                {{ decisionPrefix }}建议放弃本局（重开期望更高）
+                {{ decisionPrefix }}放弃本局
               </template>
               <template v-else-if="decisionAction === 'continue'">
-                {{ decisionPrefix }}建议继续抽牌（期望更高）
+                {{ decisionPrefix }}抽取铭牌
               </template>
               <template v-else-if="decisionAction === 'stop'">
-                {{ decisionPrefix }}建议停止（当前奖励更高）
+                {{ decisionPrefix }}结算本局
               </template>
               <template v-else-if="decisionAction === 'must_continue'">
-                {{ decisionPrefix }}必须抽第一张牌
+                {{ decisionPrefix }}必须抽取铭牌
               </template>
-              <template v-else>{{ decisionPrefix }}建议结算</template>
+              <template v-else>{{ decisionPrefix }}结算本局</template>
             </div>
             <el-divider style="margin: 8px 0" />
             <div v-if="showAdjustedCol" class="advice-row advice-header">
@@ -419,7 +418,7 @@
                 'advice-row-optimal-adjusted': isAdjOpt('continue') || isAdjOpt('must_continue'),
               }"
             >
-              <span class="advice-label">继续抽牌</span>
+              <span class="advice-label">抽取铭牌</span>
               <span class="advice-value">{{
                 currentAdvice.drawTotal != null ? formatDecimal(currentAdvice.drawTotal) : '—'
               }}</span>
@@ -431,7 +430,7 @@
               }}</span>
             </div>
             <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
-              <span class="advice-label" style="text-indent: 1.5em">等级 {{ item.level }}</span>
+              <span class="advice-label" style="text-indent: 1.5em">铭牌点数 {{ item.level }}</span>
               <span class="advice-value">{{ item.ev != null ? formatDiff(item.ev) : '—' }}</span>
               <span v-if="showAdjustedCol" class="advice-sep">|</span>
               <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
@@ -576,8 +575,8 @@
 
 <script setup lang="ts">
 // 逻辑三部分：
-//   1. 铭牌配置 & 游戏操作（抽牌/翻倍/结算）
-//   2. 奖励计算（战力点 → 档位）
+//   1. 铭牌配置 & 游戏操作（抽取铭牌/翻倍/结算）
+//   2. 奖励计算（实际战力点 → 奖励）
 //   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed } from 'vue';
 import { getCurrentAdvice, clearSolverCache } from './EndfieldTrialSwordmancySolver';
@@ -586,7 +585,7 @@ import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolv
 /** 最多抽取张数 */
 const MAX_DRAWS = 5;
 
-/** 默认战力点 → 奖励对照表（索引 = 战力点） */
+/** 默认实际战力点 → 奖励对照表（索引 = 实际战力点） */
 const REWARD_TABLE: Record<number, number> = {
   0: 0,
   1: 1000,
@@ -601,7 +600,7 @@ const REWARD_TABLE: Record<number, number> = {
   10: 160000,
 };
 
-/** 各等级牌数量配置 */
+/** 各铭牌点数数量配置 */
 interface PlaqueConfig {
   level1: number;
   level2: number;
@@ -617,7 +616,7 @@ interface Plaque {
   power: number;
 }
 
-// ── 牌库配置 ──
+// ── 铭牌库配置 ──
 
 const config = reactive<PlaqueConfig>({
   level1: 5,
@@ -661,7 +660,7 @@ function isPresetActive(af: number, fp: number): boolean {
 
 // ── 游戏核心状态 ──
 
-/** 牌池（剩余未抽的铭牌） */
+/** 铭牌库（剩余未抽的铭牌） */
 const pool = ref<Plaque[]>([]);
 /** 已抽的 5 个槽位 */
 const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
@@ -673,10 +672,10 @@ const remainingGames = ref(3);
 const remainingDoubles = ref(2);
 /** 今日剩余放弃次数 */
 const remainingAbandons = ref(3);
-/** 手动设置时牌池不足的警告标记 */
+/** 手动设置时铭牌库不足的警告标记 */
 const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
 
-/** 各等级已抽数量（索引 0-4 对应等级 1-5） */
+/** 各点数已抽数量（索引 0-4 对应点数 1-5） */
 const drawnCounts = computed(() => {
   const counts = [0, 0, 0, 0, 0];
   for (const card of drawnCards.value) {
@@ -691,7 +690,7 @@ function createPlaque(level: number): Plaque {
   return { id: nextId++, level, power: level };
 }
 
-/** 根据当前配置构建初始牌池 */
+/** 根据当前配置构建初始铭牌库 */
 function buildPool(): Plaque[] {
   const result: Plaque[] = [];
   const entries: [number, number][] = [
@@ -715,7 +714,7 @@ function initDrawnCards() {
   for (let i = 0; i < 5; i++) slotWarnings[i] = false;
 }
 
-/** 应用配置新配置并重置牌池 */
+/** 应用配置新配置并重置铭牌库 */
 function applyConfig() {
   clearSolverCache();
   nextId = 0;
@@ -724,7 +723,7 @@ function applyConfig() {
   doubled.value = false;
 }
 
-/** 重置本局牌库/已抽/翻倍 */
+/** 重置本局铭牌库/已抽/翻倍 */
 function resetGame() {
   nextId = 0;
   pool.value = buildPool();
@@ -732,9 +731,10 @@ function resetGame() {
   doubled.value = false;
 }
 
-/** 结算本局，进入下一局（消耗一次游玩次数） */
+/** 结算本局，进入下一局（消耗一次游玩次数，翻倍次数在结算时实际扣除） */
 function endGame() {
   if (remainingGames.value <= 0) return;
+  if (doubled.value) remainingDoubles.value--;
   remainingGames.value--;
   resetGame();
 }
@@ -768,7 +768,7 @@ function resetConfig() {
 
 pool.value = buildPool();
 
-// ── 牌池展示 ──
+// ── 铭牌库展示 ──
 
 const poolByLevel = computed(() => {
   const groups: Record<number, Plaque[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
@@ -784,7 +784,7 @@ const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
 
 const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + (c?.power ?? 0), 0));
 
-/** 战力点 → 奖励档位索引
+/** 实际战力点 → 奖励索引
  *  0-10 直接映射；超过 10 则模 11 循环 */
 const rewardIndex = computed(() => {
   if (totalPower.value > 10) {
@@ -824,7 +824,7 @@ const canAbandon = computed(() => {
 
 // ── 游戏操作 ──
 
-/** 随机抽取一张牌 */
+/** 随机抽取一张铭牌 */
 function drawCard() {
   if (!canDraw.value) return;
   const emptyIndex = drawnCards.value.findIndex((c) => c == null);
@@ -834,7 +834,7 @@ function drawCard() {
   drawnCards.value[emptyIndex] = plaque;
 }
 
-/** 从牌池中取出一张指定等级的牌（返回 null 表示牌池不足） */
+/** 从铭牌库中取出一张指定铭牌点数的牌（返回 null 表示铭牌库不足） */
 function takeFromPool(level: number): Plaque | null {
   const idx = pool.value.findIndex((p) => p.level === level);
   if (idx === -1) return null;
@@ -849,24 +849,19 @@ function onlyLevel(value: string): boolean {
 function toggleDouble() {
   if (!canDouble.value) return;
   doubled.value = true;
-  remainingDoubles.value--;
 }
 
 function handleDoubleSwitch(val: string | number | boolean) {
   if (val) {
     if (!doubled.value) toggleDouble();
   } else {
-    if (doubled.value) {
-      doubled.value = false;
-      remainingDoubles.value++;
-    }
+    if (doubled.value) doubled.value = false;
   }
 }
 
-/** 放弃本局：不消耗游玩次数，退还翻倍，重置牌局 */
+/** 放弃本局：不消耗游玩次数，重置牌局（翻倍次数在结算时扣除，放弃不消耗） */
 function abandonGame() {
   if (!canAbandon.value) return;
-  if (doubled.value) remainingDoubles.value++;
   remainingAbandons.value--;
   resetGame();
 }
@@ -882,7 +877,7 @@ function formatDecimal(value: number): string {
 }
 
 function formatDiff(value: number): string {
-  const prefix = value > 0 ? '+' : '';
+  const prefix = value >= 0 ? '+' : '';
   return prefix + formatDecimal(value);
 }
 
@@ -916,12 +911,12 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
   value: i,
 }));
 
-/** 溢出心理挡位：战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
+/** 溢出心理挡位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
 const overflowPsychOptions = computed(() => {
   const params = overflowParams.value;
   return Array.from({ length: 11 }, (_, i) => {
     const power = 11 + i;
-    const s = power % 11; // 有效战力
+    const s = power % 11; // 战力点
     const raw = REWARD_TABLE[s] ?? 0;
     let label: string;
     if (params) {
@@ -940,7 +935,7 @@ const overflowPsychValue = computed(() => {
   return undefined;
 });
 
-/** OTP 输入框的字符串值（按抽牌顺序排列，空位为 ''） */
+/** OTP 输入框的字符串值（按抽取顺序排列，空位为 ''） */
 const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join(''));
 
 const hasWarning = computed(() => slotWarnings.some(Boolean));
@@ -1089,10 +1084,10 @@ const decisionAction = computed(
 );
 
 /** 仅心理模型激活时在决策文字前显示标注 */
-const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应用后：' : ''));
+const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应用后最优：' : '最优：'));
 
 // ── OTP 手动输入处理 ──
-// 先将所有已抽牌归还牌池，再按 OTP 顺序依次取出指定等级
+// 先将所有已抽牌归还铭牌库，再按 OTP 顺序依次取出指定铭牌点数
 
 function handleOtpChange(val: string | number) {
   const s = String(val);
@@ -1314,7 +1309,7 @@ function handleOtpChange(val: string | number) {
     color: var(--el-color-danger);
   }
 
-  // ── 牌池展示 ──
+  // ── 铭牌库展示 ──
 
   .pool-list {
     display: flex;
@@ -1324,7 +1319,7 @@ function handleOtpChange(val: string | number) {
 
   .pool-level-row {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 8px;
     padding: 6px 10px;
     border-radius: 6px;
@@ -1486,7 +1481,7 @@ function handleOtpChange(val: string | number) {
     margin-left: 0;
   }
 
-  // ── 最优策略建议 ──
+  // ── 策略分析 ──
 
   .advice-card {
     :deep(.el-card__header) {
@@ -1572,8 +1567,12 @@ function handleOtpChange(val: string | number) {
       color: var(--el-color-success);
     }
 
-    &.advice-stop {
+    &.advice-double {
       color: var(--el-color-primary);
+    }
+
+    &.advice-stop {
+      color: var(--el-text-color-primary);
     }
 
     &.advice-abandon {
@@ -1615,7 +1614,7 @@ function handleOtpChange(val: string | number) {
     background: var(--el-color-danger-light-9);
   }
 
-  // ── 有效战力点分布 ──
+  // ── 战力点分布 ──
 
   .distribution-card {
     :deep(.el-card__header) {

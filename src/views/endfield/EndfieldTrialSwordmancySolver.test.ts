@@ -45,7 +45,7 @@ const expected: Record<string, number> = {
 };
 
 /**
- * 通过 getCurrentAdvice(全空牌库状态) 获取初始状态的今日总期望
+ * 通过 getCurrentAdvice(全空铭牌库状态) 获取初始状态的今日总期望
  * 初始状态：drawnCounts = [0,0,0,0,0]，未翻倍
  * 此值应等于 Python 参考实现的 dp(deck_init, 1, P, B, A)
  */
@@ -95,7 +95,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
     expect(result!.optimalAction).not.toBe('abandon');
   });
 
-  it('未抽牌时不能结算也不能放弃（无剩余翻倍次数）', () => {
+  it('未抽取铭牌时不能结算也不能放弃（无剩余翻倍次数）', () => {
     const result = getCurrentAdvice([0, 0, 0, 0, 0], deck, rewards, false, 3, 0, 3);
     expect(result).not.toBeNull();
     expect(result!.optimalAction).toBe('must_continue');
@@ -132,7 +132,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
 
   describe('战力点概率分布（合并到 getCurrentAdvice）', () => {
     it('已翻倍且已抽 531 时分布不应锁定在当前战力点', () => {
-      // 已抽 531 → drawnCounts=[1,0,1,0,1], 总战力=9, 有效战力=9%11=9
+      // 已抽 531 → drawnCounts=[1,0,1,0,1], 总战力=9, 战力点=9%11=9
       // 已翻倍 (M=2), remainingDoubles=1 (已用掉一次), P=3, A=3
       const advice = getCurrentAdvice(
         [1, 0, 1, 0, 1],
@@ -146,7 +146,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
       expect(advice).not.toBeNull();
       // 不应锁定在 9=100%（未传 doubled 时的 bug）
       expect(advice!.distribution[9]).toBeLessThan(1);
-      // 继续抽牌后存在放弃的可能性
+      // 继续抽取铭牌后存在放弃的可能性
       expect(advice!.abandonProb).toBeGreaterThan(0);
     });
 
@@ -168,9 +168,9 @@ describe('EndfieldTrialSwordmancySolver', () => {
     });
 
     it('已抽 11451 应显示放弃 100%', () => {
-      // 总战力 = 3*1 + 4 + 5 = 12，有效战力 = 12 % 11 = 1
-      // 放弃期望 = dp(全牌池, 1, 3, 2, 2) = 591493.60
-      // 停止期望 = 1000 + dp(全牌池, 1, 2, 2, 3) = 1000 + 522129.02 = 523129.02
+      // 总战力 = 3*1 + 4 + 5 = 12，战力点 = 12 % 11 = 1
+      // 放弃期望 = dp(铭牌库, 1, 3, 2, 2) = 591493.60
+      // 停止期望 = 1000 + dp(铭牌库, 1, 2, 2, 3) = 1000 + 522129.02 = 523129.02
       // 放弃 > 停止 → 最优策略为放弃
       const advice = getCurrentAdvice(
         [3, 0, 0, 1, 1], // 11451
