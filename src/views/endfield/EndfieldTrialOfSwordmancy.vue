@@ -13,24 +13,41 @@
       data-tour="config"
     >
       <el-collapse-item title="基础参数配置" name="config">
-        <div class="config-grid">
-          <div v-for="level in 5" :key="level" class="config-item">
-            <span class="config-label">铭牌点数 {{ level }}</span>
-            <el-input-number
-              v-model="config[`level${level}` as keyof PlaqueConfig]"
-              size="small"
-              :min="0"
-              :max="99"
-            />
+        <div class="config-reward-section">
+          <div class="config-reward-header">铭牌库配置</div>
+          <div class="config-grid">
+            <div v-for="level in 5" :key="level" class="config-item">
+              <span class="config-label">铭牌点数 {{ level }}</span>
+              <el-input-number
+                v-model="config[`level${level}` as keyof PlaqueConfig]"
+                :min="0"
+                :max="99"
+              />
+            </div>
+          </div>
+          <div class="config-buttons">
+            <el-button type="primary" class="config-apply-btn" @click="applyConfig">
+              应用铭牌库配置
+            </el-button>
+            <el-button class="config-reset-btn" @click="resetConfig">重置铭牌库</el-button>
           </div>
         </div>
-        <div class="config-buttons">
-          <el-button type="primary" class="config-apply-btn" size="small" @click="applyConfig">
-            应用配置（重置铭牌库）
-          </el-button>
-          <el-button class="config-reset-btn" size="small" @click="resetConfig">
-            重置铭牌分布
-          </el-button>
+
+        <el-divider style="margin: 12px 0" />
+        <div class="config-reward-section">
+          <div class="config-reward-header">奖励对照表</div>
+          <div class="config-reward-hint">JSON 数组格式，战力点 0~10 依次对应 11 项奖励值</div>
+          <el-input
+            v-model="rewardTableText"
+            type="textarea"
+            :rows="6"
+            class="config-reward-textarea"
+          />
+          <div v-if="rewardTableError" class="config-reward-error">{{ rewardTableError }}</div>
+          <div class="config-reward-buttons">
+            <el-button type="primary" @click="applyRewardTable">应用奖励表</el-button>
+            <el-button @click="resetRewardTable">重置奖励表</el-button>
+          </div>
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -55,7 +72,7 @@
                   :max="1"
                   :step="0.05"
                   show-input
-                  input-size="small"
+                  input-
                   class="psycho-slider"
                 />
               </div>
@@ -66,30 +83,26 @@
                   :min="0"
                   :max="1000000"
                   :step="5000"
-                  size="small"
                   class="psycho-input"
                 />
               </div>
             </div>
             <div class="psycho-presets">
               <el-button
-                size="small"
                 @click="setPsychoParams(1.0, 0)"
                 :type="isPresetActive(1.0, 0) ? 'primary' : ''"
               >
-                收益最大
+                最大化收益
               </el-button>
               <el-button
-                size="small"
-                @click="setPsychoParams(0.6, 60000)"
-                :type="isPresetActive(0.6, 60000) ? 'primary' : ''"
+                @click="setPsychoParams(0.5, 30000)"
+                :type="isPresetActive(0.5, 30000) ? 'primary' : ''"
               >
-                厌恶溢出
+                均衡
               </el-button>
               <el-button
-                size="small"
-                @click="setPsychoParams(0.01, 640000)"
-                :type="isPresetActive(0.01, 640000) ? 'primary' : ''"
+                @click="setPsychoParams(0.01, 500000)"
+                :type="isPresetActive(0.01, 500000) ? 'primary' : ''"
               >
                 绝对厌恶溢出
               </el-button>
@@ -106,40 +119,18 @@
           <div class="daily-grid">
             <div class="daily-item">
               <span class="daily-label">剩余游玩</span>
-              <el-input-number
-                v-model="remainingGames"
-                :min="0"
-                :max="3"
-                size="small"
-                class="daily-input"
-              />
+              <el-input-number v-model="remainingGames" :min="0" :max="4" class="daily-input" />
             </div>
             <div class="daily-item">
               <span class="daily-label">剩余翻倍</span>
-              <el-input-number
-                v-model="remainingDoubles"
-                :min="0"
-                :max="2"
-                size="small"
-                class="daily-input"
-              />
+              <el-input-number v-model="remainingDoubles" :min="0" :max="2" class="daily-input" />
             </div>
             <div class="daily-item">
               <span class="daily-label">剩余放弃</span>
-              <el-input-number
-                v-model="remainingAbandons"
-                :min="0"
-                :max="3"
-                size="small"
-                class="daily-input"
-              />
+              <el-input-number v-model="remainingAbandons" :min="0" :max="3" class="daily-input" />
             </div>
-            <el-button class="daily-single-btn" size="small" @click="setSingleSimulation">
-              设为单次模拟
-            </el-button>
-            <el-button class="daily-reset-btn" size="small" type="danger" @click="resetToday">
-              重置今日
-            </el-button>
+            <el-button class="daily-single-btn" @click="setSingleSimulation"> 模拟单次 </el-button>
+            <el-button class="daily-reset-btn" type="danger" @click="resetToday"> 重置 </el-button>
           </div>
         </el-card>
       </el-col>
@@ -255,17 +246,6 @@
               />
               <span class="xs-value">{{ overflowPsychValue ?? '—' }}</span>
             </div>
-            <div class="reward-info">
-              <div class="reward-values">
-                <span class="base-reward" :class="{ 'reward-success': rewardIndex === 10 }"
-                  >奖励：{{ baseReward.toLocaleString() }}</span
-                >
-                <template v-if="doubled">
-                  <span class="reward-multiply">×2</span>
-                  <span class="final-reward-final"> = {{ finalReward.toLocaleString() }} </span>
-                </template>
-              </div>
-            </div>
           </el-card>
         </el-col>
       </el-row>
@@ -275,9 +255,14 @@
       <el-col :span="24">
         <div class="actions-row">
           <div class="actions-row-left">
-            <el-popconfirm title="确认重置游戏状态和今日状态？" @confirm="resetToday">
+            <el-popconfirm
+              title="确认重置游戏状态和今日状态？"
+              placement="bottom-end"
+              width="200px"
+              @confirm="resetToday"
+            >
               <template #reference>
-                <el-button type="danger" size="large" class="action-btn"> 重置所有 </el-button>
+                <el-button type="danger" class="action-btn"> 重置所有 </el-button>
               </template>
             </el-popconfirm>
           </div>
@@ -285,7 +270,6 @@
             <el-button
               class="action-btn"
               :disabled="!canDraw || remainingGames === 0"
-              size="large"
               type="primary"
               @click="drawCard"
             >
@@ -307,7 +291,6 @@
               :disabled="!canToggleDouble"
               inactive-text="关"
               active-text="开"
-              size="large"
               class="action-switch"
               @change="handleDoubleSwitch"
             />
@@ -321,11 +304,10 @@
             <el-button
               class="action-btn"
               :disabled="!canAbandon"
-              size="large"
               type="danger"
               @click="abandonGame"
             >
-              放弃本局<br />（剩余{{ remainingAbandons }}次）
+              放弃本局 / 剩余{{ remainingAbandons }}次
             </el-button>
           </div>
           <div class="actions-row-right">
@@ -339,7 +321,6 @@
                 :disabled="!canToggleDouble"
                 inactive-text="关"
                 active-text="开"
-                size="large"
                 class="action-switch"
                 @change="handleDoubleSwitch"
               />
@@ -347,11 +328,10 @@
             <el-button
               class="action-btn"
               :disabled="remainingGames === 0 || activeDrawCount === 0"
-              size="large"
               type="info"
               @click="activeDrawCount > 0 ? endGame() : resetGame()"
             >
-              结算本局<br />（剩余{{ remainingGames }}次）
+              结算本局 / 剩余{{ remainingGames }}次
             </el-button>
           </div>
         </div>
@@ -637,7 +617,7 @@
     <el-tour-step
       target="[data-tour='config']"
       title="基础参数配置"
-      description="调整各点数铭牌的初始数量，点击「应用配置」重置铭牌库"
+      description="调整基础参数，铭牌库配置和奖励对照表"
     />
   </el-tour>
 </template>
@@ -656,20 +636,16 @@ import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolv
 /** 最多抽取张数 */
 const MAX_DRAWS = 5;
 
-/** 默认实际战力点 → 奖励对照表（索引 = 实际战力点） */
-const REWARD_TABLE: Record<number, number> = {
-  0: 0,
-  1: 1000,
-  2: 2000,
-  3: 4000,
-  4: 7500,
-  5: 12000,
-  6: 20000,
-  7: 36000,
-  8: 60000,
-  9: 100000,
-  10: 160000,
-};
+/** 默认奖励表（索引 = 战力点 0~10） */
+const DEFAULT_REWARDS: number[] = [
+  0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000,
+];
+/** 当前生效的奖励表 */
+const rewardValues = ref<number[]>([...DEFAULT_REWARDS]);
+/** textarea 中的 JSON 字符串 */
+const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
+/** 解析错误信息，空表示无错误 */
+const rewardTableError = ref('');
 
 /** 各铭牌点数数量配置 */
 interface PlaqueConfig {
@@ -837,6 +813,40 @@ function resetConfig() {
   applyConfig();
 }
 
+/** 解析 textarea 中的 JSON 并应用奖励表 */
+function applyRewardTable() {
+  rewardTableError.value = '';
+  try {
+    const parsed = JSON.parse(rewardTableText.value);
+    if (!Array.isArray(parsed)) {
+      rewardTableError.value = '必须是一个 JSON 数组';
+      return;
+    }
+    if (parsed.length !== 11) {
+      rewardTableError.value = `数组长度必须为 11，当前为 ${parsed.length}`;
+      return;
+    }
+    for (let i = 0; i < parsed.length; i++) {
+      if (typeof parsed[i] !== 'number' || isNaN(parsed[i])) {
+        rewardTableError.value = `索引 ${i} 的值不是有效数字`;
+        return;
+      }
+    }
+    rewardValues.value = [...parsed];
+    clearSolverCache();
+  } catch (e) {
+    rewardTableError.value = `JSON 格式错误：${(e as Error).message}`;
+  }
+}
+
+/** 重置奖励表为默认值并生效 */
+function resetRewardTable() {
+  rewardTableText.value = JSON.stringify(DEFAULT_REWARDS, null, 2);
+  rewardTableError.value = '';
+  rewardValues.value = [...DEFAULT_REWARDS];
+  clearSolverCache();
+}
+
 pool.value = buildPool();
 
 // ── 铭牌库展示 ──
@@ -865,7 +875,7 @@ const rewardIndex = computed(() => {
 });
 
 /** 翻倍前的基础奖励 */
-const baseReward = computed(() => REWARD_TABLE[rewardIndex.value] ?? 0);
+const baseReward = computed(() => rewardValues.value[rewardIndex.value] ?? 0);
 
 /** 最终奖励（含翻倍） */
 const finalReward = computed(() => {
@@ -997,7 +1007,7 @@ function formatRewardShort(value: number): string {
 
 const rewardOptions = computed(() =>
   Array.from({ length: 11 }, (_, i) => ({
-    label: formatRewardShort(doubled.value ? REWARD_TABLE[i]! * 2 : REWARD_TABLE[i]!),
+    label: formatRewardShort(doubled.value ? rewardValues.value[i]! * 2 : rewardValues.value[i]!),
     value: i,
   })),
 );
@@ -1014,7 +1024,7 @@ const overflowPsychOptions = computed(() => {
   return Array.from({ length: 11 }, (_, i) => {
     const power = 11 + i;
     const s = power % 11; // 战力点
-    const raw = REWARD_TABLE[s] ?? 0;
+    const raw = rewardValues.value[s] ?? 0;
     let label: string;
     if (params) {
       const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
@@ -1047,12 +1057,10 @@ const deckConfigArray = computed(() => [
   config.level4,
   config.level5,
 ]);
-const rewardArray = computed(() => Object.values(REWARD_TABLE).slice(0, 11));
-
 /** 当前状态的最优行动建议（含多局/翻倍，原始） */
 const currentAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
-  const rewards = rewardArray.value;
+  const rewards = rewardValues.value;
   if (deck.some((c) => c < 0)) return null;
   return getCurrentAdvice(
     drawnCounts.value,
@@ -1068,7 +1076,7 @@ const currentAdvice = computed<AdviceResult | null>(() => {
 /** 调整后的最优行动建议（含溢出厌恶模型） */
 const adjustedAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
-  const rewards = rewardArray.value;
+  const rewards = rewardValues.value;
   if (deck.some((c) => c < 0) || !overflowParams.value) return currentAdvice.value;
   return getCurrentAdvice(
     drawnCounts.value,
@@ -1085,7 +1093,7 @@ const adjustedAdvice = computed<AdviceResult | null>(() => {
 /** 下一张抽到各等级后的概率与期望（通过调用 getCurrentAdvice 获取） */
 const perLevelAdvice = computed(() => {
   const deck = deckConfigArray.value;
-  const rewards = rewardArray.value;
+  const rewards = rewardValues.value;
   const dc = drawnCounts.value;
   if (deck.some((c) => c < 0)) return [];
   if (!canDraw.value) {
@@ -1262,6 +1270,43 @@ function handleOtpChange(val: string | number) {
   }
 
   .config-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .config-reward-section {
+    margin-top: 4px;
+  }
+
+  .config-reward-header {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .config-reward-hint {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    margin-bottom: 6px;
+  }
+
+  .config-reward-textarea {
+    width: 100%;
+    :deep(textarea) {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  }
+
+  .config-reward-error {
+    color: var(--el-color-danger);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .config-reward-buttons {
     display: flex;
     gap: 8px;
     margin-top: 8px;
@@ -1590,7 +1635,7 @@ function handleOtpChange(val: string | number) {
   }
 
   .daily-input {
-    width: 72px;
+    width: 108px;
   }
 
   .daily-suffix {
@@ -1826,8 +1871,7 @@ function handleOtpChange(val: string | number) {
   }
 
   .action-btn {
-    min-width: 144px;
-    line-height: 1.2;
+    min-width: 168px;
   }
 
   .action-switch-label {
