@@ -1,0 +1,14 @@
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-ml: () !default;
+$colors-ml: map.merge(
+  (
+    'kotoha': #92cfbb,
+    'elena': #9bce92,
+    'miya': #d7a96b,
+  ),
+  $colors-ml
+);

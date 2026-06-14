@@ -1,19 +1,30 @@
 // based on 'node_modules/element-plus/theme-chalk/src/var.scss'
 @use 'sass:map';
 
-@use './im-colors.scss' as *;
+@use './im-colors-cg.scss' as *;
+@use './im-colors-ml.scss' as *;
 
 @use './im-config';
 @use './im-mixins' as *;
 
 :root {
-  // custom colors
-  // im-color-miya: #d7a96b;
-  @each $name in map.keys($colors) {
-    @include set-css-var-value('color-' + $name, map.get($colors, $name));
+  @each $name in map.keys($colors-cg) {
+    @include set-css-var-value('color-cg-' + $name, map.get($colors-cg, $name));
+  }
+  @each $name in map.keys($colors-ml) {
+    @include set-css-var-value('color-ml-' + $name, map.get($colors-ml, $name));
   }
 }
 
+.color-ml-kotoha {
+  color: var(--im-color-ml-kotoha);
+}
+.color-ml-elena {
+  color: var(--im-color-ml-elena);
+}
+.color-ml-miya {
+  color: var(--im-color-ml-miya);
+}
 .color-cg-cute {
   color: var(--im-color-cg-cute);
 }

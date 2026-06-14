@@ -26,7 +26,7 @@ const isDark = useDark();
   position: sticky;
   top: 0;
   z-index: 39;
-  background-color: var(--im-color-miya);
+  background-color: var(--im-color-ml-miya);
   > div {
     display: flex;
     justify-content: space-between;
@@ -43,7 +43,7 @@ const isDark = useDark();
 
   .switch-dark {
     --el-switch-on-color: #4c4d4f;
-    --el-switch-off-color: var(--im-color-miya);
+    --el-switch-off-color: var(--im-color-ml-miya);
     --el-switch-border-color: rgba(255, 255, 255, 0.4);
   }
 }

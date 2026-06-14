@@ -4,18 +4,5 @@
 
 @use './im-mixins' as *;
 
+// Colors moved to im-colors-ml.scss and im-colors-cg.scss
 $colors: () !default;
-$colors: map.merge(
-  (
-    'kotoha': #92cfbb,
-    'elena': #9bce92,
-    'miya': #d7a96b,
-    'cg-cute': #fb0774,
-    'cg-cool': #236dfb,
-    'cg-passion': #fca926,
-    'cg-vocal': #ed5469,
-    'cg-dance': #3dafdb,
-    'cg-visual': #ff9a33,
-  ),
-  $colors
-);
