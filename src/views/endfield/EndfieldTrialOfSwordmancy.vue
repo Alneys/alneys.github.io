@@ -101,8 +101,8 @@
                 均衡
               </el-button>
               <el-button
-                @click="setPsychoParams(0.01, 500000)"
-                :type="isPresetActive(0.01, 500000) ? 'primary' : ''"
+                @click="setPsychoParams(0.01, 400000)"
+                :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
               >
                 绝对厌恶溢出
               </el-button>
@@ -898,9 +898,9 @@ const canToggleDouble = computed(() => {
   return doubled.value || remainingDoubles.value > 0;
 });
 
-/** 可放弃条件：有放弃次数、已抽至少一张牌、有剩余游玩次数 */
+/** 可放弃条件：已抽至少一张牌、有剩余游玩次数 */
 const canAbandon = computed(() => {
-  return remainingAbandons.value > 0 && activeDrawCount.value > 0 && remainingGames.value > 0;
+  return activeDrawCount.value > 0 && remainingGames.value > 0;
 });
 
 // ── 游戏操作 ──
@@ -953,10 +953,14 @@ function handleDoubleSwitch(val: string | number | boolean) {
   }
 }
 
-/** 放弃本局：不消耗游玩次数，重置牌局（翻倍次数在结算时扣除，放弃不消耗） */
+/** 放弃本局：有剩余放弃次数时不消耗游玩次数；无剩余放弃次数时消耗一次游玩次数，本局收益为 0，不消耗翻倍次数 */
 function abandonGame() {
   if (!canAbandon.value) return;
-  remainingAbandons.value--;
+  if (remainingAbandons.value > 0) {
+    remainingAbandons.value--;
+  } else {
+    remainingGames.value--;
+  }
   resetGame();
 }
 

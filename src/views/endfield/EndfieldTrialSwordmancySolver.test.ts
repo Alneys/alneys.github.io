@@ -22,10 +22,10 @@ const expected: Record<string, number> = {
   '2,0,1': 215972.82,
   '2,0,2': 241540.04,
   '2,0,3': 261064.51,
-  '2,1,0': 270206.81,
-  '2,1,1': 331494.81,
-  '2,1,2': 371112.88,
-  '2,1,3': 400899.77,
+  '2,1,0': 281043.25,
+  '2,1,1': 335487.13,
+  '2,1,2': 373758.68,
+  '2,1,3': 402653.2,
   '2,2,0': 352726.67,
   '2,2,1': 431945.65,
   '2,2,2': 483080.08,
@@ -34,14 +34,14 @@ const expected: Record<string, number> = {
   '3,0,1': 313872.66,
   '3,0,2': 347675.52,
   '3,0,3': 373445.64,
-  '3,1,0': 361940.81,
-  '3,1,1': 430553.13,
-  '3,1,2': 475885.64,
-  '3,1,3': 511374.21,
-  '3,2,0': 449448.31,
-  '3,2,1': 534169.39,
-  '3,2,2': 591493.6,
-  '3,2,3': 635610.87,
+  '3,1,0': 375405.32,
+  '3,1,1': 435963.91,
+  '3,1,2': 479113.39,
+  '3,1,3': 513509.25,
+  '3,2,0': 468513.28,
+  '3,2,1': 543521.15,
+  '3,2,2': 596903.01,
+  '3,2,3': 639603.99,
 };
 
 /**
@@ -66,17 +66,16 @@ describe('EndfieldTrialSwordmancySolver', () => {
     30000,
   );
 
-  it('默认初始状态 P=3 B=2 A=3 的期望收益为 635,610.87', () => {
+  it('默认初始状态 P=3 B=2 A=3 的期望收益为 639,603.99', () => {
     const result = getCurrentAdvice([0, 0, 0, 0, 0], deck, rewards, false, 3, 2, 3);
     expect(result).not.toBeNull();
-    expect(result!.expectedToday).toBeCloseTo(635610.87, 0);
+    expect(result!.expectedToday).toBeCloseTo(639603.99, 0);
   });
 
-  it('放弃次数为 0 时的结果应与原无放弃机制的版本一致', () => {
-    // P=3 B=2 A=0 应与用户最初提供的 P=3 B=2 基准一致
+  it('放弃次数为 0 时的结果高于原无放弃机制的版本（因为 A=0 时也可放弃作为新选项）', () => {
     const withAbandon = getCurrentAdvice([0, 0, 0, 0, 0], deck, rewards, false, 3, 2, 0);
     expect(withAbandon).not.toBeNull();
-    expect(withAbandon!.expectedToday).toBeCloseTo(449448.31, 0);
+    expect(withAbandon!.expectedToday).toBeCloseTo(468513.28, 0);
   });
 
   it('已抽满 5 张时仍可放弃', () => {
@@ -162,14 +161,14 @@ describe('EndfieldTrialSwordmancySolver', () => {
       );
       expect(advice).not.toBeNull();
       expect(advice!.optimalAction).toBe('continue');
-      expect(advice!.drawTotal).toBeCloseTo(611402.24, 0);
-      expect(advice!.stopTotal).toBeCloseTo(600899.77, 0);
-      expect(advice!.abandonTotal).toBeCloseTo(591493.6, 0);
+      expect(advice!.drawTotal).toBeCloseTo(616249.19, 0);
+      expect(advice!.stopTotal).toBeCloseTo(602653.2, 0);
+      expect(advice!.abandonTotal).toBeCloseTo(596903.01, 0);
     });
 
     it('已抽 11451 应显示放弃 100%', () => {
       // 总战力 = 3*1 + 4 + 5 = 12，战力点 = 12 % 11 = 1
-      // 放弃期望 = dp(铭牌库, 1, 3, 2, 2) = 591493.60
+      // 放弃期望 = dp(铭牌库, 1, 3, 2, 2) = 596903.01 (A=0 放弃选项提升了下游 DP 值)
       // 停止期望 = 1000 + dp(铭牌库, 1, 2, 2, 3) = 1000 + 522129.02 = 523129.02
       // 放弃 > 停止 → 最优策略为放弃
       const advice = getCurrentAdvice(
@@ -187,7 +186,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
       for (let i = 0; i < 11; i++) {
         expect(advice!.distribution[i]).toBeCloseTo(0, 2);
       }
-      expect(advice!.abandonTotal).toBeCloseTo(591493.6, 0);
+      expect(advice!.abandonTotal).toBeCloseTo(596903.01, 0);
       expect(advice!.stopTotal).toBeCloseTo(523129.02, 0);
     });
 

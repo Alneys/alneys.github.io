@@ -251,18 +251,32 @@ export function getCurrentAdvice(
     }
 
     let vAbandon = -Infinity;
-    if (A > 0 && !cannotStop) {
-      vAbandon = dpDaily(
-        deckInit[0]!,
-        deckInit[1]!,
-        deckInit[2]!,
-        deckInit[3]!,
-        deckInit[4]!,
-        1,
-        P,
-        B + (Mv - 1),
-        A - 1,
-      ).ev;
+    if (!cannotStop) {
+      if (A > 0) {
+        vAbandon = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P,
+          B + (Mv - 1),
+          A - 1,
+        ).ev;
+      } else if (P > 0) {
+        vAbandon = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P - 1,
+          B + (Mv - 1),
+          0,
+        ).ev;
+      }
     }
 
     const best = Math.max(vDouble, vDraw, vAbandon, vStop);
@@ -316,7 +330,7 @@ export function getCurrentAdvice(
           abandonProb += prob * child.abandonProb;
         }
       }
-    } else if (A > 0 && !cannotStop && vAbandon >= vStop) {
+    } else if (!cannotStop && vAbandon >= vStop) {
       // 放弃最优
       distribution = new Array<number>(modValue).fill(0);
       abandonProb = 1;
@@ -349,18 +363,32 @@ export function getCurrentAdvice(
 
   if (drawn >= maxDraws || totalRemaining === 0) {
     let vAbandon = -Infinity;
-    if (A > 0 && drawn > 0) {
-      vAbandon = dpDaily(
-        deckInit[0]!,
-        deckInit[1]!,
-        deckInit[2]!,
-        deckInit[3]!,
-        deckInit[4]!,
-        1,
-        P,
-        B + (M - 1),
-        A - 1,
-      ).ev;
+    if (drawn > 0) {
+      if (A > 0) {
+        vAbandon = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P,
+          B + (M - 1),
+          A - 1,
+        ).ev;
+      } else if (P > 0) {
+        vAbandon = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P - 1,
+          B + (M - 1),
+          0,
+        ).ev;
+      }
     }
 
     const vStop = currentReward + futureValue;
@@ -371,7 +399,7 @@ export function getCurrentAdvice(
     let distribution: number[];
     let abandonProb: number;
 
-    if (A > 0 && drawn > 0 && vAbandon >= vStop) {
+    if (drawn > 0 && vAbandon >= vStop) {
       optimalAction = 'abandon';
       distribution = new Array<number>(modValue).fill(0);
       abandonProb = 1;
@@ -390,7 +418,7 @@ export function getCurrentAdvice(
       drawTotal: null,
       doubleTotal: null,
       stopTotal: Math.round(vStop * 100) / 100,
-      abandonTotal: A > 0 && drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
+      abandonTotal: drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
       expectedAfterStop: Math.round(futureValue * 100) / 100,
       distribution: distribution.map((p) => Math.round(p * 10000) / 10000),
       abandonProb: Math.round(abandonProb * 10000) / 10000,
@@ -431,18 +459,32 @@ export function getCurrentAdvice(
   }
 
   let vAbandon = -Infinity;
-  if (A > 0 && drawn > 0) {
-    vAbandon = dpDaily(
-      deckInit[0]!,
-      deckInit[1]!,
-      deckInit[2]!,
-      deckInit[3]!,
-      deckInit[4]!,
-      1,
-      P,
-      B + (M - 1),
-      A - 1,
-    ).ev;
+  if (drawn > 0) {
+    if (A > 0) {
+      vAbandon = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        P,
+        B + (M - 1),
+        A - 1,
+      ).ev;
+    } else if (P > 0) {
+      vAbandon = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        P - 1,
+        B + (M - 1),
+        0,
+      ).ev;
+    }
   }
 
   const evContinue = Math.max(vDraw, vDouble);
@@ -465,7 +507,7 @@ export function getCurrentAdvice(
     optimalAction = 'double';
   } else if (vDraw >= vAbandon && vDraw >= vStop) {
     optimalAction = 'continue';
-  } else if (A > 0 && vAbandon >= vStop) {
+  } else if (vAbandon >= vStop) {
     optimalAction = 'abandon';
   } else {
     optimalAction = 'stop';
@@ -492,7 +534,7 @@ export function getCurrentAdvice(
     doubleTotal:
       drawn > 0 && drawn < 3 && !doubled && B > 0 ? Math.round(vDouble * 100) / 100 : null,
     stopTotal: drawn > 0 ? Math.round(vStop * 100) / 100 : null,
-    abandonTotal: A > 0 && drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
+    abandonTotal: drawn > 0 ? Math.round(vAbandon * 100) / 100 : null,
     expectedAfterStop: Math.round(futureValue * 100) / 100,
     distribution: currentResult.distribution.map((p) => Math.round(p * 10000) / 10000),
     abandonProb: Math.round(currentResult.abandonProb * 10000) / 10000,
