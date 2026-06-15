@@ -1,7 +1,7 @@
 // Override Element Plus scss vars
 
 @use 'sass:map';
-@use './im/im-colors.scss' as imColors;
+@use './im/im-colors-ml.scss' as imColorsMl;
 
 @use 'element-plus/theme-chalk/display.css';
 
@@ -11,7 +11,7 @@
   ),
   $colors: (
     'primary': (
-      'base': map.get(imColors.$colors, 'miya'),
+      'base': map.get(imColorsMl.$colors-ml, 'miya'),
     ),
   ),
   $font-size: (

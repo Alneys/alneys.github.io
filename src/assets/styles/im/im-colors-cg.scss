@@ -1,0 +1,17 @@
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-cg: () !default;
+$colors-cg: map.merge(
+  (
+    'cute': #fb0774,
+    'cool': #236dfb,
+    'passion': #fca926,
+    'vocal': #ed5469,
+    'dance': #3dafdb,
+    'visual': #ff9a33,
+  ),
+  $colors-cg
+);

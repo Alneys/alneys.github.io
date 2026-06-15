@@ -108,7 +108,7 @@ import {
   tableResonanceRowHeaderTw,
   tableResonanceColumnHeader,
 } from '../CgssUnitViewerTypes';
-import { useResponsive } from '../composables/useResponsive';
+import { useResponsive } from '@/composables/useResponsive';
 import { useCardFilter } from '../composables/useCardFilter';
 import { useIconActions } from '../composables/useIconActions';
 import {

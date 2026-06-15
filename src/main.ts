@@ -13,9 +13,6 @@ import inputmodeDirective from './utils/directives/inputmode';
 
 // self-host fonts
 import 'unfonts.css';
-// import '@fontsource-variable/inconsolata';
-// import '@fontsource-variable/noto-sans-jp';
-// import '@fontsource-variable/noto-sans-sc';
 
 import '@/assets/styles/main.scss';
 

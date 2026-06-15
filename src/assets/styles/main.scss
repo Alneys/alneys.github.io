@@ -1,7 +1,10 @@
 @use './external/normalize.css';
+@use './im/im-colors.scss';
+@use './palette/palette.scss';
 @use './neutral-colors.scss';
-@use './im/im-main.scss';
+
 @use './custom.scss';
-@use './custom-override.scss';
-@use './base.scss';
+@use './custom-el-override.scss';
+@use './custom-normalize.scss';
+
 // @use './element-plus.scss';

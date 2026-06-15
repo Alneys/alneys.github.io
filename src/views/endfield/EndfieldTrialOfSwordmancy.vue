@@ -8,7 +8,9 @@
           alt="BiliBili"
         />
       </a>
-      <el-button class="tour-trigger-btn" @click="tourOpen = true"> 页面引导 </el-button>
+      <el-button class="tour-trigger-btn" :size="compSize" @click="tourOpen = true">
+        页面引导
+      </el-button>
     </div>
     <div class="al-divider"></div>
 
@@ -23,21 +25,34 @@
           <el-collapse-item title="基础参数配置" name="config">
             <div class="config-reward-section">
               <div class="config-reward-header">铭牌库配置</div>
-              <div class="config-grid">
+              <div v-if="poolQuickConfigMode" class="config-otp-row">
+                <span class="config-label">铭牌库分布</span>
+                <el-input-otp
+                  v-model="otpConfigValue"
+                  :length="5"
+                  inputmode="numeric"
+                  :validator="onlyConfigDigit"
+                />
+              </div>
+              <div v-else class="config-grid">
                 <div v-for="level in 5" :key="level" class="config-item">
-                  <span class="config-label">铭牌点数 {{ level }}</span>
-                  <el-input-number
-                    v-model="config[`level${level}` as keyof PlaqueConfig]"
+                  <span class="config-label">点数 {{ level }}</span>
+                  <el-input
+                    v-model.number="config[`level${level}` as keyof PlaqueConfig]"
+                    :size="compSize"
+                    type="number"
                     :min="0"
                     :max="99"
                   />
                 </div>
               </div>
               <div class="config-buttons">
-                <el-button type="primary" class="config-apply-btn" @click="applyConfig">
-                  应用铭牌库配置
+                <el-button :size="compSize" type="primary" @click="toggleQuickMode">
+                  {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
                 </el-button>
-                <el-button class="config-reset-btn" @click="resetConfig">重置铭牌库</el-button>
+                <el-button class="config-reset-btn" :size="compSize" @click="resetConfig">
+                  重置铭牌库
+                </el-button>
               </div>
             </div>
 
@@ -47,14 +62,17 @@
               <div class="config-reward-hint">JSON 数组格式，战力点 0~10 依次对应 11 项奖励值</div>
               <el-input
                 v-model="rewardTableText"
+                :size="compSize"
                 type="textarea"
                 :rows="6"
                 class="config-reward-textarea"
               />
               <div v-if="rewardTableError" class="config-reward-error">{{ rewardTableError }}</div>
               <div class="config-reward-buttons">
-                <el-button type="primary" @click="applyRewardTable">应用奖励表</el-button>
-                <el-button @click="resetRewardTable">重置奖励表</el-button>
+                <el-button :size="compSize" type="primary" @click="applyRewardTable"
+                  >应用奖励表</el-button
+                >
+                <el-button :size="compSize" @click="resetRewardTable">重置奖励表</el-button>
               </div>
             </div>
           </el-collapse-item>
@@ -76,11 +94,11 @@
                     <span class="psycho-label">溢出接受值</span>
                     <el-slider
                       v-model="aversionFactor"
+                      :size="compSize"
                       :min="0"
                       :max="1"
                       :step="0.05"
                       show-input
-                      input-
                       class="psycho-slider"
                     />
                   </div>
@@ -88,6 +106,7 @@
                     <span class="psycho-label">固定心理落差</span>
                     <el-input-number
                       v-model="fixedPenalty"
+                      :size="compSize"
                       :min="0"
                       :max="1000000"
                       :step="5000"
@@ -97,20 +116,23 @@
                 </div>
                 <div class="psycho-presets">
                   <el-button
-                    @click="setPsychoParams(1.0, 0)"
+                    :size="compSize"
                     :type="isPresetActive(1.0, 0) ? 'primary' : ''"
+                    @click="setPsychoParams(1.0, 0)"
                   >
                     最大化收益
                   </el-button>
                   <el-button
-                    @click="setPsychoParams(0.5, 30000)"
+                    :size="compSize"
                     :type="isPresetActive(0.5, 30000) ? 'primary' : ''"
+                    @click="setPsychoParams(0.5, 30000)"
                   >
                     均衡
                   </el-button>
                   <el-button
-                    @click="setPsychoParams(0.01, 400000)"
+                    :size="compSize"
                     :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
+                    @click="setPsychoParams(0.01, 400000)"
                   >
                     绝对厌恶溢出
                   </el-button>
@@ -125,14 +147,48 @@
                 <span>今日状态</span>
               </template>
               <div class="daily-grid">
+                <div v-if="poolQuickConfigMode" class="config-otp-row">
+                  <span class="daily-label">铭牌库分布</span>
+                  <el-input-otp
+                    v-model="otpConfigValue"
+                    :length="5"
+                    inputmode="numeric"
+                    :validator="onlyConfigDigit"
+                  />
+                </div>
+                <div v-else class="config-grid">
+                  <div v-for="level in 5" :key="level" class="config-item">
+                    <span class="daily-label">点数 {{ level }}</span>
+                    <el-input
+                      v-model.number="config[`level${level}` as keyof PlaqueConfig]"
+                      :size="compSize"
+                      type="number"
+                      :min="0"
+                      :max="99"
+                    />
+                  </div>
+                </div>
+                <div class="config-buttons">
+                  <el-button :size="compSize" type="primary" @click="toggleQuickMode">
+                    {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
+                  </el-button>
+                </div>
+                <el-divider style="margin: 4px 0" />
                 <div class="daily-item">
                   <span class="daily-label">剩余游玩</span>
-                  <el-input-number v-model="remainingGames" :min="0" :max="4" class="daily-input" />
+                  <el-input-number
+                    v-model="remainingGames"
+                    :size="compSize"
+                    :min="0"
+                    :max="4"
+                    class="daily-input"
+                  />
                 </div>
                 <div class="daily-item">
                   <span class="daily-label">剩余翻倍</span>
                   <el-input-number
                     v-model="remainingDoubles"
+                    :size="compSize"
                     :min="0"
                     :max="2"
                     class="daily-input"
@@ -142,15 +198,21 @@
                   <span class="daily-label">剩余放弃</span>
                   <el-input-number
                     v-model="remainingAbandons"
+                    :size="compSize"
                     :min="0"
                     :max="3"
                     class="daily-input"
                   />
                 </div>
-                <el-button class="daily-single-btn" @click="setSingleSimulation">
+                <el-button class="daily-single-btn" :size="compSize" @click="setSingleSimulation">
                   模拟单次
                 </el-button>
-                <el-button class="daily-reset-btn" type="danger" @click="resetToday">
+                <el-button
+                  class="daily-reset-btn"
+                  :size="compSize"
+                  type="danger"
+                  @click="resetToday"
+                >
                   重置
                 </el-button>
               </div>
@@ -158,7 +220,7 @@
           </el-col>
         </el-row>
 
-        <div class="al-divider"></div>
+        <div class="al-divider hidden-xs-only"></div>
 
         <div data-tour="game-state">
           <el-row :gutter="16" class="game-section">
@@ -172,7 +234,10 @@
                     v-for="slotIndex in MAX_DRAWS"
                     :key="slotIndex"
                     class="drawn-slot"
-                    :class="{ filled: drawnCards[slotIndex - 1] != null }"
+                    :class="{
+                      filled: drawnCards[slotIndex - 1] != null,
+                      'drawn-slot-warning': hasWarning && drawnCards[slotIndex - 1] != null,
+                    }"
                   >
                     <div v-if="drawnCards[slotIndex - 1]" class="drawn-slot-inner">
                       <span class="drawn-slot-lv">Lv</span>
@@ -186,15 +251,19 @@
                 </div>
                 <el-divider style="margin: 16px 0"></el-divider>
                 <div class="drawn-manual-input" data-tour="manual-input">
-                  <div class="manual-input-label">手动设置铭牌点数</div>
-                  <el-input-otp
-                    :model-value="otpValue"
-                    :length="5"
-                    inputmode="numeric"
-                    :validator="onlyLevel"
-                    @update:model-value="handleOtpChange"
-                  />
-                  <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
+                  <div class="manual-input-left">
+                    <div class="manual-input-label">手动设置铭牌点数</div>
+                    <el-input-otp
+                      v-model="otpValue"
+                      :length="5"
+                      inputmode="numeric"
+                      :validator="onlyLevel"
+                      @update:model-value="handleOtpChange"
+                    />
+                  </div>
+                  <el-button class="manual-undo-btn" :size="compSize" @click="undoLastDraw">
+                    撤销
+                  </el-button>
                 </div>
               </el-card>
             </el-col>
@@ -210,14 +279,13 @@
                     :key="level"
                     class="pool-level-row"
                     :class="{ 'pool-level-clickable': getPoolCount(level) > 0 }"
-                    :style="getPoolCount(level) > 0 ? 'cursor: pointer' : ''"
+                    :style="getPoolCount(level) > 0 ? 'cursor: pointer' : 'cursor:not-allowed'"
                     @click="simulateDrawFromPool(level)"
                   >
                     <span class="pool-level-label">Lv.{{ level }}</span>
-                    <span class="pool-level-count">{{ poolByLevel[level]?.length ?? 0 }} 张</span>
+                    <span class="pool-level-count">{{ getPoolCount(level) }} 张</span>
                   </div>
                 </div>
-                <el-empty v-if="pool.length === 0" description="铭牌库已空" :image-size="48" />
               </el-card>
             </el-col>
           </el-row>
@@ -231,7 +299,8 @@
                 <div class="power-point-section" :class="{ 'reward-penalty': totalPower > 10 }">
                   <span class="reward-label">战力点</span>
                   <el-segmented
-                    :model-value="rewardIndex"
+                    v-model="rewardIndex"
+                    :size="compSize"
                     :options="powerPointOptions"
                     block
                     :class="{
@@ -244,7 +313,8 @@
                 <div class="reward-tier-section" :class="{ 'reward-penalty': totalPower > 10 }">
                   <span class="reward-label">奖励</span>
                   <el-segmented
-                    :model-value="rewardIndex"
+                    v-model="rewardIndex"
+                    :size="compSize"
                     :options="rewardOptions"
                     block
                     :class="{
@@ -252,7 +322,7 @@
                       'reward-success': rewardIndex === 10,
                     }"
                   />
-                  <span class="xs-value">{{ formatRewardShort(baseReward) }}</span>
+                  <span class="xs-value">{{ formatRewardShort(finalReward) }}</span>
                 </div>
                 <div
                   class="overflow-psych-section"
@@ -263,7 +333,8 @@
                 >
                   <span class="reward-label">溢出心理</span>
                   <el-segmented
-                    :model-value="overflowPsychValue"
+                    v-model="overflowPsychValue"
+                    :size="compSize"
                     :options="overflowPsychOptions"
                     :disabled="!showAdjustedCol"
                     block
@@ -287,14 +358,17 @@
                   @confirm="resetToday"
                 >
                   <template #reference>
-                    <el-button type="danger" class="action-btn"> 重置所有 </el-button>
+                    <el-button :size="compSize" type="danger" class="action-btn">
+                      重置所有
+                    </el-button>
                   </template>
                 </el-popconfirm>
               </div>
               <div class="actions-row-right">
                 <el-button
                   class="action-btn"
-                  :disabled="!canDraw || remainingGames === 0"
+                  :size="compSize"
+                  :disabled="!canDraw || remainingGames === 0 || hasWarning"
                   type="primary"
                   @click="drawCard"
                 >
@@ -312,8 +386,9 @@
                   ><span class="action-switch-warning">奖励翻倍</span></span
                 >
                 <el-switch
-                  :model-value="doubled"
-                  :disabled="!canToggleDouble"
+                  v-model="doubled"
+                  :size="compSize"
+                  :disabled="!canToggleDouble || hasWarning"
                   inactive-text="关"
                   active-text="开"
                   class="action-switch"
@@ -328,7 +403,8 @@
               <div class="actions-row-left">
                 <el-button
                   class="action-btn"
-                  :disabled="!canAbandon"
+                  :size="compSize"
+                  :disabled="!canAbandon || hasWarning"
                   type="danger"
                   @click="abandonGame"
                 >
@@ -342,8 +418,9 @@
                     ><span class="action-switch-warning">奖励翻倍</span></span
                   >
                   <el-switch
-                    :model-value="doubled"
-                    :disabled="!canToggleDouble"
+                    v-model="doubled"
+                    :size="compSize"
+                    :disabled="!canToggleDouble || hasWarning"
                     inactive-text="关"
                     active-text="开"
                     class="action-switch"
@@ -352,7 +429,8 @@
                 </div>
                 <el-button
                   class="action-btn"
-                  :disabled="remainingGames === 0 || activeDrawCount === 0"
+                  :size="compSize"
+                  :disabled="remainingGames === 0 || activeDrawCount === 0 || hasWarning"
                   type="info"
                   @click="activeDrawCount > 0 ? endGame() : resetGame()"
                 >
@@ -364,7 +442,7 @@
         </el-row>
       </el-col>
 
-      <div class="al-divider hidden-lg-and-up" style="width: 100%"></div>
+      <div class="al-divider hidden-xs-only hidden-lg-and-up" style="width: 100%"></div>
 
       <el-col :span="24" :lg="9" :xs="24">
         <el-row :gutter="16" class="game-section" data-tour="result">
@@ -373,7 +451,10 @@
               <template #header>
                 <span>策略分析</span>
               </template>
-              <div v-if="currentAdvice" class="advice-content">
+              <div v-if="hasWarning" class="advice-content">
+                <div class="advice-decision advice-abandon">错误：铭牌库不足</div>
+              </div>
+              <div v-else-if="currentAdvice" class="advice-content">
                 <div
                   class="advice-decision"
                   :class="{
@@ -531,7 +612,7 @@
                   }}</span>
                 </div>
                 <div class="advice-row">
-                  <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
+                  <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
                   <span class="advice-value">{{
                     adjustedAdvice && adjustedAdvice.stopTotal != null
                       ? formatDecimal(currentAdvice.expectedAfterStop)
@@ -550,9 +631,7 @@
                   }}</span>
                 </div>
               </div>
-              <div v-else class="advice-content">
-                <div class="advice-empty">正在计算策略数据…</div>
-              </div>
+              <div v-else class="advice-content" />
             </el-card>
           </el-col>
 
@@ -561,51 +640,54 @@
               <template #header>
                 <span>战力点概率分布</span>
               </template>
-              <el-table
-                v-if="distributionTableData.length > 0"
-                :data="distributionTableData"
-                height="auto"
-                :row-class-name="distributionRowClassName"
-                style="width: 100%"
-              >
-                <el-table-column label="" width="56">
-                  <template #default="{ row }">
-                    <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
-                    <span
-                      v-else
-                      class="distribution-value"
-                      :class="{ 'distribution-current-value': row.isCurrent }"
-                      >{{ row.value }}</span
-                    >
-                  </template>
-                </el-table-column>
-                <el-table-column label="概率" width="80">
-                  <template #default="{ row }">
-                    <span
-                      class="distribution-prob"
-                      :class="{ 'distribution-prob-abandon': row.isAbandon }"
-                      >{{ (row.prob * 100).toFixed(2) + '%' }}</span
-                    >
-                  </template>
-                </el-table-column>
-                <el-table-column label="分布条">
-                  <template #default="{ row }">
-                    <el-progress
-                      :percentage="Math.max(Math.round(row.prob * 100), 0)"
-                      :stroke-width="20"
-                      :show-text="false"
-                      :color="
-                        row.isAbandon
-                          ? 'var(--el-color-danger)'
-                          : row.isCurrent
-                            ? 'var(--el-color-primary)'
-                            : 'var(--el-color-primary-light-5)'
-                      "
-                    />
-                  </template>
-                </el-table-column>
-              </el-table>
-              <div v-else class="distribution-empty">正在计算…</div>
+              <template v-if="!hasWarning">
+                <el-table
+                  v-if="distributionTableData.length > 0"
+                  :size="compSize"
+                  :data="distributionTableData"
+                  height="auto"
+                  :row-class-name="distributionRowClassName"
+                  style="width: 100%"
+                >
+                  <el-table-column label="" width="56">
+                    <template #default="{ row }">
+                      <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
+                      <span
+                        v-else
+                        class="distribution-value"
+                        :class="{ 'distribution-current-value': row.isCurrent }"
+                        >{{ row.value }}</span
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="概率" width="80">
+                    <template #default="{ row }">
+                      <span
+                        class="distribution-prob"
+                        :class="{ 'distribution-prob-abandon': row.isAbandon }"
+                        >{{ (row.prob * 100).toFixed(2) + '%' }}</span
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="分布条">
+                    <template #default="{ row }">
+                      <el-progress
+                        :percentage="Math.max(Math.round(row.prob * 100), 0)"
+                        :stroke-width="20"
+                        :show-text="false"
+                        :color="
+                          row.isAbandon
+                            ? 'var(--el-color-danger)'
+                            : row.isCurrent
+                              ? 'var(--el-color-primary)'
+                              : 'var(--el-color-primary-light-5)'
+                        "
+                      />
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div v-else class="distribution-empty" />
+              </template>
             </el-card>
           </el-col>
         </el-row>
@@ -615,14 +697,14 @@
 
   <el-tour v-model="tourOpen">
     <el-tour-step
+      target="[data-tour='daily']"
+      title="今日状态"
+      description="操作前，先管理今日铭牌库分布，剩余游玩/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
+    />
+    <el-tour-step
       target="[data-tour='game-state']"
       title="当前游戏状态"
       description="已抽铭牌、铭牌库、奖励状态"
-    />
-    <el-tour-step
-      target="[data-tour='daily']"
-      title="今日状态"
-      description="操作前，先管理今日剩余游玩/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
     />
     <el-tour-step
       target="[data-tour='manual-input']"
@@ -643,8 +725,7 @@
       target="[data-tour='result']"
       title="策略分析"
       description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与心理模型期望，并且显示本局最优行动的战力点概率分布表"
-      placement="top"
-      :scroll-into-view-options="{ block: 'end' }"
+      :scroll-into-view-options="{ block: isMobile ? 'start' : 'end' }"
     />
     <el-tour-step
       target="[data-tour='psycho']"
@@ -660,15 +741,15 @@
 </template>
 
 <script setup lang="ts">
-// 逻辑三部分：
-//   1. 铭牌配置 & 游戏操作（抽取铭牌/翻倍/结算）
-//   2. 奖励计算（实际战力点 → 奖励）
-//   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
-import { reactive, ref, computed } from 'vue';
-
-const tourOpen = ref(false);
+import { reactive, ref, computed, watch } from 'vue';
+import { useResponsive } from '@/composables/useResponsive';
 import { getCurrentAdvice, clearSolverCache } from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolver';
+
+const { isMobile } = useResponsive();
+const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
+
+const tourOpen = ref(false);
 
 /** 最多抽取张数 */
 const MAX_DRAWS = 5;
@@ -677,12 +758,6 @@ const MAX_DRAWS = 5;
 const DEFAULT_REWARDS: number[] = [
   0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000,
 ];
-/** 当前生效的奖励表 */
-const rewardValues = ref<number[]>([...DEFAULT_REWARDS]);
-/** textarea 中的 JSON 字符串 */
-const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
-/** 解析错误信息，空表示无错误 */
-const rewardTableError = ref('');
 
 /** 各铭牌点数数量配置 */
 interface PlaqueConfig {
@@ -700,7 +775,12 @@ interface Plaque {
   power: number;
 }
 
-// ── 铭牌库配置 ──
+/** 当前生效的奖励表 */
+const rewardValues = ref<number[]>([...DEFAULT_REWARDS]);
+/** textarea 中的 JSON 字符串 */
+const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
+/** 解析错误信息，空表示无错误 */
+const rewardTableError = ref('');
 
 const config = reactive<PlaqueConfig>({
   level1: 5,
@@ -719,54 +799,6 @@ const DEFAULT_CONFIG: PlaqueConfig = {
 };
 
 const activeCollapse = ref<string[]>([]);
-
-// ── 心理模型参数（溢出厌恶） ──
-
-const aversionFactor = ref(1.0);
-const fixedPenalty = ref(0);
-
-const overflowParams = computed<OverflowParams | undefined>(() => {
-  // 默认参数等同于不启用心理模型
-  if (aversionFactor.value === 1.0 && fixedPenalty.value === 0) return undefined;
-  return { aversionFactor: aversionFactor.value, fixedPenalty: fixedPenalty.value };
-});
-
-const showAdjustedCol = computed(() => overflowParams.value !== undefined);
-
-function setPsychoParams(af: number, fp: number) {
-  aversionFactor.value = af;
-  fixedPenalty.value = fp;
-}
-
-function isPresetActive(af: number, fp: number): boolean {
-  return aversionFactor.value === af && fixedPenalty.value === fp;
-}
-
-// ── 游戏核心状态 ──
-
-/** 铭牌库（剩余未抽的铭牌） */
-const pool = ref<Plaque[]>([]);
-/** 已抽的 5 个槽位 */
-const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
-/** 是否已开启奖励翻倍 */
-const doubled = ref(false);
-/** 今日剩余游玩次数 */
-const remainingGames = ref(3);
-/** 今日剩余翻倍次数 */
-const remainingDoubles = ref(2);
-/** 今日剩余放弃次数 */
-const remainingAbandons = ref(3);
-/** 手动设置时铭牌库不足的警告标记 */
-const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
-
-/** 各点数已抽数量（索引 0-4 对应点数 1-5） */
-const drawnCounts = computed(() => {
-  const counts = [0, 0, 0, 0, 0];
-  for (const card of drawnCards.value) {
-    if (card) counts[card.level - 1]!++;
-  }
-  return counts;
-});
 
 let nextId = 0;
 
@@ -798,13 +830,328 @@ function initDrawnCards() {
   for (let i = 0; i < 5; i++) slotWarnings[i] = false;
 }
 
-/** 应用配置新配置并重置铭牌库 */
+/** 应用铭牌库配置并重置游戏状态 */
 function applyConfig() {
+  for (const key of ['level1', 'level2', 'level3', 'level4', 'level5'] as const) {
+    if (config[key] > 99) config[key] = 99;
+    if (config[key] < 0) config[key] = 0;
+  }
   clearSolverCache();
   nextId = 0;
   pool.value = buildPool();
   initDrawnCards();
   doubled.value = false;
+  ElMessage.success('已应用铭牌库配置');
+}
+
+/** 重置铭牌分布为默认值，并应用配置 */
+function resetConfig() {
+  clearSolverCache();
+  config.level1 = DEFAULT_CONFIG.level1;
+  config.level2 = DEFAULT_CONFIG.level2;
+  config.level3 = DEFAULT_CONFIG.level3;
+  config.level4 = DEFAULT_CONFIG.level4;
+  config.level5 = DEFAULT_CONFIG.level5;
+  // applyConfig();
+}
+
+/** 快速配置模式（OTP 式单格输入+自动跳转） */
+const poolQuickConfigMode = ref(true);
+
+function toggleQuickMode() {
+  poolQuickConfigMode.value = !poolQuickConfigMode.value;
+  if (poolQuickConfigMode.value) {
+    ([1, 2, 3, 4, 5] as const).forEach((level) => {
+      const k = `level${level}` as keyof PlaqueConfig;
+      if (config[k] > 9) config[k] = 9;
+    });
+  }
+}
+
+const otpConfigValue = computed({
+  get: () =>
+    [config.level1, config.level2, config.level3, config.level4, config.level5]
+      .map((v) => (v > 9 ? 9 : v))
+      .join(''),
+  set: (val: string) => {
+    const s = val.padEnd(5, '0').slice(0, 5);
+    config.level1 = Number(s[0]) || 0;
+    config.level2 = Number(s[1]) || 0;
+    config.level3 = Number(s[2]) || 0;
+    config.level4 = Number(s[3]) || 0;
+    config.level5 = Number(s[4]) || 0;
+  },
+});
+
+function onlyConfigDigit(value: string): boolean {
+  return value === '' || (value >= '0' && value <= '9');
+}
+
+let applyConfigTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  config,
+  () => {
+    if (applyConfigTimer) clearTimeout(applyConfigTimer);
+    applyConfigTimer = setTimeout(() => {
+      applyConfig();
+    }, 1000);
+  },
+  { deep: true },
+);
+
+/** 解析 textarea 中的 JSON 并应用奖励表 */
+function applyRewardTable() {
+  rewardTableError.value = '';
+  try {
+    const parsed = JSON.parse(rewardTableText.value);
+    if (!Array.isArray(parsed)) {
+      rewardTableError.value = '必须是一个 JSON 数组';
+      return;
+    }
+    if (parsed.length !== 11) {
+      rewardTableError.value = `数组长度必须为 11，当前为 ${parsed.length}`;
+      return;
+    }
+    for (let i = 0; i < parsed.length; i++) {
+      if (typeof parsed[i] !== 'number' || isNaN(parsed[i])) {
+        rewardTableError.value = `索引 ${i} 的值不是有效数字`;
+        return;
+      }
+    }
+    rewardValues.value = [...parsed];
+    clearSolverCache();
+    ElMessage.success('已应用奖励表');
+  } catch (e) {
+    rewardTableError.value = `JSON 格式错误：${(e as Error).message}`;
+  }
+}
+
+/** 重置奖励表为默认值并生效 */
+function resetRewardTable() {
+  rewardTableText.value = JSON.stringify(DEFAULT_REWARDS, null, 2);
+  rewardTableError.value = '';
+  rewardValues.value = [...DEFAULT_REWARDS];
+  clearSolverCache();
+  ElMessage.success('已应用奖励表');
+}
+
+/** 铭牌库（剩余未抽的铭牌） */
+const pool = ref<Plaque[]>([]);
+/** 已抽的 5 个槽位 */
+const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
+/** 是否已开启奖励翻倍 */
+const doubled = ref(false);
+/** 今日剩余游玩次数 */
+const remainingGames = ref(3);
+/** 今日剩余翻倍次数 */
+const remainingDoubles = ref(2);
+/** 今日剩余放弃次数 */
+const remainingAbandons = ref(3);
+/** 手动设置时铭牌库不足的警告标记 */
+const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
+
+/** 各点数已抽数量（索引 0-4 对应点数 1-5） */
+const drawnCounts = computed(() => {
+  const counts = [0, 0, 0, 0, 0];
+  for (const card of drawnCards.value) {
+    if (card) counts[card.level - 1]!++;
+  }
+  return counts;
+});
+
+pool.value = buildPool();
+
+const poolByLevel = computed(() => {
+  const groups: Record<number, Plaque[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+  for (const plaque of pool.value) {
+    groups[plaque.level]!.push(plaque);
+  }
+  return groups;
+});
+
+const aversionFactor = ref(1.0);
+const fixedPenalty = ref(0);
+
+const overflowParams = computed<OverflowParams | undefined>(() => {
+  // 默认参数等同于不启用心理模型
+  if (aversionFactor.value === 1.0 && fixedPenalty.value === 0) return undefined;
+  return { aversionFactor: aversionFactor.value, fixedPenalty: fixedPenalty.value };
+});
+
+const showAdjustedCol = computed(() => overflowParams.value !== undefined);
+
+function setPsychoParams(af: number, fp: number) {
+  aversionFactor.value = af;
+  fixedPenalty.value = fp;
+}
+
+function isPresetActive(af: number, fp: number): boolean {
+  return aversionFactor.value === af && fixedPenalty.value === fp;
+}
+
+const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
+
+const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + (c?.power ?? 0), 0));
+
+/** 实际战力点 → 奖励索引
+ *  0-10 直接映射；超过 10 则模 11 循环 */
+const rewardIndex = computed(() => {
+  if (totalPower.value > 10) {
+    return totalPower.value % 11;
+  }
+  return totalPower.value;
+});
+
+/** 翻倍前的基础奖励 */
+const baseReward = computed(() => rewardValues.value[rewardIndex.value] ?? 0);
+
+/** 最终奖励（含翻倍） */
+const finalReward = computed(() => {
+  return doubled.value ? baseReward.value * 2 : baseReward.value;
+});
+
+const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
+  label: String(i),
+  value: i,
+}));
+
+const rewardOptions = computed(() =>
+  Array.from({ length: 11 }, (_, i) => ({
+    label: formatRewardShort(doubled.value ? rewardValues.value[i]! * 2 : rewardValues.value[i]!),
+    value: i,
+  })),
+);
+
+/** 溢出心理档位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
+const overflowPsychOptions = computed(() => {
+  const params = overflowParams.value;
+  const mul = doubled.value ? 2 : 1;
+  return Array.from({ length: 11 }, (_, i) => {
+    const power = 11 + i;
+    const s = power % 11;
+    const raw = rewardValues.value[s] ?? 0;
+    let label: string;
+    if (params) {
+      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+      label = formatRewardShort(adjusted);
+    } else {
+      label = formatRewardShort(raw * mul);
+    }
+    return { label, value: power };
+  });
+});
+
+/** 当前总战力对应的溢出点（11~21），未溢出时不选中任何挡位 */
+const overflowPsychValue = computed(() => {
+  if (totalPower.value >= 11 && totalPower.value <= 21) return totalPower.value;
+  return undefined;
+});
+
+/** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
+const overflowPsychDisplayValue = computed(() => {
+  const params = overflowParams.value;
+  const mul = doubled.value ? 2 : 1;
+  if (totalPower.value >= 11 && totalPower.value <= 21) {
+    const s = totalPower.value % 11;
+    const raw = rewardValues.value[s] ?? 0;
+    let adjusted: number;
+    if (params) {
+      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+    } else {
+      adjusted = raw * mul;
+    }
+    return formatRewardShort(adjusted);
+  }
+  return '—';
+});
+
+const canDraw = computed(() => {
+  return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
+});
+
+/** 可翻倍条件：本局未翻倍、今日有剩余次数 */
+const canDouble = computed(() => {
+  return !doubled.value && remainingDoubles.value > 0;
+});
+
+/** 开关可用条件：已翻倍 或 今日有剩余次数 */
+const canToggleDouble = computed(() => {
+  return doubled.value || remainingDoubles.value > 0;
+});
+
+/** 可放弃条件：已抽至少一张牌、有剩余游玩次数 */
+const canAbandon = computed(() => {
+  return activeDrawCount.value > 0 && remainingGames.value > 0;
+});
+
+/** 随机抽取一张铭牌 */
+function drawCard() {
+  if (!canDraw.value) return;
+  const emptyIndex = drawnCards.value.findIndex((c) => c == null);
+  if (emptyIndex === -1) return;
+  const index = Math.floor(Math.random() * pool.value.length);
+  const plaque = pool.value.splice(index, 1)[0]!;
+  drawnCards.value[emptyIndex] = plaque;
+}
+
+/** 点击铭牌库等级行时模拟抽取对应点数的铭牌 */
+function simulateDrawFromPool(level: number) {
+  const emptyIndex = drawnCards.value.findIndex((c) => c == null);
+  if (emptyIndex === -1) {
+    return;
+  }
+  const plaque = takeFromPool(level);
+  if (!plaque) {
+    return;
+  }
+  drawnCards.value[emptyIndex] = plaque;
+}
+
+/** 从铭牌库中取出一张指定铭牌点数的牌（返回 null 表示铭牌库不足） */
+function takeFromPool(level: number): Plaque | null {
+  const idx = pool.value.findIndex((p) => p.level === level);
+  if (idx === -1) return null;
+  return pool.value.splice(idx, 1)[0]!;
+}
+
+/** 撤销上一次抽牌：将最后一张已抽铭牌放回铭牌库 */
+function undoLastDraw() {
+  let lastIndex = -1;
+  for (let i = drawnCards.value.length - 1; i >= 0; i--) {
+    if (drawnCards.value[i] != null) {
+      lastIndex = i;
+      break;
+    }
+  }
+  if (lastIndex === -1) return;
+  const card = drawnCards.value[lastIndex];
+  drawnCards.value[lastIndex] = null;
+  slotWarnings[lastIndex] = false;
+  if (card && card.id >= 0) pool.value.push(card);
+}
+
+function toggleDouble() {
+  if (!canDouble.value) return;
+  doubled.value = true;
+}
+
+function handleDoubleSwitch(val: string | number | boolean) {
+  if (val) {
+    if (!doubled.value) toggleDouble();
+  } else {
+    if (doubled.value) doubled.value = false;
+  }
+}
+
+/** 放弃本局：有剩余放弃次数时不消耗游玩次数；无剩余放弃次数时消耗一次游玩次数，本局收益为 0，不消耗翻倍次数 */
+function abandonGame() {
+  if (!canAbandon.value) return;
+  if (remainingAbandons.value > 0) {
+    remainingAbandons.value--;
+  } else {
+    remainingGames.value--;
+  }
+  resetGame();
 }
 
 /** 重置本局铭牌库/已抽/翻倍 */
@@ -839,170 +1186,6 @@ function setSingleSimulation() {
   resetGame();
 }
 
-/** 重置铭牌分布为默认值，并应用配置 */
-function resetConfig() {
-  clearSolverCache();
-  config.level1 = DEFAULT_CONFIG.level1;
-  config.level2 = DEFAULT_CONFIG.level2;
-  config.level3 = DEFAULT_CONFIG.level3;
-  config.level4 = DEFAULT_CONFIG.level4;
-  config.level5 = DEFAULT_CONFIG.level5;
-  applyConfig();
-}
-
-/** 解析 textarea 中的 JSON 并应用奖励表 */
-function applyRewardTable() {
-  rewardTableError.value = '';
-  try {
-    const parsed = JSON.parse(rewardTableText.value);
-    if (!Array.isArray(parsed)) {
-      rewardTableError.value = '必须是一个 JSON 数组';
-      return;
-    }
-    if (parsed.length !== 11) {
-      rewardTableError.value = `数组长度必须为 11，当前为 ${parsed.length}`;
-      return;
-    }
-    for (let i = 0; i < parsed.length; i++) {
-      if (typeof parsed[i] !== 'number' || isNaN(parsed[i])) {
-        rewardTableError.value = `索引 ${i} 的值不是有效数字`;
-        return;
-      }
-    }
-    rewardValues.value = [...parsed];
-    clearSolverCache();
-  } catch (e) {
-    rewardTableError.value = `JSON 格式错误：${(e as Error).message}`;
-  }
-}
-
-/** 重置奖励表为默认值并生效 */
-function resetRewardTable() {
-  rewardTableText.value = JSON.stringify(DEFAULT_REWARDS, null, 2);
-  rewardTableError.value = '';
-  rewardValues.value = [...DEFAULT_REWARDS];
-  clearSolverCache();
-}
-
-pool.value = buildPool();
-
-// ── 铭牌库展示 ──
-
-const poolByLevel = computed(() => {
-  const groups: Record<number, Plaque[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-  for (const plaque of pool.value) {
-    groups[plaque.level]!.push(plaque);
-  }
-  return groups;
-});
-
-// ── 奖励计算 ──
-
-const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
-
-const totalPower = computed(() => drawnCards.value.reduce((sum, c) => sum + (c?.power ?? 0), 0));
-
-/** 实际战力点 → 奖励索引
- *  0-10 直接映射；超过 10 则模 11 循环 */
-const rewardIndex = computed(() => {
-  if (totalPower.value > 10) {
-    return totalPower.value % 11;
-  }
-  return totalPower.value;
-});
-
-/** 翻倍前的基础奖励 */
-const baseReward = computed(() => rewardValues.value[rewardIndex.value] ?? 0);
-
-/** 最终奖励（含翻倍） */
-const finalReward = computed(() => {
-  return doubled.value ? baseReward.value * 2 : baseReward.value;
-});
-
-// ── 按钮可用状态 ──
-
-const canDraw = computed(() => {
-  return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
-});
-
-/** 可翻倍条件：本局未翻倍、今日有剩余次数 */
-const canDouble = computed(() => {
-  return !doubled.value && remainingDoubles.value > 0;
-});
-
-/** 开关可用条件：已翻倍 或 今日有剩余次数 */
-const canToggleDouble = computed(() => {
-  return doubled.value || remainingDoubles.value > 0;
-});
-
-/** 可放弃条件：已抽至少一张牌、有剩余游玩次数 */
-const canAbandon = computed(() => {
-  return activeDrawCount.value > 0 && remainingGames.value > 0;
-});
-
-// ── 游戏操作 ──
-
-/** 随机抽取一张铭牌 */
-function drawCard() {
-  if (!canDraw.value) return;
-  const emptyIndex = drawnCards.value.findIndex((c) => c == null);
-  if (emptyIndex === -1) return;
-  const index = Math.floor(Math.random() * pool.value.length);
-  const plaque = pool.value.splice(index, 1)[0]!;
-  drawnCards.value[emptyIndex] = plaque;
-}
-
-/** 点击铭牌库等级行时模拟抽取对应点数的铭牌 */
-function simulateDrawFromPool(level: number) {
-  const emptyIndex = drawnCards.value.findIndex((c) => c == null);
-  if (emptyIndex === -1) {
-    return;
-  }
-  const plaque = takeFromPool(level);
-  if (!plaque) {
-    return;
-  }
-  drawnCards.value[emptyIndex] = plaque;
-}
-
-/** 从铭牌库中取出一张指定铭牌点数的牌（返回 null 表示铭牌库不足） */
-function takeFromPool(level: number): Plaque | null {
-  const idx = pool.value.findIndex((p) => p.level === level);
-  if (idx === -1) return null;
-  return pool.value.splice(idx, 1)[0]!;
-}
-
-/** OTP 输入校验：只允许 1-5 和空 */
-function onlyLevel(value: string): boolean {
-  return value === '' || (value >= '1' && value <= '5');
-}
-
-function toggleDouble() {
-  if (!canDouble.value) return;
-  doubled.value = true;
-}
-
-function handleDoubleSwitch(val: string | number | boolean) {
-  if (val) {
-    if (!doubled.value) toggleDouble();
-  } else {
-    if (doubled.value) doubled.value = false;
-  }
-}
-
-/** 放弃本局：有剩余放弃次数时不消耗游玩次数；无剩余放弃次数时消耗一次游玩次数，本局收益为 0，不消耗翻倍次数 */
-function abandonGame() {
-  if (!canAbandon.value) return;
-  if (remainingAbandons.value > 0) {
-    remainingAbandons.value--;
-  } else {
-    remainingGames.value--;
-  }
-  resetGame();
-}
-
-// ── UI 辅助 ──
-
 /** 格式化数值为固定两位小数 */
 function formatDecimal(value: number): string {
   return value.toLocaleString(undefined, {
@@ -1023,9 +1206,9 @@ function diffClass(value: number | null): string {
   return '';
 }
 
-/** 获取铭牌库中指定等级的剩余张数 */
+/** 获取铭牌库中指定等级的剩余张数（含透支） */
 function getPoolCount(level: number): number {
-  return poolByLevel.value[level]?.length ?? 0;
+  return (poolByLevel.value[level]?.length ?? 0) - (overdraftByLevel.value[level - 1] ?? 0);
 }
 
 /** 格式化奖励数字（显示为简短格式） */
@@ -1046,67 +1229,45 @@ function formatRewardShort(value: number): string {
   return value < 0 ? `-${formatted}` : formatted;
 }
 
-const rewardOptions = computed(() =>
-  Array.from({ length: 11 }, (_, i) => ({
-    label: formatRewardShort(doubled.value ? rewardValues.value[i]! * 2 : rewardValues.value[i]!),
-    value: i,
-  })),
-);
-
-const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
-  label: String(i),
-  value: i,
-}));
-
-/** 溢出心理挡位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
-const overflowPsychOptions = computed(() => {
-  const params = overflowParams.value;
-  const mult = doubled.value ? 2 : 1;
-  return Array.from({ length: 11 }, (_, i) => {
-    const power = 11 + i;
-    const s = power % 11; // 战力点
-    const raw = rewardValues.value[s] ?? 0;
-    let label: string;
-    if (params) {
-      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
-      label = formatRewardShort(adjusted);
-    } else {
-      label = formatRewardShort(raw * mult);
-    }
-    return { label, value: power };
-  });
-});
-
-/** 当前总战力对应的溢出点（11~21），未溢出时不选中任何挡位 */
-const overflowPsychValue = computed(() => {
-  if (totalPower.value >= 11 && totalPower.value <= 21) return totalPower.value;
-  return undefined;
-});
-
-/** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
-const overflowPsychDisplayValue = computed(() => {
-  const params = overflowParams.value;
-  const mult = doubled.value ? 2 : 1;
-  if (totalPower.value >= 11 && totalPower.value <= 21) {
-    const s = totalPower.value % 11;
-    const raw = rewardValues.value[s] ?? 0;
-    let adjusted: number;
-    if (params) {
-      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
-    } else {
-      adjusted = raw * mult;
-    }
-    return formatRewardShort(adjusted);
-  }
-  return '—';
-});
-
 /** OTP 输入框的字符串值（按抽取顺序排列，空位为 ''） */
 const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join(''));
 
 const hasWarning = computed(() => slotWarnings.some(Boolean));
 
-// ── DP 求解器集成 ──
+/** 各级铭牌的透支数量（手动输入超过铭牌库限制的部分） */
+const overdraftByLevel = computed(() => {
+  const counts = [0, 0, 0, 0, 0];
+  for (const card of drawnCards.value) {
+    if (card && card.id < 0) counts[card.level - 1]!++;
+  }
+  return counts;
+});
+
+/** OTP 输入校验：只允许 1-5 和空 */
+function onlyLevel(value: string): boolean {
+  return value === '' || (value >= '1' && value <= '5');
+}
+
+function handleOtpChange(val: string | number) {
+  const s = String(val);
+  for (const card of drawnCards.value) {
+    if (card && card.id >= 0) pool.value.push(card);
+  }
+  initDrawnCards();
+  for (let i = 0; i < MAX_DRAWS; i++) {
+    const ch = s[i];
+    if (ch && ch >= '1' && ch <= '5') {
+      const level = Number(ch);
+      const plaque = takeFromPool(level);
+      if (plaque) {
+        drawnCards.value[i] = plaque;
+      } else {
+        drawnCards.value[i] = { id: -1, level, power: level };
+        slotWarnings[i] = true;
+      }
+    }
+  }
+}
 
 /** 将配置对象转为数组形式供求解器使用 */
 const deckConfigArray = computed(() => [
@@ -1116,6 +1277,7 @@ const deckConfigArray = computed(() => [
   config.level4,
   config.level5,
 ]);
+
 /** 当前状态的最优行动建议（含多局/翻倍，原始） */
 const currentAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
@@ -1262,30 +1424,6 @@ const decisionAction = computed(
 
 /** 仅心理模型激活时在决策文字前显示标注 */
 const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应用后最优：' : '最优：'));
-
-// ── OTP 手动输入处理 ──
-// 先将所有已抽牌归还铭牌库，再按 OTP 顺序依次取出指定铭牌点数
-
-function handleOtpChange(val: string | number) {
-  const s = String(val);
-  for (const card of drawnCards.value) {
-    if (card) pool.value.push(card);
-  }
-  initDrawnCards();
-  for (let i = 0; i < MAX_DRAWS; i++) {
-    const ch = s[i];
-    if (ch && ch >= '1' && ch <= '5') {
-      const level = Number(ch);
-      const plaque = takeFromPool(level);
-      if (plaque) {
-        drawnCards.value[i] = plaque;
-      } else {
-        drawnCards.value[i] = createPlaque(level);
-        slotWarnings[i] = true;
-      }
-    }
-  }
-}
 </script>
 
 <style lang="scss" scoped>
@@ -1321,11 +1459,22 @@ function handleOtpChange(val: string | number) {
     display: flex;
     align-items: center;
     gap: 8px;
+
+    :deep(.el-input) {
+      width: 80px;
+    }
   }
 
   .config-label {
     font-size: 14px;
     white-space: nowrap;
+  }
+
+  .config-otp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
   }
 
   .config-buttons {
@@ -1376,10 +1525,10 @@ function handleOtpChange(val: string | number) {
   .psycho-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 8px 16px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 8px 16px;
     }
   }
 
@@ -1406,7 +1555,7 @@ function handleOtpChange(val: string | number) {
     font-size: 13px;
     color: var(--el-text-color-secondary);
     white-space: nowrap;
-    min-width: 120px;
+    min-width: 96px;
   }
 
   .psycho-slider {
@@ -1453,10 +1602,10 @@ function handleOtpChange(val: string | number) {
   .reward-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 8px 16px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 8px 16px;
     }
   }
 
@@ -1495,6 +1644,15 @@ function handleOtpChange(val: string | number) {
     }
   }
 
+  .drawn-slot-warning {
+    border-color: var(--el-color-danger) !important;
+    background: var(--el-color-danger-light-9) !important;
+
+    .drawn-slot-num {
+      color: var(--el-color-danger) !important;
+    }
+  }
+
   .drawn-slot-inner {
     display: flex;
     flex-direction: column;
@@ -1524,8 +1682,14 @@ function handleOtpChange(val: string | number) {
   .drawn-manual-input {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     width: 100%;
+  }
+
+  .manual-input-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .manual-input-label {
@@ -1536,6 +1700,10 @@ function handleOtpChange(val: string | number) {
 
   .manual-input-warning {
     color: var(--el-color-danger);
+  }
+
+  .manual-undo-btn {
+    flex-shrink: 0;
   }
 
   // ── 铭牌库展示 ──
@@ -1608,6 +1776,7 @@ function handleOtpChange(val: string | number) {
       flex-grow: 1;
       --el-border-radius-base: 0px;
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
+      --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
     }
 
     &.overflow-psych-disabled {
@@ -1667,10 +1836,10 @@ function handleOtpChange(val: string | number) {
   .daily-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 8px 16px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 8px 16px;
     }
   }
 
@@ -1679,6 +1848,16 @@ function handleOtpChange(val: string | number) {
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+
+    .config-otp-row {
+      margin-bottom: 0;
+    }
+    .config-grid {
+      margin-bottom: 0;
+    }
+    .config-buttons {
+      margin-top: 0;
+    }
   }
 
   .daily-item {
@@ -1984,6 +2163,10 @@ function handleOtpChange(val: string | number) {
       .actions-row-right {
         flex: 1;
       }
+    }
+
+    .daily-input {
+      width: 80px;
     }
 
     .switch-xs-row {

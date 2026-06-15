@@ -244,8 +244,8 @@ onMounted(() => {
 
   .password-input {
     :deep(.el-input-group__append) {
-      background-color: var(--im-color-miya);
-      border-color: var(--im-color-miya);
+      background-color: var(--im-color-ml-miya);
+      border-color: var(--im-color-ml-miya);
 
       .el-button {
         color: white;

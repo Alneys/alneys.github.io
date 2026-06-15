@@ -1,0 +1,49 @@
+// 中性色变量 - 基于 Ant Design 设计规范
+// 浅色模式：文字基色 #000，背景基色 #fff
+// 深色模式：文字基色 #fff，背景基色 #000
+
+:root {
+  // 文字颜色 (基于透明度)
+  --al-color-text: rgba(0, 0, 0, 0.88);
+  --al-color-text-secondary: rgba(0, 0, 0, 0.65);
+  --al-color-text-tertiary: rgba(0, 0, 0, 0.45);
+  --al-color-text-quaternary: rgba(0, 0, 0, 0.25);
+
+  // 边框颜色
+  --al-color-border: #d9d9d9;
+  --al-color-border-secondary: rgba(5, 5, 5, 0.06);
+
+  // 填充颜色
+  --al-color-fill: rgba(0, 0, 0, 0.15);
+  --al-color-fill-secondary: rgba(0, 0, 0, 0.06);
+  --al-color-fill-tertiary: rgba(0, 0, 0, 0.04);
+  --al-color-fill-quaternary: rgba(0, 0, 0, 0.02);
+
+  // 背景颜色
+  --al-color-bg-layout: #ffffff;
+  --al-color-bg-container: #ffffff;
+  --al-color-bg-elevated: #ffffff;
+}
+
+html.dark {
+  // 文字颜色 (基于透明度)
+  --al-color-text: rgba(255, 255, 255, 0.85);
+  --al-color-text-secondary: rgba(255, 255, 255, 0.65);
+  --al-color-text-tertiary: rgba(255, 255, 255, 0.45);
+  --al-color-text-quaternary: rgba(255, 255, 255, 0.25);
+
+  // 边框颜色
+  --al-color-border: #424242;
+  --al-color-border-secondary: rgba(253, 253, 253, 0.12);
+
+  // 填充颜色
+  --al-color-fill: rgba(255, 255, 255, 0.18);
+  --al-color-fill-secondary: rgba(255, 255, 255, 0.12);
+  --al-color-fill-tertiary: rgba(255, 255, 255, 0.08);
+  --al-color-fill-quaternary: rgba(255, 255, 255, 0.04);
+
+  // 背景颜色
+  --al-color-bg-layout: #101010;
+  --al-color-bg-container: #141414;
+  --al-color-bg-elevated: #1f1f1f;
+}
