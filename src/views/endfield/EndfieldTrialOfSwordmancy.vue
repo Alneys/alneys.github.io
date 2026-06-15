@@ -234,7 +234,10 @@
                     v-for="slotIndex in MAX_DRAWS"
                     :key="slotIndex"
                     class="drawn-slot"
-                    :class="{ filled: drawnCards[slotIndex - 1] != null }"
+                    :class="{
+                      filled: drawnCards[slotIndex - 1] != null,
+                      'drawn-slot-warning': hasWarning && drawnCards[slotIndex - 1] != null,
+                    }"
                   >
                     <div v-if="drawnCards[slotIndex - 1]" class="drawn-slot-inner">
                       <span class="drawn-slot-lv">Lv</span>
@@ -257,7 +260,6 @@
                       :validator="onlyLevel"
                       @update:model-value="handleOtpChange"
                     />
-                    <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
                   </div>
                   <el-button class="manual-undo-btn" :size="compSize" @click="undoLastDraw">
                     撤销
@@ -277,11 +279,11 @@
                     :key="level"
                     class="pool-level-row"
                     :class="{ 'pool-level-clickable': getPoolCount(level) > 0 }"
-                    :style="getPoolCount(level) > 0 ? 'cursor: pointer' : ''"
+                    :style="getPoolCount(level) > 0 ? 'cursor: pointer' : 'cursor:not-allowed'"
                     @click="simulateDrawFromPool(level)"
                   >
                     <span class="pool-level-label">Lv.{{ level }}</span>
-                    <span class="pool-level-count">{{ poolByLevel[level]?.length ?? 0 }} 张</span>
+                    <span class="pool-level-count">{{ getPoolCount(level) }} 张</span>
                   </div>
                 </div>
               </el-card>
@@ -366,7 +368,7 @@
                 <el-button
                   class="action-btn"
                   :size="compSize"
-                  :disabled="!canDraw || remainingGames === 0"
+                  :disabled="!canDraw || remainingGames === 0 || hasWarning"
                   type="primary"
                   @click="drawCard"
                 >
@@ -386,7 +388,7 @@
                 <el-switch
                   v-model="doubled"
                   :size="compSize"
-                  :disabled="!canToggleDouble"
+                  :disabled="!canToggleDouble || hasWarning"
                   inactive-text="关"
                   active-text="开"
                   class="action-switch"
@@ -402,7 +404,7 @@
                 <el-button
                   class="action-btn"
                   :size="compSize"
-                  :disabled="!canAbandon"
+                  :disabled="!canAbandon || hasWarning"
                   type="danger"
                   @click="abandonGame"
                 >
@@ -418,7 +420,7 @@
                   <el-switch
                     v-model="doubled"
                     :size="compSize"
-                    :disabled="!canToggleDouble"
+                    :disabled="!canToggleDouble || hasWarning"
                     inactive-text="关"
                     active-text="开"
                     class="action-switch"
@@ -428,7 +430,7 @@
                 <el-button
                   class="action-btn"
                   :size="compSize"
-                  :disabled="remainingGames === 0 || activeDrawCount === 0"
+                  :disabled="remainingGames === 0 || activeDrawCount === 0 || hasWarning"
                   type="info"
                   @click="activeDrawCount > 0 ? endGame() : resetGame()"
                 >
@@ -449,7 +451,10 @@
               <template #header>
                 <span>策略分析</span>
               </template>
-              <div v-if="currentAdvice" class="advice-content">
+              <div v-if="hasWarning" class="advice-content">
+                <div class="advice-decision advice-abandon">错误：铭牌库不足</div>
+              </div>
+              <div v-else-if="currentAdvice" class="advice-content">
                 <div
                   class="advice-decision"
                   :class="{
@@ -626,9 +631,7 @@
                   }}</span>
                 </div>
               </div>
-              <div v-else class="advice-content">
-                <div class="advice-empty">正在计算策略数据…</div>
-              </div>
+              <div v-else class="advice-content" />
             </el-card>
           </el-col>
 
@@ -637,52 +640,54 @@
               <template #header>
                 <span>战力点概率分布</span>
               </template>
-              <el-table
-                v-if="distributionTableData.length > 0"
-                :size="compSize"
-                :data="distributionTableData"
-                height="auto"
-                :row-class-name="distributionRowClassName"
-                style="width: 100%"
-              >
-                <el-table-column label="" width="56">
-                  <template #default="{ row }">
-                    <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
-                    <span
-                      v-else
-                      class="distribution-value"
-                      :class="{ 'distribution-current-value': row.isCurrent }"
-                      >{{ row.value }}</span
-                    >
-                  </template>
-                </el-table-column>
-                <el-table-column label="概率" width="80">
-                  <template #default="{ row }">
-                    <span
-                      class="distribution-prob"
-                      :class="{ 'distribution-prob-abandon': row.isAbandon }"
-                      >{{ (row.prob * 100).toFixed(2) + '%' }}</span
-                    >
-                  </template>
-                </el-table-column>
-                <el-table-column label="分布条">
-                  <template #default="{ row }">
-                    <el-progress
-                      :percentage="Math.max(Math.round(row.prob * 100), 0)"
-                      :stroke-width="20"
-                      :show-text="false"
-                      :color="
-                        row.isAbandon
-                          ? 'var(--el-color-danger)'
-                          : row.isCurrent
-                            ? 'var(--el-color-primary)'
-                            : 'var(--el-color-primary-light-5)'
-                      "
-                    />
-                  </template>
-                </el-table-column>
-              </el-table>
-              <div v-else class="distribution-empty">正在计算…</div>
+              <template v-if="!hasWarning">
+                <el-table
+                  v-if="distributionTableData.length > 0"
+                  :size="compSize"
+                  :data="distributionTableData"
+                  height="auto"
+                  :row-class-name="distributionRowClassName"
+                  style="width: 100%"
+                >
+                  <el-table-column label="" width="56">
+                    <template #default="{ row }">
+                      <span v-if="row.isAbandon" class="distribution-abandon-label">放弃</span>
+                      <span
+                        v-else
+                        class="distribution-value"
+                        :class="{ 'distribution-current-value': row.isCurrent }"
+                        >{{ row.value }}</span
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="概率" width="80">
+                    <template #default="{ row }">
+                      <span
+                        class="distribution-prob"
+                        :class="{ 'distribution-prob-abandon': row.isAbandon }"
+                        >{{ (row.prob * 100).toFixed(2) + '%' }}</span
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="分布条">
+                    <template #default="{ row }">
+                      <el-progress
+                        :percentage="Math.max(Math.round(row.prob * 100), 0)"
+                        :stroke-width="20"
+                        :show-text="false"
+                        :color="
+                          row.isAbandon
+                            ? 'var(--el-color-danger)'
+                            : row.isCurrent
+                              ? 'var(--el-color-primary)'
+                              : 'var(--el-color-primary-light-5)'
+                        "
+                      />
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div v-else class="distribution-empty" />
+              </template>
             </el-card>
           </el-col>
         </el-row>
@@ -827,6 +832,10 @@ function initDrawnCards() {
 
 /** 应用铭牌库配置并重置游戏状态 */
 function applyConfig() {
+  for (const key of ['level1', 'level2', 'level3', 'level4', 'level5'] as const) {
+    if (config[key] > 99) config[key] = 99;
+    if (config[key] < 0) config[key] = 0;
+  }
   clearSolverCache();
   nextId = 0;
   pool.value = buildPool();
@@ -1117,7 +1126,8 @@ function undoLastDraw() {
   if (lastIndex === -1) return;
   const card = drawnCards.value[lastIndex];
   drawnCards.value[lastIndex] = null;
-  if (card) pool.value.push(card);
+  slotWarnings[lastIndex] = false;
+  if (card && card.id >= 0) pool.value.push(card);
 }
 
 function toggleDouble() {
@@ -1196,9 +1206,9 @@ function diffClass(value: number | null): string {
   return '';
 }
 
-/** 获取铭牌库中指定等级的剩余张数 */
+/** 获取铭牌库中指定等级的剩余张数（含透支） */
 function getPoolCount(level: number): number {
-  return poolByLevel.value[level]?.length ?? 0;
+  return (poolByLevel.value[level]?.length ?? 0) - (overdraftByLevel.value[level - 1] ?? 0);
 }
 
 /** 格式化奖励数字（显示为简短格式） */
@@ -1224,6 +1234,15 @@ const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join
 
 const hasWarning = computed(() => slotWarnings.some(Boolean));
 
+/** 各级铭牌的透支数量（手动输入超过铭牌库限制的部分） */
+const overdraftByLevel = computed(() => {
+  const counts = [0, 0, 0, 0, 0];
+  for (const card of drawnCards.value) {
+    if (card && card.id < 0) counts[card.level - 1]!++;
+  }
+  return counts;
+});
+
 /** OTP 输入校验：只允许 1-5 和空 */
 function onlyLevel(value: string): boolean {
   return value === '' || (value >= '1' && value <= '5');
@@ -1232,7 +1251,7 @@ function onlyLevel(value: string): boolean {
 function handleOtpChange(val: string | number) {
   const s = String(val);
   for (const card of drawnCards.value) {
-    if (card) pool.value.push(card);
+    if (card && card.id >= 0) pool.value.push(card);
   }
   initDrawnCards();
   for (let i = 0; i < MAX_DRAWS; i++) {
@@ -1243,7 +1262,7 @@ function handleOtpChange(val: string | number) {
       if (plaque) {
         drawnCards.value[i] = plaque;
       } else {
-        drawnCards.value[i] = createPlaque(level);
+        drawnCards.value[i] = { id: -1, level, power: level };
         slotWarnings[i] = true;
       }
     }
@@ -1622,6 +1641,15 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
     &.filled {
       border-color: var(--el-color-primary);
       background: var(--el-color-primary-light-9);
+    }
+  }
+
+  .drawn-slot-warning {
+    border-color: var(--el-color-danger) !important;
+    background: var(--el-color-danger-light-9) !important;
+
+    .drawn-slot-num {
+      color: var(--el-color-danger) !important;
     }
   }
 

@@ -145,6 +145,7 @@ export function getCurrentAdvice(
     rewards.length === 0 ||
     drawnCounts.some((c) => c < 0) ||
     deck.some((c) => c < 0) ||
+    deck.some((c) => c > 99) ||
     remainingGames < 0 ||
     remainingDoubles < 0 ||
     remainingDoubles - (doubled ? 1 : 0) < 0 ||
