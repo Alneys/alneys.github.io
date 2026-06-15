@@ -217,15 +217,20 @@
                 </div>
                 <el-divider style="margin: 16px 0"></el-divider>
                 <div class="drawn-manual-input" data-tour="manual-input">
-                  <div class="manual-input-label">手动设置铭牌点数</div>
-                  <el-input-otp
-                    v-model="otpValue"
-                    :length="5"
-                    inputmode="numeric"
-                    :validator="onlyLevel"
-                    @update:model-value="handleOtpChange"
-                  />
-                  <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
+                  <div class="manual-input-left">
+                    <div class="manual-input-label">手动设置铭牌点数</div>
+                    <el-input-otp
+                      v-model="otpValue"
+                      :length="5"
+                      inputmode="numeric"
+                      :validator="onlyLevel"
+                      @update:model-value="handleOtpChange"
+                    />
+                    <span v-if="hasWarning" class="manual-input-warning">铭牌库不足</span>
+                  </div>
+                  <el-button class="manual-undo-btn" :size="compSize" @click="undoLastDraw">
+                    撤销
+                  </el-button>
                 </div>
               </el-card>
             </el-col>
@@ -572,7 +577,7 @@
                   }}</span>
                 </div>
                 <div class="advice-row">
-                  <span class="advice-label" style="text-indent: 0.5em">- 结算本局后的期望</span>
+                  <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
                   <span class="advice-value">{{
                     adjustedAdvice && adjustedAdvice.stopTotal != null
                       ? formatDecimal(currentAdvice.expectedAfterStop)
@@ -685,8 +690,7 @@
       target="[data-tour='result']"
       title="策略分析"
       description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与心理模型期望，并且显示本局最优行动的战力点概率分布表"
-      placement="top"
-      :scroll-into-view-options="{ block: 'end' }"
+      :scroll-into-view-options="{ block: 'start' }"
     />
     <el-tour-step
       target="[data-tour='psycho']"
@@ -1012,6 +1016,21 @@ function takeFromPool(level: number): Plaque | null {
   const idx = pool.value.findIndex((p) => p.level === level);
   if (idx === -1) return null;
   return pool.value.splice(idx, 1)[0]!;
+}
+
+/** 撤销上一次抽牌：将最后一张已抽铭牌放回铭牌库 */
+function undoLastDraw() {
+  let lastIndex = -1;
+  for (let i = drawnCards.value.length - 1; i >= 0; i--) {
+    if (drawnCards.value[i] != null) {
+      lastIndex = i;
+      break;
+    }
+  }
+  if (lastIndex === -1) return;
+  const card = drawnCards.value[lastIndex];
+  drawnCards.value[lastIndex] = null;
+  if (card) pool.value.push(card);
 }
 
 /** OTP 输入校验：只允许 1-5 和空 */
@@ -1566,8 +1585,14 @@ function handleOtpChange(val: string | number) {
   .drawn-manual-input {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     width: 100%;
+  }
+
+  .manual-input-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .manual-input-label {
@@ -1578,6 +1603,10 @@ function handleOtpChange(val: string | number) {
 
   .manual-input-warning {
     color: var(--el-color-danger);
+  }
+
+  .manual-undo-btn {
+    flex-shrink: 0;
   }
 
   // ── 铭牌库展示 ──
