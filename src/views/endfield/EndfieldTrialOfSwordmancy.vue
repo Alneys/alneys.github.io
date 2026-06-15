@@ -94,7 +94,6 @@
                       :max="1"
                       :step="0.05"
                       show-input
-                      input-
                       class="psycho-slider"
                     />
                   </div>
@@ -723,12 +722,6 @@ const MAX_DRAWS = 5;
 const DEFAULT_REWARDS: number[] = [
   0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000,
 ];
-/** 当前生效的奖励表 */
-const rewardValues = ref<number[]>([...DEFAULT_REWARDS]);
-/** textarea 中的 JSON 字符串 */
-const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
-/** 解析错误信息，空表示无错误 */
-const rewardTableError = ref('');
 
 /** 各铭牌点数数量配置 */
 interface PlaqueConfig {
@@ -746,7 +739,12 @@ interface Plaque {
   power: number;
 }
 
-// ── 铭牌库配置 ──
+/** 当前生效的奖励表 */
+const rewardValues = ref<number[]>([...DEFAULT_REWARDS]);
+/** textarea 中的 JSON 字符串 */
+const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
+/** 解析错误信息，空表示无错误 */
+const rewardTableError = ref('');
 
 const config = reactive<PlaqueConfig>({
   level1: 5,
@@ -765,54 +763,6 @@ const DEFAULT_CONFIG: PlaqueConfig = {
 };
 
 const activeCollapse = ref<string[]>([]);
-
-// ── 心理模型参数（溢出厌恶） ──
-
-const aversionFactor = ref(1.0);
-const fixedPenalty = ref(0);
-
-const overflowParams = computed<OverflowParams | undefined>(() => {
-  // 默认参数等同于不启用心理模型
-  if (aversionFactor.value === 1.0 && fixedPenalty.value === 0) return undefined;
-  return { aversionFactor: aversionFactor.value, fixedPenalty: fixedPenalty.value };
-});
-
-const showAdjustedCol = computed(() => overflowParams.value !== undefined);
-
-function setPsychoParams(af: number, fp: number) {
-  aversionFactor.value = af;
-  fixedPenalty.value = fp;
-}
-
-function isPresetActive(af: number, fp: number): boolean {
-  return aversionFactor.value === af && fixedPenalty.value === fp;
-}
-
-// ── 游戏核心状态 ──
-
-/** 铭牌库（剩余未抽的铭牌） */
-const pool = ref<Plaque[]>([]);
-/** 已抽的 5 个槽位 */
-const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
-/** 是否已开启奖励翻倍 */
-const doubled = ref(false);
-/** 今日剩余游玩次数 */
-const remainingGames = ref(3);
-/** 今日剩余翻倍次数 */
-const remainingDoubles = ref(2);
-/** 今日剩余放弃次数 */
-const remainingAbandons = ref(3);
-/** 手动设置时铭牌库不足的警告标记 */
-const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
-
-/** 各点数已抽数量（索引 0-4 对应点数 1-5） */
-const drawnCounts = computed(() => {
-  const counts = [0, 0, 0, 0, 0];
-  for (const card of drawnCards.value) {
-    if (card) counts[card.level - 1]!++;
-  }
-  return counts;
-});
 
 let nextId = 0;
 
@@ -844,45 +794,13 @@ function initDrawnCards() {
   for (let i = 0; i < 5; i++) slotWarnings[i] = false;
 }
 
-/** 应用配置新配置并重置铭牌库 */
+/** 应用铭牌库配置并重置游戏状态 */
 function applyConfig() {
   clearSolverCache();
   nextId = 0;
   pool.value = buildPool();
   initDrawnCards();
   doubled.value = false;
-}
-
-/** 重置本局铭牌库/已抽/翻倍 */
-function resetGame() {
-  nextId = 0;
-  pool.value = buildPool();
-  initDrawnCards();
-  doubled.value = false;
-}
-
-/** 结算本局，进入下一局（消耗一次游玩次数，翻倍次数在结算时实际扣除） */
-function endGame() {
-  if (remainingGames.value <= 0) return;
-  if (doubled.value) remainingDoubles.value--;
-  remainingGames.value--;
-  resetGame();
-}
-
-/** 重置今日全部状态 */
-function resetToday() {
-  remainingGames.value = 3;
-  remainingDoubles.value = 2;
-  remainingAbandons.value = 3;
-  resetGame();
-}
-
-/** 设置为单次模拟（P=1, B=0, A=0） */
-function setSingleSimulation() {
-  remainingGames.value = 1;
-  remainingDoubles.value = 0;
-  remainingAbandons.value = 0;
-  resetGame();
 }
 
 /** 重置铭牌分布为默认值，并应用配置 */
@@ -930,9 +848,31 @@ function resetRewardTable() {
   clearSolverCache();
 }
 
-pool.value = buildPool();
+/** 铭牌库（剩余未抽的铭牌） */
+const pool = ref<Plaque[]>([]);
+/** 已抽的 5 个槽位 */
+const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
+/** 是否已开启奖励翻倍 */
+const doubled = ref(false);
+/** 今日剩余游玩次数 */
+const remainingGames = ref(3);
+/** 今日剩余翻倍次数 */
+const remainingDoubles = ref(2);
+/** 今日剩余放弃次数 */
+const remainingAbandons = ref(3);
+/** 手动设置时铭牌库不足的警告标记 */
+const slotWarnings = reactive<boolean[]>([false, false, false, false, false]);
 
-// ── 铭牌库展示 ──
+/** 各点数已抽数量（索引 0-4 对应点数 1-5） */
+const drawnCounts = computed(() => {
+  const counts = [0, 0, 0, 0, 0];
+  for (const card of drawnCards.value) {
+    if (card) counts[card.level - 1]!++;
+  }
+  return counts;
+});
+
+pool.value = buildPool();
 
 const poolByLevel = computed(() => {
   const groups: Record<number, Plaque[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
@@ -942,7 +882,25 @@ const poolByLevel = computed(() => {
   return groups;
 });
 
-// ── 奖励计算 ──
+const aversionFactor = ref(1.0);
+const fixedPenalty = ref(0);
+
+const overflowParams = computed<OverflowParams | undefined>(() => {
+  // 默认参数等同于不启用心理模型
+  if (aversionFactor.value === 1.0 && fixedPenalty.value === 0) return undefined;
+  return { aversionFactor: aversionFactor.value, fixedPenalty: fixedPenalty.value };
+});
+
+const showAdjustedCol = computed(() => overflowParams.value !== undefined);
+
+function setPsychoParams(af: number, fp: number) {
+  aversionFactor.value = af;
+  fixedPenalty.value = fp;
+}
+
+function isPresetActive(af: number, fp: number): boolean {
+  return aversionFactor.value === af && fixedPenalty.value === fp;
+}
 
 const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
 
@@ -965,7 +923,60 @@ const finalReward = computed(() => {
   return doubled.value ? baseReward.value * 2 : baseReward.value;
 });
 
-// ── 按钮可用状态 ──
+const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
+  label: String(i),
+  value: i,
+}));
+
+const rewardOptions = computed(() =>
+  Array.from({ length: 11 }, (_, i) => ({
+    label: formatRewardShort(doubled.value ? rewardValues.value[i]! * 2 : rewardValues.value[i]!),
+    value: i,
+  })),
+);
+
+/** 溢出心理档位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
+const overflowPsychOptions = computed(() => {
+  const params = overflowParams.value;
+  const mul = doubled.value ? 2 : 1;
+  return Array.from({ length: 11 }, (_, i) => {
+    const power = 11 + i;
+    const s = power % 11;
+    const raw = rewardValues.value[s] ?? 0;
+    let label: string;
+    if (params) {
+      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+      label = formatRewardShort(adjusted);
+    } else {
+      label = formatRewardShort(raw * mul);
+    }
+    return { label, value: power };
+  });
+});
+
+/** 当前总战力对应的溢出点（11~21），未溢出时不选中任何挡位 */
+const overflowPsychValue = computed(() => {
+  if (totalPower.value >= 11 && totalPower.value <= 21) return totalPower.value;
+  return undefined;
+});
+
+/** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
+const overflowPsychDisplayValue = computed(() => {
+  const params = overflowParams.value;
+  const mul = doubled.value ? 2 : 1;
+  if (totalPower.value >= 11 && totalPower.value <= 21) {
+    const s = totalPower.value % 11;
+    const raw = rewardValues.value[s] ?? 0;
+    let adjusted: number;
+    if (params) {
+      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+    } else {
+      adjusted = raw * mul;
+    }
+    return formatRewardShort(adjusted);
+  }
+  return '—';
+});
 
 const canDraw = computed(() => {
   return activeDrawCount.value < MAX_DRAWS && pool.value.length > 0;
@@ -985,8 +996,6 @@ const canToggleDouble = computed(() => {
 const canAbandon = computed(() => {
   return activeDrawCount.value > 0 && remainingGames.value > 0;
 });
-
-// ── 游戏操作 ──
 
 /** 随机抽取一张铭牌 */
 function drawCard() {
@@ -1033,11 +1042,6 @@ function undoLastDraw() {
   if (card) pool.value.push(card);
 }
 
-/** OTP 输入校验：只允许 1-5 和空 */
-function onlyLevel(value: string): boolean {
-  return value === '' || (value >= '1' && value <= '5');
-}
-
 function toggleDouble() {
   if (!canDouble.value) return;
   doubled.value = true;
@@ -1062,7 +1066,37 @@ function abandonGame() {
   resetGame();
 }
 
-// ── UI 辅助 ──
+/** 重置本局铭牌库/已抽/翻倍 */
+function resetGame() {
+  nextId = 0;
+  pool.value = buildPool();
+  initDrawnCards();
+  doubled.value = false;
+}
+
+/** 结算本局，进入下一局（消耗一次游玩次数，翻倍次数在结算时实际扣除） */
+function endGame() {
+  if (remainingGames.value <= 0) return;
+  if (doubled.value) remainingDoubles.value--;
+  remainingGames.value--;
+  resetGame();
+}
+
+/** 重置今日全部状态 */
+function resetToday() {
+  remainingGames.value = 3;
+  remainingDoubles.value = 2;
+  remainingAbandons.value = 3;
+  resetGame();
+}
+
+/** 设置为单次模拟（P=1, B=0, A=0） */
+function setSingleSimulation() {
+  remainingGames.value = 1;
+  remainingDoubles.value = 0;
+  remainingAbandons.value = 0;
+  resetGame();
+}
 
 /** 格式化数值为固定两位小数 */
 function formatDecimal(value: number): string {
@@ -1107,67 +1141,36 @@ function formatRewardShort(value: number): string {
   return value < 0 ? `-${formatted}` : formatted;
 }
 
-const rewardOptions = computed(() =>
-  Array.from({ length: 11 }, (_, i) => ({
-    label: formatRewardShort(doubled.value ? rewardValues.value[i]! * 2 : rewardValues.value[i]!),
-    value: i,
-  })),
-);
-
-const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
-  label: String(i),
-  value: i,
-}));
-
-/** 溢出心理挡位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
-const overflowPsychOptions = computed(() => {
-  const params = overflowParams.value;
-  const mul = doubled.value ? 2 : 1;
-  return Array.from({ length: 11 }, (_, i) => {
-    const power = 11 + i;
-    const s = power % 11; // 战力点
-    const raw = rewardValues.value[s] ?? 0;
-    let label: string;
-    if (params) {
-      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
-      label = formatRewardShort(adjusted);
-    } else {
-      label = formatRewardShort(raw * mul);
-    }
-    return { label, value: power };
-  });
-});
-
-/** 当前总战力对应的溢出点（11~21），未溢出时不选中任何挡位 */
-const overflowPsychValue = computed(() => {
-  if (totalPower.value >= 11 && totalPower.value <= 21) return totalPower.value;
-  return undefined;
-});
-
-/** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
-const overflowPsychDisplayValue = computed(() => {
-  const params = overflowParams.value;
-  const mul = doubled.value ? 2 : 1;
-  if (totalPower.value >= 11 && totalPower.value <= 21) {
-    const s = totalPower.value % 11;
-    const raw = rewardValues.value[s] ?? 0;
-    let adjusted: number;
-    if (params) {
-      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
-    } else {
-      adjusted = raw * mul;
-    }
-    return formatRewardShort(adjusted);
-  }
-  return '—';
-});
-
 /** OTP 输入框的字符串值（按抽取顺序排列，空位为 ''） */
 const otpValue = computed(() => drawnCards.value.map((c) => c?.level ?? '').join(''));
 
 const hasWarning = computed(() => slotWarnings.some(Boolean));
 
-// ── DP 求解器集成 ──
+/** OTP 输入校验：只允许 1-5 和空 */
+function onlyLevel(value: string): boolean {
+  return value === '' || (value >= '1' && value <= '5');
+}
+
+function handleOtpChange(val: string | number) {
+  const s = String(val);
+  for (const card of drawnCards.value) {
+    if (card) pool.value.push(card);
+  }
+  initDrawnCards();
+  for (let i = 0; i < MAX_DRAWS; i++) {
+    const ch = s[i];
+    if (ch && ch >= '1' && ch <= '5') {
+      const level = Number(ch);
+      const plaque = takeFromPool(level);
+      if (plaque) {
+        drawnCards.value[i] = plaque;
+      } else {
+        drawnCards.value[i] = createPlaque(level);
+        slotWarnings[i] = true;
+      }
+    }
+  }
+}
 
 /** 将配置对象转为数组形式供求解器使用 */
 const deckConfigArray = computed(() => [
@@ -1177,6 +1180,7 @@ const deckConfigArray = computed(() => [
   config.level4,
   config.level5,
 ]);
+
 /** 当前状态的最优行动建议（含多局/翻倍，原始） */
 const currentAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
@@ -1323,30 +1327,6 @@ const decisionAction = computed(
 
 /** 仅心理模型激活时在决策文字前显示标注 */
 const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应用后最优：' : '最优：'));
-
-// ── OTP 手动输入处理 ──
-// 先将所有已抽牌归还铭牌库，再按 OTP 顺序依次取出指定铭牌点数
-
-function handleOtpChange(val: string | number) {
-  const s = String(val);
-  for (const card of drawnCards.value) {
-    if (card) pool.value.push(card);
-  }
-  initDrawnCards();
-  for (let i = 0; i < MAX_DRAWS; i++) {
-    const ch = s[i];
-    if (ch && ch >= '1' && ch <= '5') {
-      const level = Number(ch);
-      const plaque = takeFromPool(level);
-      if (plaque) {
-        drawnCards.value[i] = plaque;
-      } else {
-        drawnCards.value[i] = createPlaque(level);
-        slotWarnings[i] = true;
-      }
-    }
-  }
-}
 </script>
 
 <style lang="scss" scoped>
