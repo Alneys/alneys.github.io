@@ -179,7 +179,7 @@ import {
   DOMINANT_PARAM_THRESHOLD_ADD,
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
 } from '../CgssUnitViewerTypes';
-import { useResponsive } from '../composables/useResponsive';
+import { useResponsive } from '@/composables/useResponsive';
 import { useCardFilter } from '../composables/useCardFilter';
 import { useSeasonLimited } from '../composables/useSeasonLimited';
 import { useIconActions } from '../composables/useIconActions';

@@ -8,7 +8,9 @@
           alt="BiliBili"
         />
       </a>
-      <el-button class="tour-trigger-btn" @click="tourOpen = true"> 页面引导 </el-button>
+      <el-button class="tour-trigger-btn" :size="compSize" @click="tourOpen = true">
+        页面引导
+      </el-button>
     </div>
     <div class="al-divider"></div>
 
@@ -28,16 +30,24 @@
                   <span class="config-label">铭牌点数 {{ level }}</span>
                   <el-input-number
                     v-model="config[`level${level}` as keyof PlaqueConfig]"
+                    :size="compSize"
                     :min="0"
                     :max="99"
                   />
                 </div>
               </div>
               <div class="config-buttons">
-                <el-button type="primary" class="config-apply-btn" @click="applyConfig">
+                <el-button
+                  class="config-apply-btn"
+                  :size="compSize"
+                  type="primary"
+                  @click="applyConfig"
+                >
                   应用铭牌库配置
                 </el-button>
-                <el-button class="config-reset-btn" @click="resetConfig">重置铭牌库</el-button>
+                <el-button class="config-reset-btn" :size="compSize" @click="resetConfig"
+                  >重置铭牌库</el-button
+                >
               </div>
             </div>
 
@@ -47,14 +57,17 @@
               <div class="config-reward-hint">JSON 数组格式，战力点 0~10 依次对应 11 项奖励值</div>
               <el-input
                 v-model="rewardTableText"
+                :size="compSize"
                 type="textarea"
                 :rows="6"
                 class="config-reward-textarea"
               />
               <div v-if="rewardTableError" class="config-reward-error">{{ rewardTableError }}</div>
               <div class="config-reward-buttons">
-                <el-button type="primary" @click="applyRewardTable">应用奖励表</el-button>
-                <el-button @click="resetRewardTable">重置奖励表</el-button>
+                <el-button :size="compSize" type="primary" @click="applyRewardTable"
+                  >应用奖励表</el-button
+                >
+                <el-button :size="compSize" @click="resetRewardTable">重置奖励表</el-button>
               </div>
             </div>
           </el-collapse-item>
@@ -76,6 +89,7 @@
                     <span class="psycho-label">溢出接受值</span>
                     <el-slider
                       v-model="aversionFactor"
+                      :size="compSize"
                       :min="0"
                       :max="1"
                       :step="0.05"
@@ -88,6 +102,7 @@
                     <span class="psycho-label">固定心理落差</span>
                     <el-input-number
                       v-model="fixedPenalty"
+                      :size="compSize"
                       :min="0"
                       :max="1000000"
                       :step="5000"
@@ -97,20 +112,23 @@
                 </div>
                 <div class="psycho-presets">
                   <el-button
-                    @click="setPsychoParams(1.0, 0)"
+                    :size="compSize"
                     :type="isPresetActive(1.0, 0) ? 'primary' : ''"
+                    @click="setPsychoParams(1.0, 0)"
                   >
                     最大化收益
                   </el-button>
                   <el-button
-                    @click="setPsychoParams(0.5, 30000)"
+                    :size="compSize"
                     :type="isPresetActive(0.5, 30000) ? 'primary' : ''"
+                    @click="setPsychoParams(0.5, 30000)"
                   >
                     均衡
                   </el-button>
                   <el-button
-                    @click="setPsychoParams(0.01, 400000)"
+                    :size="compSize"
                     :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
+                    @click="setPsychoParams(0.01, 400000)"
                   >
                     绝对厌恶溢出
                   </el-button>
@@ -127,12 +145,19 @@
               <div class="daily-grid">
                 <div class="daily-item">
                   <span class="daily-label">剩余游玩</span>
-                  <el-input-number v-model="remainingGames" :min="0" :max="4" class="daily-input" />
+                  <el-input-number
+                    v-model="remainingGames"
+                    :size="compSize"
+                    :min="0"
+                    :max="4"
+                    class="daily-input"
+                  />
                 </div>
                 <div class="daily-item">
                   <span class="daily-label">剩余翻倍</span>
                   <el-input-number
                     v-model="remainingDoubles"
+                    :size="compSize"
                     :min="0"
                     :max="2"
                     class="daily-input"
@@ -142,15 +167,21 @@
                   <span class="daily-label">剩余放弃</span>
                   <el-input-number
                     v-model="remainingAbandons"
+                    :size="compSize"
                     :min="0"
                     :max="3"
                     class="daily-input"
                   />
                 </div>
-                <el-button class="daily-single-btn" @click="setSingleSimulation">
+                <el-button class="daily-single-btn" :size="compSize" @click="setSingleSimulation">
                   模拟单次
                 </el-button>
-                <el-button class="daily-reset-btn" type="danger" @click="resetToday">
+                <el-button
+                  class="daily-reset-btn"
+                  :size="compSize"
+                  type="danger"
+                  @click="resetToday"
+                >
                   重置
                 </el-button>
               </div>
@@ -188,7 +219,7 @@
                 <div class="drawn-manual-input" data-tour="manual-input">
                   <div class="manual-input-label">手动设置铭牌点数</div>
                   <el-input-otp
-                    :model-value="otpValue"
+                    v-model="otpValue"
                     :length="5"
                     inputmode="numeric"
                     :validator="onlyLevel"
@@ -231,7 +262,8 @@
                 <div class="power-point-section" :class="{ 'reward-penalty': totalPower > 10 }">
                   <span class="reward-label">战力点</span>
                   <el-segmented
-                    :model-value="rewardIndex"
+                    v-model="rewardIndex"
+                    :size="compSize"
                     :options="powerPointOptions"
                     block
                     :class="{
@@ -244,7 +276,8 @@
                 <div class="reward-tier-section" :class="{ 'reward-penalty': totalPower > 10 }">
                   <span class="reward-label">奖励</span>
                   <el-segmented
-                    :model-value="rewardIndex"
+                    v-model="rewardIndex"
+                    :size="compSize"
                     :options="rewardOptions"
                     block
                     :class="{
@@ -263,7 +296,8 @@
                 >
                   <span class="reward-label">溢出心理</span>
                   <el-segmented
-                    :model-value="overflowPsychValue"
+                    v-model="overflowPsychValue"
+                    :size="compSize"
                     :options="overflowPsychOptions"
                     :disabled="!showAdjustedCol"
                     block
@@ -287,13 +321,16 @@
                   @confirm="resetToday"
                 >
                   <template #reference>
-                    <el-button type="danger" class="action-btn"> 重置所有 </el-button>
+                    <el-button :size="compSize" type="danger" class="action-btn">
+                      重置所有
+                    </el-button>
                   </template>
                 </el-popconfirm>
               </div>
               <div class="actions-row-right">
                 <el-button
                   class="action-btn"
+                  :size="compSize"
                   :disabled="!canDraw || remainingGames === 0"
                   type="primary"
                   @click="drawCard"
@@ -312,7 +349,8 @@
                   ><span class="action-switch-warning">奖励翻倍</span></span
                 >
                 <el-switch
-                  :model-value="doubled"
+                  v-model="doubled"
+                  :size="compSize"
                   :disabled="!canToggleDouble"
                   inactive-text="关"
                   active-text="开"
@@ -328,6 +366,7 @@
               <div class="actions-row-left">
                 <el-button
                   class="action-btn"
+                  :size="compSize"
                   :disabled="!canAbandon"
                   type="danger"
                   @click="abandonGame"
@@ -342,7 +381,8 @@
                     ><span class="action-switch-warning">奖励翻倍</span></span
                   >
                   <el-switch
-                    :model-value="doubled"
+                    v-model="doubled"
+                    :size="compSize"
                     :disabled="!canToggleDouble"
                     inactive-text="关"
                     active-text="开"
@@ -352,6 +392,7 @@
                 </div>
                 <el-button
                   class="action-btn"
+                  :size="compSize"
                   :disabled="remainingGames === 0 || activeDrawCount === 0"
                   type="info"
                   @click="activeDrawCount > 0 ? endGame() : resetGame()"
@@ -563,6 +604,7 @@
               </template>
               <el-table
                 v-if="distributionTableData.length > 0"
+                :size="compSize"
                 :data="distributionTableData"
                 height="auto"
                 :row-class-name="distributionRowClassName"
@@ -660,15 +702,15 @@
 </template>
 
 <script setup lang="ts">
-// 逻辑三部分：
-//   1. 铭牌配置 & 游戏操作（抽取铭牌/翻倍/结算）
-//   2. 奖励计算（实际战力点 → 奖励）
-//   3. DP 求解器集成（单局策略表 + 多局翻倍建议）
 import { reactive, ref, computed } from 'vue';
-
-const tourOpen = ref(false);
+import { useResponsive } from '@/composables/useResponsive';
 import { getCurrentAdvice, clearSolverCache } from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolver';
+
+const { isMobile } = useResponsive();
+const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
+
+const tourOpen = ref(false);
 
 /** 最多抽取张数 */
 const MAX_DRAWS = 5;
@@ -1061,17 +1103,17 @@ const powerPointOptions = Array.from({ length: 11 }, (_, i) => ({
 /** 溢出心理挡位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
 const overflowPsychOptions = computed(() => {
   const params = overflowParams.value;
-  const mult = doubled.value ? 2 : 1;
+  const mul = doubled.value ? 2 : 1;
   return Array.from({ length: 11 }, (_, i) => {
     const power = 11 + i;
     const s = power % 11; // 战力点
     const raw = rewardValues.value[s] ?? 0;
     let label: string;
     if (params) {
-      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
+      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
       label = formatRewardShort(adjusted);
     } else {
-      label = formatRewardShort(raw * mult);
+      label = formatRewardShort(raw * mul);
     }
     return { label, value: power };
   });
@@ -1086,15 +1128,15 @@ const overflowPsychValue = computed(() => {
 /** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
 const overflowPsychDisplayValue = computed(() => {
   const params = overflowParams.value;
-  const mult = doubled.value ? 2 : 1;
+  const mul = doubled.value ? 2 : 1;
   if (totalPower.value >= 11 && totalPower.value <= 21) {
     const s = totalPower.value % 11;
     const raw = rewardValues.value[s] ?? 0;
     let adjusted: number;
     if (params) {
-      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mult;
+      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
     } else {
-      adjusted = raw * mult;
+      adjusted = raw * mul;
     }
     return formatRewardShort(adjusted);
   }
@@ -1376,10 +1418,10 @@ function handleOtpChange(val: string | number) {
   .psycho-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 8px 16px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 8px 16px;
     }
   }
 
@@ -1406,7 +1448,7 @@ function handleOtpChange(val: string | number) {
     font-size: 13px;
     color: var(--el-text-color-secondary);
     white-space: nowrap;
-    min-width: 120px;
+    min-width: 96px;
   }
 
   .psycho-slider {
@@ -1453,10 +1495,10 @@ function handleOtpChange(val: string | number) {
   .reward-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 8px 16px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 8px 16px;
     }
   }
 
@@ -1668,10 +1710,10 @@ function handleOtpChange(val: string | number) {
   .daily-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 10px 16px;
+      padding: 8px 16px;
     }
     :deep(.el-card__body) {
-      padding: 12px 16px;
+      padding: 8px 16px;
     }
   }
 
@@ -1985,6 +2027,10 @@ function handleOtpChange(val: string | number) {
       .actions-row-right {
         flex: 1;
       }
+    }
+
+    .daily-input {
+      width: 80px;
     }
 
     .switch-xs-row {
