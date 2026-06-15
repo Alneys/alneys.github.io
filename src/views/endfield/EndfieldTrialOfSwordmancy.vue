@@ -158,7 +158,7 @@
           </el-col>
         </el-row>
 
-        <div class="al-divider"></div>
+        <div class="al-divider hidden-xs-only"></div>
 
         <div data-tour="game-state">
           <el-row :gutter="16" class="game-section">
@@ -252,7 +252,7 @@
                       'reward-success': rewardIndex === 10,
                     }"
                   />
-                  <span class="xs-value">{{ formatRewardShort(baseReward) }}</span>
+                  <span class="xs-value">{{ formatRewardShort(finalReward) }}</span>
                 </div>
                 <div
                   class="overflow-psych-section"
@@ -364,7 +364,7 @@
         </el-row>
       </el-col>
 
-      <div class="al-divider hidden-lg-and-up" style="width: 100%"></div>
+      <div class="al-divider hidden-xs-only hidden-lg-and-up" style="width: 100%"></div>
 
       <el-col :span="24" :lg="9" :xs="24">
         <el-row :gutter="16" class="game-section" data-tour="result">
