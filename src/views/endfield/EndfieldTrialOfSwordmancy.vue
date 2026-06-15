@@ -798,6 +798,14 @@ const DEFAULT_CONFIG: PlaqueConfig = {
   level5: 6,
 };
 
+const debouncedDeckConfig = ref<number[]>([
+  DEFAULT_CONFIG.level1,
+  DEFAULT_CONFIG.level2,
+  DEFAULT_CONFIG.level3,
+  DEFAULT_CONFIG.level4,
+  DEFAULT_CONFIG.level5,
+]);
+
 const activeCollapse = ref<string[]>([]);
 
 let nextId = 0;
@@ -894,6 +902,13 @@ watch(
     if (applyConfigTimer) clearTimeout(applyConfigTimer);
     applyConfigTimer = setTimeout(() => {
       applyConfig();
+      debouncedDeckConfig.value = [
+        config.level1,
+        config.level2,
+        config.level3,
+        config.level4,
+        config.level5,
+      ];
     }, 1000);
   },
   { deep: true },
@@ -1270,13 +1285,7 @@ function handleOtpChange(val: string | number) {
 }
 
 /** 将配置对象转为数组形式供求解器使用 */
-const deckConfigArray = computed(() => [
-  config.level1,
-  config.level2,
-  config.level3,
-  config.level4,
-  config.level5,
-]);
+const deckConfigArray = computed(() => debouncedDeckConfig.value);
 
 /** 当前状态的最优行动建议（含多局/翻倍，原始） */
 const currentAdvice = computed<AdviceResult | null>(() => {
