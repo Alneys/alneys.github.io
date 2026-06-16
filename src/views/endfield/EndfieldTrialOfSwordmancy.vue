@@ -56,7 +56,7 @@
               </div>
             </div>
 
-            <el-divider style="margin: 12px 0" />
+            <el-divider style="margin: 8px 0" />
             <div class="config-reward-section">
               <div class="config-reward-header">奖励对照表</div>
               <div class="config-reward-hint">JSON 数组格式，战力点 0~10 依次对应 11 项奖励值</div>
@@ -482,7 +482,7 @@
                   </template>
                   <template v-else>{{ decisionPrefix }}结算本局</template>
                 </div>
-                <el-divider style="margin: 8px 0" />
+                <el-divider style="margin: 4px 0" />
                 <div v-if="showAdjustedCol" class="advice-row advice-header">
                   <span class="advice-label" />
                   <span class="advice-value">原始期望</span>
@@ -512,7 +512,7 @@
                   }}</span>
                 </div>
 
-                <el-divider style="margin: 8px 0" />
+                <el-divider style="margin: 4px 0" />
                 <div class="advice-row">
                   <span class="advice-label">各行动今日总期望：</span>
                   <span class="advice-value" />
@@ -619,7 +619,7 @@
                       : '—'
                   }}</span>
                 </div>
-                <el-divider style="margin: 8px 0" />
+                <el-divider style="margin: 4px 0" />
                 <div class="advice-row">
                   <span class="advice-label">今日总期望</span>
                   <span class="advice-value advice-today-value">{{
@@ -1505,21 +1505,21 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .config-reward-hint {
     font-size: 12px;
     color: var(--el-text-color-secondary);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .config-reward-textarea {
     width: 100%;
     :deep(textarea) {
       font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.5;
     }
   }
 
   .config-reward-error {
     color: var(--el-color-danger);
-    font-size: 13px;
+    font-size: 12px;
     margin-top: 4px;
   }
 
@@ -1534,10 +1534,10 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .psycho-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 8px 16px;
+      padding: 12px 16px;
     }
     :deep(.el-card__body) {
-      padding: 8px 16px;
+      padding: 12px 16px;
     }
   }
 
@@ -1561,7 +1561,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   }
 
   .psycho-label {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--el-text-color-secondary);
     white-space: nowrap;
     min-width: 96px;
@@ -1578,6 +1578,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .psycho-presets {
     display: flex;
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .game-section {
@@ -1611,10 +1612,10 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .reward-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 8px 16px;
+      padding: 12px 16px;
     }
     :deep(.el-card__body) {
-      padding: 8px 16px;
+      padding: 12px 16px;
     }
   }
 
@@ -1638,7 +1639,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .drawn-slot {
     width: 72px;
     height: 100px;
-    border-radius: 10px;
+    border-radius: 8px;
     border: 2px solid var(--el-border-color);
     display: flex;
     align-items: center;
@@ -1666,7 +1667,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
   }
 
   .drawn-slot-lv {
@@ -1720,20 +1721,20 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .pool-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
 
   .pool-level-row {
     display: flex;
     align-items: baseline;
     gap: 8px;
-    padding: 6px 10px;
-    border-radius: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
     background: var(--el-fill-color);
   }
 
   .pool-level-label {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--el-text-color-secondary);
     min-width: 32px;
   }
@@ -1845,10 +1846,10 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .daily-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 8px 16px;
+      padding: 12px 16px;
     }
     :deep(.el-card__body) {
-      padding: 8px 16px;
+      padding: 12px 16px;
     }
   }
 
@@ -1903,23 +1904,23 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .advice-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 12px 18px;
+      padding: 12px 16px;
     }
     :deep(.el-card__body) {
-      padding: 14px 18px;
+      padding: 12px 16px;
     }
   }
 
   .advice-content {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
 
   .advice-row {
     display: flex;
     align-items: center;
-    font-size: 15px;
+    font-size: 14px;
     gap: 4px;
   }
 
@@ -1986,7 +1987,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
     font-size: 16px;
     font-weight: bold;
     padding: 8px 0;
-    border-radius: 6px;
+    border-radius: 4px;
 
     &.advice-continue {
       color: var(--el-color-success);
@@ -2044,10 +2045,10 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .distribution-card {
     :deep(.el-card__header) {
       font-weight: bold;
-      padding: 12px 18px;
+      padding: 12px 16px;
     }
     :deep(.el-card__body) {
-      padding: 14px 18px;
+      padding: 12px 16px;
     }
   }
 
@@ -2218,8 +2219,8 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       flex: 1;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
-      padding: 6px 4px;
+      gap: 4px;
+      padding: 8px 4px;
     }
 
     .pool-level-count {
@@ -2232,11 +2233,11 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       flex: 1;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
-      padding: 6px 4px;
+      gap: 4px;
+      padding: 8px 4px;
       margin-bottom: 0;
       background: var(--el-fill-color);
-      border-radius: 6px;
+      border-radius: 4px;
 
       &.reward-penalty {
         background: var(--el-color-danger-light-7);
@@ -2276,6 +2277,21 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 
     .reward-values {
       justify-content: center;
+    }
+
+    .psycho-card,
+    .drawn-card,
+    .pool-card,
+    .reward-card,
+    .daily-card,
+    .advice-card,
+    .distribution-card {
+      :deep(.el-card__header) {
+        padding: 8px 12px;
+      }
+      :deep(.el-card__body) {
+        padding: 8px 12px;
+      }
     }
   }
 }
