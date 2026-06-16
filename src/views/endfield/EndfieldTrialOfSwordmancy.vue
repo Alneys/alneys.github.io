@@ -1529,9 +1529,14 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
     margin-top: 8px;
   }
 
-  // ── 心理模型参数 ──
-
-  .psycho-card {
+  // ── 所有卡片统一 padding ──
+  .psycho-card,
+  .drawn-card,
+  .pool-card,
+  .reward-card,
+  .daily-card,
+  .advice-card,
+  .distribution-card {
     :deep(.el-card__header) {
       font-weight: bold;
       padding: 12px 16px;
@@ -1540,6 +1545,8 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       padding: 12px 16px;
     }
   }
+
+  // ── 心理模型参数 ──
 
   .psycho-body {
     display: flex;
@@ -1606,18 +1613,6 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   }
 
   // ── 已抽铭牌区域 ──
-
-  .drawn-card,
-  .pool-card,
-  .reward-card {
-    :deep(.el-card__header) {
-      font-weight: bold;
-      padding: 12px 16px;
-    }
-    :deep(.el-card__body) {
-      padding: 12px 16px;
-    }
-  }
 
   .drawn-card {
     :deep(.el-card__body) {
@@ -1751,26 +1746,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   }
 
   .power-point-section,
-  .reward-tier-section {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-
-    // ── 奖励状态 ──
-
-    .reward-label {
-      margin-bottom: 0;
-      width: 64px;
-      white-space: nowrap;
-    }
-
-    .el-segmented {
-      flex-grow: 1;
-      --el-border-radius-base: 0px;
-    }
-  }
-
+  .reward-tier-section,
   .overflow-psych-section {
     display: flex;
     align-items: center;
@@ -1781,7 +1757,20 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       width: 64px;
       white-space: nowrap;
     }
+  }
 
+  .power-point-section,
+  .reward-tier-section {
+    .reward-label {
+      margin-bottom: 0;
+    }
+    .el-segmented {
+      flex-grow: 1;
+      --el-border-radius-base: 0px;
+    }
+  }
+
+  .overflow-psych-section {
     .overflow-psych-segmented {
       flex-grow: 1;
       --el-border-radius-base: 0px;
@@ -1843,16 +1832,6 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 
   // ── 今日状态 ──
 
-  .daily-card {
-    :deep(.el-card__header) {
-      font-weight: bold;
-      padding: 12px 16px;
-    }
-    :deep(.el-card__body) {
-      padding: 12px 16px;
-    }
-  }
-
   .daily-grid {
     display: flex;
     flex-wrap: wrap;
@@ -1900,16 +1879,6 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   }
 
   // ── 策略分析 ──
-
-  .advice-card {
-    :deep(.el-card__header) {
-      font-weight: bold;
-      padding: 12px 16px;
-    }
-    :deep(.el-card__body) {
-      padding: 12px 16px;
-    }
-  }
 
   .advice-content {
     display: flex;
@@ -2006,51 +1975,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
     }
   }
 
-  .tag {
-    display: inline-block;
-    padding: 0 6px;
-    font-size: 12px;
-    line-height: 22px;
-    border-radius: 4px;
-    white-space: nowrap;
-  }
-
-  .tag-success {
-    color: var(--el-color-success);
-    background: var(--el-color-success-light-9);
-  }
-
-  .tag-primary {
-    color: var(--el-color-primary);
-    background: var(--el-color-primary-light-9);
-  }
-
-  .tag-warning {
-    color: var(--el-color-warning);
-    background: var(--el-color-warning-light-9);
-  }
-
-  .tag-info {
-    color: var(--el-text-color-secondary);
-    background: var(--el-fill-color);
-  }
-
-  .tag-danger {
-    color: var(--el-color-danger);
-    background: var(--el-color-danger-light-9);
-  }
-
   // ── 战力点概率分布 ──
-
-  .distribution-card {
-    :deep(.el-card__header) {
-      font-weight: bold;
-      padding: 12px 16px;
-    }
-    :deep(.el-card__body) {
-      padding: 12px 16px;
-    }
-  }
 
   .distribution-empty {
     text-align: center;
