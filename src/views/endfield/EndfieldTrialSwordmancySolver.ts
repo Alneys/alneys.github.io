@@ -513,3 +513,11 @@ export function getCurrentAdvice(
 export function clearSolverCache(): void {
   adviceMemoCache.clear();
 }
+
+/** 默认奖励表（索引 = 战力点 0~10） */
+export const DEFAULT_REWARDS: number[] = [
+  0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000,
+];
+
+/** 默认铭牌库配置（各等级张数） */
+export const DEFAULT_DECK_CONFIG: number[] = [5, 5, 5, 8, 6];

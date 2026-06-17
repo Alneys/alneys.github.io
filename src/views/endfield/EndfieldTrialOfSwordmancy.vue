@@ -747,7 +747,12 @@
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue';
 import { useResponsive } from '@/composables/useResponsive';
-import { getCurrentAdvice, clearSolverCache } from './EndfieldTrialSwordmancySolver';
+import {
+  getCurrentAdvice,
+  clearSolverCache,
+  DEFAULT_REWARDS,
+  DEFAULT_DECK_CONFIG,
+} from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolver';
 
 const { isMobile } = useResponsive();
@@ -757,11 +762,6 @@ const tourOpen = ref(false);
 
 /** 最多抽取张数 */
 const MAX_DRAWS = 5;
-
-/** 默认奖励表（索引 = 战力点 0~10） */
-const DEFAULT_REWARDS: number[] = [
-  0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000,
-];
 
 /** 各铭牌点数数量配置 */
 interface PlaqueConfig {
@@ -794,21 +794,7 @@ const config = reactive<PlaqueConfig>({
   level5: 6,
 });
 
-const DEFAULT_CONFIG: PlaqueConfig = {
-  level1: 5,
-  level2: 5,
-  level3: 5,
-  level4: 8,
-  level5: 6,
-};
-
-const debouncedDeckConfig = ref<number[]>([
-  DEFAULT_CONFIG.level1,
-  DEFAULT_CONFIG.level2,
-  DEFAULT_CONFIG.level3,
-  DEFAULT_CONFIG.level4,
-  DEFAULT_CONFIG.level5,
-]);
+const debouncedDeckConfig = ref<number[]>([...DEFAULT_DECK_CONFIG]);
 
 const activeCollapse = ref<string[]>([]);
 
@@ -859,11 +845,11 @@ function applyConfig() {
 /** 重置铭牌分布为默认值，并应用配置 */
 function resetConfig() {
   clearSolverCache();
-  config.level1 = DEFAULT_CONFIG.level1;
-  config.level2 = DEFAULT_CONFIG.level2;
-  config.level3 = DEFAULT_CONFIG.level3;
-  config.level4 = DEFAULT_CONFIG.level4;
-  config.level5 = DEFAULT_CONFIG.level5;
+  config.level1 = DEFAULT_DECK_CONFIG[0]!;
+  config.level2 = DEFAULT_DECK_CONFIG[1]!;
+  config.level3 = DEFAULT_DECK_CONFIG[2]!;
+  config.level4 = DEFAULT_DECK_CONFIG[3]!;
+  config.level5 = DEFAULT_DECK_CONFIG[4]!;
   // applyConfig();
 }
 
