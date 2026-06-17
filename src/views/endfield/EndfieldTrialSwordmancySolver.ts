@@ -149,6 +149,19 @@ function computeAdjustedReward(
 }
 
 /**
+ * 从候选数组中选取 value 最大的条目，等值时先入者（数组靠前）胜出
+ */
+function pickBest<T extends { value: number }>(items: T[]): T {
+  let best = items[0]!;
+  for (let i = 1; i < items.length; i++) {
+    if (items[i]!.value > best.value) {
+      best = items[i]!;
+    }
+  }
+  return best;
+}
+
+/**
  * 多局 + 翻倍 DP 求解：计算当前状态的最优行动建议
  *
  * ## 玩法概述
@@ -417,44 +430,56 @@ export function getCurrentAdvice(
     // 最优期望 = 四种行动的最大值
     const bestValue = Math.max(evDouble, evDraw, evAbandon, evStop);
 
-    // 【概率分布传播】按最优行动选择对应的子分布传播方式：
-    // ① 必须继续 / 继续最优 → 使用 draw 阶段预计算的分布
-    // ② 翻倍最优 → 直接继承翻倍后分布
-    // ③ 放弃最优 → 放弃概率=1, 无终点分布
-    // ④ 停止最优 → 当前模位置概率=1
+    // 【概率分布传播】按优先级选择最优行动对应的子分布
     let distribution: number[];
     let abandonProb: number;
     let evRound: number;
-
-    if (roundDrawn === 0 || (evDraw >= evAbandon && evDraw >= evStop && evDraw >= evDouble)) {
+    if (roundDrawn === 0) {
       distribution = drawDistribution;
       abandonProb = drawAbandonProb;
       evRound = drawRoundContribution;
-    } else if (
-      roundDrawn > 0 &&
-      roundDrawn < 3 &&
-      M === 1 &&
-      D > 0 &&
-      evDouble >= evDraw &&
-      evDouble >= evStop &&
-      evDouble >= evAbandon
-    ) {
-      // 翻倍最优：直接继承翻倍后的子分布
-      const child = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A);
-      distribution = child.distribution;
-      abandonProb = child.abandonProb;
-      evRound = child.evRound;
-    } else if (!cannotStop && evAbandon >= evStop) {
-      // 放弃最优：100% 概率放弃（无任何终点分布）
-      distribution = new Array<number>(modValue).fill(0);
-      abandonProb = 1;
-      evRound = 0;
     } else {
-      // 停止最优：当前模位置概率集中为 1
-      distribution = new Array<number>(modValue).fill(0);
-      distribution[slotIndex] = 1;
-      abandonProb = 0;
-      evRound = roundReward;
+      distribution = drawDistribution;
+      abandonProb = drawAbandonProb;
+      evRound = drawRoundContribution;
+
+      // 优先级：draw > double > abandon > stop（数组顺序，越靠前优先级越高）
+      const actionCandidates: { action: string; value: number }[] = [];
+
+      if (roundDrawn < maxDraws && remainingCount > 0) {
+        actionCandidates.push({ action: 'draw', value: evDraw });
+      }
+      if (roundDrawn < 3 && M === 1 && D > 0) {
+        actionCandidates.push({ action: 'double', value: evDouble });
+      }
+      actionCandidates.push({ action: 'abandon', value: evAbandon });
+      actionCandidates.push({ action: 'stop', value: evStop });
+
+      const bestAction = pickBest(actionCandidates).action;
+
+      // 继续抽牌：按等级比例，加权聚合子战力点分布
+      if (bestAction === 'draw') {
+        distribution = drawDistribution;
+        abandonProb = drawAbandonProb;
+        evRound = drawRoundContribution;
+        // 翻倍：直接继承倍率 2 后的子分布，牌组不变，结算时扣除翻倍次数
+      } else if (bestAction === 'double') {
+        const child = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A);
+        distribution = child.distribution;
+        abandonProb = child.abandonProb;
+        evRound = child.evRound;
+        // 放弃：放弃概率 100%，战力点分布 0
+      } else if (bestAction === 'abandon') {
+        distribution = new Array<number>(modValue).fill(0);
+        abandonProb = 1;
+        evRound = 0;
+        // 结算：立即获得当前奖励，概率 100% 落在当前战力点状态
+      } else if (bestAction === 'stop') {
+        distribution = new Array<number>(modValue).fill(0);
+        distribution[slotIndex] = 1;
+        abandonProb = 0;
+        evRound = roundReward;
+      }
     }
 
     const result: DpResult = {
@@ -488,25 +513,23 @@ export function getCurrentAdvice(
   const evAfterStop = dp.evStop - currentReward;
   const evContinue = Math.max(dp.evDraw, dp.evDouble);
 
-  // 决策规则：期望值相同时按优先级 翻倍 > 继续 > 放弃 > 停止
+  // 决策规则：期望值相同时按优先级 翻倍 > 继续 > 放弃 > 停止（数组顺序）
   let optimalAction: AdviceResult['optimalAction'];
   if (drawn === 0) {
     optimalAction = 'must_continue';
-  } else if (
-    canDoubleNow &&
-    dp.evDouble >= dp.evDraw &&
-    dp.evDouble >= dp.evStop &&
-    dp.evDouble >= dp.evAbandon
-  ) {
-    optimalAction = 'double';
-  } else if (canDrawFurther && dp.evDraw >= dp.evAbandon && dp.evDraw >= dp.evStop) {
-    optimalAction = 'continue';
-  } else if (dp.evAbandon >= dp.evStop) {
-    optimalAction = 'abandon';
-  } else if (!canDrawFurther) {
-    optimalAction = 'must_stop';
   } else {
-    optimalAction = 'stop';
+    const candidates: { action: AdviceResult['optimalAction']; value: number }[] = [];
+    if (canDoubleNow) candidates.push({ action: 'double', value: dp.evDouble });
+    if (canDrawFurther) candidates.push({ action: 'continue', value: dp.evDraw });
+    candidates.push({ action: 'abandon', value: dp.evAbandon });
+    candidates.push({ action: 'stop', value: dp.evStop });
+
+    const best = pickBest(candidates);
+    optimalAction = best.action;
+
+    if (optimalAction === 'stop' && !canDrawFurther) {
+      optimalAction = 'must_stop';
+    }
   }
 
   const expectedRound = dp.evRound;
