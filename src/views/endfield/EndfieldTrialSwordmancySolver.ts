@@ -170,24 +170,29 @@ function computeAdjustedReward(
  *
  *   ### 翻倍（Double）
  *     条件：已抽 1~2 张、M=1（未翻倍）、D>0（有翻倍次数）
- *     下一状态：(牌组当前状态, M=2, P, D-1, A)
- *     期望：evDouble = EV(牌组当前状态, 倍率=2, D-1)
- *     注意：不立即产生奖励，后续结算时当前奖励 ×2
+ *     下一状态：(牌组当前状态, M=2, P, D, A)（不立即扣减 D）
+ *     期望：evDouble = EV(牌组当前状态, 倍率=2, D)
+ *     注意：不立即产生奖励，后续结算时当前奖励 ×2；翻倍次数在结算时扣除
  *
  *   ### 结算（Stop）
  *     条件：已抽 > 0 张
  *     下一状态：即时获得当前奖励（调整后 × 倍率），然后重置进入下一局
- *              (牌组初始状态, M=1, P-1, D, A)
+ *              (牌组初始状态, M=1, P-1, D-(M>1?1:0), A)
+ *             翻倍次数在结算时扣除（已翻倍则 D-1，否则 D 不变）
  *     期望：evStop = 当前奖励 + EV(下一局初态)
  *
  *   ### 放弃（Abandon）
  *     条件：已抽 > 0 张
- *     下一状态：重置牌组重新开局
- *       - A>0：用放弃次数，(牌组初始状态, 1, P, D+(M-1), A-1)
- *       - A=0：用游玩次数，(牌组初始状态, 1, P-1, D+(M-1), 0)
+ *     下一状态：重置牌组重新开局（翻倍未消耗，无需返还）
+ *       - A>0：用放弃次数，(牌组初始状态, 1, P, D, A-1)
+ *       - A=0：有游玩次数且求解器未禁止时，用游玩次数
+ *         (牌组初始状态, 1, P-1, D, 0)
+ *       - 在没有翻倍次数（A=0）时，以下条件满足任意一条禁止放弃（仅求解器避免非最优解，玩家实际可以放弃）：
+ *           ① M=1（未翻倍）
+ *           ② P=1（仅剩一次游玩次数）
+ *           ③ D=P（剩余翻倍数等于可玩次数）
  *     期望：evAbandon = EV(重置后的状态)
- *     特殊规则：放弃时返还本局已消耗的翻倍次数 D+(M-1)，
- *             因为翻倍尚未兑现即作废
+ *     特殊规则：翻倍在结算时才扣除，放弃时翻倍尚未消耗，所以无需返还
  *
  * ## 决策规则
  *   期望相同时按此优先级：翻倍 > 继续 > 放弃 > 停止
@@ -250,7 +255,7 @@ export function getCurrentAdvice(
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
   const P = remainingGames;
-  const D = remainingDoubles - (doubled ? 1 : 0);
+  const D = remainingDoubles;
   const A = remainingAbandons;
 
   const adviceKey = cacheKey(deck, rewards, overflowParams);
@@ -345,13 +350,13 @@ export function getCurrentAdvice(
       }
     }
 
-    // [Double] 条件 roundDrawn∈{1,2} ∧ M=1 ∧ D>0 → M=2, D-1
+    // [Double] 条件 roundDrawn∈{1,2} ∧ M=1 ∧ D>0 → M=2（D 不变，结算时扣减）
     let evDouble = -Infinity;
     if (roundDrawn > 0 && roundDrawn < 3 && M === 1 && D > 0) {
-      evDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, D - 1, A).ev;
+      evDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A).ev;
     }
 
-    // [Stop] 即时获得当前奖励, 重置进下一局: (deckInit, 1, P-1, D, A)
+    // [Stop] 即时获得当前奖励, 重置进下一局: (deckInit, 1, P-1, D-(M>1?1:0), A)
     let evStop = -Infinity;
     if (!cannotStop) {
       evStop =
@@ -364,14 +369,18 @@ export function getCurrentAdvice(
           deckInit[4]!,
           1,
           P - 1,
-          D,
+          M === 1 ? D : D - 1,
           A,
         ).ev;
     }
 
-    // [Abandon] 重置牌组重新开局
-    // A>0 → 用放弃次数, 保留游玩次数; A=0 → 用游玩次数, A 置 0
-    // 返还翻倍：D+(M-1)
+    // [Abandon] 重置牌组重新开局（翻倍未消耗，无需返还）
+    // A>0 → 用放弃次数, 保留游玩次数
+    // A=0 且满足以下任意条件时禁止放弃：
+    //   ① M=1（未翻倍）
+    //   ② P=1（仅剩一次游玩次数）
+    //   ③ D=P（剩余翻倍数等于可玩次数）
+    // 否则可放弃时 → 用游玩次数, A 置 0
     let evAbandon = -Infinity;
     if (!cannotStop) {
       if (A > 0) {
@@ -383,10 +392,10 @@ export function getCurrentAdvice(
           deckInit[4]!,
           1,
           P,
-          D + (M - 1),
+          D,
           A - 1,
         ).ev;
-      } else if (P > 0) {
+      } else if (P > 0 && M === 2 && P !== 1 && D !== P) {
         evAbandon = dpDaily(
           deckInit[0]!,
           deckInit[1]!,
@@ -395,7 +404,7 @@ export function getCurrentAdvice(
           deckInit[4]!,
           1,
           P - 1,
-          D + (M - 1),
+          D,
           0,
         ).ev;
       }
@@ -425,7 +434,7 @@ export function getCurrentAdvice(
       evDouble >= evAbandon
     ) {
       // 翻倍最优：直接继承翻倍后的子分布
-      const child = dpDaily(r1, r2, r3, r4, r5, 2, P, D - 1, A);
+      const child = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A);
       distribution = child.distribution;
       abandonProb = child.abandonProb;
     } else if (!cannotStop && evAbandon >= evStop) {
