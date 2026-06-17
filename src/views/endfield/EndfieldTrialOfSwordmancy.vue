@@ -502,17 +502,11 @@
                   }}</span>
                 </div>
                 <div class="advice-row">
-                  <span class="advice-label">本局继续期望</span>
-                  <span class="advice-value">{{
-                    currentAdvice.expectedContinueReward != null
-                      ? formatDecimal(currentAdvice.expectedContinueReward)
-                      : '—'
-                  }}</span>
+                  <span class="advice-label">本局最优期望</span>
+                  <span class="advice-value">{{ formatDecimal(currentAdvice.expectedRound) }}</span>
                   <span v-if="showAdjustedCol" class="advice-sep">|</span>
                   <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice && adjustedAdvice.expectedContinueReward != null
-                      ? formatDecimal(adjustedAdvice.expectedContinueReward)
-                      : '—'
+                    adjustedAdvice ? formatDecimal(adjustedAdvice.expectedRound) : '—'
                   }}</span>
                 </div>
 

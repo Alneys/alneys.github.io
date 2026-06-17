@@ -22,7 +22,7 @@ export interface OverflowParams {
 /** 当前状态的实时建议 */
 export interface AdviceResult {
   currentReward: number;
-  expectedContinueReward: number | null;
+  expectedRound: number;
   expectedToday: number;
   optimalAction: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double' | 'abandon';
   drawTotal: number | null;
@@ -41,6 +41,7 @@ interface DpResult {
   evDouble: number;
   evStop: number;
   evAbandon: number;
+  evRound: number;
   distribution: number[];
   abandonProb: number;
 }
@@ -296,6 +297,7 @@ export function getCurrentAdvice(
         evDouble: 0,
         evStop: 0,
         evAbandon: 0,
+        evRound: 0,
         distribution: new Array<number>(modValue).fill(0),
         abandonProb: 0,
       };
@@ -325,6 +327,7 @@ export function getCurrentAdvice(
     let evDraw = -Infinity;
     const drawDistribution = new Array<number>(modValue).fill(0);
     let drawAbandonProb = 0;
+    let drawRoundContribution = 0;
     if (roundDrawn < maxDraws && remainingCount > 0) {
       evDraw = 0;
       for (let i = 0; i < 5; i++) {
@@ -342,6 +345,7 @@ export function getCurrentAdvice(
             A,
           );
           evDraw += prob * child.ev;
+          drawRoundContribution += prob * child.evRound;
           for (let j = 0; j < modValue; j++) {
             drawDistribution[j]! += prob * child.distribution[j]!;
           }
@@ -420,10 +424,12 @@ export function getCurrentAdvice(
     // ④ 停止最优 → 当前模位置概率=1
     let distribution: number[];
     let abandonProb: number;
+    let evRound: number;
 
-    if (roundDrawn === 0 || (evDraw >= evAbandon && evDraw >= evStop)) {
+    if (roundDrawn === 0 || (evDraw >= evAbandon && evDraw >= evStop && evDraw >= evDouble)) {
       distribution = drawDistribution;
       abandonProb = drawAbandonProb;
+      evRound = drawRoundContribution;
     } else if (
       roundDrawn > 0 &&
       roundDrawn < 3 &&
@@ -437,15 +443,18 @@ export function getCurrentAdvice(
       const child = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A);
       distribution = child.distribution;
       abandonProb = child.abandonProb;
+      evRound = child.evRound;
     } else if (!cannotStop && evAbandon >= evStop) {
       // 放弃最优：100% 概率放弃（无任何终点分布）
       distribution = new Array<number>(modValue).fill(0);
       abandonProb = 1;
+      evRound = 0;
     } else {
       // 停止最优：当前模位置概率集中为 1
       distribution = new Array<number>(modValue).fill(0);
       distribution[slotIndex] = 1;
       abandonProb = 0;
+      evRound = roundReward;
     }
 
     const result: DpResult = {
@@ -454,6 +463,7 @@ export function getCurrentAdvice(
       evDouble,
       evStop,
       evAbandon,
+      evRound,
       distribution,
       abandonProb,
     };
@@ -499,9 +509,11 @@ export function getCurrentAdvice(
     optimalAction = 'stop';
   }
 
+  const expectedRound = dp.evRound;
+
   return {
     currentReward,
-    expectedContinueReward: canDrawFurther ? evContinue - evAfterStop : null,
+    expectedRound,
     expectedToday: dp.ev,
     optimalAction,
     drawTotal: canDrawFurther ? dp.evDraw : null,
