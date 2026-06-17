@@ -102,6 +102,13 @@ describe('EndfieldTrialSwordmancySolver', () => {
     expect(result!.abandonTotal).toBeNull();
   });
 
+  it('P=0 无剩余游玩次数时初始状态期望为 0', () => {
+    const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 0, 0, 0);
+    expect(result).not.toBeNull();
+    expect(result!.expectedToday).toBe(0);
+    expect(result!.expectedAfterStop).toBe(0);
+  });
+
   it('有翻倍次数时 D=0 可能建议先翻倍', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 2, 3);
     expect(result).not.toBeNull();
