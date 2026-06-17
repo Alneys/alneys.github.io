@@ -1197,7 +1197,7 @@ function resetToday() {
   resetGame();
 }
 
-/** 设置为单次模拟（P=1, B=0, A=0） */
+/** 设置为单次模拟（P=1, D=0, A=0） */
 function setSingleSimulation() {
   remainingGames.value = 1;
   remainingDoubles.value = 0;
@@ -1297,9 +1297,9 @@ const currentAdvice = computed<AdviceResult | null>(() => {
   const rewards = rewardValues.value;
   if (deck.some((c) => c < 0)) return null;
   return getCurrentAdvice(
-    drawnCounts.value,
     deck,
     rewards,
+    drawnCounts.value,
     doubled.value,
     remainingGames.value,
     remainingDoubles.value,
@@ -1313,9 +1313,9 @@ const adjustedAdvice = computed<AdviceResult | null>(() => {
   const rewards = rewardValues.value;
   if (deck.some((c) => c < 0) || !overflowParams.value) return currentAdvice.value;
   return getCurrentAdvice(
-    drawnCounts.value,
     deck,
     rewards,
+    drawnCounts.value,
     doubled.value,
     remainingGames.value,
     remainingDoubles.value,
@@ -1350,9 +1350,9 @@ const perLevelAdvice = computed(() => {
       const nextDrawn = [...dc];
       nextDrawn[i]!++;
       const raw = getCurrentAdvice(
-        nextDrawn,
         deck,
         rewards,
+        nextDrawn,
         doubled.value,
         remainingGames.value,
         remainingDoubles.value,
@@ -1361,9 +1361,9 @@ const perLevelAdvice = computed(() => {
       let adj: AdviceResult | null = null;
       if (overflowParams.value) {
         adj = getCurrentAdvice(
-          nextDrawn,
           deck,
           rewards,
+          nextDrawn,
           doubled.value,
           remainingGames.value,
           remainingDoubles.value,
