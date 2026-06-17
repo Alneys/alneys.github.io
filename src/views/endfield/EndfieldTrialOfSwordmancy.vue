@@ -6,6 +6,7 @@
         <img
           src="https://img.shields.io/badge/Alneys-00A1D6?style=flat-square&logo=bilibili&labelColor=eee"
           alt="BiliBili"
+          style="height: 20px"
         />
       </a>
       <el-button class="view-tour-btn" :size="compSize" @click="tourOpen = true">
@@ -487,11 +488,13 @@
                   <template v-else>{{ decisionPrefix }}结算本局</template>
                 </div>
                 <el-divider style="margin: 4px 0" />
-                <div v-if="showAdjustedCol" class="advice-row advice-header">
+                <div class="advice-row advice-header">
                   <span class="advice-label" />
                   <span class="advice-value">原始期望</span>
                   <span class="advice-sep">|</span>
-                  <span class="advice-value advice-adjusted">心理模型期望</span>
+                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted"
+                    >心理模型期望</span
+                  >
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局当前奖励</span>
@@ -654,17 +657,19 @@
                         v-else
                         class="distribution-value"
                         :class="{ 'distribution-current-value': row.isCurrent }"
-                        >{{ row.value }}</span
                       >
+                        {{ row.value }}
+                      </span>
                     </template>
                   </el-table-column>
-                  <el-table-column label="概率" width="80">
+                  <el-table-column label="概率" width="96">
                     <template #default="{ row }">
                       <span
                         class="distribution-prob"
                         :class="{ 'distribution-prob-abandon': row.isAbandon }"
-                        >{{ (row.prob * 100).toFixed(2) + '%' }}</span
                       >
+                        {{ (row.prob * 100).toFixed(2) + '%' }}
+                      </span>
                     </template>
                   </el-table-column>
                   <el-table-column label="分布条">
@@ -1182,7 +1187,6 @@ function setSingleSimulation() {
   remainingGames.value = 1;
   remainingDoubles.value = 0;
   remainingAbandons.value = 0;
-  resetGame();
 }
 
 /** 格式化数值为固定两位小数 */
@@ -1544,7 +1548,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   .psycho-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
   .psycho-grid {
@@ -1723,17 +1727,18 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       flex-grow: 1;
       --el-border-radius-base: 0px;
     }
+  }
 
-    &.reward-psych-section {
-      .reward-psych-segmented {
-        --el-segmented-item-selected-bg-color: var(--el-color-danger);
-        --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
-      }
-      &.reward-psych-disabled {
-        opacity: 0.5;
-        .reward-label {
-          color: var(--el-text-color-placeholder);
-        }
+  .reward-psych-section {
+    margin-bottom: 0;
+    .reward-psych-segmented {
+      --el-segmented-item-selected-bg-color: var(--el-color-danger);
+      --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
+    }
+    &.reward-psych-disabled {
+      opacity: 0.4;
+      .reward-label {
+        color: var(--el-text-color-placeholder);
       }
     }
   }
@@ -1931,6 +1936,10 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   }
 
   // ── 操作按钮 ──
+
+  .action-rows {
+    margin: 8px 0;
+  }
 
   .action-row {
     display: flex;
