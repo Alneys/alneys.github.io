@@ -306,17 +306,20 @@
                   <span>铭牌库剩余 {{ pool.length }} 张（点击可抽取）</span>
                 </template>
                 <div class="pool-list">
-                  <div
-                    v-for="level in 5"
-                    :key="level"
-                    class="pool-level-row"
-                    :class="{ 'pool-level-clickable': getPoolCount(level) > 0 }"
-                    :style="getPoolCount(level) > 0 ? 'cursor: pointer' : 'cursor:not-allowed'"
-                    @click="simulateDrawFromPool(level)"
-                  >
-                    <span class="pool-level-label">Lv.{{ level }}</span>
-                    <span class="pool-level-count">{{ getPoolCount(level) }} 张</span>
-                  </div>
+                  <span v-for="level in 5" :key="level">
+                    <el-button
+                      :size="compSize"
+                      type="info"
+                      plain
+                      style="width: 100%"
+                      class="pool-btn"
+                      :disabled="getPoolCount(level) === 0"
+                      @click="simulateDrawFromPool(level)"
+                    >
+                      <span class="pool-level-label">Lv.{{ level }}</span>
+                      <span class="pool-level-count">{{ getPoolCount(level) }} 张</span>
+                    </el-button>
+                  </span>
                 </div>
               </el-card>
             </el-col>
@@ -1729,19 +1732,16 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     gap: 8px;
   }
 
-  .pool-level-row {
+  .pool-btn :deep(> span) {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: var(--el-fill-color);
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
   }
 
   .pool-level-label {
     font-size: 12px;
     color: var(--el-text-color-secondary);
-    min-width: 32px;
   }
 
   .pool-level-count {
@@ -2075,18 +2075,25 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
     .action-btn {
       width: 100%;
+      min-width: unset;
     }
 
     .pool-list {
       flex-direction: row;
     }
 
-    .pool-level-row {
+    .pool-list > span {
       flex: 1;
+    }
+
+    .pool-btn {
+      height: 48px;
+    }
+
+    .pool-btn :deep(> span) {
       flex-direction: column;
-      align-items: center;
+      justify-content: center;
       gap: 4px;
-      padding: 8px 4px;
     }
 
     .pool-level-count {
