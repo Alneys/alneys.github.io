@@ -52,7 +52,7 @@ const expected: Record<string, number> = {
 function getInitialExpected(P: number, D: number, A: number): number {
   const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, P, D, A);
   if (!result) throw new Error('getCurrentAdvice returned null');
-  return result.expectedToday;
+  return result.rewardToday;
 }
 
 describe('EndfieldTrialSwordmancySolver', () => {
@@ -69,13 +69,13 @@ describe('EndfieldTrialSwordmancySolver', () => {
   it('默认初始状态 P=3 D=2 A=3 的期望收益为 639,603.99', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 2, 3);
     expect(result).not.toBeNull();
-    expect(result!.expectedToday).toBeCloseTo(639603.99, 0);
+    expect(result!.rewardToday).toBeCloseTo(639603.99, 0);
   });
 
   it('放弃次数为 0 时的结果高于原无放弃机制的版本（因为 A=0 时也可放弃作为新选项）', () => {
     const withAbandon = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 2, 0);
     expect(withAbandon).not.toBeNull();
-    expect(withAbandon!.expectedToday).toBeCloseTo(468513.28, 0);
+    expect(withAbandon!.rewardToday).toBeCloseTo(468513.28, 0);
   });
 
   it('已抽满 5 张时仍可放弃', () => {
@@ -83,8 +83,8 @@ describe('EndfieldTrialSwordmancySolver', () => {
     // 此时放弃的期望应高于结算
     const result = getCurrentAdvice(deck, rewards, [5, 0, 0, 0, 0], false, 1, 0, 1);
     expect(result).not.toBeNull();
-    expect(result!.abandonTotal).not.toBeNull();
-    expect(result!.stopTotal).not.toBeNull();
+    expect(result!.rewardAbandon).not.toBeNull();
+    expect(result!.rewardStop).not.toBeNull();
     expect(result!.optimalAction).toBe('abandon');
   });
 
@@ -94,19 +94,23 @@ describe('EndfieldTrialSwordmancySolver', () => {
     expect(result!.optimalAction).not.toBe('abandon');
   });
 
-  it('未抽取铭牌时不能结算也不能放弃（无剩余翻倍次数）', () => {
+  it('未抽取铭牌时可以结算（奖励为 0），但不能放弃', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 0, 3);
     expect(result).not.toBeNull();
+    // 无翻倍次数时继续优于结算（因为停牌奖励为 0），沿用 must_continue 兼容 UI
     expect(result!.optimalAction).toBe('must_continue');
-    expect(result!.stopTotal).toBeNull();
-    expect(result!.abandonTotal).toBeNull();
+    // rewardStop 应显示结算期望（0 + 下一局期望），不再为 null
+    expect(result!.rewardStop).not.toBeNull();
+    // 放弃仍不允许
+    expect(result!.rewardAbandon).toBeNull();
+    expect(result!.euAbandon).toBeNull();
   });
 
   it('P=0 无剩余游玩次数时初始状态期望为 0', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 0, 0, 0);
     expect(result).not.toBeNull();
-    expect(result!.expectedToday).toBe(0);
-    expect(result!.expectedAfterStop).toBe(0);
+    expect(result!.rewardToday).toBe(0);
+    expect(result!.rewardAfterStop).toBe(0);
   });
 
   it('有翻倍次数时 D=0 可能建议先翻倍', () => {
@@ -122,7 +126,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
         aversionFactor: 1.0,
         fixedPenalty: 0,
       });
-      expect(withDefault!.expectedToday).toBeCloseTo(raw!.expectedToday, 0);
+      expect(withDefault!.rewardToday).toBeCloseTo(raw!.rewardToday, 0);
     });
 
     it('带溢出参数时的期望应低于原始期望', () => {
@@ -132,7 +136,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
         fixedPenalty: 20000,
       });
       expect(withOverflow).not.toBeNull();
-      expect(withOverflow!.expectedToday).toBeLessThan(raw!.expectedToday);
+      expect(withOverflow!.rewardToday).toBeLessThan(raw!.rewardToday);
     });
   });
 
@@ -168,9 +172,9 @@ describe('EndfieldTrialSwordmancySolver', () => {
       );
       expect(advice).not.toBeNull();
       expect(advice!.optimalAction).toBe('continue');
-      expect(advice!.drawTotal).toBeCloseTo(616249.19, 0);
-      expect(advice!.stopTotal).toBeCloseTo(602653.2, 0);
-      expect(advice!.abandonTotal).toBeCloseTo(596903.01, 0);
+      expect(advice!.rewardDraw).toBeCloseTo(616249.19, 0);
+      expect(advice!.rewardStop).toBeCloseTo(602653.2, 0);
+      expect(advice!.rewardAbandon).toBeCloseTo(596903.01, 0);
     });
 
     it('已抽 11451 应显示放弃 100%', () => {
@@ -193,8 +197,8 @@ describe('EndfieldTrialSwordmancySolver', () => {
       for (let i = 0; i < 11; i++) {
         expect(advice!.distribution[i]).toBeCloseTo(0, 2);
       }
-      expect(advice!.abandonTotal).toBeCloseTo(596903.01, 0);
-      expect(advice!.stopTotal).toBeCloseTo(523129.02, 0);
+      expect(advice!.rewardAbandon).toBeCloseTo(596903.01, 0);
+      expect(advice!.rewardStop).toBeCloseTo(523129.02, 0);
     });
 
     it('已抽满 5 张时放弃概率应与 optimalAction 一致', () => {

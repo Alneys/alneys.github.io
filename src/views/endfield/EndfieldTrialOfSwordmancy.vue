@@ -26,6 +26,17 @@
           <el-collapse-item title="基础参数配置" name="config">
             <div class="config-reward-section">
               <div class="config-reward-header">铭牌库配置</div>
+              <div class="config-date-hint">
+                <span class="config-hint-hint">默认配置更新于 {{ DEFAULT_DECK_CONFIG_DATE }}</span>
+                <el-tag
+                  v-if="configDateExpired"
+                  type="danger"
+                  size="small"
+                  style="margin-left: 8px"
+                >
+                  铭牌库数据可能需要手动更新
+                </el-tag>
+              </div>
               <div v-if="poolQuickConfigMode" class="config-otp-row">
                 <span class="config-label">铭牌库分布</span>
                 <el-input-otp
@@ -54,6 +65,7 @@
                 <el-button class="config-reset-btn" :size="compSize" @click="resetConfig">
                   重置铭牌库
                 </el-button>
+                <el-button :size="compSize" @click="resetToInitial"> 重置为初始 </el-button>
               </div>
             </div>
 
@@ -155,6 +167,17 @@
                 <span>今日状态</span>
               </template>
               <div class="daily-grid">
+                <div class="daily-date-hint" style="width: 100%">
+                  <span class="date-hint-text">默认配置更新于 {{ DEFAULT_DECK_CONFIG_DATE }}</span>
+                  <el-tag
+                    v-if="configDateExpired"
+                    type="danger"
+                    size="small"
+                    style="margin-left: 8px"
+                  >
+                    铭牌库数据可能需要手动更新
+                  </el-tag>
+                </div>
                 <div v-if="poolQuickConfigMode" class="config-otp-row">
                   <span class="daily-label">铭牌库分布</span>
                   <el-input-otp
@@ -180,6 +203,7 @@
                   <el-button :size="compSize" type="primary" @click="toggleQuickMode">
                     {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
                   </el-button>
+                  <el-button :size="compSize" @click="resetToInitial"> 重置为初始 </el-button>
                 </div>
                 <el-divider style="margin: 4px 0" />
                 <div class="daily-item">
@@ -282,17 +306,20 @@
                   <span>铭牌库剩余 {{ pool.length }} 张（点击可抽取）</span>
                 </template>
                 <div class="pool-list">
-                  <div
-                    v-for="level in 5"
-                    :key="level"
-                    class="pool-level-row"
-                    :class="{ 'pool-level-clickable': getPoolCount(level) > 0 }"
-                    :style="getPoolCount(level) > 0 ? 'cursor: pointer' : 'cursor:not-allowed'"
-                    @click="simulateDrawFromPool(level)"
-                  >
-                    <span class="pool-level-label">Lv.{{ level }}</span>
-                    <span class="pool-level-count">{{ getPoolCount(level) }} 张</span>
-                  </div>
+                  <span v-for="level in 5" :key="level">
+                    <el-button
+                      :size="compSize"
+                      type="info"
+                      plain
+                      style="width: 100%"
+                      class="pool-btn"
+                      :disabled="getPoolCount(level) === 0"
+                      @click="simulateDrawFromPool(level)"
+                    >
+                      <span class="pool-level-label">Lv.{{ level }}</span>
+                      <span class="pool-level-count">{{ getPoolCount(level) }} 张</span>
+                    </el-button>
+                  </span>
                 </div>
               </el-card>
             </el-col>
@@ -313,7 +340,7 @@
                     block
                     :class="{
                       'reward-penalty': totalPower > 10,
-                      'reward-success': rewardIndex === 10,
+                      'reward-success': !(totalPower > 10) && rewardIndex === 10,
                     }"
                   />
                   <span class="reward-xs-value hidden-sm-and-up">{{ rewardIndex }}</span>
@@ -327,7 +354,7 @@
                     block
                     :class="{
                       'reward-penalty': totalPower > 10,
-                      'reward-success': rewardIndex === 10,
+                      'reward-success': !(totalPower > 10) && rewardIndex === 10,
                     }"
                   />
                   <span class="reward-xs-value hidden-sm-and-up">{{
@@ -338,10 +365,10 @@
                   class="reward-eu-section"
                   :class="{
                     'reward-eu-disabled': !showEuColumn,
-                    'reward-penalty': showEuColumn && totalPower > 10,
+                    'reward-penalty': totalPower > 10,
                   }"
                 >
-                  <span class="reward-label">溢出期望效用</span>
+                  <span class="reward-label">溢出期望</span>
                   <el-segmented
                     v-model="euSelectedValue"
                     :size="compSize"
@@ -373,8 +400,24 @@
                     </el-button>
                   </template>
                 </el-popconfirm>
+                <el-button
+                  v-if="isMobile"
+                  class="action-btn"
+                  :size="compSize"
+                  @click="undoLastDraw"
+                >
+                  撤销
+                </el-button>
               </div>
               <div class="action-row-right">
+                <el-button
+                  v-if="!isMobile"
+                  class="action-btn"
+                  :size="compSize"
+                  @click="undoLastDraw"
+                >
+                  撤销
+                </el-button>
                 <el-button
                   class="action-btn"
                   :size="compSize"
@@ -501,7 +544,7 @@
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局当前奖励</span>
-                  <span class="advice-value">{{ formatDecimal(euAdvice.currentReward) }}</span>
+                  <span class="advice-value">{{ formatDecimal(euAdvice.rewardCurrent) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
                     formatDecimal(euAdvice.euCurrentReward)
@@ -509,10 +552,10 @@
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局最优期望</span>
-                  <span class="advice-value">{{ formatDecimal(euAdvice.expectedRound) }}</span>
+                  <span class="advice-value">{{ formatDecimal(euAdvice.rewardRound) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice ? formatDecimal(euAdvice.euExpectedRound) : '—'
+                    euAdvice ? formatDecimal(euAdvice.euRound) : '—'
                   }}</span>
                 </div>
 
@@ -531,11 +574,11 @@
                 >
                   <span class="advice-label">抽取铭牌</span>
                   <span class="advice-value">{{
-                    euAdvice.drawTotal != null ? formatDecimal(euAdvice.drawTotal) : '—'
+                    euAdvice.rewardDraw != null ? formatDecimal(euAdvice.rewardDraw) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice.euDrawTotal != null ? formatDecimal(euAdvice.euDrawTotal) : '—'
+                    euAdvice.euDraw != null ? formatDecimal(euAdvice.euDraw) : '—'
                   }}</span>
                 </div>
                 <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
@@ -564,11 +607,11 @@
                 >
                   <span class="advice-label">开启翻倍</span>
                   <span class="advice-value">{{
-                    euAdvice.doubleTotal != null ? formatDecimal(euAdvice.doubleTotal) : '—'
+                    euAdvice.rewardDouble != null ? formatDecimal(euAdvice.rewardDouble) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice.euDoubleTotal != null ? formatDecimal(euAdvice.euDoubleTotal) : '—'
+                    euAdvice.euDouble != null ? formatDecimal(euAdvice.euDouble) : '—'
                   }}</span>
                 </div>
                 <div
@@ -580,11 +623,11 @@
                 >
                   <span class="advice-label">放弃本局</span>
                   <span class="advice-value">{{
-                    euAdvice.abandonTotal != null ? formatDecimal(euAdvice.abandonTotal) : '—'
+                    euAdvice.rewardAbandon != null ? formatDecimal(euAdvice.rewardAbandon) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice.euAbandonTotal != null ? formatDecimal(euAdvice.euAbandonTotal) : '—'
+                    euAdvice.euAbandon != null ? formatDecimal(euAdvice.euAbandon) : '—'
                   }}</span>
                 </div>
                 <div
@@ -596,30 +639,30 @@
                 >
                   <span class="advice-label">结算本局</span>
                   <span class="advice-value">{{
-                    euAdvice.stopTotal != null ? formatDecimal(euAdvice.stopTotal) : '—'
+                    euAdvice.rewardStop != null ? formatDecimal(euAdvice.rewardStop) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice.euStopTotal != null ? formatDecimal(euAdvice.euStopTotal) : '—'
+                    euAdvice.euStop != null ? formatDecimal(euAdvice.euStop) : '—'
                   }}</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
-                  <span class="advice-value">{{ formatDecimal(euAdvice.expectedAfterStop) }}</span>
+                  <span class="advice-value">{{ formatDecimal(euAdvice.rewardAfterStop) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    formatDecimal(euAdvice.euExpectedAfterStop)
+                    formatDecimal(euAdvice.euAfterStop)
                   }}</span>
                 </div>
                 <el-divider style="margin: 4px 0" />
                 <div class="advice-row">
                   <span class="advice-label">今日总期望</span>
                   <span class="advice-value advice-today-value">{{
-                    formatDecimal(euAdvice.expectedToday)
+                    formatDecimal(euAdvice.rewardToday)
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-today-adjusted">{{
-                    formatDecimal(euAdvice.euExpectedToday)
+                    formatDecimal(euAdvice.euToday)
                   }}</span>
                 </div>
               </div>
@@ -635,11 +678,11 @@
               <template v-if="!hasWarning">
                 <el-table
                   v-if="distributionTableData.length > 0"
-                  :size="compSize"
+                  size="small"
                   :data="distributionTableData"
                   height="auto"
                   :row-class-name="distributionRowClassName"
-                  style="width: 100%"
+                  style="width: 100%; font-size: 14px"
                 >
                   <el-table-column label="" width="56">
                     <template #default="{ row }">
@@ -742,6 +785,7 @@ import {
   clearSolverCache,
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
+  DEFAULT_DECK_CONFIG_DATE,
 } from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, ExpectedUtilityParams } from './EndfieldTrialSwordmancySolver';
 
@@ -777,11 +821,11 @@ const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
 const rewardTableError = ref('');
 
 const config = reactive<PlaqueConfig>({
-  level1: 5,
-  level2: 5,
-  level3: 5,
-  level4: 8,
-  level5: 6,
+  level1: DEFAULT_DECK_CONFIG[0]!,
+  level2: DEFAULT_DECK_CONFIG[1]!,
+  level3: DEFAULT_DECK_CONFIG[2]!,
+  level4: DEFAULT_DECK_CONFIG[3]!,
+  level5: DEFAULT_DECK_CONFIG[4]!,
 });
 
 const debouncedDeckConfig = ref<number[]>([...DEFAULT_DECK_CONFIG]);
@@ -841,6 +885,12 @@ function resetConfig() {
   config.level4 = DEFAULT_DECK_CONFIG[3]!;
   config.level5 = DEFAULT_DECK_CONFIG[4]!;
   // applyConfig();
+}
+
+/** 重置铭牌库分布为初始默认值并立即应用 */
+function resetToInitial() {
+  resetConfig();
+  applyConfig();
 }
 
 /** 快速配置模式（OTP 式单格输入+自动跳转） */
@@ -962,6 +1012,23 @@ const poolByLevel = computed(() => {
     groups[plaque.level]!.push(plaque);
   }
   return groups;
+});
+
+/** 默认配置是否已过期超过 72 小时（UTC 比较） */
+const configDateExpired = computed(() => {
+  const parts = DEFAULT_DECK_CONFIG_DATE.split(' ');
+  const dateStr = parts[0] ?? '2000-01-01';
+  const timeStr = parts[1] ?? '00:00';
+  const dateParts = dateStr.split('-');
+  const timeParts = timeStr.split(':');
+  const year = Number(dateParts[0]) || 2000;
+  const month = Number(dateParts[1]) || 1;
+  const day = Number(dateParts[2]) || 1;
+  const hour = Number(timeParts[0]) || 0;
+  const minute = Number(timeParts[1]) || 0;
+  const configDate = Date.UTC(year, month - 1, day, hour, minute);
+  const diffHours = (Date.now() - configDate) / (1000 * 60 * 60);
+  return diffHours > 72;
 });
 
 const aversionFactor = ref(1.0);
@@ -1282,7 +1349,7 @@ const currentAdvice = computed<AdviceResult | null>(() => {
   );
 });
 
-/** 调整后的最优行动建议（含溢出厌恶模型） */
+/** 调整后的最优行动建议（含期望效用模型） */
 const euAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
   const rewards = rewardValues.value;
@@ -1318,8 +1385,8 @@ const perLevelAdvice = computed(() => {
   const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
     [];
   // 左列基线 = 原始奖励期望（遵循 EU 策略），右列基线 = EU 调整期望
-  const currentExp = euAdvice.value?.expectedToday ?? 0;
-  const currentExpAdj = euAdvice.value?.euExpectedToday ?? currentExp;
+  const currentExp = euAdvice.value?.rewardToday ?? 0;
+  const currentExpAdj = euAdvice.value?.euToday ?? currentExp;
   for (let i = 0; i < 5; i++) {
     if (remaining[i]! > 0) {
       const prob = remaining[i]! / totalRemaining;
@@ -1339,9 +1406,9 @@ const perLevelAdvice = computed(() => {
       result.push({
         level: i + 1,
         prob: Math.round(prob * 10000) / 10000,
-        ev: nextResult ? Math.round((nextResult.expectedToday - currentExp) * 100) / 100 : null,
+        ev: nextResult ? Math.round((nextResult.rewardToday - currentExp) * 100) / 100 : null,
         evAdjusted: nextResult
-          ? Math.round((nextResult.euExpectedToday - currentExpAdj) * 100) / 100
+          ? Math.round((nextResult.euToday - currentExpAdj) * 100) / 100
           : null,
       });
     } else {
@@ -1464,7 +1531,6 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .config-buttons,
   .config-reward-buttons {
     display: flex;
-    gap: 8px;
     margin-top: 8px;
   }
 
@@ -1476,6 +1542,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     font-size: 14px;
     font-weight: bold;
     margin-bottom: 4px;
+  }
+
+  .config-date-hint {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+
+    .config-hint-hint {
+      display: flex;
+      align-items: center;
+      height: 20px;
+    }
   }
 
   .config-reward-hint {
@@ -1666,19 +1746,16 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     gap: 8px;
   }
 
-  .pool-level-row {
+  .pool-btn :deep(> span) {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: var(--el-fill-color);
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
   }
 
   .pool-level-label {
     font-size: 12px;
     color: var(--el-text-color-secondary);
-    min-width: 32px;
   }
 
   .pool-level-count {
@@ -1717,6 +1794,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
       --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
     }
+    &.reward-penalty {
+      .reward-eu-segmented {
+        --el-segmented-bg-color: var(--el-color-danger-light-7);
+      }
+    }
     &.reward-eu-disabled {
       opacity: 0.4;
       .reward-label {
@@ -1728,18 +1810,33 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-penalty {
     &.el-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
+      --el-segmented-bg-color: var(--el-color-danger-light-7);
     }
   }
 
   .reward-success {
     &.el-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-success);
+      --el-segmented-bg-color: var(--el-color-success-light-7);
       color: var(--el-text-color-primary);
     }
     color: var(--el-color-success);
   }
 
   // ── 今日状态 ──
+
+  .daily-date-hint {
+    display: flex;
+    align-items: baseline;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+
+    .date-hint-text {
+      display: flex;
+      align-items: center;
+      height: 20px;
+    }
+  }
 
   .daily-grid {
     display: flex;
@@ -1941,7 +2038,6 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 12px;
   }
 
   .action-btn {
@@ -1964,6 +2060,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .action-switch {
     min-width: 100px;
     justify-content: center;
+    margin-right: 8px;
   }
 
   .action-switch-group {
@@ -2012,18 +2109,25 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
     .action-btn {
       width: 100%;
+      min-width: unset;
     }
 
     .pool-list {
       flex-direction: row;
     }
 
-    .pool-level-row {
+    .pool-list > span {
       flex: 1;
+    }
+
+    .pool-btn {
+      height: 48px;
+    }
+
+    .pool-btn :deep(> span) {
       flex-direction: column;
-      align-items: center;
+      justify-content: center;
       gap: 4px;
-      padding: 8px 4px;
     }
 
     .pool-level-count {
