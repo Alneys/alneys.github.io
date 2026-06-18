@@ -678,11 +678,11 @@
               <template v-if="!hasWarning">
                 <el-table
                   v-if="distributionTableData.length > 0"
-                  :size="compSize"
+                  size="small"
                   :data="distributionTableData"
                   height="auto"
                   :row-class-name="distributionRowClassName"
-                  style="width: 100%"
+                  style="width: 100%; font-size: 14px"
                 >
                   <el-table-column label="" width="56">
                     <template #default="{ row }">
