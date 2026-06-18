@@ -132,10 +132,17 @@
                   </el-button>
                   <el-button
                     :size="compSize"
+                    :type="isPresetActive(0.01, 0) ? 'primary' : ''"
+                    @click="setPsychoParams(0.01, 0)"
+                  >
+                    厌恶溢出
+                  </el-button>
+                  <el-button
+                    :size="compSize"
                     :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
                     @click="setPsychoParams(0.01, 400000)"
                   >
-                    绝对厌恶溢出
+                    禁止溢出
                   </el-button>
                 </div>
               </div>
