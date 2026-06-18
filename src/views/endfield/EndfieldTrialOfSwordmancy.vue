@@ -464,7 +464,7 @@
               <div v-if="hasWarning" class="advice-content">
                 <div class="advice-decision advice-abandon">错误：铭牌库不足</div>
               </div>
-              <div v-else-if="currentAdvice" class="advice-content">
+              <div v-else-if="currentAdvice && euAdvice" class="advice-content">
                 <div
                   class="advice-decision"
                   :class="{
@@ -495,26 +495,24 @@
                 <el-divider style="margin: 4px 0" />
                 <div class="advice-row advice-header">
                   <span class="advice-label" />
-                  <span class="advice-value">原始期望</span>
+                  <span class="advice-value">奖励期望</span>
                   <span class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted"
-                    >期望效用模型期望</span
-                  >
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">期望效用</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局当前奖励</span>
-                  <span class="advice-value">{{ formatDecimal(currentAdvice.currentReward) }}</span>
+                  <span class="advice-value">{{ formatDecimal(euAdvice.currentReward) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice ? formatDecimal(euAdvice.currentReward) : '—'
+                    formatDecimal(euAdvice.euCurrentReward)
                   }}</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局最优期望</span>
-                  <span class="advice-value">{{ formatDecimal(currentAdvice.expectedRound) }}</span>
+                  <span class="advice-value">{{ formatDecimal(euAdvice.expectedRound) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice ? formatDecimal(euAdvice.expectedRound) : '—'
+                    euAdvice ? formatDecimal(euAdvice.euExpectedRound) : '—'
                   }}</span>
                 </div>
 
@@ -533,11 +531,11 @@
                 >
                   <span class="advice-label">抽取铭牌</span>
                   <span class="advice-value">{{
-                    currentAdvice.drawTotal != null ? formatDecimal(currentAdvice.drawTotal) : '—'
+                    euAdvice.drawTotal != null ? formatDecimal(euAdvice.drawTotal) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice && euAdvice.drawTotal != null ? formatDecimal(euAdvice.drawTotal) : '—'
+                    euAdvice.euDrawTotal != null ? formatDecimal(euAdvice.euDrawTotal) : '—'
                   }}</span>
                 </div>
                 <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
@@ -566,15 +564,11 @@
                 >
                   <span class="advice-label">开启翻倍</span>
                   <span class="advice-value">{{
-                    currentAdvice.doubleTotal != null
-                      ? formatDecimal(currentAdvice.doubleTotal)
-                      : '—'
+                    euAdvice.doubleTotal != null ? formatDecimal(euAdvice.doubleTotal) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice && euAdvice.doubleTotal != null
-                      ? formatDecimal(euAdvice.doubleTotal)
-                      : '—'
+                    euAdvice.euDoubleTotal != null ? formatDecimal(euAdvice.euDoubleTotal) : '—'
                   }}</span>
                 </div>
                 <div
@@ -586,15 +580,11 @@
                 >
                   <span class="advice-label">放弃本局</span>
                   <span class="advice-value">{{
-                    currentAdvice.abandonTotal != null
-                      ? formatDecimal(currentAdvice.abandonTotal)
-                      : '—'
+                    euAdvice.abandonTotal != null ? formatDecimal(euAdvice.abandonTotal) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice && euAdvice.abandonTotal != null
-                      ? formatDecimal(euAdvice.abandonTotal)
-                      : '—'
+                    euAdvice.euAbandonTotal != null ? formatDecimal(euAdvice.euAbandonTotal) : '—'
                   }}</span>
                 </div>
                 <div
@@ -606,30 +596,30 @@
                 >
                   <span class="advice-label">结算本局</span>
                   <span class="advice-value">{{
-                    currentAdvice.stopTotal != null ? formatDecimal(currentAdvice.stopTotal) : '—'
+                    euAdvice.stopTotal != null ? formatDecimal(euAdvice.stopTotal) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
-                    euAdvice && euAdvice.stopTotal != null ? formatDecimal(euAdvice.stopTotal) : '—'
+                    euAdvice.euStopTotal != null ? formatDecimal(euAdvice.euStopTotal) : '—'
                   }}</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
-                  <span class="advice-value">{{
-                    euAdvice && euAdvice.stopTotal != null
-                      ? formatDecimal(currentAdvice.expectedAfterStop)
-                      : '—'
+                  <span class="advice-value">{{ formatDecimal(euAdvice.expectedAfterStop) }}</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    formatDecimal(euAdvice.euExpectedAfterStop)
                   }}</span>
                 </div>
                 <el-divider style="margin: 4px 0" />
                 <div class="advice-row">
                   <span class="advice-label">今日总期望</span>
                   <span class="advice-value advice-today-value">{{
-                    formatDecimal(currentAdvice.expectedToday)
+                    formatDecimal(euAdvice.expectedToday)
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-today-adjusted">{{
-                    euAdvice ? formatDecimal(euAdvice.expectedToday) : '—'
+                    formatDecimal(euAdvice.euExpectedToday)
                   }}</span>
                 </div>
               </div>
@@ -1327,14 +1317,16 @@ const perLevelAdvice = computed(() => {
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
   const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
     [];
-  const currentExp = currentAdvice.value?.expectedToday ?? 0;
-  const currentExpAdj = euAdvice.value?.expectedToday ?? currentExp;
+  // 左列基线 = 原始奖励期望（遵循 EU 策略），右列基线 = EU 调整期望
+  const currentExp = euAdvice.value?.expectedToday ?? 0;
+  const currentExpAdj = euAdvice.value?.euExpectedToday ?? currentExp;
   for (let i = 0; i < 5; i++) {
     if (remaining[i]! > 0) {
       const prob = remaining[i]! / totalRemaining;
       const nextDrawn = [...dc];
       nextDrawn[i]!++;
-      const raw = getCurrentAdvice(
+      // 一次调用同时获取原始奖励期望和 EU 调整期望
+      const nextResult = getCurrentAdvice(
         deck,
         rewards,
         nextDrawn,
@@ -1342,25 +1334,15 @@ const perLevelAdvice = computed(() => {
         remainingGames.value,
         remainingDoubles.value,
         remainingAbandons.value,
+        euParams.value,
       );
-      let adj: AdviceResult | null = null;
-      if (euParams.value) {
-        adj = getCurrentAdvice(
-          deck,
-          rewards,
-          nextDrawn,
-          doubled.value,
-          remainingGames.value,
-          remainingDoubles.value,
-          remainingAbandons.value,
-          euParams.value,
-        );
-      }
       result.push({
         level: i + 1,
         prob: Math.round(prob * 10000) / 10000,
-        ev: raw ? Math.round((raw.expectedToday - currentExp) * 100) / 100 : null,
-        evAdjusted: adj ? Math.round((adj.expectedToday - currentExpAdj) * 100) / 100 : null,
+        ev: nextResult ? Math.round((nextResult.expectedToday - currentExp) * 100) / 100 : null,
+        evAdjusted: nextResult
+          ? Math.round((nextResult.euExpectedToday - currentExpAdj) * 100) / 100
+          : null,
       });
     } else {
       result.push({
