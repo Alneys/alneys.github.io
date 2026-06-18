@@ -340,7 +340,7 @@
                     block
                     :class="{
                       'reward-penalty': totalPower > 10,
-                      'reward-success': rewardIndex === 10,
+                      'reward-success': !(totalPower > 10) && rewardIndex === 10,
                     }"
                   />
                   <span class="reward-xs-value hidden-sm-and-up">{{ rewardIndex }}</span>
@@ -354,7 +354,7 @@
                     block
                     :class="{
                       'reward-penalty': totalPower > 10,
-                      'reward-success': rewardIndex === 10,
+                      'reward-success': !(totalPower > 10) && rewardIndex === 10,
                     }"
                   />
                   <span class="reward-xs-value hidden-sm-and-up">{{
@@ -365,10 +365,10 @@
                   class="reward-eu-section"
                   :class="{
                     'reward-eu-disabled': !showEuColumn,
-                    'reward-penalty': showEuColumn && totalPower > 10,
+                    'reward-penalty': totalPower > 10,
                   }"
                 >
-                  <span class="reward-label">溢出期望效用</span>
+                  <span class="reward-label">溢出期望</span>
                   <el-segmented
                     v-model="euSelectedValue"
                     :size="compSize"
@@ -1794,6 +1794,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
       --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
     }
+    &.reward-penalty {
+      .reward-eu-segmented {
+        --el-segmented-bg-color: var(--el-color-danger-light-7);
+      }
+    }
     &.reward-eu-disabled {
       opacity: 0.4;
       .reward-label {
@@ -1805,12 +1810,14 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-penalty {
     &.el-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
+      --el-segmented-bg-color: var(--el-color-danger-light-7);
     }
   }
 
   .reward-success {
     &.el-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-success);
+      --el-segmented-bg-color: var(--el-color-success-light-7);
       color: var(--el-text-color-primary);
     }
     color: var(--el-color-success);
