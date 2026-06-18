@@ -94,12 +94,16 @@ describe('EndfieldTrialSwordmancySolver', () => {
     expect(result!.optimalAction).not.toBe('abandon');
   });
 
-  it('未抽取铭牌时不能结算也不能放弃（无剩余翻倍次数）', () => {
+  it('未抽取铭牌时可以结算（奖励为 0），但不能放弃', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 0, 3);
     expect(result).not.toBeNull();
+    // 无翻倍次数时继续优于结算（因为停牌奖励为 0），沿用 must_continue 兼容 UI
     expect(result!.optimalAction).toBe('must_continue');
-    expect(result!.rewardStop).toBeNull();
+    // rewardStop 应显示结算期望（0 + 下一局期望），不再为 null
+    expect(result!.rewardStop).not.toBeNull();
+    // 放弃仍不允许
     expect(result!.rewardAbandon).toBeNull();
+    expect(result!.euAbandon).toBeNull();
   });
 
   it('P=0 无剩余游玩次数时初始状态期望为 0', () => {
