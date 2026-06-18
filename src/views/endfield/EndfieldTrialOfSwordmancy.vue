@@ -400,8 +400,24 @@
                     </el-button>
                   </template>
                 </el-popconfirm>
+                <el-button
+                  v-if="isMobile"
+                  class="action-btn"
+                  :size="compSize"
+                  @click="undoLastDraw"
+                >
+                  撤销
+                </el-button>
               </div>
               <div class="action-row-right">
+                <el-button
+                  v-if="!isMobile"
+                  class="action-btn"
+                  :size="compSize"
+                  @click="undoLastDraw"
+                >
+                  撤销
+                </el-button>
                 <el-button
                   class="action-btn"
                   :size="compSize"
@@ -1528,16 +1544,14 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     margin-bottom: 4px;
   }
 
-  .config-date-hint,
-  .daily-date-hint {
+  .config-date-hint {
     display: flex;
     align-items: baseline;
     margin-bottom: 4px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
 
-    .config-hint-hint,
-    .date-hint-text {
+    .config-hint-hint {
       display: flex;
       align-items: center;
       height: 20px;
@@ -1804,6 +1818,19 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   // ── 今日状态 ──
 
+  .daily-date-hint {
+    display: flex;
+    align-items: baseline;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+
+    .date-hint-text {
+      display: flex;
+      align-items: center;
+      height: 20px;
+    }
+  }
+
   .daily-grid {
     display: flex;
     flex-wrap: wrap;
@@ -2004,7 +2031,6 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 12px;
   }
 
   .action-btn {
@@ -2027,6 +2053,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .action-switch {
     min-width: 100px;
     justify-content: center;
+    margin-right: 8px;
   }
 
   .action-switch-group {
