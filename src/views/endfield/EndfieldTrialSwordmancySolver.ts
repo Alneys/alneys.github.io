@@ -5,8 +5,8 @@
  * 核心决策：继续抽 / 翻倍 / 结算 / 放弃，最大化当日总期望收益。
  */
 
-/** 溢出厌恶心理模型参数 */
-export interface OverflowParams {
+/** 溢出厌恶期望效用模型参数 */
+export interface ExpectedUtilityParams {
   /**
    * 比例衰减系数 0~1，每溢出 1 圈奖励乘以此值
    * 连续溢出 n 圈时奖励乘以 aversionFactor^n，该值越小溢出厌恶越强
@@ -21,21 +21,39 @@ export interface OverflowParams {
 
 /** 当前状态的实时建议 */
 export interface AdviceResult {
+  /** 原始奖励期望（左列展示） */
   currentReward: number;
   expectedRound: number;
   expectedToday: number;
-  optimalAction: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double' | 'abandon';
   drawTotal: number | null;
   doubleTotal: number | null;
   stopTotal: number | null;
   abandonTotal: number | null;
   expectedAfterStop: number;
+  /** 期望效用模型调整后的期望（右列展示），无模型时与左列值相同 */
+  euCurrentReward: number;
+  euExpectedRound: number;
+  euExpectedToday: number;
+  euDrawTotal: number | null;
+  euDoubleTotal: number | null;
+  euStopTotal: number | null;
+  euAbandonTotal: number | null;
+  euExpectedAfterStop: number;
+  optimalAction: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double' | 'abandon';
   distribution: number[];
   abandonProb: number;
 }
 
 /** 内部 DP 复合返回类型：期望值 + 各行动期望 + 战力点概率分布 */
 interface DpResult {
+  /** EU 调整后的期望值（用于决策 + 右列展示） */
+  eu: number;
+  euDraw: number;
+  euDouble: number;
+  euStop: number;
+  euAbandon: number;
+  euRound: number;
+  /** 原始奖励期望（遵循 EU 最优策略，用于左列展示） */
   ev: number;
   evDraw: number;
   evDouble: number;
@@ -99,15 +117,13 @@ class LRUCache<V> {
  * 生成缓存键，由牌组、奖励表、溢出参数唯一决定一组 DP 结果
  * @param deck - 牌组各等级数量
  * @param rewards - 奖励表
- * @param overflowParams - 溢出参数（可选）
+ * @param euParams - 期望效用参数（可选）
  * @returns 缓存键字符串
  */
-function cacheKey(deck: number[], rewards: number[], overflowParams?: OverflowParams): string {
+function cacheKey(deck: number[], rewards: number[], euParams?: ExpectedUtilityParams): string {
   const deckK = deck.join(',');
   const rewardK = rewards.join(',');
-  const paramK = overflowParams
-    ? `${overflowParams.aversionFactor},${overflowParams.fixedPenalty}`
-    : '';
+  const paramK = euParams ? `${euParams.aversionFactor},${euParams.fixedPenalty}` : '';
   return `${deckK}|${rewardK}|${paramK}`;
 }
 
@@ -139,7 +155,7 @@ function computeAdjustedReward(
   rawReward: number,
   drawnValue: number,
   modValue: number,
-  params?: OverflowParams,
+  params?: ExpectedUtilityParams,
 ): number {
   if (!params || (params.aversionFactor === 1 && params.fixedPenalty === 0)) return rawReward;
   const k = Math.floor(drawnValue / modValue); // k = 溢出圈数
@@ -220,7 +236,7 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  * @param remainingGames - 今日剩余游玩次数
  * @param remainingDoubles - 今日剩余翻倍次数
  * @param remainingAbandons - 今日剩余放弃次数
- * @param overflowParams - 溢出厌恶参数（可选）
+ * @param euParams - 期望效用参数（可选）
  * @returns 最优行动建议，含各行动期望值、战力点概率分布等信息；输入非法时返回 null
  */
 export function getCurrentAdvice(
@@ -231,7 +247,7 @@ export function getCurrentAdvice(
   remainingGames: number,
   remainingDoubles: number,
   remainingAbandons: number,
-  overflowParams?: OverflowParams,
+  euParams?: ExpectedUtilityParams,
 ): AdviceResult | null {
   const modValue = rewards.length;
   const maxDraws = 5;
@@ -263,8 +279,9 @@ export function getCurrentAdvice(
   const slotIndex = ((drawnValue % modValue) + modValue) % modValue;
   const multiplier = doubled ? 2 : 1;
   const rawReward = safeReward(rewards, slotIndex);
-  const currentReward =
-    computeAdjustedReward(rawReward, drawnValue, modValue, overflowParams) * multiplier;
+  const currentReward = rawReward * multiplier;
+  const euCurrentReward =
+    computeAdjustedReward(rawReward, drawnValue, modValue, euParams) * multiplier;
 
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
@@ -272,7 +289,7 @@ export function getCurrentAdvice(
   const D = remainingDoubles;
   const A = remainingAbandons;
 
-  const adviceKey = cacheKey(deck, rewards, overflowParams);
+  const adviceKey = cacheKey(deck, rewards, euParams);
   const existingAdviceMemo = adviceMemoCache.get(adviceKey);
   const memo = existingAdviceMemo ?? new Map<string, DpResult>();
   if (!existingAdviceMemo) adviceMemoCache.set(adviceKey, memo);
@@ -305,6 +322,12 @@ export function getCurrentAdvice(
     // 边界：无剩余次数，期望为 0
     if (P === 0) {
       const r: DpResult = {
+        eu: 0,
+        euDraw: 0,
+        euDouble: 0,
+        euStop: 0,
+        euAbandon: 0,
+        euRound: 0,
         ev: 0,
         evDraw: 0,
         evDouble: 0,
@@ -324,24 +347,85 @@ export function getCurrentAdvice(
     const roundPoints = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
     const slotIndex = ((roundPoints % modValue) + modValue) % modValue;
     const rawSlotReward = safeReward(rewards, slotIndex);
-    const adjustedReward = computeAdjustedReward(
-      rawSlotReward,
-      roundPoints,
-      modValue,
-      overflowParams,
-    );
+    const adjustedReward = computeAdjustedReward(rawSlotReward, roundPoints, modValue, euParams);
     const roundReward = adjustedReward * M;
+    const roundRewardRaw = rawSlotReward * M;
 
     const remainingCards = [r1, r2, r3, r4, r5];
 
     const cannotStop = roundDrawn === 0;
 
-    // [Draw] 按等级比例加权：evDraw = Σ prob_i × EV(下一状态)，同时聚合子分布
+    // 缓存子状态结果避免重复计算
+    let childDouble: DpResult | undefined;
+    let childStop: DpResult | undefined;
+    let childAbandonA: DpResult | undefined;
+    let childAbandonP: DpResult | undefined;
+
+    // [Double] 条件 roundDrawn∈{1,2} ∧ M=1 ∧ D>0 → M=2（D 不变，结算时扣减）
+    if (roundDrawn > 0 && roundDrawn < 3 && M === 1 && D > 0) {
+      childDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A);
+    }
+
+    // [Stop] 即时获得当前奖励, 重置进下一局: (deckInit, 1, P-1, D-(M>1?1:0), A)
+    if (!cannotStop) {
+      childStop = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        P - 1,
+        M === 1 ? D : D - 1,
+        A,
+      );
+    }
+
+    // [Abandon] 重置牌组重新开局（翻倍未消耗，无需返还）
+    // A>0 → 用放弃次数, 保留游玩次数
+    // A=0 且满足以下任意条件时禁止放弃：
+    //   ① M=1（未翻倍）
+    //   ② P=1（仅剩一次游玩次数）
+    //   ③ D=P（剩余翻倍数等于可玩次数）
+    // 否则可放弃时 → 用游玩次数, A 置 0
+    if (!cannotStop) {
+      if (A > 0) {
+        childAbandonA = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P,
+          D,
+          A - 1,
+        );
+      } else if (P > 0 && M === 2 && P !== 1 && D !== P) {
+        childAbandonP = dpDaily(
+          deckInit[0]!,
+          deckInit[1]!,
+          deckInit[2]!,
+          deckInit[3]!,
+          deckInit[4]!,
+          1,
+          P - 1,
+          D,
+          0,
+        );
+      }
+    }
+
+    // 各行动的 EU 调整期望值（决策依据）和原始奖励期望（左列展示）
+    // [Draw] 按等级比例加权，同时聚合子分布
+    let euDraw = -Infinity;
     let evDraw = -Infinity;
     const drawDistribution = new Array<number>(modValue).fill(0);
     let drawAbandonProb = 0;
-    let drawRoundContribution = 0;
+    let euRoundDraw = 0;
+    let evRoundDraw = 0;
     if (roundDrawn < maxDraws && remainingCount > 0) {
+      euDraw = 0;
       evDraw = 0;
       for (let i = 0; i < 5; i++) {
         if (remainingCards[i]! > 0) {
@@ -357,8 +441,10 @@ export function getCurrentAdvice(
             D,
             A,
           );
+          euDraw += prob * child.eu;
           evDraw += prob * child.ev;
-          drawRoundContribution += prob * child.evRound;
+          euRoundDraw += prob * child.euRound;
+          evRoundDraw += prob * child.evRound;
           for (let j = 0; j < modValue; j++) {
             drawDistribution[j]! += prob * child.distribution[j]!;
           }
@@ -367,93 +453,49 @@ export function getCurrentAdvice(
       }
     }
 
-    // [Double] 条件 roundDrawn∈{1,2} ∧ M=1 ∧ D>0 → M=2（D 不变，结算时扣减）
-    let evDouble = -Infinity;
-    if (roundDrawn > 0 && roundDrawn < 3 && M === 1 && D > 0) {
-      evDouble = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A).ev;
-    }
+    const euDouble = childDouble?.eu ?? -Infinity;
+    const evDouble = childDouble?.ev ?? -Infinity;
+    const euStop = childStop ? roundReward + childStop.eu : -Infinity;
+    const evStop = childStop ? roundRewardRaw + childStop.ev : -Infinity;
+    const childAbandon = childAbandonA ?? childAbandonP;
+    const euAbandon = childAbandon?.eu ?? -Infinity;
+    const evAbandon = childAbandon?.ev ?? -Infinity;
 
-    // [Stop] 即时获得当前奖励, 重置进下一局: (deckInit, 1, P-1, D-(M>1?1:0), A)
-    let evStop = -Infinity;
-    if (!cannotStop) {
-      evStop =
-        roundReward +
-        dpDaily(
-          deckInit[0]!,
-          deckInit[1]!,
-          deckInit[2]!,
-          deckInit[3]!,
-          deckInit[4]!,
-          1,
-          P - 1,
-          M === 1 ? D : D - 1,
-          A,
-        ).ev;
-    }
+    // 最优期望 = 四种行动的最大值（基于 EU 调整值决策）
+    const bestValue = Math.max(euDouble, euDraw, euAbandon, euStop);
 
-    // [Abandon] 重置牌组重新开局（翻倍未消耗，无需返还）
-    // A>0 → 用放弃次数, 保留游玩次数
-    // A=0 且满足以下任意条件时禁止放弃：
-    //   ① M=1（未翻倍）
-    //   ② P=1（仅剩一次游玩次数）
-    //   ③ D=P（剩余翻倍数等于可玩次数）
-    // 否则可放弃时 → 用游玩次数, A 置 0
-    let evAbandon = -Infinity;
-    if (!cannotStop) {
-      if (A > 0) {
-        evAbandon = dpDaily(
-          deckInit[0]!,
-          deckInit[1]!,
-          deckInit[2]!,
-          deckInit[3]!,
-          deckInit[4]!,
-          1,
-          P,
-          D,
-          A - 1,
-        ).ev;
-      } else if (P > 0 && M === 2 && P !== 1 && D !== P) {
-        evAbandon = dpDaily(
-          deckInit[0]!,
-          deckInit[1]!,
-          deckInit[2]!,
-          deckInit[3]!,
-          deckInit[4]!,
-          1,
-          P - 1,
-          D,
-          0,
-        ).ev;
-      }
-    }
-
-    // 最优期望 = 四种行动的最大值
-    const bestValue = Math.max(evDouble, evDraw, evAbandon, evStop);
-
-    // 【概率分布传播】按优先级选择最优行动对应的子分布
+    // 【概率分布传播】按优先级选择最优行动对应的子分布和期望值
     let distribution: number[];
     let abandonProb: number;
+    let euRound: number;
     let evRound: number;
+    let finalEu = -Infinity;
+    let finalEv = -Infinity;
     if (roundDrawn === 0) {
       distribution = drawDistribution;
       abandonProb = drawAbandonProb;
-      evRound = drawRoundContribution;
+      euRound = euRoundDraw;
+      evRound = evRoundDraw;
+      finalEu = euDraw;
+      finalEv = evDraw;
     } else {
       distribution = drawDistribution;
       abandonProb = drawAbandonProb;
-      evRound = drawRoundContribution;
+      euRound = euRoundDraw;
+      evRound = evRoundDraw;
 
       // 优先级：draw > double > abandon > stop（数组顺序，越靠前优先级越高）
+      // 决策基于 EU 调整值
       const actionCandidates: { action: string; value: number }[] = [];
 
       if (roundDrawn < maxDraws && remainingCount > 0) {
-        actionCandidates.push({ action: 'draw', value: evDraw });
+        actionCandidates.push({ action: 'draw', value: euDraw });
       }
       if (roundDrawn < 3 && M === 1 && D > 0) {
-        actionCandidates.push({ action: 'double', value: evDouble });
+        actionCandidates.push({ action: 'double', value: euDouble });
       }
-      actionCandidates.push({ action: 'abandon', value: evAbandon });
-      actionCandidates.push({ action: 'stop', value: evStop });
+      actionCandidates.push({ action: 'abandon', value: euAbandon });
+      actionCandidates.push({ action: 'stop', value: euStop });
 
       const bestAction = pickBest(actionCandidates).action;
 
@@ -461,29 +503,47 @@ export function getCurrentAdvice(
       if (bestAction === 'draw') {
         distribution = drawDistribution;
         abandonProb = drawAbandonProb;
-        evRound = drawRoundContribution;
+        euRound = euRoundDraw;
+        evRound = evRoundDraw;
+        finalEu = euDraw;
+        finalEv = evDraw;
         // 翻倍：直接继承倍率 2 后的子分布，牌组不变，结算时扣除翻倍次数
       } else if (bestAction === 'double') {
-        const child = dpDaily(r1, r2, r3, r4, r5, 2, P, D, A);
+        const child = childDouble!;
         distribution = child.distribution;
         abandonProb = child.abandonProb;
+        euRound = child.euRound;
         evRound = child.evRound;
+        finalEu = child.eu;
+        finalEv = child.ev;
         // 放弃：放弃概率 100%，战力点分布 0
       } else if (bestAction === 'abandon') {
         distribution = new Array<number>(modValue).fill(0);
         abandonProb = 1;
+        euRound = 0;
         evRound = 0;
+        finalEu = childAbandon!.eu;
+        finalEv = childAbandon!.ev;
         // 结算：立即获得当前奖励，概率 100% 落在当前战力点状态
       } else if (bestAction === 'stop') {
         distribution = new Array<number>(modValue).fill(0);
         distribution[slotIndex] = 1;
         abandonProb = 0;
-        evRound = roundReward;
+        euRound = roundReward;
+        evRound = roundRewardRaw;
+        finalEu = euStop;
+        finalEv = evStop;
       }
     }
 
     const result: DpResult = {
-      ev: bestValue,
+      eu: finalEu,
+      euDraw,
+      euDouble,
+      euStop,
+      euAbandon,
+      euRound,
+      ev: finalEv,
       evDraw,
       evDouble,
       evStop,
@@ -510,19 +570,27 @@ export function getCurrentAdvice(
 
   const canDrawFurther = drawn < maxDraws && totalRemaining > 0;
   const canDoubleNow = drawn > 0 && drawn < 3 && !doubled && D > 0;
-  const evAfterStop = dp.evStop - currentReward;
-  const evContinue = Math.max(dp.evDraw, dp.evDouble);
+
+  // 原始奖励期望（左列）
+  const rawAfterStop = dp.evStop - currentReward;
+  const rawExpectedRound = dp.evRound;
+  const rawExpectedToday = dp.ev;
+  // EU 调整期望（右列）
+  const euAfterStop = dp.euStop - euCurrentReward;
+  const euExpectedRound = dp.euRound;
+  const euExpectedToday = dp.eu;
 
   // 决策规则：期望值相同时按优先级 翻倍 > 继续 > 放弃 > 停止（数组顺序）
+  // 决策基于 EU 调整值
   let optimalAction: AdviceResult['optimalAction'];
   if (drawn === 0) {
     optimalAction = 'must_continue';
   } else {
     const candidates: { action: AdviceResult['optimalAction']; value: number }[] = [];
-    if (canDoubleNow) candidates.push({ action: 'double', value: dp.evDouble });
-    if (canDrawFurther) candidates.push({ action: 'continue', value: dp.evDraw });
-    candidates.push({ action: 'abandon', value: dp.evAbandon });
-    candidates.push({ action: 'stop', value: dp.evStop });
+    if (canDoubleNow) candidates.push({ action: 'double', value: dp.euDouble });
+    if (canDrawFurther) candidates.push({ action: 'continue', value: dp.euDraw });
+    candidates.push({ action: 'abandon', value: dp.euAbandon });
+    candidates.push({ action: 'stop', value: dp.euStop });
 
     const best = pickBest(candidates);
     optimalAction = best.action;
@@ -532,18 +600,24 @@ export function getCurrentAdvice(
     }
   }
 
-  const expectedRound = dp.evRound;
-
   return {
     currentReward,
-    expectedRound,
-    expectedToday: dp.ev,
-    optimalAction,
+    expectedRound: rawExpectedRound,
+    expectedToday: rawExpectedToday,
     drawTotal: canDrawFurther ? dp.evDraw : null,
     doubleTotal: canDoubleNow ? dp.evDouble : null,
     stopTotal: drawn > 0 ? dp.evStop : null,
     abandonTotal: drawn > 0 ? dp.evAbandon : null,
-    expectedAfterStop: evAfterStop,
+    expectedAfterStop: rawAfterStop,
+    euCurrentReward,
+    euExpectedRound,
+    euExpectedToday,
+    euDrawTotal: canDrawFurther ? dp.euDraw : null,
+    euDoubleTotal: canDoubleNow ? dp.euDouble : null,
+    euStopTotal: drawn > 0 ? dp.euStop : null,
+    euAbandonTotal: drawn > 0 ? dp.euAbandon : null,
+    euExpectedAfterStop: euAfterStop,
+    optimalAction,
     distribution: [...dp.distribution],
     abandonProb: dp.abandonProb,
   };

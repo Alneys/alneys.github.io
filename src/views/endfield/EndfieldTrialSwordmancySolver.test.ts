@@ -115,7 +115,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
     expect(['must_continue', 'double']).toContain(result!.optimalAction);
   });
 
-  describe('溢出厌恶模型 (OverflowParams)', () => {
+  describe('期望效用模型 (ExpectedUtilityParams)', () => {
     it('默认参数应与原始结果一致', () => {
       const raw = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 2, 3);
       const withDefault = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 2, 3, {

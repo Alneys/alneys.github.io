@@ -6,6 +6,7 @@
         <img
           src="https://img.shields.io/badge/Alneys-00A1D6?style=flat-square&logo=bilibili&labelColor=eee"
           alt="BiliBili"
+          style="height: 20px"
         />
       </a>
       <el-button class="view-tour-btn" :size="compSize" @click="tourOpen = true">
@@ -80,18 +81,18 @@
 
         <el-row :gutter="16" class="game-section">
           <el-col :span="24">
-            <el-card class="psycho-card" data-tour="psycho">
+            <el-card class="expected-utility-card" data-tour="expected-utility">
               <template #header>
-                <span>心理模型</span>
+                <span>期望效用模型</span>
               </template>
-              <div class="psycho-body">
+              <div class="expected-utility-body">
                 <el-alert type="info" :closable="false" show-icon>
                   基于期望效用理论设计，调整公式：奖励 × 溢出接受值<sup>k</sup> − k ×
                   固定心理落差（k = 总战力 ÷ 11，向下取整），可为负
                 </el-alert>
-                <div class="psycho-grid">
-                  <div class="psycho-item">
-                    <span class="psycho-label">溢出接受值</span>
+                <div class="expected-utility-grid">
+                  <div class="expected-utility-item">
+                    <span class="expected-utility-label">溢出接受值</span>
                     <el-slider
                       v-model="aversionFactor"
                       :size="compSize"
@@ -99,42 +100,49 @@
                       :max="1"
                       :step="0.05"
                       show-input
-                      class="psycho-slider"
+                      class="expected-utility-slider"
                     />
                   </div>
-                  <div class="psycho-item">
-                    <span class="psycho-label">固定心理落差</span>
+                  <div class="expected-utility-item">
+                    <span class="expected-utility-label">固定心理落差</span>
                     <el-input-number
                       v-model="fixedPenalty"
                       :size="compSize"
                       :min="0"
                       :max="1000000"
                       :step="5000"
-                      class="psycho-input"
+                      class="expected-utility-input"
                     />
                   </div>
                 </div>
-                <div class="psycho-presets">
+                <div class="expected-utility-presets">
                   <el-button
                     :size="compSize"
                     :type="isPresetActive(1.0, 0) ? 'primary' : ''"
-                    @click="setPsychoParams(1.0, 0)"
+                    @click="setEuParams(1.0, 0)"
                   >
                     最大化收益
                   </el-button>
                   <el-button
                     :size="compSize"
                     :type="isPresetActive(0.5, 30000) ? 'primary' : ''"
-                    @click="setPsychoParams(0.5, 30000)"
+                    @click="setEuParams(0.5, 30000)"
                   >
                     均衡
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
-                    @click="setPsychoParams(0.01, 400000)"
+                    :type="isPresetActive(0.01, 0) ? 'primary' : ''"
+                    @click="setEuParams(0.01, 0)"
                   >
-                    绝对厌恶溢出
+                    厌恶溢出
+                  </el-button>
+                  <el-button
+                    :size="compSize"
+                    :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
+                    @click="setEuParams(0.01, 400000)"
+                  >
+                    禁止溢出
                   </el-button>
                 </div>
               </div>
@@ -327,24 +335,22 @@
                   }}</span>
                 </div>
                 <div
-                  class="reward-psych-section"
+                  class="reward-eu-section"
                   :class="{
-                    'reward-psych-disabled': !showAdjustedCol,
-                    'reward-penalty': showAdjustedCol && totalPower > 10,
+                    'reward-eu-disabled': !showEuColumn,
+                    'reward-penalty': showEuColumn && totalPower > 10,
                   }"
                 >
-                  <span class="reward-label">溢出心理</span>
+                  <span class="reward-label">溢出期望效用</span>
                   <el-segmented
-                    v-model="overflowPsychValue"
+                    v-model="euSelectedValue"
                     :size="compSize"
-                    :options="overflowPsychOptions"
-                    :disabled="!showAdjustedCol"
+                    :options="euOptions"
+                    :disabled="!showEuColumn"
                     block
-                    class="reward-psych-segmented"
+                    class="reward-eu-segmented"
                   />
-                  <span class="reward-xs-value hidden-sm-and-up">{{
-                    overflowPsychDisplayValue
-                  }}</span>
+                  <span class="reward-xs-value hidden-sm-and-up">{{ euDisplayValue }}</span>
                 </div>
               </el-card>
             </el-col>
@@ -458,7 +464,7 @@
               <div v-if="hasWarning" class="advice-content">
                 <div class="advice-decision advice-abandon">错误：铭牌库不足</div>
               </div>
-              <div v-else-if="currentAdvice" class="advice-content">
+              <div v-else-if="currentAdvice && euAdvice" class="advice-content">
                 <div
                   class="advice-decision"
                   :class="{
@@ -487,26 +493,26 @@
                   <template v-else>{{ decisionPrefix }}结算本局</template>
                 </div>
                 <el-divider style="margin: 4px 0" />
-                <div v-if="showAdjustedCol" class="advice-row advice-header">
+                <div class="advice-row advice-header">
                   <span class="advice-label" />
-                  <span class="advice-value">原始期望</span>
+                  <span class="advice-value">奖励期望</span>
                   <span class="advice-sep">|</span>
-                  <span class="advice-value advice-adjusted">心理模型期望</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">期望效用</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局当前奖励</span>
-                  <span class="advice-value">{{ formatDecimal(currentAdvice.currentReward) }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice ? formatDecimal(adjustedAdvice.currentReward) : '—'
+                  <span class="advice-value">{{ formatDecimal(euAdvice.currentReward) }}</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    formatDecimal(euAdvice.euCurrentReward)
                   }}</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局最优期望</span>
-                  <span class="advice-value">{{ formatDecimal(currentAdvice.expectedRound) }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice ? formatDecimal(adjustedAdvice.expectedRound) : '—'
+                  <span class="advice-value">{{ formatDecimal(euAdvice.expectedRound) }}</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    euAdvice ? formatDecimal(euAdvice.euExpectedRound) : '—'
                   }}</span>
                 </div>
 
@@ -525,13 +531,11 @@
                 >
                   <span class="advice-label">抽取铭牌</span>
                   <span class="advice-value">{{
-                    currentAdvice.drawTotal != null ? formatDecimal(currentAdvice.drawTotal) : '—'
+                    euAdvice.drawTotal != null ? formatDecimal(euAdvice.drawTotal) : '—'
                   }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice && adjustedAdvice.drawTotal != null
-                      ? formatDecimal(adjustedAdvice.drawTotal)
-                      : '—'
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    euAdvice.euDrawTotal != null ? formatDecimal(euAdvice.euDrawTotal) : '—'
                   }}</span>
                 </div>
                 <div v-for="item in perLevelAdvice" :key="item.level" class="advice-row">
@@ -541,9 +545,9 @@
                   <span class="advice-value" :class="diffClass(item.ev)">{{
                     item.ev != null ? formatDiff(item.ev) : '—'
                   }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span
-                    v-if="showAdjustedCol"
+                    v-if="showEuColumn"
                     class="advice-value advice-adjusted"
                     :class="diffClass(item.evAdjusted)"
                     >{{ item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—' }}</span
@@ -560,15 +564,11 @@
                 >
                   <span class="advice-label">开启翻倍</span>
                   <span class="advice-value">{{
-                    currentAdvice.doubleTotal != null
-                      ? formatDecimal(currentAdvice.doubleTotal)
-                      : '—'
+                    euAdvice.doubleTotal != null ? formatDecimal(euAdvice.doubleTotal) : '—'
                   }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice && adjustedAdvice.doubleTotal != null
-                      ? formatDecimal(adjustedAdvice.doubleTotal)
-                      : '—'
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    euAdvice.euDoubleTotal != null ? formatDecimal(euAdvice.euDoubleTotal) : '—'
                   }}</span>
                 </div>
                 <div
@@ -580,15 +580,11 @@
                 >
                   <span class="advice-label">放弃本局</span>
                   <span class="advice-value">{{
-                    currentAdvice.abandonTotal != null
-                      ? formatDecimal(currentAdvice.abandonTotal)
-                      : '—'
+                    euAdvice.abandonTotal != null ? formatDecimal(euAdvice.abandonTotal) : '—'
                   }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice && adjustedAdvice.abandonTotal != null
-                      ? formatDecimal(adjustedAdvice.abandonTotal)
-                      : '—'
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    euAdvice.euAbandonTotal != null ? formatDecimal(euAdvice.euAbandonTotal) : '—'
                   }}</span>
                 </div>
                 <div
@@ -600,32 +596,30 @@
                 >
                   <span class="advice-label">结算本局</span>
                   <span class="advice-value">{{
-                    currentAdvice.stopTotal != null ? formatDecimal(currentAdvice.stopTotal) : '—'
+                    euAdvice.stopTotal != null ? formatDecimal(euAdvice.stopTotal) : '—'
                   }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-adjusted">{{
-                    adjustedAdvice && adjustedAdvice.stopTotal != null
-                      ? formatDecimal(adjustedAdvice.stopTotal)
-                      : '—'
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    euAdvice.euStopTotal != null ? formatDecimal(euAdvice.euStopTotal) : '—'
                   }}</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
-                  <span class="advice-value">{{
-                    adjustedAdvice && adjustedAdvice.stopTotal != null
-                      ? formatDecimal(currentAdvice.expectedAfterStop)
-                      : '—'
+                  <span class="advice-value">{{ formatDecimal(euAdvice.expectedAfterStop) }}</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                    formatDecimal(euAdvice.euExpectedAfterStop)
                   }}</span>
                 </div>
                 <el-divider style="margin: 4px 0" />
                 <div class="advice-row">
                   <span class="advice-label">今日总期望</span>
                   <span class="advice-value advice-today-value">{{
-                    formatDecimal(currentAdvice.expectedToday)
+                    formatDecimal(euAdvice.expectedToday)
                   }}</span>
-                  <span v-if="showAdjustedCol" class="advice-sep">|</span>
-                  <span v-if="showAdjustedCol" class="advice-value advice-today-adjusted">{{
-                    adjustedAdvice ? formatDecimal(adjustedAdvice.expectedToday) : '—'
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-value advice-today-adjusted">{{
+                    formatDecimal(euAdvice.euExpectedToday)
                   }}</span>
                 </div>
               </div>
@@ -654,17 +648,19 @@
                         v-else
                         class="distribution-value"
                         :class="{ 'distribution-current-value': row.isCurrent }"
-                        >{{ row.value }}</span
                       >
+                        {{ row.value }}
+                      </span>
                     </template>
                   </el-table-column>
-                  <el-table-column label="概率" width="80">
+                  <el-table-column label="概率" width="96">
                     <template #default="{ row }">
                       <span
                         class="distribution-prob"
                         :class="{ 'distribution-prob-abandon': row.isAbandon }"
-                        >{{ (row.prob * 100).toFixed(2) + '%' }}</span
                       >
+                        {{ (row.prob * 100).toFixed(2) + '%' }}
+                      </span>
                     </template>
                   </el-table-column>
                   <el-table-column label="分布条">
@@ -722,12 +718,12 @@
     <el-tour-step
       target="[data-tour='result']"
       title="策略分析"
-      description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与心理模型期望，并且显示本局最优行动的战力点概率分布表"
+      description="基于动态规划求解器的行动建议，高亮最优行动，对比原始期望与期望效用模型期望，并且显示本局最优行动的战力点概率分布表"
       :scroll-into-view-options="{ block: isMobile ? 'start' : 'end' }"
     />
     <el-tour-step
-      target="[data-tour='psycho']"
-      title="心理模型"
+      target="[data-tour='expected-utility']"
+      title="期望效用模型"
       description="通过溢出接受值和固定心理落差微调策略决策，预设方案可快速切换"
     />
     <el-tour-step
@@ -747,7 +743,7 @@ import {
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
 } from './EndfieldTrialSwordmancySolver';
-import type { AdviceResult, OverflowParams } from './EndfieldTrialSwordmancySolver';
+import type { AdviceResult, ExpectedUtilityParams } from './EndfieldTrialSwordmancySolver';
 
 const { isMobile } = useResponsive();
 const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
@@ -971,15 +967,15 @@ const poolByLevel = computed(() => {
 const aversionFactor = ref(1.0);
 const fixedPenalty = ref(0);
 
-const overflowParams = computed<OverflowParams | undefined>(() => {
-  // 默认参数等同于不启用心理模型
+const euParams = computed<ExpectedUtilityParams | undefined>(() => {
+  // 默认参数等同于不启用期望效用模型
   if (aversionFactor.value === 1.0 && fixedPenalty.value === 0) return undefined;
   return { aversionFactor: aversionFactor.value, fixedPenalty: fixedPenalty.value };
 });
 
-const showAdjustedCol = computed(() => overflowParams.value !== undefined);
+const showEuColumn = computed(() => euParams.value !== undefined);
 
-function setPsychoParams(af: number, fp: number) {
+function setEuParams(af: number, fp: number) {
   aversionFactor.value = af;
   fixedPenalty.value = fp;
 }
@@ -1021,9 +1017,9 @@ const rewardOptions = computed(() =>
   })),
 );
 
-/** 溢出心理档位：实际战力点 11~21 经心理模型调整后的奖励，供玩家对比参考 */
-const overflowPsychOptions = computed(() => {
-  const params = overflowParams.value;
+/** 溢出期望效用档位：实际战力点 11~21 经期望效用模型调整后的奖励，供玩家对比参考 */
+const euOptions = computed(() => {
+  const params = euParams.value;
   const mul = doubled.value ? 2 : 1;
   return Array.from({ length: 11 }, (_, i) => {
     const power = 11 + i;
@@ -1041,14 +1037,14 @@ const overflowPsychOptions = computed(() => {
 });
 
 /** 当前总战力对应的溢出点（11~21），未溢出时不选中任何挡位 */
-const overflowPsychValue = computed(() => {
+const euSelectedValue = computed(() => {
   if (totalPower.value >= 11 && totalPower.value <= 21) return totalPower.value;
   return undefined;
 });
 
-/** 小屏幕时溢出心理显示的数值（格式化后的奖励值，如"-30K"） */
-const overflowPsychDisplayValue = computed(() => {
-  const params = overflowParams.value;
+/** 小屏幕时溢出期望效用显示的数值（格式化后的奖励值，如"-30K"） */
+const euDisplayValue = computed(() => {
+  const params = euParams.value;
   const mul = doubled.value ? 2 : 1;
   if (totalPower.value >= 11 && totalPower.value <= 21) {
     const s = totalPower.value % 11;
@@ -1182,7 +1178,6 @@ function setSingleSimulation() {
   remainingGames.value = 1;
   remainingDoubles.value = 0;
   remainingAbandons.value = 0;
-  resetGame();
 }
 
 /** 格式化数值为固定两位小数 */
@@ -1288,10 +1283,10 @@ const currentAdvice = computed<AdviceResult | null>(() => {
 });
 
 /** 调整后的最优行动建议（含溢出厌恶模型） */
-const adjustedAdvice = computed<AdviceResult | null>(() => {
+const euAdvice = computed<AdviceResult | null>(() => {
   const deck = deckConfigArray.value;
   const rewards = rewardValues.value;
-  if (deck.some((c) => c < 0) || !overflowParams.value) return currentAdvice.value;
+  if (deck.some((c) => c < 0) || !euParams.value) return currentAdvice.value;
   return getCurrentAdvice(
     deck,
     rewards,
@@ -1300,7 +1295,7 @@ const adjustedAdvice = computed<AdviceResult | null>(() => {
     remainingGames.value,
     remainingDoubles.value,
     remainingAbandons.value,
-    overflowParams.value,
+    euParams.value,
   );
 });
 
@@ -1322,14 +1317,16 @@ const perLevelAdvice = computed(() => {
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
   const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
     [];
-  const currentExp = currentAdvice.value?.expectedToday ?? 0;
-  const currentExpAdj = adjustedAdvice.value?.expectedToday ?? currentExp;
+  // 左列基线 = 原始奖励期望（遵循 EU 策略），右列基线 = EU 调整期望
+  const currentExp = euAdvice.value?.expectedToday ?? 0;
+  const currentExpAdj = euAdvice.value?.euExpectedToday ?? currentExp;
   for (let i = 0; i < 5; i++) {
     if (remaining[i]! > 0) {
       const prob = remaining[i]! / totalRemaining;
       const nextDrawn = [...dc];
       nextDrawn[i]!++;
-      const raw = getCurrentAdvice(
+      // 一次调用同时获取原始奖励期望和 EU 调整期望
+      const nextResult = getCurrentAdvice(
         deck,
         rewards,
         nextDrawn,
@@ -1337,25 +1334,15 @@ const perLevelAdvice = computed(() => {
         remainingGames.value,
         remainingDoubles.value,
         remainingAbandons.value,
+        euParams.value,
       );
-      let adj: AdviceResult | null = null;
-      if (overflowParams.value) {
-        adj = getCurrentAdvice(
-          deck,
-          rewards,
-          nextDrawn,
-          doubled.value,
-          remainingGames.value,
-          remainingDoubles.value,
-          remainingAbandons.value,
-          overflowParams.value,
-        );
-      }
       result.push({
         level: i + 1,
         prob: Math.round(prob * 10000) / 10000,
-        ev: raw ? Math.round((raw.expectedToday - currentExp) * 100) / 100 : null,
-        evAdjusted: adj ? Math.round((adj.expectedToday - currentExpAdj) * 100) / 100 : null,
+        ev: nextResult ? Math.round((nextResult.expectedToday - currentExp) * 100) / 100 : null,
+        evAdjusted: nextResult
+          ? Math.round((nextResult.euExpectedToday - currentExpAdj) * 100) / 100
+          : null,
       });
     } else {
       result.push({
@@ -1370,7 +1357,7 @@ const perLevelAdvice = computed(() => {
 });
 
 const distributionTableData = computed(() => {
-  const result = adjustedAdvice.value;
+  const result = euAdvice.value;
   if (!result) return [];
   const { distribution: dist, abandonProb } = result;
   const currentS = rewardIndex.value;
@@ -1400,23 +1387,23 @@ function isRawOptOnly(...actions: string[]): boolean {
   if (!currentAdvice.value) return false;
   const rawIs = actions.includes(currentAdvice.value.optimalAction);
   if (!rawIs) return false;
-  if (!adjustedAdvice.value) return true;
-  return !actions.includes(adjustedAdvice.value.optimalAction);
+  if (!euAdvice.value) return true;
+  return !actions.includes(euAdvice.value.optimalAction);
 }
 
 /** 调整后最优则优先使用调整后高亮色 */
 function isAdjOpt(...actions: string[]): boolean {
-  if (!adjustedAdvice.value) return false;
-  return actions.includes(adjustedAdvice.value.optimalAction);
+  if (!euAdvice.value) return false;
+  return actions.includes(euAdvice.value.optimalAction);
 }
 
-/** 决策动作优先采用心理模型建议，无模型时回退原始 */
+/** 决策动作优先采用期望效用模型建议，无模型时回退原始 */
 const decisionAction = computed(
-  () => adjustedAdvice.value?.optimalAction ?? currentAdvice.value?.optimalAction ?? 'stop',
+  () => euAdvice.value?.optimalAction ?? currentAdvice.value?.optimalAction ?? 'stop',
 );
 
-/** 仅心理模型激活时在决策文字前显示标注 */
-const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应用后最优：' : '最优：'));
+/** 仅期望效用模型激活时在决策文字前显示标注 */
+const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型应用后最优：' : '最优：'));
 </script>
 
 <style lang="scss" scoped>
@@ -1460,7 +1447,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 
   .config-label,
   .daily-label,
-  .psycho-label,
+  .expected-utility-label,
   .drawn-manual-label {
     font-size: 14px;
     color: var(--el-text-color-secondary);
@@ -1513,7 +1500,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
   }
 
   // ── 所有卡片统一 padding ──
-  .psycho-card,
+  .expected-utility-card,
   .drawn-card,
   .pool-card,
   .reward-card,
@@ -1538,37 +1525,36 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
     }
   }
 
-  // ── 心理模型参数 ──
+  // ── 期望效用模型参数 ──
 
-  .psycho-body,
-  .psycho-grid {
+  .expected-utility-body,
+  .expected-utility-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
-  .psycho-grid {
+  .expected-utility-grid {
     margin-bottom: 8px;
   }
 
-  .psycho-item {
+  .expected-utility-item {
     display: flex;
     align-items: center;
     gap: 12px;
   }
 
-  .psycho-slider {
+  .expected-utility-slider {
     flex: 1;
   }
 
-  .psycho-input {
+  .expected-utility-input {
     width: 140px;
   }
 
-  .psycho-presets {
+  .expected-utility-presets {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
   }
 
   .game-section {
@@ -1708,7 +1694,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 
   .reward-point-section,
   .reward-tier-section,
-  .reward-psych-section {
+  .reward-eu-section {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1723,17 +1709,18 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       flex-grow: 1;
       --el-border-radius-base: 0px;
     }
+  }
 
-    &.reward-psych-section {
-      .reward-psych-segmented {
-        --el-segmented-item-selected-bg-color: var(--el-color-danger);
-        --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
-      }
-      &.reward-psych-disabled {
-        opacity: 0.5;
-        .reward-label {
-          color: var(--el-text-color-placeholder);
-        }
+  .reward-eu-section {
+    margin-bottom: 0;
+    .reward-eu-segmented {
+      --el-segmented-item-selected-bg-color: var(--el-color-danger);
+      --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
+    }
+    &.reward-eu-disabled {
+      opacity: 0.4;
+      .reward-label {
+        color: var(--el-text-color-placeholder);
       }
     }
   }
@@ -1932,6 +1919,10 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 
   // ── 操作按钮 ──
 
+  .action-rows {
+    margin: 8px 0;
+  }
+
   .action-row {
     display: flex;
     align-items: center;
@@ -2041,7 +2032,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
 
     .reward-point-section,
     .reward-tier-section,
-    .reward-psych-section {
+    .reward-eu-section {
       flex: 1;
       flex-direction: column;
       align-items: center;
@@ -2072,7 +2063,7 @@ const decisionPrefix = computed(() => (showAdjustedCol.value ? '心理模型应�
       }
     }
 
-    .reward-psych-section.reward-psych-disabled {
+    .reward-eu-section.reward-eu-disabled {
       opacity: 0.5;
     }
 
