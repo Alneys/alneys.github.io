@@ -5,11 +5,11 @@
  * 核心决策：继续抽 / 翻倍 / 结算 / 放弃，最大化当日总期望收益。
  */
 
-/** 溢出厌恶期望效用模型参数 */
+/** 期望效用模型参数 */
 export interface ExpectedUtilityParams {
   /**
    * 比例衰减系数 0~1，每溢出 1 圈奖励乘以此值
-   * 连续溢出 n 圈时奖励乘以 aversionFactor^n，该值越小溢出厌恶越强
+   * 连续溢出 n 圈时奖励乘以 aversionFactor^n，该值越小对溢出的折扣越大
    */
   aversionFactor: number;
   /**
@@ -22,23 +22,23 @@ export interface ExpectedUtilityParams {
 /** 当前状态的实时建议 */
 export interface AdviceResult {
   /** 原始奖励期望（左列展示） */
-  currentReward: number;
-  expectedRound: number;
-  expectedToday: number;
-  drawTotal: number | null;
-  doubleTotal: number | null;
-  stopTotal: number | null;
-  abandonTotal: number | null;
-  expectedAfterStop: number;
+  rewardCurrent: number;
+  rewardRound: number;
+  rewardToday: number;
+  rewardDraw: number | null;
+  rewardDouble: number | null;
+  rewardStop: number | null;
+  rewardAbandon: number | null;
+  rewardAfterStop: number;
   /** 期望效用模型调整后的期望（右列展示），无模型时与左列值相同 */
   euCurrentReward: number;
-  euExpectedRound: number;
-  euExpectedToday: number;
-  euDrawTotal: number | null;
-  euDoubleTotal: number | null;
-  euStopTotal: number | null;
-  euAbandonTotal: number | null;
-  euExpectedAfterStop: number;
+  euRound: number;
+  euToday: number;
+  euDraw: number | null;
+  euDouble: number | null;
+  euStop: number | null;
+  euAbandon: number | null;
+  euAfterStop: number;
   optimalAction: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double' | 'abandon';
   distribution: number[];
   abandonProb: number;
@@ -54,12 +54,12 @@ interface DpResult {
   euAbandon: number;
   euRound: number;
   /** 原始奖励期望（遵循 EU 最优策略，用于左列展示） */
-  ev: number;
-  evDraw: number;
-  evDouble: number;
-  evStop: number;
-  evAbandon: number;
-  evRound: number;
+  reward: number;
+  rewardDraw: number;
+  rewardDouble: number;
+  rewardStop: number;
+  rewardAbandon: number;
+  rewardRound: number;
   distribution: number[];
   abandonProb: number;
 }
@@ -144,11 +144,11 @@ function safeReward(rewards: number[], s: number): number {
 }
 
 /**
- * 计算调整后奖励（溢出厌恶模型）
+ * 计算调整后奖励（期望效用模型）
  * @param rawReward - 原始奖励值
  * @param drawnValue - 已抽牌点数之和
  * @param modValue - 奖励表长度（模数）
- * @param params - 溢出厌恶参数（可选）
+ * @param params - 期望效用参数（可选）
  * @returns 调整后的奖励值
  */
 function computeAdjustedReward(
@@ -191,17 +191,20 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  *   D     = 今日剩余翻倍次数
  *   A     = 今日剩余放弃次数
  *
- * ## 可选行动
+ * DP 求解以 EU（期望效用）为决策依据，
+ * reward（原始奖励期望）作为副产物按 EU 最优策略同步计算。
+ *
+ * ## 可选行动（以下 EU 为期望效用模型调整后的值）
  *
  *   ### 继续抽（Draw）
  *     条件：已抽 < 5 张 且 牌组有剩余
  *     下一状态：(牌组扣除一张牌（5种情况）, 相同 M, P, D, A)，按抽牌的概率加权
- *     期望：evDraw = Σ 该等级概率 × EV(抽到该等级后的状态)
+ *     期望：euDraw = Σ 该等级概率 × EU(抽到该等级后的状态)
  *
  *   ### 翻倍（Double）
  *     条件：已抽 1~2 张、M=1（未翻倍）、D>0（有翻倍次数）
  *     下一状态：(牌组当前状态, M=2, P, D, A)（不立即扣减 D）
- *     期望：evDouble = EV(牌组当前状态, 倍率=2, D)
+ *     期望：euDouble = EU(牌组当前状态, 倍率=2, D)
  *     注意：不立即产生奖励，后续结算时当前奖励 ×2；翻倍次数在结算时扣除
  *
  *   ### 结算（Stop）
@@ -209,7 +212,7 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  *     下一状态：即时获得当前奖励（调整后 × 倍率），然后重置进入下一局
  *              (牌组初始状态, M=1, P-1, D-(M>1?1:0), A)
  *             翻倍次数在结算时扣除（已翻倍则 D-1，否则 D 不变）
- *     期望：evStop = 当前奖励 + EV(下一局初态)
+ *     期望：euStop = 调整后本局奖励 + EU(下一局初态)
  *
  *   ### 放弃（Abandon）
  *     条件：已抽 > 0 张
@@ -221,11 +224,11 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  *           ① M=1（未翻倍）
  *           ② P=1（仅剩一次游玩次数）
  *           ③ D=P（剩余翻倍数等于可玩次数）
- *     期望：evAbandon = EV(重置后的状态)
+ *     期望：euAbandon = EU(重置后的状态)
  *     特殊规则：翻倍在结算时才扣除，放弃时翻倍尚未消耗，所以无需返还
  *
  * ## 决策规则
- *   期望相同时按此优先级：翻倍 > 继续 > 放弃 > 停止
+ *   以 EU（期望效用）为决策依据，期望相同时按此优先级：翻倍 > 继续 > 放弃 > 停止
  *   已抽 0 张 → must_continue
  *   已抽满 5 张或无牌可抽 → 仅结算或放弃
  *
@@ -328,12 +331,12 @@ export function getCurrentAdvice(
         euStop: 0,
         euAbandon: 0,
         euRound: 0,
-        ev: 0,
-        evDraw: 0,
-        evDouble: 0,
-        evStop: 0,
-        evAbandon: 0,
-        evRound: 0,
+        reward: 0,
+        rewardDraw: 0,
+        rewardDouble: 0,
+        rewardStop: 0,
+        rewardAbandon: 0,
+        rewardRound: 0,
         distribution: new Array<number>(modValue).fill(0),
         abandonProb: 0,
       };
@@ -419,14 +422,14 @@ export function getCurrentAdvice(
     // 各行动的 EU 调整期望值（决策依据）和原始奖励期望（左列展示）
     // [Draw] 按等级比例加权，同时聚合子分布
     let euDraw = -Infinity;
-    let evDraw = -Infinity;
+    let rewardDraw = -Infinity;
     const drawDistribution = new Array<number>(modValue).fill(0);
     let drawAbandonProb = 0;
     let euRoundDraw = 0;
-    let evRoundDraw = 0;
+    let rewardRoundDraw = 0;
     if (roundDrawn < maxDraws && remainingCount > 0) {
       euDraw = 0;
-      evDraw = 0;
+      rewardDraw = 0;
       for (let i = 0; i < 5; i++) {
         if (remainingCards[i]! > 0) {
           const prob = remainingCards[i]! / remainingCount;
@@ -442,9 +445,9 @@ export function getCurrentAdvice(
             A,
           );
           euDraw += prob * child.eu;
-          evDraw += prob * child.ev;
+          rewardDraw += prob * child.reward;
           euRoundDraw += prob * child.euRound;
-          evRoundDraw += prob * child.evRound;
+          rewardRoundDraw += prob * child.rewardRound;
           for (let j = 0; j < modValue; j++) {
             drawDistribution[j]! += prob * child.distribution[j]!;
           }
@@ -454,12 +457,12 @@ export function getCurrentAdvice(
     }
 
     const euDouble = childDouble?.eu ?? -Infinity;
-    const evDouble = childDouble?.ev ?? -Infinity;
+    const rewardDouble = childDouble?.reward ?? -Infinity;
     const euStop = childStop ? roundReward + childStop.eu : -Infinity;
-    const evStop = childStop ? roundRewardRaw + childStop.ev : -Infinity;
+    const rewardStop = childStop ? roundRewardRaw + childStop.reward : -Infinity;
     const childAbandon = childAbandonA ?? childAbandonP;
     const euAbandon = childAbandon?.eu ?? -Infinity;
-    const evAbandon = childAbandon?.ev ?? -Infinity;
+    const rewardAbandon = childAbandon?.reward ?? -Infinity;
 
     // 最优期望 = 四种行动的最大值（基于 EU 调整值决策）
     const bestValue = Math.max(euDouble, euDraw, euAbandon, euStop);
@@ -468,21 +471,21 @@ export function getCurrentAdvice(
     let distribution: number[];
     let abandonProb: number;
     let euRound: number;
-    let evRound: number;
+    let rewardRound: number;
     let finalEu = -Infinity;
-    let finalEv = -Infinity;
+    let finalReward = -Infinity;
     if (roundDrawn === 0) {
       distribution = drawDistribution;
       abandonProb = drawAbandonProb;
       euRound = euRoundDraw;
-      evRound = evRoundDraw;
+      rewardRound = rewardRoundDraw;
       finalEu = euDraw;
-      finalEv = evDraw;
+      finalReward = rewardDraw;
     } else {
       distribution = drawDistribution;
       abandonProb = drawAbandonProb;
       euRound = euRoundDraw;
-      evRound = evRoundDraw;
+      rewardRound = rewardRoundDraw;
 
       // 优先级：draw > double > abandon > stop（数组顺序，越靠前优先级越高）
       // 决策基于 EU 调整值
@@ -504,35 +507,35 @@ export function getCurrentAdvice(
         distribution = drawDistribution;
         abandonProb = drawAbandonProb;
         euRound = euRoundDraw;
-        evRound = evRoundDraw;
+        rewardRound = rewardRoundDraw;
         finalEu = euDraw;
-        finalEv = evDraw;
+        finalReward = rewardDraw;
         // 翻倍：直接继承倍率 2 后的子分布，牌组不变，结算时扣除翻倍次数
       } else if (bestAction === 'double') {
         const child = childDouble!;
         distribution = child.distribution;
         abandonProb = child.abandonProb;
         euRound = child.euRound;
-        evRound = child.evRound;
+        rewardRound = child.rewardRound;
         finalEu = child.eu;
-        finalEv = child.ev;
+        finalReward = child.reward;
         // 放弃：放弃概率 100%，战力点分布 0
       } else if (bestAction === 'abandon') {
         distribution = new Array<number>(modValue).fill(0);
         abandonProb = 1;
         euRound = 0;
-        evRound = 0;
+        rewardRound = 0;
         finalEu = childAbandon!.eu;
-        finalEv = childAbandon!.ev;
+        finalReward = childAbandon!.reward;
         // 结算：立即获得当前奖励，概率 100% 落在当前战力点状态
       } else if (bestAction === 'stop') {
         distribution = new Array<number>(modValue).fill(0);
         distribution[slotIndex] = 1;
         abandonProb = 0;
         euRound = roundReward;
-        evRound = roundRewardRaw;
+        rewardRound = roundRewardRaw;
         finalEu = euStop;
-        finalEv = evStop;
+        finalReward = rewardStop;
       }
     }
 
@@ -543,12 +546,12 @@ export function getCurrentAdvice(
       euStop,
       euAbandon,
       euRound,
-      ev: finalEv,
-      evDraw,
-      evDouble,
-      evStop,
-      evAbandon,
-      evRound,
+      reward: finalReward,
+      rewardDraw,
+      rewardDouble,
+      rewardStop,
+      rewardAbandon,
+      rewardRound,
       distribution,
       abandonProb,
     };
@@ -572,13 +575,13 @@ export function getCurrentAdvice(
   const canDoubleNow = drawn > 0 && drawn < 3 && !doubled && D > 0;
 
   // 原始奖励期望（左列）
-  const rawAfterStop = dp.evStop - currentReward;
-  const rawExpectedRound = dp.evRound;
-  const rawExpectedToday = dp.ev;
+  const rewardAfterStop = dp.rewardStop - currentReward;
+  const rewardRound = dp.rewardRound;
+  const rewardToday = dp.reward;
   // EU 调整期望（右列）
   const euAfterStop = dp.euStop - euCurrentReward;
-  const euExpectedRound = dp.euRound;
-  const euExpectedToday = dp.eu;
+  const euRound = dp.euRound;
+  const euToday = dp.eu;
 
   // 决策规则：期望值相同时按优先级 翻倍 > 继续 > 放弃 > 停止（数组顺序）
   // 决策基于 EU 调整值
@@ -601,22 +604,22 @@ export function getCurrentAdvice(
   }
 
   return {
-    currentReward,
-    expectedRound: rawExpectedRound,
-    expectedToday: rawExpectedToday,
-    drawTotal: canDrawFurther ? dp.evDraw : null,
-    doubleTotal: canDoubleNow ? dp.evDouble : null,
-    stopTotal: drawn > 0 ? dp.evStop : null,
-    abandonTotal: drawn > 0 ? dp.evAbandon : null,
-    expectedAfterStop: rawAfterStop,
+    rewardCurrent: currentReward,
+    rewardRound,
+    rewardToday,
+    rewardDraw: canDrawFurther ? dp.rewardDraw : null,
+    rewardDouble: canDoubleNow ? dp.rewardDouble : null,
+    rewardStop: drawn > 0 ? dp.rewardStop : null,
+    rewardAbandon: drawn > 0 ? dp.rewardAbandon : null,
+    rewardAfterStop,
     euCurrentReward,
-    euExpectedRound,
-    euExpectedToday,
-    euDrawTotal: canDrawFurther ? dp.euDraw : null,
-    euDoubleTotal: canDoubleNow ? dp.euDouble : null,
-    euStopTotal: drawn > 0 ? dp.euStop : null,
-    euAbandonTotal: drawn > 0 ? dp.euAbandon : null,
-    euExpectedAfterStop: euAfterStop,
+    euRound,
+    euToday,
+    euDraw: canDrawFurther ? dp.euDraw : null,
+    euDouble: canDoubleNow ? dp.euDouble : null,
+    euStop: drawn > 0 ? dp.euStop : null,
+    euAbandon: drawn > 0 ? dp.euAbandon : null,
+    euAfterStop,
     optimalAction,
     distribution: [...dp.distribution],
     abandonProb: dp.abandonProb,
