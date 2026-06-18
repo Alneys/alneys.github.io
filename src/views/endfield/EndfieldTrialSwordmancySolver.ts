@@ -5,8 +5,8 @@
  * 核心决策：继续抽 / 翻倍 / 结算 / 放弃，最大化当日总期望收益。
  */
 
-/** 溢出厌恶心理模型参数 */
-export interface OverflowParams {
+/** 溢出厌恶期望效用模型参数 */
+export interface ExpectedUtilityParams {
   /**
    * 比例衰减系数 0~1，每溢出 1 圈奖励乘以此值
    * 连续溢出 n 圈时奖励乘以 aversionFactor^n，该值越小溢出厌恶越强
@@ -99,15 +99,13 @@ class LRUCache<V> {
  * 生成缓存键，由牌组、奖励表、溢出参数唯一决定一组 DP 结果
  * @param deck - 牌组各等级数量
  * @param rewards - 奖励表
- * @param overflowParams - 溢出参数（可选）
+ * @param euParams - 期望效用参数（可选）
  * @returns 缓存键字符串
  */
-function cacheKey(deck: number[], rewards: number[], overflowParams?: OverflowParams): string {
+function cacheKey(deck: number[], rewards: number[], euParams?: ExpectedUtilityParams): string {
   const deckK = deck.join(',');
   const rewardK = rewards.join(',');
-  const paramK = overflowParams
-    ? `${overflowParams.aversionFactor},${overflowParams.fixedPenalty}`
-    : '';
+  const paramK = euParams ? `${euParams.aversionFactor},${euParams.fixedPenalty}` : '';
   return `${deckK}|${rewardK}|${paramK}`;
 }
 
@@ -139,7 +137,7 @@ function computeAdjustedReward(
   rawReward: number,
   drawnValue: number,
   modValue: number,
-  params?: OverflowParams,
+  params?: ExpectedUtilityParams,
 ): number {
   if (!params || (params.aversionFactor === 1 && params.fixedPenalty === 0)) return rawReward;
   const k = Math.floor(drawnValue / modValue); // k = 溢出圈数
@@ -220,7 +218,7 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  * @param remainingGames - 今日剩余游玩次数
  * @param remainingDoubles - 今日剩余翻倍次数
  * @param remainingAbandons - 今日剩余放弃次数
- * @param overflowParams - 溢出厌恶参数（可选）
+ * @param euParams - 期望效用参数（可选）
  * @returns 最优行动建议，含各行动期望值、战力点概率分布等信息；输入非法时返回 null
  */
 export function getCurrentAdvice(
@@ -231,7 +229,7 @@ export function getCurrentAdvice(
   remainingGames: number,
   remainingDoubles: number,
   remainingAbandons: number,
-  overflowParams?: OverflowParams,
+  euParams?: ExpectedUtilityParams,
 ): AdviceResult | null {
   const modValue = rewards.length;
   const maxDraws = 5;
@@ -264,7 +262,7 @@ export function getCurrentAdvice(
   const multiplier = doubled ? 2 : 1;
   const rawReward = safeReward(rewards, slotIndex);
   const currentReward =
-    computeAdjustedReward(rawReward, drawnValue, modValue, overflowParams) * multiplier;
+    computeAdjustedReward(rawReward, drawnValue, modValue, euParams) * multiplier;
 
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
@@ -272,7 +270,7 @@ export function getCurrentAdvice(
   const D = remainingDoubles;
   const A = remainingAbandons;
 
-  const adviceKey = cacheKey(deck, rewards, overflowParams);
+  const adviceKey = cacheKey(deck, rewards, euParams);
   const existingAdviceMemo = adviceMemoCache.get(adviceKey);
   const memo = existingAdviceMemo ?? new Map<string, DpResult>();
   if (!existingAdviceMemo) adviceMemoCache.set(adviceKey, memo);
@@ -324,12 +322,7 @@ export function getCurrentAdvice(
     const roundPoints = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
     const slotIndex = ((roundPoints % modValue) + modValue) % modValue;
     const rawSlotReward = safeReward(rewards, slotIndex);
-    const adjustedReward = computeAdjustedReward(
-      rawSlotReward,
-      roundPoints,
-      modValue,
-      overflowParams,
-    );
+    const adjustedReward = computeAdjustedReward(rawSlotReward, roundPoints, modValue, euParams);
     const roundReward = adjustedReward * M;
 
     const remainingCards = [r1, r2, r3, r4, r5];
