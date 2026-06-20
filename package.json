@@ -55,6 +55,8 @@
     "sass": "^1.99.0",
     "stylelint": "^17.13.0",
     "stylelint-config-idiomatic-order": "^10.0.0",
+    "stylelint-config-recommended-scss": "^17.0.1",
+    "stylelint-config-recommended-vue": "^1.6.1",
     "typescript": "~5.9.3",
     "unplugin-auto-import": "^20.3.0",
     "unplugin-fonts": "^2.0.0",

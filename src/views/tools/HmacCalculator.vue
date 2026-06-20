@@ -427,7 +427,7 @@ function copyToClipboard(): void {
   margin-top: 1em;
 }
 
-.input-section {
+%input-section {
   margin-bottom: 1em;
 
   .section-label {
@@ -450,11 +450,11 @@ function copyToClipboard(): void {
 }
 
 .key-section {
-  @extend .input-section;
+  @extend %input-section;
 }
 
 .message-section {
-  @extend .input-section;
+  @extend %input-section;
   margin-top: 1em;
 }
 

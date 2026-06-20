@@ -1,6 +1,6 @@
 // Element Plus dark mode styles
 
-@use 'element-plus/theme-chalk/src/dark/css-vars.scss';
+@use 'element-plus/theme-chalk/src/dark/css-vars';
 
 html.dark {
   --el-org-popper-bg-color-light: #1d1e1f;
