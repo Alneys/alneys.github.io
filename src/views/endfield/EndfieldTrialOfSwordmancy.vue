@@ -130,28 +130,28 @@
                 <div class="expected-utility-presets">
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(1.0, 0) ? 'primary' : ''"
+                    :type="isEuPresetActive(1.0, 0) ? 'primary' : ''"
                     @click="setEuParams(1.0, 0)"
                   >
                     最大化收益
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.5, 30000) ? 'primary' : ''"
+                    :type="isEuPresetActive(0.5, 30000) ? 'primary' : ''"
                     @click="setEuParams(0.5, 30000)"
                   >
                     均衡
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.01, 0) ? 'primary' : ''"
+                    :type="isEuPresetActive(0.01, 0) ? 'primary' : ''"
                     @click="setEuParams(0.01, 0)"
                   >
                     厌恶溢出
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
+                    :type="isEuPresetActive(0.01, 400000) ? 'primary' : ''"
                     @click="setEuParams(0.01, 400000)"
                   >
                     禁止溢出
@@ -540,13 +540,13 @@
                   <span class="advice-label" />
                   <span class="advice-value">奖励期望</span>
                   <span class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">期望效用</span>
+                  <span v-if="showEuColumn" class="advice-value advice-eu">期望效用</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局当前奖励</span>
                   <span class="advice-value">{{ formatDecimal(euAdvice.rewardCurrent) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     formatDecimal(euAdvice.euCurrentReward)
                   }}</span>
                 </div>
@@ -554,7 +554,7 @@
                   <span class="advice-label">本局最优期望</span>
                   <span class="advice-value">{{ formatDecimal(euAdvice.rewardRound) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice ? formatDecimal(euAdvice.euRound) : '—'
                   }}</span>
                 </div>
@@ -567,9 +567,7 @@
                 <div
                   class="advice-row"
                   :class="{
-                    'advice-row-optimal': isRawOptOnly('continue', 'must_continue'),
-                    'advice-row-optimal-adjusted':
-                      isAdjOpt('continue') || isAdjOpt('must_continue'),
+                    'advice-row-optimal': isEuOpt('continue') || isEuOpt('must_continue'),
                   }"
                 >
                   <span class="advice-label">抽取铭牌</span>
@@ -577,7 +575,7 @@
                     euAdvice.rewardDraw != null ? formatDecimal(euAdvice.rewardDraw) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euDraw != null ? formatDecimal(euAdvice.euDraw) : '—'
                   }}</span>
                 </div>
@@ -585,64 +583,49 @@
                   <span class="advice-label" style="text-indent: 1.5em"
                     >铭牌点数 {{ item.level }}</span
                   >
-                  <span class="advice-value" :class="diffClass(item.ev)">{{
-                    item.ev != null ? formatDiff(item.ev) : '—'
+                  <span class="advice-value" :class="diffClass(item.rewardDiff)">{{
+                    item.rewardDiff != null ? formatDiff(item.rewardDiff) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span
                     v-if="showEuColumn"
-                    class="advice-value advice-adjusted"
-                    :class="diffClass(item.evAdjusted)"
-                    >{{ item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—' }}</span
+                    class="advice-value advice-eu"
+                    :class="diffClass(item.euDiff)"
+                    >{{ item.euDiff != null ? formatDiff(item.euDiff) : '—' }}</span
                   >
                   <span class="advice-sep">|</span>
                   <span class="advice-value advice-prob">{{ (item.prob * 100).toFixed(1) }}%</span>
                 </div>
-                <div
-                  class="advice-row"
-                  :class="{
-                    'advice-row-optimal': isRawOptOnly('double'),
-                    'advice-row-optimal-adjusted': isAdjOpt('double'),
-                  }"
-                >
+                <div class="advice-row" :class="{ 'advice-row-optimal': isEuOpt('double') }">
                   <span class="advice-label">开启翻倍</span>
                   <span class="advice-value">{{
                     euAdvice.rewardDouble != null ? formatDecimal(euAdvice.rewardDouble) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euDouble != null ? formatDecimal(euAdvice.euDouble) : '—'
                   }}</span>
                 </div>
-                <div
-                  class="advice-row"
-                  :class="{
-                    'advice-row-optimal': isRawOptOnly('abandon'),
-                    'advice-row-optimal-adjusted': isAdjOpt('abandon'),
-                  }"
-                >
+                <div class="advice-row" :class="{ 'advice-row-optimal': isEuOpt('abandon') }">
                   <span class="advice-label">放弃本局</span>
                   <span class="advice-value">{{
                     euAdvice.rewardAbandon != null ? formatDecimal(euAdvice.rewardAbandon) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euAbandon != null ? formatDecimal(euAdvice.euAbandon) : '—'
                   }}</span>
                 </div>
                 <div
                   class="advice-row"
-                  :class="{
-                    'advice-row-optimal': isRawOptOnly('stop', 'must_stop'),
-                    'advice-row-optimal-adjusted': isAdjOpt('stop') || isAdjOpt('must_stop'),
-                  }"
+                  :class="{ 'advice-row-optimal': isEuOpt('stop') || isEuOpt('must_stop') }"
                 >
                   <span class="advice-label">结算本局</span>
                   <span class="advice-value">{{
                     euAdvice.rewardStop != null ? formatDecimal(euAdvice.rewardStop) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euStop != null ? formatDecimal(euAdvice.euStop) : '—'
                   }}</span>
                 </div>
@@ -650,7 +633,7 @@
                   <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
                   <span class="advice-value">{{ formatDecimal(euAdvice.rewardAfterStop) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     formatDecimal(euAdvice.euAfterStop)
                   }}</span>
                 </div>
@@ -661,7 +644,7 @@
                     formatDecimal(euAdvice.rewardToday)
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-today-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-today-eu">{{
                     formatDecimal(euAdvice.euToday)
                   }}</span>
                 </div>
@@ -1047,7 +1030,7 @@ function setEuParams(af: number, fp: number) {
   fixedPenalty.value = fp;
 }
 
-function isPresetActive(af: number, fp: number): boolean {
+function isEuPresetActive(af: number, fp: number): boolean {
   return aversionFactor.value === af && fixedPenalty.value === fp;
 }
 
@@ -1094,8 +1077,8 @@ const euOptions = computed(() => {
     const raw = rewardValues.value[s] ?? 0;
     let label: string;
     if (params) {
-      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
-      label = formatRewardShort(adjusted);
+      const euValue = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+      label = formatRewardShort(euValue);
     } else {
       label = formatRewardShort(raw * mul);
     }
@@ -1116,13 +1099,13 @@ const euDisplayValue = computed(() => {
   if (totalPower.value >= 11 && totalPower.value <= 21) {
     const s = totalPower.value % 11;
     const raw = rewardValues.value[s] ?? 0;
-    let adjusted: number;
+    let euValue: number;
     if (params) {
-      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+      euValue = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
     } else {
-      adjusted = raw * mul;
+      euValue = raw * mul;
     }
-    return formatRewardShort(adjusted);
+    return formatRewardShort(euValue);
   }
   return '—';
 });
@@ -1376,17 +1359,21 @@ const perLevelAdvice = computed(() => {
     return [1, 2, 3, 4, 5].map((level) => ({
       level,
       prob: 0,
-      ev: null as number | null,
-      evAdjusted: null as number | null,
+      rewardDiff: null as number | null,
+      euDiff: null as number | null,
     }));
   }
   const remaining = deck.map((d, i) => d - dc[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
-  const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
-    [];
+  const result: {
+    level: number;
+    prob: number;
+    rewardDiff: number | null;
+    euDiff: number | null;
+  }[] = [];
   // 左列基线 = 原始奖励期望（遵循 EU 策略），右列基线 = EU 调整期望
-  const currentExp = euAdvice.value?.rewardToday ?? 0;
-  const currentExpAdj = euAdvice.value?.euToday ?? currentExp;
+  const currentRewardExp = euAdvice.value?.rewardToday ?? 0;
+  const currentEu = euAdvice.value?.euToday ?? currentRewardExp;
   for (let i = 0; i < 5; i++) {
     if (remaining[i]! > 0) {
       const prob = remaining[i]! / totalRemaining;
@@ -1406,17 +1393,17 @@ const perLevelAdvice = computed(() => {
       result.push({
         level: i + 1,
         prob: Math.round(prob * 10000) / 10000,
-        ev: nextResult ? Math.round((nextResult.rewardToday - currentExp) * 100) / 100 : null,
-        evAdjusted: nextResult
-          ? Math.round((nextResult.euToday - currentExpAdj) * 100) / 100
+        rewardDiff: nextResult
+          ? Math.round((nextResult.rewardToday - currentRewardExp) * 100) / 100
           : null,
+        euDiff: nextResult ? Math.round((nextResult.euToday - currentEu) * 100) / 100 : null,
       });
     } else {
       result.push({
         level: i + 1,
         prob: 0,
-        ev: null,
-        evAdjusted: null,
+        rewardDiff: null,
+        euDiff: null,
       });
     }
   }
@@ -1449,17 +1436,8 @@ function distributionRowClassName({ row }: { row: any }) {
   return '';
 }
 
-/** 原始最优且调整后非最优时才高亮原始色，避免与调整后高亮冲突 */
-function isRawOptOnly(...actions: string[]): boolean {
-  if (!currentAdvice.value) return false;
-  const rawIs = actions.includes(currentAdvice.value.optimalAction);
-  if (!rawIs) return false;
-  if (!euAdvice.value) return true;
-  return !actions.includes(euAdvice.value.optimalAction);
-}
-
-/** 调整后最优则优先使用调整后高亮色 */
-function isAdjOpt(...actions: string[]): boolean {
+/** 调整后最优则高亮显示 */
+function isEuOpt(...actions: string[]): boolean {
   if (!euAdvice.value) return false;
   return actions.includes(euAdvice.value.optimalAction);
 }
@@ -1893,15 +1871,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     min-width: 144px;
   }
 
-  .advice-row-optimal,
-  .advice-row-optimal-adjusted {
+  .advice-row-optimal {
     font-weight: bold;
     border-radius: 4px;
-  }
-  .advice-row-optimal {
-    background: var(--el-fill-color);
-  }
-  .advice-row-optimal-adjusted {
     background: var(--el-color-primary-light-8);
   }
 
@@ -1925,7 +1897,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     font-weight: normal;
   }
 
-  .advice-adjusted {
+  .advice-eu {
     color: var(--el-text-color-primary);
   }
 
@@ -1941,7 +1913,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     }
   }
 
-  .advice-today-adjusted {
+  .advice-today-eu {
     color: var(--el-text-color-primary);
     font-weight: bold;
   }

@@ -54,7 +54,7 @@ interface DpResult {
   euAbandon: number;
   euRound: number;
   /** 原始奖励期望（遵循 EU 最优策略，用于左列展示） */
-  reward: number;
+  rewardExp: number;
   rewardDraw: number;
   rewardDouble: number;
   rewardStop: number;
@@ -151,7 +151,7 @@ function safeGetReward(rewards: number[], s: number): number {
  * @param params - 期望效用参数（可选）
  * @returns 调整后的奖励值
  */
-function computeAdjustedReward(
+function computeEuReward(
   rawReward: number,
   drawnValue: number,
   modValue: number,
@@ -285,7 +285,7 @@ export function getCurrentAdvice(
   // drawn === 0 时没有实际奖励
   const currentReward = drawn === 0 ? 0 : rawReward * multiplier;
   const euCurrentReward =
-    drawn === 0 ? 0 : computeAdjustedReward(rawReward, drawnValue, modValue, euParams) * multiplier;
+    drawn === 0 ? 0 : computeEuReward(rawReward, drawnValue, modValue, euParams) * multiplier;
 
   const remaining = deck.map((d, i) => d - drawnCounts[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
@@ -332,7 +332,7 @@ export function getCurrentAdvice(
         euStop: 0,
         euAbandon: 0,
         euRound: 0,
-        reward: 0,
+        rewardExp: 0,
         rewardDraw: 0,
         rewardDouble: 0,
         rewardStop: 0,
@@ -351,7 +351,7 @@ export function getCurrentAdvice(
     const roundPoints = initialTotal - (r1 * 1 + r2 * 2 + r3 * 3 + r4 * 4 + r5 * 5);
     const slotIndex = ((roundPoints % modValue) + modValue) % modValue;
     const rawSlotReward = safeGetReward(rewards, slotIndex);
-    const adjustedReward = computeAdjustedReward(rawSlotReward, roundPoints, modValue, euParams);
+    const adjustedReward = computeEuReward(rawSlotReward, roundPoints, modValue, euParams);
     const roundReward = adjustedReward * M;
     const roundRewardRaw = rawSlotReward * M;
 
@@ -434,7 +434,7 @@ export function getCurrentAdvice(
             A,
           );
           euDraw += prob * child.eu;
-          rewardDraw += prob * child.reward;
+          rewardDraw += prob * child.rewardExp;
           euRoundDraw += prob * child.euRound;
           rewardRoundDraw += prob * child.rewardRound;
           for (let j = 0; j < modValue; j++) {
@@ -456,11 +456,11 @@ export function getCurrentAdvice(
     const euAbandon = childAbandon?.eu ?? -Infinity;
 
     // ====== 原始奖励期望 ======
-    const rewardDouble = childDouble?.reward ?? -Infinity;
-    const rewardStop = childStop ? stopRoundRaw + childStop.reward : -Infinity;
+    const rewardDouble = childDouble?.rewardExp ?? -Infinity;
+    const rewardStop = childStop ? stopRoundRaw + childStop.rewardExp : -Infinity;
     let rewardAbandon: number;
     if (childAbandon) {
-      rewardAbandon = childAbandon.reward;
+      rewardAbandon = childAbandon.rewardExp;
     } else if (roundDrawn > 0 && P > 0) {
       // 禁止放弃时仍计算后续状态（重置牌组）的原始奖励期望用于展示
       const fallbackChild = dpDaily(
@@ -474,7 +474,7 @@ export function getCurrentAdvice(
         D,
         0,
       );
-      rewardAbandon = fallbackChild.reward;
+      rewardAbandon = fallbackChild.rewardExp;
     } else {
       rewardAbandon = 0;
     }
@@ -528,7 +528,7 @@ export function getCurrentAdvice(
       euRound = child.euRound;
       rewardRound = child.rewardRound;
       finalEu = child.eu;
-      finalReward = child.reward;
+      finalReward = child.rewardExp;
       // 放弃：放弃概率 100%，战力点分布 0
     } else if (bestAction === 'abandon') {
       distribution = new Array<number>(modValue).fill(0);
@@ -536,7 +536,7 @@ export function getCurrentAdvice(
       euRound = 0;
       rewardRound = 0;
       finalEu = childAbandon!.eu;
-      finalReward = childAbandon!.reward;
+      finalReward = childAbandon!.rewardExp;
       // 结算：立即获得当前奖励（roundDrawn===0 时无战力点），概率分布和回合奖励
     } else if (bestAction === 'stop') {
       distribution = new Array<number>(modValue).fill(0);
@@ -560,7 +560,7 @@ export function getCurrentAdvice(
       euStop,
       euAbandon,
       euRound,
-      reward: finalReward,
+      rewardExp: finalReward,
       rewardDraw,
       rewardDouble,
       rewardStop,
@@ -591,7 +591,7 @@ export function getCurrentAdvice(
   // 原始奖励期望（左列）
   const rewardAfterStop = dp.rewardStop - currentReward;
   const rewardRound = dp.rewardRound;
-  const rewardToday = dp.reward;
+  const rewardToday = dp.rewardExp;
   // EU 调整期望（右列）
   const euAfterStop = dp.euStop - euCurrentReward;
   const euRound = dp.euRound;
