@@ -1,3 +1,5 @@
+import type { Config } from 'stylelint';
+
 export default {
   extends: [
     'stylelint-config-standard-scss',
@@ -25,4 +27,4 @@ export default {
     'shorthand-property-no-redundant-values': null,
     'scss/double-slash-comment-empty-line-before': null,
   },
-};
+} satisfies Config;

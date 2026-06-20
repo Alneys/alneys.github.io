@@ -2,6 +2,7 @@ import pluginVue from 'eslint-plugin-vue';
 import vueTsEslintConfig from '@vue/eslint-config-typescript';
 import eslintConfigPrettier from '@vue/eslint-config-prettier';
 
+/** @type {import('eslint/config').Config[]} */
 export default [
   {
     ignores: [
