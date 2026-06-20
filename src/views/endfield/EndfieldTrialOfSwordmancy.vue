@@ -303,7 +303,7 @@
             <el-col :span="6" :xs="24"
               ><el-card class="pool-card" data-tour="pool">
                 <template #header>
-                  <span>铭牌库剩余 {{ pool.length }} 张（点击可抽取）</span>
+                  <span>铭牌库剩余 {{ pool.length }} 张</span>
                 </template>
                 <div class="pool-list">
                   <span v-for="level in 5" :key="level">

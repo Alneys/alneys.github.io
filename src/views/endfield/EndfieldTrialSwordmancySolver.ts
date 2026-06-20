@@ -445,16 +445,39 @@ export function getCurrentAdvice(
       }
     }
 
-    const euDouble = childDouble?.eu ?? -Infinity;
-    const rewardDouble = childDouble?.reward ?? -Infinity;
-    // roundDrawn === 0 时结算奖励为 0（无抽牌无战力点）
-    const stopReward = roundDrawn === 0 ? 0 : roundRewardRaw;
-    const stopAdjustedReward = roundDrawn === 0 ? 0 : roundReward;
-    const euStop = childStop ? stopAdjustedReward + childStop.eu : -Infinity;
-    const rewardStop = childStop ? stopReward + childStop.reward : -Infinity;
+    // ====== 中间变量 ======
+    const stopRoundRaw = roundDrawn === 0 ? 0 : roundRewardRaw;
+    const stopRoundAdj = roundDrawn === 0 ? 0 : roundReward;
     const childAbandon = childAbandonA ?? childAbandonP;
+
+    // ====== EU 调整期望值（决策依据） ======
+    const euDouble = childDouble?.eu ?? -Infinity;
+    const euStop = childStop ? stopRoundAdj + childStop.eu : -Infinity;
     const euAbandon = childAbandon?.eu ?? -Infinity;
-    const rewardAbandon = childAbandon?.reward ?? -Infinity;
+
+    // ====== 原始奖励期望 ======
+    const rewardDouble = childDouble?.reward ?? -Infinity;
+    const rewardStop = childStop ? stopRoundRaw + childStop.reward : -Infinity;
+    let rewardAbandon: number;
+    if (childAbandon) {
+      rewardAbandon = childAbandon.reward;
+    } else if (roundDrawn > 0 && P > 0) {
+      // 禁止放弃时仍计算后续状态（重置牌组）的原始奖励期望用于展示
+      const fallbackChild = dpDaily(
+        deckInit[0]!,
+        deckInit[1]!,
+        deckInit[2]!,
+        deckInit[3]!,
+        deckInit[4]!,
+        1,
+        P - 1,
+        D,
+        0,
+      );
+      rewardAbandon = fallbackChild.reward;
+    } else {
+      rewardAbandon = 0;
+    }
 
     // 最优期望 = 四种行动的最大值（基于 EU 调整值决策）
     const bestValue = Math.max(euDouble, euDraw, euAbandon, euStop);
