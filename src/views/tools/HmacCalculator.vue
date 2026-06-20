@@ -455,6 +455,7 @@ function copyToClipboard(): void {
 
 .message-section {
   @extend %input-section;
+
   margin-top: 1em;
 }
 

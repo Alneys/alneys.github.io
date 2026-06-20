@@ -1544,6 +1544,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .config-reward-textarea {
     width: 100%;
+
     :deep(textarea) {
       font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
       font-size: 12px;
@@ -1569,6 +1570,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       padding: 12px 16px;
       font-weight: bold;
     }
+
     :deep(.el-card__body) {
       padding: 12px 16px;
     }
@@ -1577,6 +1579,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       :deep(.el-card__header) {
         padding: 8px 12px;
       }
+
       :deep(.el-card__body) {
         padding: 8px 12px;
       }
@@ -1692,9 +1695,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     font-weight: bold;
     line-height: 1;
   }
+
   .drawn-slot-num {
     color: var(--el-color-primary);
   }
+
   .drawn-slot-q {
     color: var(--el-text-color-placeholder);
   }
@@ -1768,17 +1773,21 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .reward-eu-section {
     margin-bottom: 0;
+
     .reward-eu-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
       --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
     }
+
     &.reward-penalty {
       .reward-eu-segmented {
         --el-segmented-bg-color: var(--el-color-danger-light-7);
       }
     }
+
     &.reward-eu-disabled {
       opacity: 0.4;
+
       .reward-label {
         color: var(--el-text-color-placeholder);
       }
@@ -1796,8 +1805,10 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     &.el-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-success);
       --el-segmented-bg-color: var(--el-color-success-light-7);
+
       color: var(--el-text-color-primary);
     }
+
     color: var(--el-color-success);
   }
 
@@ -1825,9 +1836,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     .config-otp-row {
       margin-bottom: 0;
     }
+
     .config-grid {
       margin-bottom: 0;
     }
+
     .config-buttons {
       margin-top: 0;
     }

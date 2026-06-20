@@ -84,9 +84,11 @@ const isVisualBold = computed(() =>
 .tooltip-card {
   font-size: 14px;
 }
+
 .is-bold {
   font-weight: bold;
 }
+
 .is-underline {
   text-decoration: underline;
 }

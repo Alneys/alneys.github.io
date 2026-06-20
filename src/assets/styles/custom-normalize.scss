@@ -16,10 +16,12 @@
 .font-normal * {
   font-family: var(--al-font-family);
 }
+
 .font-mono,
 .font-mono * {
   font-family: var(--al-font-family-mono);
 }
+
 .font-jp,
 .font-jp * {
   font-family: var(--al-font-family-jp);
@@ -50,18 +52,23 @@ html {
 h1 {
   font-size: 1.5rem;
 }
+
 h2 {
   font-size: 1.25rem;
 }
+
 h3 {
   font-size: 1.125rem;
 }
+
 h4 {
   font-size: 1rem;
 }
+
 h5 {
   font-size: 0.875rem;
 }
+
 h6 {
   font-size: 0.75rem;
 }
@@ -70,9 +77,11 @@ h6 {
   h1 {
     font-size: 1.25rem;
   }
+
   h2 {
     font-size: 1.125rem;
   }
+
   h3 {
     font-size: 1.0625rem;
   }

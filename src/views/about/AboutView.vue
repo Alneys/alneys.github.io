@@ -206,6 +206,7 @@ async function copyToClipboard(text: string) {
 .el-link {
   vertical-align: inherit;
 }
+
 .shields-io-collections {
   display: flex;
   flex-wrap: wrap;
@@ -216,6 +217,7 @@ img[src^='https://img.shields.io'] {
   height: 24px;
   vertical-align: text-bottom;
 }
+
 .list-p {
   li {
     margin-block: 0.5em;
@@ -224,6 +226,7 @@ img[src^='https://img.shields.io'] {
 
 .al-collapse {
   margin-top: 1em;
+
   .el-collapse {
     --el-collapse-header-font-size: var(--el-font-size-base);
     --el-collapse-content-font-size: var(--el-font-size-base);

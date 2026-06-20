@@ -166,8 +166,10 @@ const applyPreloadedCardStatus = () => {
     margin: 0.5em 0;
     gap: 0.5em;
   }
+
   .config-name-filter-input {
     font-family: var(--al-font-family-jp);
+
     ::placeholder {
       font-family: var(--al-font-family);
     }
