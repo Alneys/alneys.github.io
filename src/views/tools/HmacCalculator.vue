@@ -432,14 +432,14 @@ function copyToClipboard(): void {
 
   .section-label {
     display: block;
-    font-weight: bold;
     margin-bottom: 1em;
+    font-weight: bold;
   }
 
   .encoding-switch {
     display: block;
-    margin-bottom: 1em;
     margin-top: 1em;
+    margin-bottom: 1em;
   }
 
   .mono-input {
@@ -480,8 +480,8 @@ function copyToClipboard(): void {
   gap: 0.5em;
 
   .algorithm-select {
-    flex: 1;
     max-width: 200px;
+    flex: 1;
   }
 
   &.checkboxes {
@@ -503,12 +503,12 @@ function copyToClipboard(): void {
 
   .hmac-output {
     :deep(.el-input-group__append) {
-      background-color: var(--im-color-ml-miya);
       border-color: var(--im-color-ml-miya);
+      background-color: var(--im-color-ml-miya);
 
       .el-button {
-        color: white;
         border: none;
+        color: white;
       }
     }
   }

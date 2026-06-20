@@ -24,8 +24,8 @@ const isDark = useDark();
 <style lang="scss" scoped>
 #layout-header {
   position: sticky;
-  top: 0;
   z-index: 39;
+  top: 0;
   background-color: var(--im-color-ml-miya);
   > div {
     display: flex;
@@ -34,9 +34,9 @@ const isDark = useDark();
     .title {
       text-decoration: none;
       h1 {
+        margin: 0;
         color: white;
         line-height: 1.25;
-        margin: 0;
       }
     }
   }

@@ -35,8 +35,8 @@
 
   > .main {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
+    grid-template-columns: repeat(3, 1fr);
     a {
       text-decoration: none;
     }

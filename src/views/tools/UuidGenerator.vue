@@ -252,10 +252,10 @@ onMounted(() => {
 }
 
 .uuid-display {
-  margin-bottom: 1em;
   display: flex;
-  gap: 0.5em;
   align-items: flex-start;
+  margin-bottom: 1em;
+  gap: 0.5em;
 
   .uuid-input {
     flex: 1;

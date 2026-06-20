@@ -24,12 +24,12 @@ function handleCgssCountdownClick() {
 
 <style lang="scss" scoped>
 .cgss-countdown {
-  cursor: pointer;
   background-color: #2581c7;
+  cursor: pointer;
 
   .cgss-countdown-container {
-    padding: 0.5em;
     width: 100%;
+    padding: 0.5em;
     text-align: center;
 
     > div {

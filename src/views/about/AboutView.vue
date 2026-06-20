@@ -181,11 +181,11 @@ async function copyToClipboard(text: string) {
 
   .game-id {
     display: flex;
+    width: fit-content;
     align-items: center;
-    gap: 0.5em;
     // margin: 0.25em 0;
     cursor: pointer;
-    width: fit-content;
+    gap: 0.5em;
 
     &:hover span {
       color: var(--el-color-primary);
@@ -232,13 +232,13 @@ img[src^='https://img.shields.io'] {
 
 .debug-panel {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
   z-index: 9998;
+  right: 16px;
+  bottom: 16px;
   padding: 8px;
-  background: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
   border-radius: 8px;
+  background: var(--el-bg-color);
   box-shadow: var(--el-box-shadow-light);
 }
 </style>

@@ -1476,8 +1476,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .config-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
     margin-bottom: 4px;
+    gap: 12px;
   }
 
   .config-item {
@@ -1502,8 +1502,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .config-otp-row {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin-bottom: 4px;
+    gap: 8px;
   }
 
   .config-buttons,
@@ -1531,8 +1531,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
     .config-hint-hint {
       display: flex;
-      align-items: center;
       height: 20px;
+      align-items: center;
     }
   }
 
@@ -1616,8 +1616,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .game-section {
-    row-gap: 8px;
     margin-bottom: 8px;
+    row-gap: 8px;
 
     :deep(.el-col) {
       display: flex;
@@ -1635,27 +1635,27 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       display: flex;
       flex: 1;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
     }
   }
 
   .drawn-slots {
     display: flex;
-    gap: 12px;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 12px;
   }
 
   .drawn-slot {
     display: flex;
-    justify-content: center;
-    align-items: center;
     width: 72px;
     height: 100px;
+    align-items: center;
+    justify-content: center;
     border: 2px solid var(--el-border-color);
-    background: var(--el-fill-color-light);
     border-radius: 8px;
+    background: var(--el-fill-color-light);
     transition: all 0.3s;
     user-select: none;
 
@@ -1701,9 +1701,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .drawn-manual-input {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     width: 100%;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .drawn-manual-left {
@@ -1726,8 +1726,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .pool-btn :deep(> span) {
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     gap: 24px;
   }
 
@@ -1752,8 +1752,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-eu-section {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin-bottom: 8px;
+    gap: 8px;
 
     .reward-label {
       width: 64px;
@@ -1811,8 +1811,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
     .date-hint-text {
       display: flex;
-      align-items: center;
       height: 20px;
+      align-items: center;
     }
   }
 
@@ -1872,16 +1872,16 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .advice-row-optimal {
+    border-radius: 4px;
     background: var(--el-color-primary-light-8);
     font-weight: bold;
-    border-radius: 4px;
   }
 
   .advice-value {
     min-width: 88px;
+    font-variant-numeric: tabular-nums;
     font-weight: bold;
     text-align: right;
-    font-variant-numeric: tabular-nums;
 
     &.advice-diff-positive {
       color: var(--el-color-success);
@@ -1920,10 +1920,10 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .advice-decision {
     padding: 8px 0;
+    border-radius: 4px;
     font-size: 16px;
     font-weight: bold;
     text-align: center;
-    border-radius: 4px;
 
     &.advice-continue {
       color: var(--el-color-success);
@@ -1952,8 +1952,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .distribution-value {
-    font-weight: bold;
     font-variant-numeric: tabular-nums;
+    font-weight: bold;
   }
 
   .distribution-current-value {
@@ -1994,22 +1994,22 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .action-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     width: 100%;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
   }
 
   .action-row-left {
     display: flex;
-    justify-content: flex-start;
     align-items: center;
+    justify-content: flex-start;
   }
 
   .action-row-right {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
+    justify-content: flex-end;
   }
 
   .action-btn {
@@ -2030,8 +2030,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .action-switch {
-    justify-content: center;
     min-width: 100px;
+    justify-content: center;
     margin-right: 8px;
   }
 
@@ -2044,8 +2044,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .action-row-center {
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
   }
 
   // ── 响应式：小屏幕 ──
@@ -2112,11 +2112,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       flex: 1;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
       padding: 8px 4px;
+      border-radius: 4px;
       margin-bottom: 0;
       background: var(--el-fill-color);
-      border-radius: 4px;
+      gap: 4px;
 
       &.reward-penalty {
         background: var(--el-color-danger-light-7);

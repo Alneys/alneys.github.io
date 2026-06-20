@@ -163,8 +163,8 @@ const applyPreloadedCardStatus = () => {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.5em;
     margin: 0.5em 0;
+    gap: 0.5em;
   }
   .config-name-filter-input {
     font-family: var(--al-font-family-jp);

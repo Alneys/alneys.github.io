@@ -215,8 +215,8 @@
             >
               <ul
                 style="
-                  margin: 0;
                   padding-left: 1.5em;
+                  margin: 0;
                   font-size: var(--el-font-size-base);
                   line-height: 1.5;
                 "
@@ -235,8 +235,8 @@
             >
               <ul
                 style="
-                  margin: 0;
                   padding-left: 1.5em;
+                  margin: 0;
                   font-size: var(--el-font-size-base);
                   line-height: 1.5;
                 "
@@ -736,8 +736,8 @@ async function handleSubmit() {
   /* Chrome, Safari, Edge, Opera */
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
     margin: 0;
+    -webkit-appearance: none;
   }
 
   /* Firefox */
@@ -752,15 +752,15 @@ async function handleSubmit() {
 
   :deep(.el-card__header) {
     padding: 8px;
-    line-height: 23px;
-    font-weight: bold;
-    color: var(--el-text-color-primary);
-    text-align: center;
-    background-color: var(--el-color-primary-light-3);
     border-top: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
-    border-left: 1px solid var(--border-color);
     border-bottom: none;
+    border-left: 1px solid var(--border-color);
+    background-color: var(--el-color-primary-light-3);
+    color: var(--el-text-color-primary);
+    font-weight: bold;
+    line-height: 23px;
+    text-align: center;
   }
 
   :deep(.el-card__body) {
