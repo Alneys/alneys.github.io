@@ -14,6 +14,7 @@ import inputmodeDirective from './utils/directives/inputmode';
 // self-host fonts
 import 'unfonts.css';
 
+import 'nprogress/nprogress.css';
 import '@/assets/styles/main.scss';
 
 const app = createApp(App);

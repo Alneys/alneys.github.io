@@ -12,3 +12,52 @@
   border-left: 2px solid var(--im-color-ml-miya);
   height: 100%;
 }
+
+// nprogress overrides
+#nprogress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: var(--im-color-ml-elena);
+  height: 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+#nprogress .spinner {
+  display: none;
+}
+
+#nprogress .peg {
+  box-shadow:
+    0 0 10px var(--im-color-ml-elena),
+    0 0 5px var(--im-color-ml-elena);
+}
+
+#nprogress .spinner-icon {
+  border-top-color: var(--im-color-ml-elena);
+  border-left-color: var(--im-color-ml-elena);
+}
+
+#nprogress.is-error .bar {
+  background: var(--el-color-danger);
+}
+
+#nprogress.is-error .peg {
+  box-shadow:
+    0 0 10px var(--el-color-danger),
+    0 0 5px var(--el-color-danger);
+}
+
+#nprogress.is-error .spinner-icon {
+  border-top-color: var(--el-color-danger);
+  border-left-color: var(--el-color-danger);
+}

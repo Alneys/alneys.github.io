@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import NProgress from 'nprogress';
 import LayoutIndex from '@/views/layout/LayoutIndex.vue';
 
 const router = createRouter({
@@ -120,6 +121,26 @@ const router = createRouter({
     //   component: () => import('../views/AboutView.vue'),
     // },
   ],
+});
+
+router.beforeEach(() => {
+  // Clear error class from previous failed navigation
+  document.getElementById('nprogress')?.classList.remove('is-error');
+  NProgress.start();
+  // Move progress bar into header so it sits at the bottom of the header
+  const el = document.getElementById('nprogress');
+  const header = document.getElementById('layout-header');
+  if (el && header && el.parentElement !== header) {
+    header.appendChild(el);
+  }
+});
+
+router.afterEach(() => {
+  NProgress.done();
+});
+
+router.onError(() => {
+  document.getElementById('nprogress')?.classList.add('is-error');
 });
 
 export default router;
