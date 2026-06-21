@@ -190,7 +190,7 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  * ## DP 状态 (r1, r2, r3, r4, r5, M, P, D, A)
  *   r1~r5 = 牌组各等级剩余张数
  *   M     = 当前局倍率（1 或 2）
- *   P     = 今日剩余游玩次数（含当前局）
+ *   P     = 今日剩余结算次数（含当前局）
  *   D     = 今日剩余翻倍次数
  *   A     = 今日剩余放弃次数
  *
@@ -221,11 +221,11 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  *     条件：已抽 > 0 张
  *     下一状态：重置牌组重新开局（翻倍未消耗，无需返还）
  *       - A>0：用放弃次数，(牌组初始状态, 1, P, D, A-1)
- *       - A=0：有游玩次数且求解器未禁止时，用游玩次数
+ *       - A=0：有结算次数且求解器未禁止时，用结算次数
  *         (牌组初始状态, 1, P-1, D, 0)
  *       - 在没有翻倍次数（A=0）时，以下条件满足任意一条禁止放弃（仅求解器避免非最优解，玩家实际可以放弃）：
  *           ① M=1（未翻倍）
- *           ② P=1（仅剩一次游玩次数）
+ *           ② P=1（仅剩一次结算次数）
  *           ③ D=P（剩余翻倍数等于可玩次数）
  *     期望：euAbandon = EU(重置后的状态)
  *     特殊规则：翻倍在结算时才扣除，放弃时翻倍尚未消耗，所以无需返还
@@ -239,7 +239,7 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  * @param rewards - 奖励表
  * @param drawnCounts - 当前已抽各等级（1~5）铭牌数量
  * @param doubled - 当前局是否已翻倍
- * @param remainingGames - 今日剩余游玩次数
+ * @param remainingGames - 今日剩余结算次数
  * @param remainingDoubles - 今日剩余翻倍次数
  * @param remainingAbandons - 今日剩余放弃次数
  * @param euParams - 期望效用参数（可选）
@@ -306,7 +306,7 @@ export function getCurrentAdvice(
    *
    * @param r1 ~ r5 - 牌组各等级（1~5）剩余张数
    * @param M - 当前局倍率（1 或 2）
-   * @param P - 今日剩余游玩次数（含当前局）
+   * @param P - 今日剩余结算次数（含当前局）
    * @param D - 今日剩余翻倍次数
    * @param A - 今日剩余放弃次数
    * @returns 包含最优期望值、战力点概率分布、放弃概率的结果
