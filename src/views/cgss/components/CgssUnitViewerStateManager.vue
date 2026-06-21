@@ -153,8 +153,8 @@ const importCidsFromLocalStorage = () => {
 .unit-state-manager {
   display: flex;
   flex-wrap: wrap;
-  margin: 0.5em 0;
   gap: 0.5em;
+  margin: 0.5em 0;
 
   > div {
     display: flex;

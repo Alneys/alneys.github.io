@@ -37,8 +37,8 @@ const isDark = useDark();
 
       h1 {
         margin: 0;
-        color: white;
         line-height: 1.25;
+        color: white;
       }
     }
   }

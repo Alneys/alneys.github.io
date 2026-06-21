@@ -253,9 +253,9 @@ onMounted(() => {
 
 .uuid-display {
   display: flex;
+  gap: 0.5em;
   align-items: flex-start;
   margin-bottom: 1em;
-  gap: 0.5em;
 
   .uuid-input {
     flex: 1;
@@ -276,8 +276,8 @@ onMounted(() => {
 
 .setting-row {
   display: flex;
-  align-items: center;
   gap: 0.5em;
+  align-items: center;
 
   .count-slider {
     flex: 1;

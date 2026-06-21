@@ -24,8 +24,8 @@ function handleCgssCountdownClick() {
 
 <style lang="scss" scoped>
 .cgss-countdown {
-  background-color: #2581c7;
   cursor: pointer;
+  background-color: #2581c7;
 
   .cgss-countdown-container {
     width: 100%;
@@ -37,8 +37,8 @@ function handleCgssCountdownClick() {
     }
 
     * {
-      color: white;
       font-size: var(--el-font-size-base);
+      color: white;
     }
   }
 

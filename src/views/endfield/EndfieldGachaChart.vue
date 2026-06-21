@@ -1232,11 +1232,11 @@ watch(isDark, () => {
 }
 
 .simulation-summary {
+  margin-top: 1em;
   padding: 0.5em;
   border-radius: 4px;
-  margin-top: 1em;
-  background-color: var(--el-fill-color);
   font-weight: bold;
   text-align: center;
+  background-color: var(--el-fill-color);
 }
 </style>

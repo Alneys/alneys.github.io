@@ -742,12 +742,12 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
 
 .setting-row {
   display: flex;
-  align-items: center;
   gap: 0.5em;
+  align-items: center;
 
   .ssh-comment-input {
-    max-width: 300px;
     flex: 1;
+    max-width: 300px;
   }
 }
 
@@ -781,8 +781,8 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
   margin-top: 1em;
 
   .security-tips {
-    padding-left: 1.5em;
     margin: 0.5em 0 0 0;
+    padding-left: 1.5em;
 
     li {
       margin-bottom: 0.3em;

@@ -1497,8 +1497,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .view-title-row {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 12px;
+    align-items: center;
   }
 
   .view-title {
@@ -1516,14 +1516,14 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .config-grid {
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 4px;
     gap: 12px;
+    margin-bottom: 4px;
   }
 
   .config-item {
     display: flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
 
     :deep(.el-input) {
       width: 80px;
@@ -1534,16 +1534,16 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .daily-label,
   .expected-utility-label,
   .drawn-manual-label {
-    color: var(--el-text-color-secondary);
     font-size: 14px;
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
   }
 
   .config-otp-row {
     display: flex;
+    gap: 8px;
     align-items: center;
     margin-bottom: 4px;
-    gap: 8px;
   }
 
   .config-buttons,
@@ -1566,20 +1566,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     display: flex;
     align-items: baseline;
     margin-bottom: 4px;
-    color: var(--el-text-color-secondary);
     font-size: 12px;
+    color: var(--el-text-color-secondary);
 
     .config-hint-hint {
       display: flex;
-      height: 20px;
       align-items: center;
+      height: 20px;
     }
   }
 
   .config-reward-hint {
     margin-bottom: 4px;
-    color: var(--el-text-color-secondary);
     font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 
   .config-reward-textarea {
@@ -1594,8 +1594,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .config-reward-error {
     margin-top: 4px;
-    color: var(--el-color-danger);
     font-size: 12px;
+    color: var(--el-color-danger);
   }
 
   // ── 所有卡片统一 padding ──
@@ -1641,8 +1641,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .expected-utility-item {
     display: flex;
-    align-items: center;
     gap: 12px;
+    align-items: center;
   }
 
   .expected-utility-slider {
@@ -1659,8 +1659,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .game-section {
-    margin-bottom: 8px;
     row-gap: 8px;
+    margin-bottom: 8px;
 
     :deep(.el-col) {
       display: flex;
@@ -1686,21 +1686,21 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .drawn-slots {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: 12px;
+    justify-content: center;
   }
 
   .drawn-slot {
+    user-select: none;
     display: flex;
-    width: 72px;
-    height: 100px;
     align-items: center;
     justify-content: center;
+    width: 72px;
+    height: 100px;
     border: 2px solid var(--el-border-color);
     border-radius: 8px;
     background: var(--el-fill-color-light);
     transition: all 0.3s;
-    user-select: none;
 
     &.filled {
       border-color: var(--el-color-primary);
@@ -1720,13 +1720,13 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .drawn-slot-inner {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 4px;
+    align-items: center;
   }
 
   .drawn-slot-lv {
-    color: var(--el-text-color-secondary);
     font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 
   .drawn-slot-num,
@@ -1746,15 +1746,15 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .drawn-manual-input {
     display: flex;
-    width: 100%;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
   }
 
   .drawn-manual-left {
     display: flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
   }
 
   .drawn-undo-btn {
@@ -1771,20 +1771,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .pool-btn :deep(> span) {
     display: flex;
+    gap: 24px;
     align-items: center;
     justify-content: center;
-    gap: 24px;
   }
 
   .pool-level-label {
-    color: var(--el-text-color-secondary);
     font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 
   .pool-level-count {
-    color: var(--el-text-color-primary);
     font-size: 16px;
     font-weight: bold;
+    color: var(--el-text-color-primary);
   }
 
   .reward-label {
@@ -1796,9 +1796,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-tier-section,
   .reward-eu-section {
     display: flex;
+    gap: 8px;
     align-items: center;
     margin-bottom: 8px;
-    gap: 8px;
 
     .reward-label {
       width: 64px;
@@ -1806,8 +1806,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     }
 
     .el-segmented {
-      flex-grow: 1;
       --el-border-radius-base: 0px;
+
+      flex-grow: 1;
     }
   }
 
@@ -1855,21 +1856,21 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .daily-date-hint {
     display: flex;
     align-items: baseline;
-    color: var(--el-text-color-secondary);
     font-size: 12px;
+    color: var(--el-text-color-secondary);
 
     .date-hint-text {
       display: flex;
-      height: 20px;
       align-items: center;
+      height: 20px;
     }
   }
 
   .daily-grid {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 8px;
+    align-items: center;
 
     .config-otp-row {
       margin-bottom: 0;
@@ -1886,8 +1887,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .daily-item {
     display: flex;
-    align-items: center;
     gap: 4px;
+    align-items: center;
   }
 
   .daily-input {
@@ -1918,9 +1919,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .advice-row {
     display: flex;
+    gap: 4px;
     align-items: center;
     font-size: 14px;
-    gap: 4px;
   }
 
   .advice-label {
@@ -1930,14 +1931,14 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .advice-row-optimal {
     border-radius: 4px;
-    background: var(--el-color-primary-light-8);
     font-weight: bold;
+    background: var(--el-color-primary-light-8);
   }
 
   .advice-value {
     min-width: 88px;
-    font-variant-numeric: tabular-nums;
     font-weight: bold;
+    font-variant-numeric: tabular-nums;
     text-align: right;
 
     &.advice-diff-positive {
@@ -1950,8 +1951,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .advice-sep {
-    color: var(--el-border-color);
     font-weight: normal;
+    color: var(--el-border-color);
   }
 
   .advice-eu {
@@ -1971,8 +1972,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .advice-today-eu {
-    color: var(--el-text-color-primary);
     font-weight: bold;
+    color: var(--el-text-color-primary);
   }
 
   .advice-decision {
@@ -2003,19 +2004,19 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .distribution-empty {
     padding: 12px 0;
-    color: var(--el-text-color-secondary);
     font-size: 14px;
+    color: var(--el-text-color-secondary);
     text-align: center;
   }
 
   .distribution-value {
-    font-variant-numeric: tabular-nums;
     font-weight: bold;
+    font-variant-numeric: tabular-nums;
   }
 
   .distribution-current-value {
-    color: var(--el-color-primary);
     font-weight: bold;
+    color: var(--el-color-primary);
   }
 
   .distribution-prob {
@@ -2035,8 +2036,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   :deep(.distribution-row-highlight) {
-    background: var(--el-color-primary-light-9);
     font-weight: bold;
+    background: var(--el-color-primary-light-9);
   }
 
   :deep(.el-table__body .distribution-row-highlight:hover .el-table__cell) {
@@ -2051,10 +2052,10 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .action-row {
     display: flex;
-    width: 100%;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    width: 100%;
   }
 
   .action-row-left {
@@ -2087,15 +2088,15 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .action-switch {
-    min-width: 100px;
     justify-content: center;
+    min-width: 100px;
     margin-right: 8px;
   }
 
   .action-switch-group {
     display: flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
     white-space: nowrap;
   }
 
@@ -2155,8 +2156,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
     .pool-btn :deep(> span) {
       flex-direction: column;
-      justify-content: center;
       gap: 4px;
+      justify-content: center;
     }
 
     .pool-level-count {
@@ -2168,12 +2169,12 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     .reward-eu-section {
       flex: 1;
       flex-direction: column;
+      gap: 4px;
       align-items: center;
+      margin-bottom: 0;
       padding: 8px 4px;
       border-radius: 4px;
-      margin-bottom: 0;
       background: var(--el-fill-color);
-      gap: 4px;
 
       &.reward-penalty {
         background: var(--el-color-danger-light-7);
@@ -2190,8 +2191,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       .reward-label {
         width: auto;
         margin-bottom: 0;
-        color: var(--el-text-color-secondary);
         font-size: 13px;
+        color: var(--el-text-color-secondary);
       }
 
       .reward-xs-value {

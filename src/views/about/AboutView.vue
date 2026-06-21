@@ -180,12 +180,12 @@ async function copyToClipboard(text: string) {
   margin-top: 1em;
 
   .game-id {
-    display: flex;
-    width: fit-content;
-    align-items: center;
     // margin: 0.25em 0;
     cursor: pointer;
+    display: flex;
     gap: 0.5em;
+    align-items: center;
+    width: fit-content;
 
     &:hover span {
       color: var(--el-color-primary);

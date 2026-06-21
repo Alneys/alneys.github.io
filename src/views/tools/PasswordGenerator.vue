@@ -265,8 +265,8 @@ onMounted(() => {
 
 .setting-row {
   display: flex;
-  align-items: center;
   gap: 0.5em;
+  align-items: center;
 
   .length-slider {
     flex: 1;
@@ -279,13 +279,13 @@ onMounted(() => {
 
   .setting-label {
     flex-shrink: 0;
-    color: var(--el-text-color-secondary);
     font-size: 14px;
+    color: var(--el-text-color-secondary);
   }
 
   .symbols-input {
-    max-width: 300px;
     flex: 1;
+    max-width: 300px;
   }
 }
 

@@ -41,62 +41,62 @@
     }
 
     .cgss-icon {
+      cursor: pointer;
+      scale: 1;
       display: inline-block;
       width: 48px;
       height: 48px;
-      border-radius: 4px;
       margin: 0;
-      cursor: pointer;
-      scale: 1;
+      border-radius: 4px;
     }
 
     .icon-filter-match {
-      margin: 0;
       scale: 1;
+      margin: 0;
     }
 
     .icon-filter-not-match {
-      margin: 0;
       scale: 0.375;
+      margin: 0;
     }
 
     .icon-specialize-not-match {
-      margin: -6px;
       scale: 0.625;
+      margin: -6px;
 
       &.icon-filter-match {
-        margin: 0;
         scale: 0.85;
+        margin: 0;
       }
 
       &.icon-filter-not-match {
-        margin: 0;
         scale: 0.375;
+        margin: 0;
       }
     }
 
     .icon-extra {
-      margin: -6px;
       scale: 0.75;
+      margin: -6px;
 
       &.icon-filter-match {
-        margin: 0;
         scale: 1;
+        margin: 0;
       }
 
       &.icon-specialize-not-match {
-        margin: -12px;
         scale: 0.375;
+        margin: -12px;
 
         &.icon-filter-match {
-          margin: 0;
           scale: 0.85;
+          margin: 0;
         }
       }
 
       &.icon-filter-not-match {
-        margin: -12px;
         scale: 0.375;
+        margin: -12px;
       }
     }
 
@@ -135,9 +135,9 @@
     > div {
       display: flex;
       flex-wrap: wrap;
+      gap: 0.5em;
       align-items: baseline;
       margin: 0.5em 0;
-      gap: 0.5em;
     }
   }
 }

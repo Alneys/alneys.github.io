@@ -477,12 +477,12 @@ function copyToClipboard(): void {
 
 .setting-row {
   display: flex;
-  align-items: center;
   gap: 0.5em;
+  align-items: center;
 
   .algorithm-select {
-    max-width: 200px;
     flex: 1;
+    max-width: 200px;
   }
 
   &.checkboxes {

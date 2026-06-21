@@ -162,9 +162,9 @@ const applyPreloadedCardStatus = () => {
   > div {
     display: flex;
     flex-wrap: wrap;
+    gap: 0.5em;
     align-items: baseline;
     margin: 0.5em 0;
-    gap: 0.5em;
   }
 
   .config-name-filter-input {
