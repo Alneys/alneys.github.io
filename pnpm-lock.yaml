@@ -132,12 +132,6 @@ importers:
       stylelint-config-idiomatic-order:
         specifier: ^10.0.0
         version: 10.0.0(stylelint@17.13.0(typescript@5.9.3))
-      stylelint-config-recommended-scss:
-        specifier: ^17.0.1
-        version: 17.0.1(postcss@8.5.15)(stylelint@17.13.0(typescript@5.9.3))
-      stylelint-config-recommended-vue:
-        specifier: ^1.6.1
-        version: 1.6.1(postcss-html@1.8.1)(stylelint@17.13.0(typescript@5.9.3))
       stylelint-config-standard-scss:
         specifier: ^17.0.0
         version: 17.0.0(postcss@8.5.15)(stylelint@17.13.0(typescript@5.9.3))
