@@ -442,10 +442,15 @@
                   v-model="doubled"
                   :size="compSize"
                   :disabled="!canToggleDouble || hasWarning"
-                  inactive-text="关"
-                  active-text="开"
+                  inactive-text="开"
+                  active-text="关"
+                  :active-value="false"
+                  :inactive-value="true"
                   class="action-switch"
-                  @change="handleDoubleSwitch"
+                  style="
+                    --el-switch-on-color: var(--el-color-info);
+                    --el-switch-off-color: var(--el-color-primary);
+                  "
                 />
               </div>
             </div>
@@ -474,10 +479,15 @@
                     v-model="doubled"
                     :size="compSize"
                     :disabled="!canToggleDouble || hasWarning"
-                    inactive-text="关"
-                    active-text="开"
+                    inactive-text="开"
+                    active-text="关"
+                    :active-value="false"
+                    :inactive-value="true"
                     class="action-switch"
-                    @change="handleDoubleSwitch"
+                    style="
+                      --el-switch-on-color: var(--el-color-info);
+                      --el-switch-off-color: var(--el-color-primary);
+                    "
                   />
                 </div>
                 <el-button
@@ -1124,6 +1134,13 @@ const canToggleDouble = computed(() => {
   return doubled.value || remainingDoubles.value > 0;
 });
 
+/** 剩余翻倍次数手动归零时，自动关闭翻倍开关 */
+watch(remainingDoubles, (val) => {
+  if (val <= 0 && doubled.value) {
+    doubled.value = false;
+  }
+});
+
 /** 可放弃条件：已抽至少一张牌、有剩余游玩次数 */
 const canAbandon = computed(() => {
   return activeDrawCount.value > 0 && remainingGames.value > 0;
@@ -1178,14 +1195,6 @@ function undoLastDraw() {
 function toggleDouble() {
   if (!canDouble.value) return;
   doubled.value = true;
-}
-
-function handleDoubleSwitch(val: string | number | boolean) {
-  if (val) {
-    if (!doubled.value) toggleDouble();
-  } else {
-    if (doubled.value) doubled.value = false;
-  }
 }
 
 /** 放弃本局：有剩余放弃次数时不消耗游玩次数；无剩余放弃次数时消耗一次游玩次数，本局收益为 0，不消耗翻倍次数 */
