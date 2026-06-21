@@ -521,8 +521,7 @@
                 <div
                   class="advice-decision"
                   :class="{
-                    'advice-continue':
-                      decisionAction === 'continue' || decisionAction === 'must_continue',
+                    'advice-draw': decisionAction === 'draw' || decisionAction === 'must_draw',
                     'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
                     'advice-double': decisionAction === 'double',
                     'advice-abandon': decisionAction === 'abandon',
@@ -534,13 +533,13 @@
                   <template v-else-if="decisionAction === 'abandon'">
                     {{ decisionPrefix }}放弃本局
                   </template>
-                  <template v-else-if="decisionAction === 'continue'">
-                    {{ decisionPrefix }}抽取铭牌
-                  </template>
                   <template v-else-if="decisionAction === 'stop'">
                     {{ decisionPrefix }}结算本局
                   </template>
-                  <template v-else-if="decisionAction === 'must_continue'">
+                  <template v-else-if="decisionAction === 'draw'">
+                    {{ decisionPrefix }}抽取铭牌
+                  </template>
+                  <template v-else-if="decisionAction === 'must_draw'">
                     {{ decisionPrefix }}必须抽取铭牌
                   </template>
                   <template v-else>{{ decisionPrefix }}结算本局</template>
@@ -577,7 +576,7 @@
                 <div
                   class="advice-row"
                   :class="{
-                    'advice-row-optimal': isEuOpt('continue') || isEuOpt('must_continue'),
+                    'advice-row-optimal': isEuOpt('draw') || isEuOpt('must_draw'),
                   }"
                 >
                   <span class="advice-label">抽取铭牌</span>
@@ -1947,7 +1946,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     font-weight: bold;
     text-align: center;
 
-    &.advice-continue {
+    &.advice-draw {
       color: var(--el-color-success);
     }
 

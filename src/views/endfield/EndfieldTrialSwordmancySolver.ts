@@ -39,7 +39,7 @@ export interface AdviceResult {
   euStop: number | null;
   euAbandon: number | null;
   euAfterStop: number;
-  optimalAction: 'stop' | 'continue' | 'must_continue' | 'must_stop' | 'double' | 'abandon';
+  optimalAction: 'stop' | 'draw' | 'must_draw' | 'must_stop' | 'double' | 'abandon';
   distribution: number[];
   abandonProb: number;
 }
@@ -228,9 +228,9 @@ function pickBest<T extends { value: number }>(items: T[]): T {
  *     特殊规则：翻倍在结算时才扣除，放弃时翻倍尚未消耗，所以无需返还
  *
  * ## 决策规则
- *   以 EU（期望效用）为决策依据，期望相同时按此优先级：翻倍 > 继续 > 放弃 > 停止
+ *   以 EU（期望效用）为决策依据，期望相同时按此优先级：继续 > 翻倍 > 放弃 > 停止
  *   已抽满 5 张或无牌可抽 → 仅结算或放弃
- *   已抽 0 张时 optimalAction 强制返回 must_continue（求解器内部 DP 仍考虑结算已用于计算结算本局后的期望）
+ *   已抽 0 张时 optimalAction 强制返回 must_draw（求解器内部 DP 仍考虑结算已用于计算结算本局后的期望）
  *
  * @param deck - 牌组初始各等级数量
  * @param rewards - 奖励表
@@ -597,11 +597,11 @@ export function getCurrentAdvice(
   const euRound = dp.euRound;
   const euToday = dp.eu;
 
-  // 决策规则：期望值相同时按优先级 翻倍 > 继续 > 放弃 > 停止（数组顺序）
+  // 决策规则：期望值相同时按优先级 继续 > 翻倍 > 放弃 > 停止（数组顺序）
   // 决策基于 EU 调整值
   const candidates: { action: AdviceResult['optimalAction']; value: number }[] = [];
+  if (canDrawFurther) candidates.push({ action: 'draw', value: dp.euDraw });
   if (canDoubleNow) candidates.push({ action: 'double', value: dp.euDouble });
-  if (canDrawFurther) candidates.push({ action: 'continue', value: dp.euDraw });
   if (drawn > 0) candidates.push({ action: 'abandon', value: dp.euAbandon });
   // stop 始终可选（drawn === 0 时奖励为 0）
   candidates.push({ action: 'stop', value: dp.euStop });
@@ -612,9 +612,9 @@ export function getCurrentAdvice(
   if (optimalAction === 'stop' && !canDrawFurther) {
     optimalAction = 'must_stop';
   }
-  // drawn === 0 时强制 must_continue（仅求解器内部允许立即结算）
+  // drawn === 0 时强制 must_draw（仅求解器内部允许立即结算）
   if (drawn === 0) {
-    optimalAction = 'must_continue';
+    optimalAction = 'must_draw';
   }
 
   return {
