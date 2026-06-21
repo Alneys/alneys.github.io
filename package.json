@@ -13,7 +13,17 @@
     "lint": "run-s \"lint:*\"",
     "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/",
+    "postinstall": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged && pnpm type-check",
+    "commit-msg": "node scripts/verify-commit.js"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,vue}": "eslint --fix --cache",
+    "src/**/*.{scss,vue}": "stylelint --fix",
+    "src/**/*.{ts,vue,scss}": "prettier --write --experimental-cli"
   },
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",
@@ -48,11 +58,13 @@
     "eslint": "^9.39.4",
     "eslint-plugin-vue": "^10.8.0",
     "jsdom": "^27.4.0",
+    "lint-staged": "^17.0.8",
     "npm-run-all2": "^8.0.4",
     "postcss-html": "^1.8.1",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.8.4",
     "sass": "^1.99.0",
+    "simple-git-hooks": "^2.13.1",
     "stylelint": "^17.13.0",
     "stylelint-config-idiomatic-order": "^10.0.0",
     "stylelint-config-recommended-scss": "^17.0.1",
