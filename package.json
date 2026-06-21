@@ -5,15 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vue-tsc --build --force",
+    "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build --force",
-    "lint": "eslint . --fix && prettier --write --list-different src/",
+    "type-check": "vue-tsc --build",
+    "lint": "run-s \"lint:*\"",
     "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
-    "lint-only": "eslint . --fix",
-    "format": "prettier --write --list-different src/"
+    "lint:eslint": "eslint . --fix --cache",
+    "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",
@@ -51,7 +51,7 @@
     "npm-run-all2": "^8.0.4",
     "postcss-html": "^1.8.1",
     "postcss-scss": "^4.0.9",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.4",
     "sass": "^1.99.0",
     "stylelint": "^17.13.0",
     "stylelint-config-idiomatic-order": "^10.0.0",
@@ -63,9 +63,9 @@
     "unplugin-auto-import": "^20.3.0",
     "unplugin-fonts": "^2.0.0",
     "unplugin-vue-components": "^30.0.0",
-    "vite": "^7.3.2",
+    "vite": "^7.3.5",
     "vite-plugin-vue-devtools": "^8.1.1",
-    "vitest": "^4.1.3",
-    "vue-tsc": "~3.2.6"
+    "vitest": "^4.1.9",
+    "vue-tsc": "~3.3.5"
   }
 }
