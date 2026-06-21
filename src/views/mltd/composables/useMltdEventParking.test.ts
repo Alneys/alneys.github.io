@@ -265,16 +265,14 @@ describe('useMltdEventParking', () => {
       const beforePt = form.value.pt ?? 0;
 
       const result = hook.parkingResult.value?.result;
-      if (result && result.length > 0) {
-        const firstItem = result[0]!;
-        hook.executeOperation(firstItem);
+      expect(result && result.length > 0).toBeTruthy();
+      const firstItem = result![0]!;
+      hook.executeOperation(firstItem);
 
-        expect(form.value.pt).toBeGreaterThan(beforePt);
-        const key =
-          `${firstItem.name}-${firstItem.multiplier}` +
-          (firstItem.type ? `-${firstItem.type}` : '');
-        expect(hook.executedCounts.value[key]).toBe(1);
-      }
+      expect(form.value.pt).toBeGreaterThan(beforePt);
+      const key =
+        `${firstItem.name}-${firstItem.multiplier}` + (firstItem.type ? `-${firstItem.type}` : '');
+      expect(hook.executedCounts.value[key]).toBe(1);
     });
 
     it('undoOperation 应减少执行次数并还原 pt', async () => {
@@ -284,22 +282,20 @@ describe('useMltdEventParking', () => {
       await hook.handleSubmit();
 
       const result = hook.parkingResult.value?.result;
-      if (result && result.length > 0) {
-        const firstItem = result[0]!;
-        const beforePt = form.value.pt ?? 0;
+      expect(result && result.length > 0).toBeTruthy();
+      const firstItem = result![0]!;
+      const beforePt = form.value.pt ?? 0;
 
-        hook.executeOperation(firstItem);
-        const afterExecutePt = form.value.pt ?? 0;
-        expect(afterExecutePt).toBeGreaterThan(beforePt);
+      hook.executeOperation(firstItem);
+      const afterExecutePt = form.value.pt ?? 0;
+      expect(afterExecutePt).toBeGreaterThan(beforePt);
 
-        hook.undoOperation(firstItem);
-        expect(form.value.pt).toBe(beforePt);
+      hook.undoOperation(firstItem);
+      expect(form.value.pt).toBe(beforePt);
 
-        const key =
-          `${firstItem.name}-${firstItem.multiplier}` +
-          (firstItem.type ? `-${firstItem.type}` : '');
-        expect(hook.executedCounts.value[key]).toBe(0);
-      }
+      const key =
+        `${firstItem.name}-${firstItem.multiplier}` + (firstItem.type ? `-${firstItem.type}` : '');
+      expect(hook.executedCounts.value[key]).toBe(0);
     });
   });
 
@@ -310,10 +306,9 @@ describe('useMltdEventParking', () => {
       await hook.handleSubmit();
 
       const result = hook.parkingResult.value?.result;
-      if (result && result.length > 0) {
-        const item = result[0]!;
-        expect(hook.getInitialCount(item)).toBe(item.value);
-      }
+      expect(result && result.length > 0).toBeTruthy();
+      const item = result![0]!;
+      expect(hook.getInitialCount(item)).toBe(item.value);
     });
 
     it('getRemainingCount 应等于 initial - executed', async () => {
@@ -322,16 +317,15 @@ describe('useMltdEventParking', () => {
       await hook.handleSubmit();
 
       const result = hook.parkingResult.value?.result;
-      if (result && result.length > 0) {
-        const item = result[0]!;
-        const initialCount = hook.getInitialCount(item);
+      expect(result && result.length > 0).toBeTruthy();
+      const item = result![0]!;
+      const initialCount = hook.getInitialCount(item);
 
-        hook.executeOperation(item);
-        expect(hook.getRemainingCount(item)).toBe(initialCount - 1);
+      hook.executeOperation(item);
+      expect(hook.getRemainingCount(item)).toBe(initialCount - 1);
 
-        hook.undoOperation(item);
-        expect(hook.getRemainingCount(item)).toBe(initialCount);
-      }
+      hook.undoOperation(item);
+      expect(hook.getRemainingCount(item)).toBe(initialCount);
     });
   });
 
@@ -342,17 +336,16 @@ describe('useMltdEventParking', () => {
       await hook.handleSubmit();
 
       const result = hook.parkingResult.value?.result;
-      if (result && result.length > 0) {
-        const firstItem = result[0]!;
-        hook.executeOperation(firstItem);
+      expect(result && result.length > 0).toBeTruthy();
+      const firstItem = result![0]!;
+      hook.executeOperation(firstItem);
 
-        expect(hook.executedCounts.value).not.toEqual({});
+      expect(hook.executedCounts.value).not.toEqual({});
 
-        hook.resetToInitial();
+      hook.resetToInitial();
 
-        expect(hook.executedCounts.value).toEqual({});
-        expect(form.value.pt).toBe(0);
-      }
+      expect(hook.executedCounts.value).toEqual({});
+      expect(form.value.pt).toBe(0);
     });
   });
 });
