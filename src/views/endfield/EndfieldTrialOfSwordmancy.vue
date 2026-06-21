@@ -1247,7 +1247,9 @@ function formatDecimal(value: number): string {
 }
 
 function formatDiff(value: number): string {
-  const prefix = value >= 0 ? '+' : '';
+  // 误差判定：四舍五入到两位小数后若为 0，不显示正负号，防止出现 +0.00
+  if (Math.round(Math.abs(value) * 100) / 100 === 0) return '0.00';
+  const prefix = value > 0 ? '+' : '';
   return prefix + formatDecimal(value);
 }
 
