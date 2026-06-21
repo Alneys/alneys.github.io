@@ -47,11 +47,9 @@ describe('useMltdEventParkingTreasure', () => {
       await nextTick();
 
       // 最高打工票倍率为 2.8，isBoostPeriod=false 时应跳过
-      for (const c of eventChoices.value) {
-        if (c.type === '打工票') {
-          const mag = parseFloat(c.multiplier.replace('倍', ''));
-          expect(mag).toBeLessThan(2.8);
-        }
+      for (const c of eventChoices.value.filter((c) => c.type === '打工票')) {
+        const mag = parseFloat(c.multiplier.replace('倍', ''));
+        expect(mag).toBeLessThan(2.8);
       }
     });
 

@@ -97,8 +97,8 @@ describe('EndfieldTrialSwordmancySolver', () => {
   it('未抽取铭牌时可以结算（奖励为 0），但不能放弃', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 0, 3);
     expect(result).not.toBeNull();
-    // 无翻倍次数时继续优于结算（因为停牌奖励为 0），沿用 must_continue 兼容 UI
-    expect(result!.optimalAction).toBe('must_continue');
+    // 无翻倍次数时继续优于结算（因为停牌奖励为 0），沿用 must_draw 兼容 UI
+    expect(result!.optimalAction).toBe('must_draw');
     // rewardStop 应显示结算期望（0 + 下一局期望），不再为 null
     expect(result!.rewardStop).not.toBeNull();
     // 放弃仍不允许
@@ -116,7 +116,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
   it('有翻倍次数时 D=0 可能建议先翻倍', () => {
     const result = getCurrentAdvice(deck, rewards, [0, 0, 0, 0, 0], false, 3, 2, 3);
     expect(result).not.toBeNull();
-    expect(['must_continue', 'double']).toContain(result!.optimalAction);
+    expect(['must_draw', 'double']).toContain(result!.optimalAction);
   });
 
   describe('期望效用模型 (ExpectedUtilityParams)', () => {
@@ -171,7 +171,7 @@ describe('EndfieldTrialSwordmancySolver', () => {
         3,
       );
       expect(advice).not.toBeNull();
-      expect(advice!.optimalAction).toBe('continue');
+      expect(advice!.optimalAction).toBe('draw');
       expect(advice!.rewardDraw).toBeCloseTo(616249.19, 0);
       expect(advice!.rewardStop).toBeCloseTo(602653.2, 0);
       expect(advice!.rewardAbandon).toBeCloseTo(596903.01, 0);

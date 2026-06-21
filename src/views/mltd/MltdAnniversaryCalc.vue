@@ -739,14 +739,14 @@ function handleClear() {
   }
 
   .auto-mode-hint {
+    margin-left: 8px;
     color: var(--el-color-success);
     font-size: 14px;
-    margin-left: 8px;
   }
 
   .total {
-    border-top: 1px dashed var(--el-border-color-darker);
     padding-top: 8px;
+    border-top: 1px dashed var(--el-border-color-darker);
     margin-bottom: 0.5em;
   }
 }
@@ -757,15 +757,15 @@ function handleClear() {
 
   :deep(.el-card__header) {
     padding: 8px;
-    line-height: 23px;
-    font-weight: bold;
-    color: var(--el-text-color-primary);
-    text-align: center;
-    background-color: var(--el-color-primary-light-3);
     border-top: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
-    border-left: 1px solid var(--border-color);
     border-bottom: none;
+    border-left: 1px solid var(--border-color);
+    background-color: var(--el-color-primary-light-3);
+    color: var(--el-text-color-primary);
+    font-weight: bold;
+    line-height: 23px;
+    text-align: center;
   }
 
   :deep(.el-card__body) {
@@ -786,8 +786,8 @@ function handleClear() {
     }
 
     .el-table__cell {
-      padding: 8px 10px;
       min-width: 80px;
+      padding: 8px 10px;
     }
 
     .font-mono {

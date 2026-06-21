@@ -48,10 +48,12 @@ const env = import.meta.env;
     margin-bottom: 32px;
     text-align: center;
   }
+
   > .main {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
+    grid-template-columns: repeat(3, 1fr);
+
     a {
       text-decoration: none;
     }

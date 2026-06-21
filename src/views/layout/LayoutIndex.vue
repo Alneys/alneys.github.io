@@ -17,9 +17,9 @@ useVersionCheck();
 
 <style lang="scss">
 #layout .layout-max-width-container {
-  margin: 0 auto;
-  padding: 8px 32px;
   max-width: 1664px;
+  padding: 8px 32px;
+  margin: 0 auto;
 }
 
 #layout h1.view-title {

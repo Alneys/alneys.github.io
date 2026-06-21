@@ -244,12 +244,12 @@ onMounted(() => {
 
   .password-input {
     :deep(.el-input-group__append) {
-      background-color: var(--im-color-ml-miya);
       border-color: var(--im-color-ml-miya);
+      background-color: var(--im-color-ml-miya);
 
       .el-button {
-        color: white;
         border: none;
+        color: white;
       }
     }
   }
@@ -279,13 +279,13 @@ onMounted(() => {
 
   .setting-label {
     flex-shrink: 0;
-    font-size: 14px;
     color: var(--el-text-color-secondary);
+    font-size: 14px;
   }
 
   .symbols-input {
-    flex: 1;
     max-width: 300px;
+    flex: 1;
   }
 }
 

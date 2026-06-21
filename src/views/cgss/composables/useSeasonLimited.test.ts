@@ -14,7 +14,7 @@ describe('useSeasonLimited', () => {
       expect(isSeasonLimitedCard('301381')).toBe(true);
     });
 
-    it('当 cid-1 在列表中应返回 true ', () => {
+    it('当 cid-1 在列表中应返回 true', () => {
       // 101326-1=101325 在列表中
       expect(isSeasonLimitedCard('101326')).toBe(true);
       // 301304-1=301303 在列表中

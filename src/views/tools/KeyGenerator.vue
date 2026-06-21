@@ -746,8 +746,8 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
   gap: 0.5em;
 
   .ssh-comment-input {
-    flex: 1;
     max-width: 300px;
+    flex: 1;
   }
 }
 
@@ -760,8 +760,8 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
 
   .output-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: 0.5em;
 
     .output-label {

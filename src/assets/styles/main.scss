@@ -1,10 +1,10 @@
 @use './external/normalize.css';
-@use './im/im-colors.scss';
-@use './palette/palette.scss';
-@use './neutral-colors.scss';
+@use './im/im-colors';
+@use './palette/palette';
+@use './neutral-colors';
 
-@use './custom.scss';
-@use './custom-el-override.scss';
-@use './custom-normalize.scss';
+@use './custom';
+@use './custom-el-override';
+@use './custom-normalize';
 
 // @use './element-plus.scss';

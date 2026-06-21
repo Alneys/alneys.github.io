@@ -3,12 +3,61 @@
 
 // simple divider
 .al-divider {
-  margin: 1em 0;
   border-bottom: 2px solid var(--im-color-ml-miya);
+  margin: 1em 0;
 }
 
 .al-divider-vertical {
-  margin: 0px 1em;
-  border-left: 2px solid var(--im-color-ml-miya);
   height: 100%;
+  border-left: 2px solid var(--im-color-ml-miya);
+  margin: 0 1em;
+}
+
+// nprogress overrides
+#nprogress {
+  position: absolute;
+  z-index: 40;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--im-color-ml-elena);
+}
+
+#nprogress .spinner {
+  display: none;
+}
+
+#nprogress .peg {
+  box-shadow:
+    0 0 10px var(--im-color-ml-elena),
+    0 0 5px var(--im-color-ml-elena);
+}
+
+#nprogress .spinner-icon {
+  border-top-color: var(--im-color-ml-elena);
+  border-left-color: var(--im-color-ml-elena);
+}
+
+#nprogress.is-error .bar {
+  background: var(--el-color-danger);
+}
+
+#nprogress.is-error .peg {
+  box-shadow:
+    0 0 10px var(--el-color-danger),
+    0 0 5px var(--el-color-danger);
+}
+
+#nprogress.is-error .spinner-icon {
+  border-top-color: var(--el-color-danger);
+  border-left-color: var(--el-color-danger);
 }

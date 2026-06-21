@@ -120,9 +120,11 @@ onMounted(async () => {
 .el-link {
   vertical-align: inherit;
 }
+
 .unit-information {
   margin: 1em 0;
 }
+
 .error-container {
   margin: 1em 0;
 }

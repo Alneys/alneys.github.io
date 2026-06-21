@@ -16,26 +16,28 @@
 .font-normal * {
   font-family: var(--al-font-family);
 }
+
 .font-mono,
 .font-mono * {
   font-family: var(--al-font-family-mono);
 }
+
 .font-jp,
 .font-jp * {
   font-family: var(--al-font-family-jp);
 }
 
 html {
-  margin: 0;
   padding: 0;
+  margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
 body {
-  margin: 0;
   padding: 0;
+  margin: 0;
 }
 
 * {
@@ -50,18 +52,23 @@ html {
 h1 {
   font-size: 1.5rem;
 }
+
 h2 {
   font-size: 1.25rem;
 }
+
 h3 {
   font-size: 1.125rem;
 }
+
 h4 {
   font-size: 1rem;
 }
+
 h5 {
   font-size: 0.875rem;
 }
+
 h6 {
   font-size: 0.75rem;
 }
@@ -70,9 +77,11 @@ h6 {
   h1 {
     font-size: 1.25rem;
   }
+
   h2 {
     font-size: 1.125rem;
   }
+
   h3 {
     font-size: 1.0625rem;
   }
@@ -101,8 +110,8 @@ samp {
 $el-exclude: ':not([class^="el-"] *)';
 
 :where(body) {
-  color: var(--al-color-text);
   background-color: var(--al-color-bg-layout);
+  color: var(--al-color-text);
 }
 
 :where(h1, h2, h3, h4, h5, h6)#{$el-exclude} {

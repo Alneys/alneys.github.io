@@ -62,10 +62,10 @@
                 <el-button :size="compSize" type="primary" @click="toggleQuickMode">
                   {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
                 </el-button>
-                <el-button class="config-reset-btn" :size="compSize" @click="resetConfig">
+                <el-button class="config-reset-btn" :size="compSize" @click="resetPoolConfig">
                   重置铭牌库
                 </el-button>
-                <el-button :size="compSize" @click="resetToInitial"> 重置为初始 </el-button>
+                <el-button :size="compSize" @click="handleResetPoolConfig"> 重置为初始 </el-button>
               </div>
             </div>
 
@@ -130,28 +130,28 @@
                 <div class="expected-utility-presets">
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(1.0, 0) ? 'primary' : ''"
+                    :type="isEuPresetActive(1.0, 0) ? 'primary' : ''"
                     @click="setEuParams(1.0, 0)"
                   >
                     最大化收益
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.5, 30000) ? 'primary' : ''"
+                    :type="isEuPresetActive(0.5, 30000) ? 'primary' : ''"
                     @click="setEuParams(0.5, 30000)"
                   >
                     均衡
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.01, 0) ? 'primary' : ''"
+                    :type="isEuPresetActive(0.01, 0) ? 'primary' : ''"
                     @click="setEuParams(0.01, 0)"
                   >
                     厌恶溢出
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isPresetActive(0.01, 400000) ? 'primary' : ''"
+                    :type="isEuPresetActive(0.01, 400000) ? 'primary' : ''"
                     @click="setEuParams(0.01, 400000)"
                   >
                     禁止溢出
@@ -203,17 +203,20 @@
                   <el-button :size="compSize" type="primary" @click="toggleQuickMode">
                     {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
                   </el-button>
-                  <el-button :size="compSize" @click="resetToInitial"> 重置为初始 </el-button>
+                  <el-button :size="compSize" @click="handleResetPoolConfig">
+                    重置为初始
+                  </el-button>
                 </div>
                 <el-divider style="margin: 4px 0" />
                 <div class="daily-item">
-                  <span class="daily-label">剩余游玩</span>
+                  <span class="daily-label">剩余结算</span>
                   <el-input-number
                     v-model="remainingGames"
                     :size="compSize"
                     :min="0"
-                    :max="4"
+                    :max="3"
                     class="daily-input"
+                    :class="{ 'daily-input-zero': remainingGames === 0 }"
                   />
                 </div>
                 <div class="daily-item">
@@ -224,6 +227,7 @@
                     :min="0"
                     :max="2"
                     class="daily-input"
+                    :class="{ 'daily-input-zero': remainingDoubles === 0 }"
                   />
                 </div>
                 <div class="daily-item">
@@ -234,6 +238,7 @@
                     :min="0"
                     :max="3"
                     class="daily-input"
+                    :class="{ 'daily-input-zero': remainingAbandons === 0 }"
                   />
                 </div>
                 <el-button class="daily-single-btn" :size="compSize" @click="setSingleSimulation">
@@ -287,6 +292,7 @@
                     <div class="drawn-manual-label hidden-xs-only">手动设置铭牌点数</div>
                     <el-input-otp
                       v-model="otpValue"
+                      :size="isMobile ? 'large' : 'default'"
                       :length="5"
                       inputmode="numeric"
                       :validator="onlyLevel"
@@ -303,7 +309,7 @@
             <el-col :span="6" :xs="24"
               ><el-card class="pool-card" data-tour="pool">
                 <template #header>
-                  <span>铭牌库剩余 {{ pool.length }} 张（点击可抽取）</span>
+                  <span>铭牌库剩余 {{ pool.length }} 张</span>
                 </template>
                 <div class="pool-list">
                   <span v-for="level in 5" :key="level">
@@ -331,7 +337,13 @@
                 <template #header>
                   <span>奖励状态</span>
                 </template>
-                <div class="reward-point-section" :class="{ 'reward-penalty': totalPower > 10 }">
+                <div
+                  class="reward-point-section"
+                  :class="{
+                    'reward-penalty': totalPower > 10,
+                    'reward-success': !(totalPower > 10) && rewardIndex === 10,
+                  }"
+                >
                   <span class="reward-label">战力点</span>
                   <el-segmented
                     v-model="rewardIndex"
@@ -345,7 +357,13 @@
                   />
                   <span class="reward-xs-value hidden-sm-and-up">{{ rewardIndex }}</span>
                 </div>
-                <div class="reward-tier-section" :class="{ 'reward-penalty': totalPower > 10 }">
+                <div
+                  class="reward-tier-section"
+                  :class="{
+                    'reward-penalty': totalPower > 10,
+                    'reward-success': !(totalPower > 10) && rewardIndex === 10,
+                  }"
+                >
                   <span class="reward-label">奖励</span>
                   <el-segmented
                     v-model="rewardIndex"
@@ -442,10 +460,15 @@
                   v-model="doubled"
                   :size="compSize"
                   :disabled="!canToggleDouble || hasWarning"
-                  inactive-text="关"
-                  active-text="开"
+                  inactive-text="开"
+                  active-text="关"
+                  :active-value="false"
+                  :inactive-value="true"
                   class="action-switch"
-                  @change="handleDoubleSwitch"
+                  style="
+                    --el-switch-on-color: var(--el-color-info);
+                    --el-switch-off-color: var(--el-color-primary);
+                  "
                 />
               </div>
             </div>
@@ -474,10 +497,15 @@
                     v-model="doubled"
                     :size="compSize"
                     :disabled="!canToggleDouble || hasWarning"
-                    inactive-text="关"
-                    active-text="开"
+                    inactive-text="开"
+                    active-text="关"
+                    :active-value="false"
+                    :inactive-value="true"
                     class="action-switch"
-                    @change="handleDoubleSwitch"
+                    style="
+                      --el-switch-on-color: var(--el-color-info);
+                      --el-switch-off-color: var(--el-color-primary);
+                    "
                   />
                 </div>
                 <el-button
@@ -511,8 +539,7 @@
                 <div
                   class="advice-decision"
                   :class="{
-                    'advice-continue':
-                      decisionAction === 'continue' || decisionAction === 'must_continue',
+                    'advice-draw': decisionAction === 'draw' || decisionAction === 'must_draw',
                     'advice-stop': decisionAction === 'stop' || decisionAction === 'must_stop',
                     'advice-double': decisionAction === 'double',
                     'advice-abandon': decisionAction === 'abandon',
@@ -524,13 +551,13 @@
                   <template v-else-if="decisionAction === 'abandon'">
                     {{ decisionPrefix }}放弃本局
                   </template>
-                  <template v-else-if="decisionAction === 'continue'">
-                    {{ decisionPrefix }}抽取铭牌
-                  </template>
                   <template v-else-if="decisionAction === 'stop'">
                     {{ decisionPrefix }}结算本局
                   </template>
-                  <template v-else-if="decisionAction === 'must_continue'">
+                  <template v-else-if="decisionAction === 'draw'">
+                    {{ decisionPrefix }}抽取铭牌
+                  </template>
+                  <template v-else-if="decisionAction === 'must_draw'">
                     {{ decisionPrefix }}必须抽取铭牌
                   </template>
                   <template v-else>{{ decisionPrefix }}结算本局</template>
@@ -540,13 +567,13 @@
                   <span class="advice-label" />
                   <span class="advice-value">奖励期望</span>
                   <span class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">期望效用</span>
+                  <span v-if="showEuColumn" class="advice-value advice-eu">期望效用</span>
                 </div>
                 <div class="advice-row">
                   <span class="advice-label">本局当前奖励</span>
                   <span class="advice-value">{{ formatDecimal(euAdvice.rewardCurrent) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     formatDecimal(euAdvice.euCurrentReward)
                   }}</span>
                 </div>
@@ -554,7 +581,7 @@
                   <span class="advice-label">本局最优期望</span>
                   <span class="advice-value">{{ formatDecimal(euAdvice.rewardRound) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice ? formatDecimal(euAdvice.euRound) : '—'
                   }}</span>
                 </div>
@@ -567,9 +594,7 @@
                 <div
                   class="advice-row"
                   :class="{
-                    'advice-row-optimal': isRawOptOnly('continue', 'must_continue'),
-                    'advice-row-optimal-adjusted':
-                      isAdjOpt('continue') || isAdjOpt('must_continue'),
+                    'advice-row-optimal': isEuOpt('draw') || isEuOpt('must_draw'),
                   }"
                 >
                   <span class="advice-label">抽取铭牌</span>
@@ -577,7 +602,7 @@
                     euAdvice.rewardDraw != null ? formatDecimal(euAdvice.rewardDraw) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euDraw != null ? formatDecimal(euAdvice.euDraw) : '—'
                   }}</span>
                 </div>
@@ -585,64 +610,49 @@
                   <span class="advice-label" style="text-indent: 1.5em"
                     >铭牌点数 {{ item.level }}</span
                   >
-                  <span class="advice-value" :class="diffClass(item.ev)">{{
-                    item.ev != null ? formatDiff(item.ev) : '—'
+                  <span class="advice-value" :class="diffClass(item.rewardDiff)">{{
+                    item.rewardDiff != null ? formatDiff(item.rewardDiff) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span
                     v-if="showEuColumn"
-                    class="advice-value advice-adjusted"
-                    :class="diffClass(item.evAdjusted)"
-                    >{{ item.evAdjusted != null ? formatDiff(item.evAdjusted) : '—' }}</span
+                    class="advice-value advice-eu"
+                    :class="diffClass(item.euDiff)"
+                    >{{ item.euDiff != null ? formatDiff(item.euDiff) : '—' }}</span
                   >
                   <span class="advice-sep">|</span>
                   <span class="advice-value advice-prob">{{ (item.prob * 100).toFixed(1) }}%</span>
                 </div>
-                <div
-                  class="advice-row"
-                  :class="{
-                    'advice-row-optimal': isRawOptOnly('double'),
-                    'advice-row-optimal-adjusted': isAdjOpt('double'),
-                  }"
-                >
+                <div class="advice-row" :class="{ 'advice-row-optimal': isEuOpt('double') }">
                   <span class="advice-label">开启翻倍</span>
                   <span class="advice-value">{{
                     euAdvice.rewardDouble != null ? formatDecimal(euAdvice.rewardDouble) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euDouble != null ? formatDecimal(euAdvice.euDouble) : '—'
                   }}</span>
                 </div>
-                <div
-                  class="advice-row"
-                  :class="{
-                    'advice-row-optimal': isRawOptOnly('abandon'),
-                    'advice-row-optimal-adjusted': isAdjOpt('abandon'),
-                  }"
-                >
+                <div class="advice-row" :class="{ 'advice-row-optimal': isEuOpt('abandon') }">
                   <span class="advice-label">放弃本局</span>
                   <span class="advice-value">{{
                     euAdvice.rewardAbandon != null ? formatDecimal(euAdvice.rewardAbandon) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euAbandon != null ? formatDecimal(euAdvice.euAbandon) : '—'
                   }}</span>
                 </div>
                 <div
                   class="advice-row"
-                  :class="{
-                    'advice-row-optimal': isRawOptOnly('stop', 'must_stop'),
-                    'advice-row-optimal-adjusted': isAdjOpt('stop') || isAdjOpt('must_stop'),
-                  }"
+                  :class="{ 'advice-row-optimal': isEuOpt('stop') || isEuOpt('must_stop') }"
                 >
                   <span class="advice-label">结算本局</span>
                   <span class="advice-value">{{
                     euAdvice.rewardStop != null ? formatDecimal(euAdvice.rewardStop) : '—'
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     euAdvice.euStop != null ? formatDecimal(euAdvice.euStop) : '—'
                   }}</span>
                 </div>
@@ -650,7 +660,7 @@
                   <span class="advice-label" style="text-indent: 1em">结算本局后的期望</span>
                   <span class="advice-value">{{ formatDecimal(euAdvice.rewardAfterStop) }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-eu">{{
                     formatDecimal(euAdvice.euAfterStop)
                   }}</span>
                 </div>
@@ -661,7 +671,7 @@
                     formatDecimal(euAdvice.rewardToday)
                   }}</span>
                   <span v-if="showEuColumn" class="advice-sep">|</span>
-                  <span v-if="showEuColumn" class="advice-value advice-today-adjusted">{{
+                  <span v-if="showEuColumn" class="advice-value advice-today-eu">{{
                     formatDecimal(euAdvice.euToday)
                   }}</span>
                 </div>
@@ -736,7 +746,7 @@
     <el-tour-step
       target="[data-tour='daily']"
       title="今日状态"
-      description="操作前，先管理今日铭牌库分布，剩余游玩/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
+      description="操作前，先管理今日铭牌库分布，剩余结算/翻倍/放弃次数，以获得正确结果，点击「设为单次模拟」快速测试单局情况"
     />
     <el-tour-step
       target="[data-tour='game-state']"
@@ -877,7 +887,7 @@ function applyConfig() {
 }
 
 /** 重置铭牌分布为默认值，并应用配置 */
-function resetConfig() {
+function resetPoolConfig() {
   clearSolverCache();
   config.level1 = DEFAULT_DECK_CONFIG[0]!;
   config.level2 = DEFAULT_DECK_CONFIG[1]!;
@@ -888,9 +898,9 @@ function resetConfig() {
 }
 
 /** 重置铭牌库分布为初始默认值并立即应用 */
-function resetToInitial() {
-  resetConfig();
-  applyConfig();
+function handleResetPoolConfig() {
+  config.level1 = DEFAULT_DECK_CONFIG[0]! + 1;
+  resetPoolConfig();
 }
 
 /** 快速配置模式（OTP 式单格输入+自动跳转） */
@@ -986,7 +996,7 @@ const pool = ref<Plaque[]>([]);
 const drawnCards = ref<(Plaque | null)[]>([null, null, null, null, null]);
 /** 是否已开启奖励翻倍 */
 const doubled = ref(false);
-/** 今日剩余游玩次数 */
+/** 今日剩余结算次数 */
 const remainingGames = ref(3);
 /** 今日剩余翻倍次数 */
 const remainingDoubles = ref(2);
@@ -1047,7 +1057,7 @@ function setEuParams(af: number, fp: number) {
   fixedPenalty.value = fp;
 }
 
-function isPresetActive(af: number, fp: number): boolean {
+function isEuPresetActive(af: number, fp: number): boolean {
   return aversionFactor.value === af && fixedPenalty.value === fp;
 }
 
@@ -1094,8 +1104,8 @@ const euOptions = computed(() => {
     const raw = rewardValues.value[s] ?? 0;
     let label: string;
     if (params) {
-      const adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
-      label = formatRewardShort(adjusted);
+      const euValue = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+      label = formatRewardShort(euValue);
     } else {
       label = formatRewardShort(raw * mul);
     }
@@ -1116,13 +1126,13 @@ const euDisplayValue = computed(() => {
   if (totalPower.value >= 11 && totalPower.value <= 21) {
     const s = totalPower.value % 11;
     const raw = rewardValues.value[s] ?? 0;
-    let adjusted: number;
+    let euValue: number;
     if (params) {
-      adjusted = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
+      euValue = (raw * Math.pow(params.aversionFactor, 1) - 1 * params.fixedPenalty) * mul;
     } else {
-      adjusted = raw * mul;
+      euValue = raw * mul;
     }
-    return formatRewardShort(adjusted);
+    return formatRewardShort(euValue);
   }
   return '—';
 });
@@ -1141,7 +1151,14 @@ const canToggleDouble = computed(() => {
   return doubled.value || remainingDoubles.value > 0;
 });
 
-/** 可放弃条件：已抽至少一张牌、有剩余游玩次数 */
+/** 剩余翻倍次数手动归零时，自动关闭翻倍开关 */
+watch(remainingDoubles, (val) => {
+  if (val <= 0 && doubled.value) {
+    doubled.value = false;
+  }
+});
+
+/** 可放弃条件：已抽至少一张牌、有剩余结算次数 */
 const canAbandon = computed(() => {
   return activeDrawCount.value > 0 && remainingGames.value > 0;
 });
@@ -1154,6 +1171,7 @@ function drawCard() {
   const index = Math.floor(Math.random() * pool.value.length);
   const plaque = pool.value.splice(index, 1)[0]!;
   drawnCards.value[emptyIndex] = plaque;
+  ElMessage.info(`抽到点数 ${plaque.level}，当前战力点 ${rewardIndex.value}`);
 }
 
 /** 点击铭牌库等级行时模拟抽取对应点数的铭牌 */
@@ -1167,6 +1185,7 @@ function simulateDrawFromPool(level: number) {
     return;
   }
   drawnCards.value[emptyIndex] = plaque;
+  ElMessage.info(`抽到点数 ${level}，当前战力点 ${rewardIndex.value}`);
 }
 
 /** 从铭牌库中取出一张指定铭牌点数的牌（返回 null 表示铭牌库不足） */
@@ -1197,14 +1216,6 @@ function toggleDouble() {
   doubled.value = true;
 }
 
-function handleDoubleSwitch(val: string | number | boolean) {
-  if (val) {
-    if (!doubled.value) toggleDouble();
-  } else {
-    if (doubled.value) doubled.value = false;
-  }
-}
-
 /** 放弃本局：有剩余放弃次数时不消耗游玩次数；无剩余放弃次数时消耗一次游玩次数，本局收益为 0，不消耗翻倍次数 */
 function abandonGame() {
   if (!canAbandon.value) return;
@@ -1214,6 +1225,9 @@ function abandonGame() {
     remainingGames.value--;
   }
   resetGame();
+  ElMessage.info(
+    `已放弃本局，剩余结算次数 ${remainingGames.value}，剩余放弃次数 ${remainingAbandons.value}`,
+  );
 }
 
 /** 重置本局铭牌库/已抽/翻倍 */
@@ -1229,7 +1243,13 @@ function endGame() {
   if (remainingGames.value <= 0) return;
   if (doubled.value) remainingDoubles.value--;
   remainingGames.value--;
+  const reward = finalReward.value;
+  const remainingG = remainingGames.value;
+  const remainingD = remainingDoubles.value;
   resetGame();
+  ElMessage.info(
+    `已结算本局，获得奖励 ${reward}，剩余结算次数 ${remainingG}，剩余翻倍次数 ${remainingD}`,
+  );
 }
 
 /** 重置今日全部状态 */
@@ -1238,6 +1258,7 @@ function resetToday() {
   remainingDoubles.value = 2;
   remainingAbandons.value = 3;
   resetGame();
+  ElMessage.info('已重置');
 }
 
 /** 设置为单次模拟（P=1, D=0, A=0） */
@@ -1256,7 +1277,9 @@ function formatDecimal(value: number): string {
 }
 
 function formatDiff(value: number): string {
-  const prefix = value >= 0 ? '+' : '';
+  // 误差判定：四舍五入到两位小数后若为 0，不显示正负号，防止出现 +0.00
+  if (Math.round(Math.abs(value) * 100) / 100 === 0) return '0.00';
+  const prefix = value > 0 ? '+' : '';
   return prefix + formatDecimal(value);
 }
 
@@ -1376,17 +1399,21 @@ const perLevelAdvice = computed(() => {
     return [1, 2, 3, 4, 5].map((level) => ({
       level,
       prob: 0,
-      ev: null as number | null,
-      evAdjusted: null as number | null,
+      rewardDiff: null as number | null,
+      euDiff: null as number | null,
     }));
   }
   const remaining = deck.map((d, i) => d - dc[i]!);
   const totalRemaining = remaining.reduce((a, b) => a + b, 0);
-  const result: { level: number; prob: number; ev: number | null; evAdjusted: number | null }[] =
-    [];
+  const result: {
+    level: number;
+    prob: number;
+    rewardDiff: number | null;
+    euDiff: number | null;
+  }[] = [];
   // 左列基线 = 原始奖励期望（遵循 EU 策略），右列基线 = EU 调整期望
-  const currentExp = euAdvice.value?.rewardToday ?? 0;
-  const currentExpAdj = euAdvice.value?.euToday ?? currentExp;
+  const currentRewardExp = euAdvice.value?.rewardToday ?? 0;
+  const currentEu = euAdvice.value?.euToday ?? currentRewardExp;
   for (let i = 0; i < 5; i++) {
     if (remaining[i]! > 0) {
       const prob = remaining[i]! / totalRemaining;
@@ -1406,17 +1433,17 @@ const perLevelAdvice = computed(() => {
       result.push({
         level: i + 1,
         prob: Math.round(prob * 10000) / 10000,
-        ev: nextResult ? Math.round((nextResult.rewardToday - currentExp) * 100) / 100 : null,
-        evAdjusted: nextResult
-          ? Math.round((nextResult.euToday - currentExpAdj) * 100) / 100
+        rewardDiff: nextResult
+          ? Math.round((nextResult.rewardToday - currentRewardExp) * 100) / 100
           : null,
+        euDiff: nextResult ? Math.round((nextResult.euToday - currentEu) * 100) / 100 : null,
       });
     } else {
       result.push({
         level: i + 1,
         prob: 0,
-        ev: null,
-        evAdjusted: null,
+        rewardDiff: null,
+        euDiff: null,
       });
     }
   }
@@ -1449,17 +1476,8 @@ function distributionRowClassName({ row }: { row: any }) {
   return '';
 }
 
-/** 原始最优且调整后非最优时才高亮原始色，避免与调整后高亮冲突 */
-function isRawOptOnly(...actions: string[]): boolean {
-  if (!currentAdvice.value) return false;
-  const rawIs = actions.includes(currentAdvice.value.optimalAction);
-  if (!rawIs) return false;
-  if (!euAdvice.value) return true;
-  return !actions.includes(euAdvice.value.optimalAction);
-}
-
-/** 调整后最优则优先使用调整后高亮色 */
-function isAdjOpt(...actions: string[]): boolean {
+/** 调整后最优则高亮显示 */
+function isEuOpt(...actions: string[]): boolean {
   if (!euAdvice.value) return false;
   return actions.includes(euAdvice.value.optimalAction);
 }
@@ -1478,9 +1496,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 #view-endfield-trial-of-swordmancy {
   .view-title-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
   }
 
   .view-title {
@@ -1498,8 +1516,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .config-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
     margin-bottom: 4px;
+    gap: 12px;
   }
 
   .config-item {
@@ -1516,16 +1534,16 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .daily-label,
   .expected-utility-label,
   .drawn-manual-label {
-    font-size: 14px;
     color: var(--el-text-color-secondary);
+    font-size: 14px;
     white-space: nowrap;
   }
 
   .config-otp-row {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin-bottom: 4px;
+    gap: 8px;
   }
 
   .config-buttons,
@@ -1539,33 +1557,34 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .config-reward-header {
+    margin-bottom: 4px;
     font-size: 14px;
     font-weight: bold;
-    margin-bottom: 4px;
   }
 
   .config-date-hint {
     display: flex;
     align-items: baseline;
     margin-bottom: 4px;
-    font-size: 12px;
     color: var(--el-text-color-secondary);
+    font-size: 12px;
 
     .config-hint-hint {
       display: flex;
-      align-items: center;
       height: 20px;
+      align-items: center;
     }
   }
 
   .config-reward-hint {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
     margin-bottom: 4px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
   }
 
   .config-reward-textarea {
     width: 100%;
+
     :deep(textarea) {
       font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
       font-size: 12px;
@@ -1574,9 +1593,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .config-reward-error {
+    margin-top: 4px;
     color: var(--el-color-danger);
     font-size: 12px;
-    margin-top: 4px;
   }
 
   // ── 所有卡片统一 padding ──
@@ -1588,9 +1607,10 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .advice-card,
   .distribution-card {
     :deep(.el-card__header) {
-      font-weight: bold;
       padding: 12px 16px;
+      font-weight: bold;
     }
+
     :deep(.el-card__body) {
       padding: 12px 16px;
     }
@@ -1599,6 +1619,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       :deep(.el-card__header) {
         padding: 8px 12px;
       }
+
       :deep(.el-card__body) {
         padding: 8px 12px;
       }
@@ -1638,8 +1659,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .game-section {
-    row-gap: 8px;
     margin-bottom: 8px;
+    row-gap: 8px;
 
     :deep(.el-col) {
       display: flex;
@@ -1655,28 +1676,28 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .drawn-card {
     :deep(.el-card__body) {
       display: flex;
+      flex: 1;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex: 1;
     }
   }
 
   .drawn-slots {
     display: flex;
-    gap: 12px;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 12px;
   }
 
   .drawn-slot {
+    display: flex;
     width: 72px;
     height: 100px;
-    border-radius: 8px;
-    border: 2px solid var(--el-border-color);
-    display: flex;
     align-items: center;
     justify-content: center;
+    border: 2px solid var(--el-border-color);
+    border-radius: 8px;
     background: var(--el-fill-color-light);
     transition: all 0.3s;
     user-select: none;
@@ -1704,8 +1725,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .drawn-slot-lv {
-    font-size: 12px;
     color: var(--el-text-color-secondary);
+    font-size: 12px;
   }
 
   .drawn-slot-num,
@@ -1714,18 +1735,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     font-weight: bold;
     line-height: 1;
   }
+
   .drawn-slot-num {
     color: var(--el-color-primary);
   }
+
   .drawn-slot-q {
     color: var(--el-text-color-placeholder);
   }
 
   .drawn-manual-input {
     display: flex;
+    width: 100%;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
   }
 
   .drawn-manual-left {
@@ -1748,20 +1771,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .pool-btn :deep(> span) {
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     gap: 24px;
   }
 
   .pool-level-label {
-    font-size: 12px;
     color: var(--el-text-color-secondary);
+    font-size: 12px;
   }
 
   .pool-level-count {
+    color: var(--el-text-color-primary);
     font-size: 16px;
     font-weight: bold;
-    color: var(--el-text-color-primary);
   }
 
   .reward-label {
@@ -1774,8 +1797,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-eu-section {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin-bottom: 8px;
+    gap: 8px;
 
     .reward-label {
       width: 64px;
@@ -1790,17 +1813,21 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .reward-eu-section {
     margin-bottom: 0;
+
     .reward-eu-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-danger);
       --el-segmented-item-selected-disabled-bg-color: var(--el-color-danger);
     }
+
     &.reward-penalty {
       .reward-eu-segmented {
         --el-segmented-bg-color: var(--el-color-danger-light-7);
       }
     }
+
     &.reward-eu-disabled {
       opacity: 0.4;
+
       .reward-label {
         color: var(--el-text-color-placeholder);
       }
@@ -1818,9 +1845,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     &.el-segmented {
       --el-segmented-item-selected-bg-color: var(--el-color-success);
       --el-segmented-bg-color: var(--el-color-success-light-7);
+
       color: var(--el-text-color-primary);
     }
-    color: var(--el-color-success);
   }
 
   // ── 今日状态 ──
@@ -1828,13 +1855,13 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .daily-date-hint {
     display: flex;
     align-items: baseline;
-    font-size: 12px;
     color: var(--el-text-color-secondary);
+    font-size: 12px;
 
     .date-hint-text {
       display: flex;
-      align-items: center;
       height: 20px;
+      align-items: center;
     }
   }
 
@@ -1847,9 +1874,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     .config-otp-row {
       margin-bottom: 0;
     }
+
     .config-grid {
       margin-bottom: 0;
     }
+
     .config-buttons {
       margin-top: 0;
     }
@@ -1863,6 +1892,12 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .daily-input {
     width: 108px;
+  }
+
+  .daily-input-zero {
+    :deep(.el-input__inner) {
+      color: var(--el-color-danger);
+    }
   }
 
   .daily-single-btn {
@@ -1889,26 +1924,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   }
 
   .advice-label {
-    color: var(--el-text-color-secondary);
     min-width: 144px;
+    color: var(--el-text-color-secondary);
   }
 
-  .advice-row-optimal,
-  .advice-row-optimal-adjusted {
-    font-weight: bold;
-    border-radius: 4px;
-  }
   .advice-row-optimal {
-    background: var(--el-fill-color);
-  }
-  .advice-row-optimal-adjusted {
+    border-radius: 4px;
     background: var(--el-color-primary-light-8);
+    font-weight: bold;
   }
 
   .advice-value {
-    font-weight: bold;
-    font-variant-numeric: tabular-nums;
     min-width: 88px;
+    font-variant-numeric: tabular-nums;
+    font-weight: bold;
     text-align: right;
 
     &.advice-diff-positive {
@@ -1925,7 +1954,7 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     font-weight: normal;
   }
 
-  .advice-adjusted {
+  .advice-eu {
     color: var(--el-text-color-primary);
   }
 
@@ -1941,19 +1970,19 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     }
   }
 
-  .advice-today-adjusted {
+  .advice-today-eu {
     color: var(--el-text-color-primary);
     font-weight: bold;
   }
 
   .advice-decision {
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
     padding: 8px 0;
     border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
 
-    &.advice-continue {
+    &.advice-draw {
       color: var(--el-color-success);
     }
 
@@ -1973,15 +2002,15 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   // ── 战力点概率分布 ──
 
   .distribution-empty {
-    text-align: center;
+    padding: 12px 0;
     color: var(--el-text-color-secondary);
     font-size: 14px;
-    padding: 12px 0;
+    text-align: center;
   }
 
   .distribution-value {
-    font-weight: bold;
     font-variant-numeric: tabular-nums;
+    font-weight: bold;
   }
 
   .distribution-current-value {
@@ -2022,9 +2051,9 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .action-row {
     display: flex;
+    width: 100%;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
     gap: 12px;
   }
 
@@ -2072,8 +2101,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   .action-row-center {
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
   }
 
   // ── 响应式：小屏幕 ──
@@ -2140,14 +2169,18 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       flex: 1;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
       padding: 8px 4px;
+      border-radius: 4px;
       margin-bottom: 0;
       background: var(--el-fill-color);
-      border-radius: 4px;
+      gap: 4px;
 
       &.reward-penalty {
         background: var(--el-color-danger-light-7);
+      }
+
+      &.reward-success {
+        background: var(--el-color-success-light-7);
       }
 
       .el-segmented {
@@ -2157,8 +2190,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       .reward-label {
         width: auto;
         margin-bottom: 0;
-        font-size: 13px;
         color: var(--el-text-color-secondary);
+        font-size: 13px;
       }
 
       .reward-xs-value {

@@ -307,20 +307,17 @@ describe('useMltdEventParkingTale', () => {
       // 再打一次 3rd MM(600): progress 50+50=100, ptDiff=-6600+3600+600=-2400
       // progress=100, 打活动曲(3000): progress=0, ptDiff=-2400+3000=600>0... over
 
-      if (result.flag) {
-        const totalPt = result.result!.reduce(
-          (sum, r) =>
-            sum +
-            r.value *
-              (eventChoices.value.find(
-                (c) => c.name === r.name && c.multiplier === r.multiplier && c.type === r.type,
-              )?.pt ?? 0),
-          0,
-        );
-        expect(totalPt).toBe(6600);
-      } else {
-        expect(result.message).toBe('不存在控分方案');
-      }
+      expect(result.flag).toBeTruthy();
+      const totalPt = result.result!.reduce(
+        (sum, r) =>
+          sum +
+          r.value *
+            (eventChoices.value.find(
+              (c) => c.name === r.name && c.multiplier === r.multiplier && c.type === r.type,
+            )?.pt ?? 0),
+        0,
+      );
+      expect(totalPt).toBe(6600);
     }, 10000);
   });
 });

@@ -1,7 +1,9 @@
 import pluginVue from 'eslint-plugin-vue';
 import vueTsEslintConfig from '@vue/eslint-config-typescript';
 import eslintConfigPrettier from '@vue/eslint-config-prettier';
+import pluginVitest from '@vitest/eslint-plugin';
 
+/** @type {import('eslint/config').Config[]} */
 export default [
   {
     ignores: [
@@ -22,6 +24,12 @@ export default [
 
   ...pluginVue.configs['flat/essential'],
   ...vueTsEslintConfig(),
+
+  {
+    ...pluginVitest.configs.recommended,
+    files: ['**/*.{spec,test}.ts'],
+  },
+
   eslintConfigPrettier,
 
   {
