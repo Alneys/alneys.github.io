@@ -62,10 +62,10 @@
                 <el-button :size="compSize" type="primary" @click="toggleQuickMode">
                   {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
                 </el-button>
-                <el-button class="config-reset-btn" :size="compSize" @click="resetConfig">
+                <el-button class="config-reset-btn" :size="compSize" @click="resetPoolConfig">
                   重置铭牌库
                 </el-button>
-                <el-button :size="compSize" @click="resetToInitial"> 重置为初始 </el-button>
+                <el-button :size="compSize" @click="handleResetPoolConfig"> 重置为初始 </el-button>
               </div>
             </div>
 
@@ -203,7 +203,9 @@
                   <el-button :size="compSize" type="primary" @click="toggleQuickMode">
                     {{ '快速输入：' + (poolQuickConfigMode ? '开' : '关') }}
                   </el-button>
-                  <el-button :size="compSize" @click="resetToInitial"> 重置为初始 </el-button>
+                  <el-button :size="compSize" @click="handleResetPoolConfig">
+                    重置为初始
+                  </el-button>
                 </div>
                 <el-divider style="margin: 4px 0" />
                 <div class="daily-item">
@@ -869,7 +871,7 @@ function applyConfig() {
 }
 
 /** 重置铭牌分布为默认值，并应用配置 */
-function resetConfig() {
+function resetPoolConfig() {
   clearSolverCache();
   config.level1 = DEFAULT_DECK_CONFIG[0]!;
   config.level2 = DEFAULT_DECK_CONFIG[1]!;
@@ -880,9 +882,9 @@ function resetConfig() {
 }
 
 /** 重置铭牌库分布为初始默认值并立即应用 */
-function resetToInitial() {
-  resetConfig();
-  applyConfig();
+function handleResetPoolConfig() {
+  config.level1 = DEFAULT_DECK_CONFIG[0]! + 1;
+  resetPoolConfig();
 }
 
 /** 快速配置模式（OTP 式单格输入+自动跳转） */
