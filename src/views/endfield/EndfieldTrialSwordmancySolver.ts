@@ -166,11 +166,14 @@ function computeEuReward(
 
 /**
  * 从候选数组中选取 value 最大的条目，等值时先入者（数组靠前）胜出
+ * 使用 EPSILON = 1e-6 容限消除浮点数误差
  */
+const EPSILON = 1e-6;
+
 function pickBest<T extends { value: number }>(items: T[]): T {
   let best = items[0]!;
   for (let i = 1; i < items.length; i++) {
-    if (items[i]!.value > best.value) {
+    if (items[i]!.value - best.value > EPSILON) {
       best = items[i]!;
     }
   }
@@ -478,9 +481,6 @@ export function getCurrentAdvice(
     } else {
       rewardAbandon = 0;
     }
-
-    // 最优期望 = 四种行动的最大值（基于 EU 调整值决策）
-    const bestValue = Math.max(euDouble, euDraw, euAbandon, euStop);
 
     // 【概率分布传播】按优先级选择最优行动对应的子分布和期望值
     let distribution: number[];
