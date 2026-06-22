@@ -1,12 +1,20 @@
+import { propertyGroups } from 'stylelint-config-clean-order';
 import type { Config } from 'stylelint';
+
+const propertiesOrder = propertyGroups.map((properties) => ({
+  noEmptyLineBetween: true,
+  emptyLineBefore: 'never',
+  properties,
+}));
 
 export default {
   extends: [
     'stylelint-config-standard-scss',
     'stylelint-config-standard-vue/scss',
-    'stylelint-config-idiomatic-order',
+    'stylelint-config-clean-order',
   ],
   rules: {
+    'order/properties-order': [propertiesOrder],
     'selector-class-pattern': [
       '^(?:el-.*|[a-z][a-z0-9]*(?:-[a-z0-9]+)*)$',
       { resolveNestedSelectors: true },

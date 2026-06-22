@@ -711,8 +711,9 @@ function handleClear() {
 
 <style lang="scss" scoped>
 .boost-allocation-card {
-  margin-bottom: 1em;
   --el-card-padding: 16px;
+
+  margin-bottom: 1em;
 
   :deep(.el-slider) {
     .el-slider__runway {
@@ -734,26 +735,27 @@ function handleClear() {
   }
 
   .slider-hint {
-    color: var(--el-text-color-secondary);
     font-size: 14px;
+    color: var(--el-text-color-secondary);
   }
 
   .auto-mode-hint {
     margin-left: 8px;
-    color: var(--el-color-success);
     font-size: 14px;
+    color: var(--el-color-success);
   }
 
   .total {
+    margin-bottom: 0.5em;
     padding-top: 8px;
     border-top: 1px dashed var(--el-border-color-darker);
-    margin-bottom: 0.5em;
   }
 }
 
 .mltd-anni-result-card {
-  margin-bottom: 1em;
   --border-color: var(--el-border-color);
+
+  margin-bottom: 1em;
 
   :deep(.el-card__header) {
     padding: 8px;
@@ -761,11 +763,11 @@ function handleClear() {
     border-right: 1px solid var(--border-color);
     border-bottom: none;
     border-left: 1px solid var(--border-color);
-    background-color: var(--el-color-primary-light-3);
-    color: var(--el-text-color-primary);
     font-weight: bold;
     line-height: 23px;
+    color: var(--el-text-color-primary);
     text-align: center;
+    background-color: var(--el-color-primary-light-3);
   }
 
   :deep(.el-card__body) {

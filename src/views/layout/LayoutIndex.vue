@@ -18,8 +18,8 @@ useVersionCheck();
 <style lang="scss">
 #layout .layout-max-width-container {
   max-width: 1664px;
-  padding: 8px 32px;
   margin: 0 auto;
+  padding: 8px 32px;
 }
 
 #layout h1.view-title {

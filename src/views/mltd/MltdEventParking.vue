@@ -215,8 +215,8 @@
             >
               <ul
                 style="
-                  padding-left: 1.5em;
                   margin: 0;
+                  padding-left: 1.5em;
                   font-size: var(--el-font-size-base);
                   line-height: 1.5;
                 "
@@ -235,8 +235,8 @@
             >
               <ul
                 style="
-                  padding-left: 1.5em;
                   margin: 0;
+                  padding-left: 1.5em;
                   font-size: var(--el-font-size-base);
                   line-height: 1.5;
                 "
@@ -747,8 +747,9 @@ async function handleSubmit() {
 }
 
 .mltd-parking-result-card {
-  margin-bottom: 1em;
   --border-color: var(--el-border-color);
+
+  margin-bottom: 1em;
 
   :deep(.el-card__header) {
     padding: 8px;
@@ -756,11 +757,11 @@ async function handleSubmit() {
     border-right: 1px solid var(--border-color);
     border-bottom: none;
     border-left: 1px solid var(--border-color);
-    background-color: var(--el-color-primary-light-3);
-    color: var(--el-text-color-primary);
     font-weight: bold;
     line-height: 23px;
+    color: var(--el-text-color-primary);
     text-align: center;
+    background-color: var(--el-color-primary-light-3);
   }
 
   :deep(.el-card__body) {

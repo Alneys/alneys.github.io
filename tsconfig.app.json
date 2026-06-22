@@ -10,11 +10,23 @@
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
-    "composite": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    // Path mapping for cleaner imports.
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["element-plus/global"]
+
+    // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
+    // Specified here to keep it out of the root directory.
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    // ---- Customizations ----
+
+    // Global scope types.
+    "types": ["element-plus/global"],
+
+    // TS6 migration safety: explicitly disable to avoid errors on side-effect imports
+    // (e.g. import 'unfonts.css', import 'nprogress/nprogress.css')
+    // Remove this after verifying all side-effect imports are properly handled.
+    "noUncheckedSideEffectImports": false
   }
 }
