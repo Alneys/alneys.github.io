@@ -27,7 +27,7 @@
     "src/**/*.{ts,vue,scss}": "prettier --write --experimental-cli"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "^22.18.0 || >=24.12.0"
   },
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",
@@ -43,7 +43,7 @@
     "pinia": "^3.0.4",
     "sm-crypto": "^0.4.0",
     "vue": "^3.5.38",
-    "vue-router": "^4.6.4"
+    "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "~1.16.1",
