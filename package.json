@@ -14,6 +14,7 @@
     "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
     "lint:eslint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
+    "preinstall": "npx only-allow pnpm",
     "postinstall": "simple-git-hooks"
   },
   "simple-git-hooks": {
@@ -24,6 +25,9 @@
     "src/**/*.{ts,vue}": "eslint --fix --cache",
     "src/**/*.{scss,vue}": "stylelint --fix",
     "src/**/*.{ts,vue,scss}": "prettier --write --experimental-cli"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",
