@@ -61,7 +61,7 @@ async function copyToClipboard(text: string) {
           alt="Weibo"
         />
       </a>
-      <a href="https://steamcommunity.com/id/Alneys_Al/" target="_blank">
+      <a href="https://steamcommunity.com/id/Alneys_Al" target="_blank">
         <img
           src="https://img.shields.io/badge/Alneys__Al-000000?style=flat-square&logo=steam"
           alt="Steam"
@@ -93,37 +93,91 @@ async function copyToClipboard(text: string) {
     <div class="shields-io-collections">
       <a href="https://vuejs.org" target="_blank">
         <img
-          src="https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&labelColor=555&logo=vuedotjs"
+          src="https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&labelColor=333&logo=vuedotjs"
           alt="Vue.js"
         />
       </a>
-      <a href="https://element-plus.org/" target="_blank">
+      <a href="https://pinia.vuejs.org" target="_blank">
         <img
-          src="https://img.shields.io/badge/Element_Plus-409EFF?style=flat-square&labelColor=eee&logo=data:image/svg+xml;base64,PHN2ZyBpZD0i5Zu+5bGCXzEiIGRhdGEtbmFtZT0i5Zu+5bGCIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDQ0IDQ0Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzQwOWVmZjtmaWxsLXJ1bGU6ZXZlbm9kZDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmVsZW1lbnQgcGx1cy1sb2dvLXNtYWxsIOWJr+acrDwvdGl0bGU+PHBhdGggaWQ9ImVsZW1lbnRfcGx1cy1sb2dvLXNtYWxsIiBkYXRhLW5hbWU9ImVsZW1lbnQgcGx1cy1sb2dvLXNtYWxsIiBjbGFzcz0iY2xzLTEiIGQ9Ik0zNy40MSwzMi4zN2MwLDEuNTctLjgzLDEuOTMtLjgzLDEuOTNMMjEuNTEsNDNBMS42OSwxLjY5LDAsMCwxLDIwLDQzUzUuMiwzNC40LDQuNjYsMzRhMS4yOSwxLjI5LDAsMCwxLS41NS0xVjE1LjI0YzAtLjc4LDEtMS4zMywxLTEuMzNMMTkuODYsNS4zNmEyLDIsMCwwLDEsMS43OSwwbDE0LjQ2LDguNDFhMi4wNiwyLjA2LDAsMCwxLDEuMjUsMi4wNlYzMi4zN1ptLTUuOS0xN0wyMS4zNSw5LjVhMS41OSwxLjU5LDAsMCwwLTEuNDEsMEw4LjMzLDE2LjE1cy0uNzcuNDYtLjc2LDEuMDgsMCwxMy45MiwwLDEzLjkyQTEsMSwwLDAsMCw4LDMxLjljLjQzLjMsMTIsNywxMiw3YTEuMzEsMS4zMSwwLDAsMCwxLjE5LDBDMjEuOTEsMzguNSwzMywzMi4xMSwzMywzMi4xMXMuNjUtLjI4LjY1LTEuNTFWMjcuMTNsLTEzLDcuOVYzMmEzLjA1LDMuMDUsMCwwLDEsMS0yLjA3TDMzLjIsMjNhMi40NCwyLjQ0LDAsMCwwLC41NS0xLjQ2VjE4LjQzTDIwLjY0LDI2LjM1di0zLjJhMi4yMiwyLjIyLDAsMCwxLC44My0xLjc5Wk00MS4wNyw0LjIyYS4zOS4zOSwwLDAsMC0uMzctLjQySDM4VjEuMDZjMC0uMTYtLjI2LS4yMi0uNTMtLjIyTDM2LDEuMDhjLS4xOCwwLS4zMS4xMi0uMzEuMjNWMy44SDMzYS40LjQsMCwwLDAtLjM2LjM3djJoM1Y5YzAsLjE2LjI2LjI3LjU0LjIzbDEuNTEtLjI1Yy4xOCwwLC4yOS0uMTMuMjktLjIzVjYuMTRoM1oiLz48L3N2Zz4="
+          src="https://img.shields.io/badge/Pinia-FFD859?style=flat-square&labelColor=333&logo=pinia"
+          alt="Pinia"
+        />
+      </a>
+      <a href="https://vite.dev" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Vite-9135FF?style=flat-square&labelColor=333&logo=vite"
+          alt="Vite"
+        />
+      </a>
+      <a href="https://vueuse.org" target="_blank">
+        <img
+          src="https://img.shields.io/badge/VueUse-41B883?style=flat-square&labelColor=333&logo=vueuse"
+          alt="VueUse"
+        />
+      </a>
+      <a href="https://vitest.dev" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Vitest-00FF74?style=flat-square&labelColor=333&logo=vitest"
+          alt="Vitest"
+        />
+      </a>
+      <a href="https://www.typescriptlang.org" target="_blank">
+        <img
+          src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&labelColor=333&logo=typescript"
+          alt="TypeScript"
+        />
+      </a>
+      <a href="https://sass-lang.com" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Sass-CC6699?style=flat-square&labelColor=333&logo=sass"
+          alt="Sass"
+        />
+      </a>
+      <a href="https://element-plus.org" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Element_Plus-409EFF?style=flat-square&labelColor=333&logo=data:image/svg+xml;base64,PHN2ZyBpZD0i5Zu+5bGCXzEiIGRhdGEtbmFtZT0i5Zu+5bGCIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDQ0IDQ0Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzQwOWVmZjtmaWxsLXJ1bGU6ZXZlbm9kZDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmVsZW1lbnQgcGx1cy1sb2dvLXNtYWxsIOWJr+acrDwvdGl0bGU+PHBhdGggaWQ9ImVsZW1lbnRfcGx1cy1sb2dvLXNtYWxsIiBkYXRhLW5hbWU9ImVsZW1lbnQgcGx1cy1sb2dvLXNtYWxsIiBjbGFzcz0iY2xzLTEiIGQ9Ik0zNy40MSwzMi4zN2MwLDEuNTctLjgzLDEuOTMtLjgzLDEuOTNMMjEuNTEsNDNBMS42OSwxLjY5LDAsMCwxLDIwLDQzUzUuMiwzNC40LDQuNjYsMzRhMS4yOSwxLjI5LDAsMCwxLS41NS0xVjE1LjI0YzAtLjc4LDEtMS4zMywxLTEuMzNMMTkuODYsNS4zNmEyLDIsMCwwLDEsMS43OSwwbDE0LjQ2LDguNDFhMi4wNiwyLjA2LDAsMCwxLDEuMjUsMi4wNlYzMi4zN1ptLTUuOS0xN0wyMS4zNSw5LjVhMS41OSwxLjU5LDAsMCwwLTEuNDEsMEw4LjMzLDE2LjE1cy0uNzcuNDYtLjc2LDEuMDgsMCwxMy45MiwwLDEzLjkyQTEsMSwwLDAsMCw4LDMxLjljLjQzLjMsMTIsNywxMiw3YTEuMzEsMS4zMSwwLDAsMCwxLjE5LDBDMjEuOTEsMzguNSwzMywzMi4xMSwzMywzMi4xMXMuNjUtLjI4LjY1LTEuNTFWMjcuMTNsLTEzLDcuOVYzMmEzLjA1LDMuMDUsMCwwLDEsMS0yLjA3TDMzLjIsMjNhMi40NCwyLjQ0LDAsMCwwLC41NS0xLjQ2VjE4LjQzTDIwLjY0LDI2LjM1di0zLjJhMi4yMiwyLjIyLDAsMCwxLC44My0xLjc5Wk00MS4wNyw0LjIyYS4zOS4zOSwwLDAsMC0uMzctLjQySDM4VjEuMDZjMC0uMTYtLjI2LS4yMi0uNTMtLjIyTDM2LDEuMDhjLS4xOCwwLS4zMS4xMi0uMzEuMjNWMy44SDMzYS40LjQsMCwwLDAtLjM2LjM3djJoM1Y5YzAsLjE2LjI2LjI3LjU0LjIzbDEuNTEtLjI1Yy4xOCwwLC4yOS0uMTMuMjktLjIzVjYuMTRoM1oiLz48L3N2Zz4="
           alt="Element Plus"
         />
       </a>
       <a href="https://echarts.apache.org/en/index.html" target="_blank">
         <img
-          src="https://img.shields.io/badge/Apache_Echarts-AA344D?style=flat-square&labelColor=eee&logo=firefoxbrowser"
+          src="https://img.shields.io/badge/Apache_Echarts-AA344D?style=flat-square&labelColor=333&logo=firefoxbrowser"
           alt="Apache Echarts"
         />
       </a>
-      <a href="https://oxc.rs/" target="_blank">
+      <a href="https://oxc.rs" target="_blank">
         <img
-          src="https://img.shields.io/badge/Oxc-00F7F1?style=flat-square&labelColor=eee&logo=oxc"
+          src="https://img.shields.io/badge/Oxc-00F7F1?style=flat-square&labelColor=333&logo=oxc"
           alt="Oxc"
+        />
+      </a>
+      <a href="https://eslint.org" target="_blank">
+        <img
+          src="https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&labelColor=333&logo=eslint"
+          alt="ESLint"
+        />
+      </a>
+      <a href="https://prettier.io" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Prettier-F7B93E?style=flat-square&labelColor=333&logo=prettier"
+          alt="Prettier"
+        />
+      </a>
+      <a href="https://stylelint.io" target="_blank">
+        <img
+          src="https://img.shields.io/badge/stylelint-263238?style=flat-square&labelColor=333&logo=stylelint"
+          alt="stylelint"
         />
       </a>
       <a href="https://www.mozilla.org/firefox/new" target="_blank">
         <img
-          src="https://img.shields.io/badge/FireFox-FF7139?style=flat-square&labelColor=eee&logo=firefoxbrowser"
+          src="https://img.shields.io/badge/FireFox-FF7139?style=flat-square&labelColor=333&logo=firefoxbrowser"
           alt="FireFox"
         />
       </a>
-      <a href="https://pages.github.com/" target="_blank">
+      <a href="https://pages.github.com" target="_blank">
         <img
-          src="https://img.shields.io/badge/GitHub Pages-222222?style=flat-square&labelColor=555&logo=githubpages"
+          src="https://img.shields.io/badge/GitHub Pages-222222?style=flat-square&labelColor=333&logo=githubpages"
           alt="GitHub Pages"
         />
       </a>
