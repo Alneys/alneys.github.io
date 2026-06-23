@@ -103,7 +103,19 @@ async function copyToClipboard(text: string) {
           alt="Element Plus"
         />
       </a>
-      <a href="https://www.mozilla.org/firefox/new/" target="_blank">
+      <a href="https://echarts.apache.org/en/index.html" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Apache_Echarts-AA344D?style=flat-square&labelColor=eee&logo=firefoxbrowser"
+          alt="Apache Echarts"
+        />
+      </a>
+      <a href="https://oxc.rs/" target="_blank">
+        <img
+          src="https://img.shields.io/badge/Oxc-00F7F1?style=flat-square&labelColor=eee&logo=oxc"
+          alt="Oxc"
+        />
+      </a>
+      <a href="https://www.mozilla.org/firefox/new" target="_blank">
         <img
           src="https://img.shields.io/badge/FireFox-FF7139?style=flat-square&labelColor=eee&logo=firefoxbrowser"
           alt="FireFox"
@@ -143,25 +155,15 @@ async function copyToClipboard(text: string) {
       />
     </div>
 
-    <!-- <div class="al-divider"></div>
-    <h3>已知问题</h3>
-    <div class="list-p">
-      <li>
-        在input[type=number]输入框强行输入非数值时，点击清空按钮无法清空输入框：这是v-model.number与input[type=number]共同作用的结果。
-      </li>
-    </div> -->
-
     <div class="al-divider"></div>
     <h3>可能的开发计划（？）</h3>
-    <div class="list-p">已进入长期不更新状态，以下内容更新日期未知</div>
+    <div class="list-p">以下内容更新日期未知</div>
     <div class="al-collapse">
       <el-collapse>
         <el-collapse-item title="点击查看" name="1">
           <div class="list-p">
             <ul>
-              <li><del>偶像大师百万现场现场 周年活动计算器</del></li>
               <li>国际化 / i18n</li>
-              <li>偶像大师百万现场现场 活动控分计算器</li>
               <li>自行开发的网页脚本列表</li>
               <li>常用网站列表</li>
             </ul>
