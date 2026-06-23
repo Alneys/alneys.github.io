@@ -53,8 +53,9 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
+
 import nameFilterData from '../data/cgss_name_filter.json';
+import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
 // 自定义事件
 const emit = defineEmits<{

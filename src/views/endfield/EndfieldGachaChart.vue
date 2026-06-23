@@ -149,6 +149,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDark } from '@vueuse/core';
 import {
   ref,
   reactive,
@@ -159,7 +160,7 @@ import {
   useTemplateRef,
   shallowRef,
 } from 'vue';
-import { useDark } from '@vueuse/core';
+
 import * as echarts from 'echarts';
 
 const isDark = useDark();

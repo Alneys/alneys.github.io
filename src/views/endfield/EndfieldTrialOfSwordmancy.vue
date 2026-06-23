@@ -789,7 +789,9 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue';
+
 import { useResponsive } from '@/composables/useResponsive';
+
 import {
   getCurrentAdvice,
   clearSolverCache,

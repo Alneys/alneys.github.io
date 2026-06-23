@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
 
 const rewards = [0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000];

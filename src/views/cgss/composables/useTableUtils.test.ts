@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+
+import type { TableDataRow, CgssCardSkillTableItem } from '../CgssUnitViewerTypes';
 import {
   sortTableTw,
   sortResonanceSpecialize,
@@ -7,7 +9,6 @@ import {
   createCardDataItem,
   sortCardsByParam,
 } from './useTableUtils';
-import type { TableDataRow, CgssCardSkillTableItem } from '../CgssUnitViewerTypes';
 
 // ==================== 辅助函数：创建测试数据 ====================
 

@@ -4,6 +4,7 @@
  */
 
 import { type Ref } from 'vue';
+
 import type { TableDataRow, CardData } from '../CgssUnitViewerTypes';
 import { useCardBrightness } from './useCardBrightness';
 

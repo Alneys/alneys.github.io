@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
+
 import { Sunny, Moon } from '@element-plus/icons-vue';
+
 import CgssCountdownHeader from '@/components/CgssCountdownHeader.vue';
 
 const isDark = useDark();

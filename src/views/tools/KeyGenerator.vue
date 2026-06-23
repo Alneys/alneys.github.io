@@ -203,6 +203,7 @@
 
 <script setup lang="ts">
 import { ref, computed, shallowRef, watch } from 'vue';
+
 import { CopyDocument, Check } from '@element-plus/icons-vue';
 
 type AlgorithmType = 'EdDSA' | 'ECDSA' | 'RSA' | 'AES';

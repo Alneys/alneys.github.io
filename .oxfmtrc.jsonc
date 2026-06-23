@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+
+  // Oxfmt options that are the same as Prettier's, reference: https://prettier.io/docs/options
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": false,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "objectWrap": "preserve",
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "proseWrap": "preserve",
+  "htmlWhitespaceSensitivity": "css",
+  "vueIndentScriptAndStyle": false,
+  "endOfLine": "lf",
+  "embeddedLanguageFormatting": "auto",
+  "singleAttributePerLine": false,
+
+  // Oxfmt own extensions: https://oxc.rs/docs/guide/usage/formatter/config-file-reference.html
+  "insertFinalNewline": true,
+  "sortImports": {
+    "customGroups": [
+      {
+        "groupName": "vue",
+        "elementNamePattern": ["vue", "vue-router", "pinia", "@vue/*", "@vueuse/*"],
+      },
+      {
+        "groupName": "vite",
+        "elementNamePattern": ["vite", "@vitejs/*", "vitest", "vite-plugin-*"],
+      },
+    ],
+    "groups": [
+      "vue",
+      "vite",
+      "builtin",
+      "external",
+      ["internal", "subpath"],
+      ["parent", "sibling", "index"],
+      "style",
+      "unknown",
+    ],
+    "newlinesBetween": true,
+    "order": "asc",
+    "ignoreCase": true,
+  },
+  "sortPackageJson": true,
+}

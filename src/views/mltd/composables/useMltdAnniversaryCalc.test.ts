@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ref, nextTick } from 'vue';
-import { useMltdAnniversaryCalc, createDefaultForm } from './useMltdAnniversaryCalc';
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../data/MltdAnniversaryConstant';
 import type { AnniversaryForm } from '../MltdTypes';
+import { useMltdAnniversaryCalc, createDefaultForm } from './useMltdAnniversaryCalc';
 
 describe('calculateOptimalBoostAllocation', () => {
   describe('钻石最小化优化', () => {

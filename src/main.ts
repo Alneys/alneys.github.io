@@ -1,6 +1,5 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-
+import { createApp } from 'vue';
 // Element Plus (disabled when importing on demand)
 // import ElementPlus from 'element-plus';
 // import 'element-plus/dist/index.css';
@@ -8,12 +7,10 @@ import { createPinia } from 'pinia';
 
 import App from './App.vue';
 import router from './router';
-
 import inputmodeDirective from './utils/directives/inputmode';
 
 // self-host fonts
 import 'unfonts.css';
-
 import 'nprogress/nprogress.css';
 import '@/assets/styles/main.scss';
 

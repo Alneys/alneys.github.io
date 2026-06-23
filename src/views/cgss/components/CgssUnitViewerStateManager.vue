@@ -31,6 +31,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
+
 import { useCardBrightness } from '../composables/useCardBrightness';
 
 // 自定义事件

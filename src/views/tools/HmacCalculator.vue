@@ -136,9 +136,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, shallowRef, computed, watch } from 'vue';
+
 import { UploadFilled, CopyDocument, Check } from '@element-plus/icons-vue';
-import type { UploadFile } from 'element-plus';
 import CryptoJS from 'crypto-js';
+import type { UploadFile } from 'element-plus';
 import { sm3 } from 'sm-crypto';
 
 // 文件大小限制：100MB

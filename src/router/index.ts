@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
+
 import NProgress from 'nprogress';
+
 import LayoutIndex from '@/views/layout/LayoutIndex.vue';
 
 const router = createRouter({

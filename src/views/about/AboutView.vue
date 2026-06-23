@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+
 import svgCG from '@/assets/svg/imas-cinderella-girls.svg?raw';
+import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
 import svgML from '@/assets/svg/imas-million-live.svg?raw';
 import svgSC from '@/assets/svg/imas-shiny-colors.svg?raw';
-import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
 import { useVersionCheck } from '@/composables/useVersionCheck';
 
 const env = import.meta.env;
