@@ -12,7 +12,7 @@
     "type-check": "vue-tsc --build",
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
-    "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
+    "lint:stylelint": "stylelint --fix \"src/**/*.{scss,vue}\"",
     "lint:eslint": "eslint . --fix --cache",
     "format": "oxfmt src/",
     "format:prettier": "prettier --write --experimental-cli src/",
