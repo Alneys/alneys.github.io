@@ -101,10 +101,20 @@
     }
 
     .cgss-icon.icon-dark {
-      filter: brightness(0.4);
+      filter: brightness(0.5);
 
       &.icon-season-limited {
         filter: brightness(0.675);
+      }
+    }
+
+    html.dark {
+      .cgss-icon.icon-dark {
+        filter: brightness(0.4);
+
+        &.icon-season-limited {
+          filter: brightness(0.675);
+        }
       }
     }
 
