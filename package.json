@@ -14,7 +14,8 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/",
+    "format": "oxfmt src/",
+    "format:prettier": "prettier --write --experimental-cli src/",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "simple-git-hooks"
   },
@@ -27,7 +28,7 @@
       "oxlint --fix"
     ],
     "src/**/*.{scss,vue}": "stylelint --fix",
-    "src/**/*.{ts,vue,scss}": "prettier --write --experimental-cli"
+    "src/**/*.{ts,vue,scss}": "oxfmt"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
@@ -68,6 +69,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
     "npm-run-all2": "^9.0.2",
+    "oxfmt": "^0.56.0",
     "oxlint": "~1.69.0",
     "postcss-html": "^1.8.1",
     "postcss-scss": "^4.0.9",
