@@ -34,5 +34,9 @@ export default {
     'font-family-name-quotes': null,
     'shorthand-property-no-redundant-values': null,
     'scss/double-slash-comment-empty-line-before': null,
+    'declaration-block-no-redundant-longhand-properties': [
+      true,
+      { ignoreShorthands: ['flex', 'flex-flow'] },
+    ],
   },
 } satisfies Config;
