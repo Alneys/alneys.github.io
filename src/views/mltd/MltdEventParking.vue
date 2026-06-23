@@ -398,7 +398,9 @@
 
 <script setup lang="ts">
 import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
+
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
+
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
 import { EVENT_PARKING_TIPS, EVENT_PARKING_NOTICES } from './data/MltdEventParkingConstant';
 import type { ParkingForm, EventChoice, ParkingResultItem } from './MltdTypes';

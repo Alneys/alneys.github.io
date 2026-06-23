@@ -1,0 +1,41 @@
+// cSpell: disable
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-sc: () !default;
+$colors-sc: map.merge(
+  (
+    'mano': #ffbad6,
+    'hiori': #144384,
+    'meguru': #ffe012,
+    'kogane': #f84cad,
+    'mamimi': #a846fb,
+    'sakuya': #006047,
+    'yuika': #3b91c4,
+    'kiriko': #d9f2ff,
+    'kaho': #e5461c,
+    'chiyoko': #f93b90,
+    'juri': #ffc602,
+    'rinze': #89c3eb,
+    'natsuha': #90e667,
+    'amana': #f54275,
+    'tenka': #e75bec,
+    'chiyuki': #fafafa,
+    'asahi': #f30100,
+    'fuyuko': #5aff19,
+    'mei': #ff00ff,
+    'tooru': #50d0d0,
+    'madoka': #be1e3e,
+    'koito': #7967c3,
+    'hinana': #ffc639,
+    'nichika': #a6cdb6,
+    'mikoto': #760f10,
+    'luca': #35281f,
+    'hana': #e0b5d3,
+    'haruki': #ead7a4,
+    'hazuki': #6f9d9f,
+  ),
+  $colors-sc
+);

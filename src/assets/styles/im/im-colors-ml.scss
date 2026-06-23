@@ -1,3 +1,4 @@
+// cSpell: disable
 @use 'sass:math';
 @use 'sass:map';
 
@@ -6,9 +7,46 @@
 $colors-ml: () !default;
 $colors-ml: map.merge(
   (
+    'mirai': #ea5b76,
+    'shizuka': #6495cf,
+    'tsubasa': #fed552,
     'kotoha': #92cfbb,
     'elena': #9bce92,
+    'minako': #58a6dc,
+    'megumi': #454341,
+    'matsuri': #5abfb7,
+    'serika': #ed90ba,
+    'akane': #eb613f,
+    'anna': #7e6ca8,
+    'roco': #fff03c,
+    'yuriko': #c7b83c,
+    'sayoko': #7f6575,
+    'arisa': #b54461,
+    'umi': #e9739b,
+    'iku': #f7e78e,
+    'tomoka': #bee3e3,
+    'emily': #554171,
+    'shiho': #afa690,
+    'ayumu': #e25a9b,
+    'hinata': #d1342c,
+    'kana': #f5ad3b,
+    'nao': #788bc5,
+    'chizuru': #f19557,
+    'konomi': #f1becb,
+    'tamaki': #ee762e,
+    'fuka': #7278a8,
     'miya': #d7a96b,
+    'noriko': #eceb70,
+    'mizuki': #99b7dc,
+    'karen': #b63b40,
+    'rio': #f19591,
+    'subaru': #aeb49c,
+    'reika': #6bb6b0,
+    'momoko': #efb864,
+    'julia': #d7385f,
+    'tsumugi': #ebe1ff,
+    'kaori': #274079,
+    'misaki': #96e2df,
   ),
   $colors-ml
 );

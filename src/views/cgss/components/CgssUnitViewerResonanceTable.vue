@@ -98,8 +98,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, toRef } from 'vue';
+
 import type { TableColumnCtx } from 'element-plus';
-import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
+
+import { useResponsive } from '@/composables/useResponsive';
+
 import {
   type CgssCardSkillTableItem,
   type TableDataRow,
@@ -108,7 +111,6 @@ import {
   tableResonanceRowHeaderTw,
   tableResonanceColumnHeader,
 } from '../CgssUnitViewerTypes';
-import { useResponsive } from '@/composables/useResponsive';
 import { useCardFilter } from '../composables/useCardFilter';
 import { useIconActions } from '../composables/useIconActions';
 import {
@@ -117,6 +119,7 @@ import {
   sortCardsByParam,
   sortResonanceSpecialize,
 } from '../composables/useTableUtils';
+import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 
 // 传入属性
 const props = defineProps<{

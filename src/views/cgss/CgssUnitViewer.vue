@@ -67,12 +67,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, useTemplateRef } from 'vue';
-import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
-import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
-import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
+
 import { type TableDataRow, type CgssCardSkillTableItem } from './CgssUnitViewerTypes';
-import { useCardFilter } from './composables/useCardFilter';
+import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
+import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
+import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
 import { useCardBrightness } from './composables/useCardBrightness';
+import { useCardFilter } from './composables/useCardFilter';
 import { useCardSkillData } from './composables/useCardSkillData';
 
 const { inputNameFilter } = useCardFilter();

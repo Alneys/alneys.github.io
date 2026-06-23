@@ -11,23 +11,13 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "run-s \"lint:*\"",
-    "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:stylelint": "stylelint --fix \"src/**/*.{scss,vue}\"",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/",
+    "format": "oxfmt src/",
+    "format:prettier": "prettier --write --experimental-cli src/",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "simple-git-hooks"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged && pnpm type-check",
-    "commit-msg": "node scripts/verify-commit.js"
-  },
-  "lint-staged": {
-    "src/**/*.{ts,vue}": "eslint --fix --cache",
-    "src/**/*.{scss,vue}": "stylelint --fix",
-    "src/**/*.{ts,vue,scss}": "prettier --write --experimental-cli"
-  },
-  "engines": {
-    "node": "^22.18.0 || >=24.12.0"
   },
   "dependencies": {
     "@element-plus/icons-vue": "~2.3.2",
@@ -59,11 +49,14 @@
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-oxlint": "~1.69.0",
     "eslint-plugin-vue": "~10.9.2",
     "jiti": "^2.7.0",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
     "npm-run-all2": "^9.0.2",
+    "oxfmt": "^0.56.0",
+    "oxlint": "~1.69.0",
     "postcss-html": "^1.8.1",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.8.4",
@@ -82,5 +75,19 @@
     "vitest": "^4.1.9",
     "vue-eslint-parser": "^10.4.1",
     "vue-tsc": "^3.3.5"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged && pnpm type-check",
+    "commit-msg": "node scripts/verify-commit.js"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,vue}": [
+      "oxlint --fix"
+    ],
+    "src/**/*.{scss,vue}": "stylelint --fix",
+    "src/**/*.{ts,vue,scss}": "oxfmt"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
   }
 }

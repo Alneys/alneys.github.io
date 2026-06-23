@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+
 import type { CgssCardSkillTableItem } from '../CgssUnitViewerTypes';
 
 const data = ref<CgssCardSkillTableItem[] | null>(null);

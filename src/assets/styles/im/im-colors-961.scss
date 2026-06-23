@@ -1,0 +1,14 @@
+// cSpell: disable
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-961: () !default;
+$colors-961: map.merge(
+  (
+    'leon': #512aa3,
+    'shika': #e6f9e5,
+  ),
+  $colors-961
+);

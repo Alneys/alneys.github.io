@@ -1,0 +1,18 @@
+// cSpell: disable
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-876: () !default;
+$colors-876: map.merge(
+  (
+    'ai': #e85786,
+    'eri': #00adb9,
+    'ryo': #b2d468,
+    'manaka': #ff4554,
+    'letora': #d7f930,
+    'cosmo': #56ccf2,
+  ),
+  $colors-876
+);

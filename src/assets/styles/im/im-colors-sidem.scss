@@ -1,0 +1,61 @@
+// cSpell: disable
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-sidem: () !default;
+$colors-sidem: map.merge(
+  (
+    'toma': #f62638,
+    'shota': #98d70d,
+    'hokuto': #1b25ab,
+    'teru': #ff261c,
+    'kaoru': #1b48bf,
+    'tsubasa': #2eb135,
+    'kei': #c2afe6,
+    'rei': #004898,
+    'kyoji': #6dc6e7,
+    'pierre': #8add66,
+    'minori': #ee869a,
+    'yusuke': #ffe200,
+    'kyosuke': #53da3f,
+    'hideo': #55b4e4,
+    'ryu': #ea5125,
+    'seiji': #77843c,
+    'kirio': #ffd700,
+    'shouma': #6a488e,
+    'kurou': #71a4d9,
+    'hayato': #fe6b01,
+    'jun': #2358a8,
+    'natsuki': #26cad3,
+    'haruna': #b2d03c,
+    'shiki': #e84a95,
+    'suzaku': #e23b30,
+    'genbu': #071f5f,
+    'yukihiro': #ec9079,
+    'souichirou': #00956f,
+    'asselin': #5d6eb3,
+    'makio': #f4c55b,
+    'saki': #f77eb4,
+    'nao': #201750,
+    'shiro': #e2211c,
+    'kanon': #f5b5c3,
+    'michio': #426ca9,
+    'rui': #f7d54e,
+    'jiro': #ee7800,
+    'takeru': #001ca8,
+    'michiru': #fda900,
+    'ren': #ba2636,
+    'ryo': #6ed24b,
+    'daigo': #e83f18,
+    'kazuki': #cd9f52,
+    'amehiko': #111822,
+    'sora': #3f7735,
+    'chris': #00c4df,
+    'shuu': #0198f0,
+    'momohito': #b8f028,
+    'eishin': #e01828,
+  ),
+  $colors-sidem
+);

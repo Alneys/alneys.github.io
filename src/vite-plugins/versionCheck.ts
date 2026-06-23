@@ -1,7 +1,8 @@
+import type { Plugin } from 'vite';
+
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Plugin } from 'vite';
 
 export function versionCheckPlugin(): Plugin {
   return {

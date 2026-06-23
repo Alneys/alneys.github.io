@@ -1,0 +1,26 @@
+// cSpell: disable
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-765: () !default;
+$colors-765: map.merge(
+  (
+    'haruka': #e22b30,
+    'chihaya': #2743d2,
+    'miki': #b4e04b,
+    'yukiho': #d3dde9,
+    'yayoi': #f39939,
+    'makoto': #515558,
+    'iori': #fd99e1,
+    'takane': #a6126a,
+    'ritsuko': #01a860,
+    'azusa': #9238be,
+    'ami': #ffe43f,
+    'mami': #ffe43f,
+    'hibiki': #01adb9,
+    'kotori': #fff6a4,
+  ),
+  $colors-765
+);

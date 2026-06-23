@@ -81,16 +81,6 @@ function calculateTicketPoint(basePoint: number, multiplier: number): number {
 }
 
 /**
- * 计算打工票消耗所需的票数
- * @param multiplier 打工票倍率
- * @param ticket 单倍打工票消耗所需的票数
- * @returns 票数
- */
-function calculateTicketCount(multiplier: number, ticket: number): number {
-  return multiplier * ticket;
-}
-
-/**
  * 生成 Theater 活动的完整游玩选项列表
  *
  * 生成顺序：
@@ -151,7 +141,6 @@ function generateTheaterChoices(isBoostPeriod: boolean = true): EventChoice[] {
   for (const song of SONG_CONFIGS_FOR_PARKING) {
     for (const multiplier of multipliers) {
       const ticketPoint = calculateTicketPoint(song.value, multiplier);
-      const ticketCount = calculateTicketCount(multiplier, song.ticket);
       entries.push({
         name: song.name,
         type: '打工票',

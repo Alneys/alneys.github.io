@@ -71,6 +71,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch, shallowRef } from 'vue';
+
 import { CopyDocument, Check } from '@element-plus/icons-vue';
 
 type UuidVersion = 'v4' | 'v7' | 'nil';

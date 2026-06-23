@@ -1,0 +1,14 @@
+// cSpell: disable
+@use 'sass:math';
+@use 'sass:map';
+
+@use './im-mixins' as *;
+
+$colors-others: () !default;
+$colors-others: map.merge(
+  (
+    'kohaku': #fefad4,
+    'aya': #3f3538,
+  ),
+  $colors-others
+);
