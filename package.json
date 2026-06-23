@@ -11,6 +11,7 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
     "lint:style": "stylelint --fix \"src/**/*.{scss,vue}\"",
     "lint:eslint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
@@ -22,7 +23,9 @@
     "commit-msg": "node scripts/verify-commit.js"
   },
   "lint-staged": {
-    "src/**/*.{ts,vue}": "eslint --fix --cache",
+    "src/**/*.{ts,vue}": [
+      "oxlint --fix"
+    ],
     "src/**/*.{scss,vue}": "stylelint --fix",
     "src/**/*.{ts,vue,scss}": "prettier --write --experimental-cli"
   },
@@ -59,11 +62,13 @@
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-oxlint": "~1.69.0",
     "eslint-plugin-vue": "~10.9.2",
     "jiti": "^2.7.0",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
     "npm-run-all2": "^9.0.2",
+    "oxlint": "~1.69.0",
     "postcss-html": "^1.8.1",
     "postcss-scss": "^4.0.9",
     "prettier": "^3.8.4",
