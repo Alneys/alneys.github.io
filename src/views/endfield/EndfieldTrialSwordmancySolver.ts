@@ -341,7 +341,7 @@ export function getCurrentAdvice(
         rewardStop: 0,
         rewardAbandon: 0,
         rewardRound: 0,
-        distribution: new Array<number>(modValue).fill(0),
+        distribution: Array.from({ length: modValue }, () => 0),
         abandonProb: 0,
       };
       memo.set(key, r);
@@ -415,7 +415,7 @@ export function getCurrentAdvice(
     // [Draw] 按等级比例加权，同时聚合子分布
     let euDraw = -Infinity;
     let rewardDraw = -Infinity;
-    const drawDistribution = new Array<number>(modValue).fill(0);
+    const drawDistribution = Array.from({ length: modValue }, () => 0);
     let drawAbandonProb = 0;
     let euRoundDraw = 0;
     let rewardRoundDraw = 0;
@@ -531,7 +531,7 @@ export function getCurrentAdvice(
       finalReward = child.rewardExp;
       // 放弃：放弃概率 100%，战力点分布 0
     } else if (bestAction === 'abandon') {
-      distribution = new Array<number>(modValue).fill(0);
+      distribution = Array.from({ length: modValue }, () => 0);
       abandonProb = 1;
       euRound = 0;
       rewardRound = 0;
@@ -539,7 +539,7 @@ export function getCurrentAdvice(
       finalReward = childAbandon!.rewardExp;
       // 结算：立即获得当前奖励（roundDrawn===0 时无战力点），概率分布和回合奖励
     } else if (bestAction === 'stop') {
-      distribution = new Array<number>(modValue).fill(0);
+      distribution = Array.from({ length: modValue }, () => 0);
       abandonProb = 0;
       if (roundDrawn > 0) {
         distribution[slotIndex] = 1;

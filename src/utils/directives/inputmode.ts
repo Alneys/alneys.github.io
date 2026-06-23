@@ -1,7 +1,7 @@
 import type { Directive } from 'vue';
 
 const inputmodeDirective: Directive = {
-  mounted(el: Element, binding, vnode, prevVnode) {
+  mounted(el: Element, binding, _vnode, _prevVnode) {
     try {
       if (el.tagName.toLowerCase() !== 'input') {
         el = el.getElementsByTagName('input')[0]!;
