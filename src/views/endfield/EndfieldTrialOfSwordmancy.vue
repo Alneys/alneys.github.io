@@ -151,8 +151,8 @@
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isEuPresetActive(0.01, 400000) ? 'primary' : ''"
-                    @click="setEuParams(0.01, 400000)"
+                    :type="isEuPresetActive(0.01, 600000) ? 'primary' : ''"
+                    @click="setEuParams(0.01, 600000)"
                   >
                     禁止溢出
                   </el-button>
@@ -566,7 +566,7 @@
                 <div class="advice-row advice-header">
                   <span class="advice-label" />
                   <span class="advice-value">奖励期望</span>
-                  <span class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-eu">期望效用</span>
                 </div>
                 <div class="advice-row">
@@ -737,6 +737,104 @@
               </template>
             </el-card>
           </el-col>
+          <el-col :span="24" :xs="24">
+            <el-card class="simplified-strategy-card">
+              <template #header>
+                <span>简化策略</span>
+              </template>
+              <div v-loading="solverLoading" class="simplified-body simplified-body-loading">
+                <template
+                  v-if="
+                    simplifiedStrategyResult && simplifiedStrategyResult.optimalStrategy.length > 0
+                  "
+                >
+                  <el-alert type="info" :closable="false" show-icon>
+                    1. 能翻倍就翻倍<br />
+                    2. 参考下表，根据当前剩余的放弃次数，找到结算阈值<br />
+                    3.1 持续抽牌，点数达到或超过阈值时立即结算<br />
+                    3.2 已经抽满仍不满足条件，则放弃（没有放弃机会时结算）
+                  </el-alert>
+                  <el-table
+                    :data="thresholdRowData"
+                    size="small"
+                    style="width: 100%; font-size: 14px"
+                    :cell-class-name="thresholdCellClassName"
+                    :header-cell-class-name="thresholdCellClassName"
+                  >
+                    <el-table-column label="剩余放弃" width="80">
+                      <template #default>
+                        <span class="simplified-comp-label" style="min-width: unset">结算阈值</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="3 次" prop="a3" align="center">
+                      <template #default="{ row }">
+                        {{ row.a3 }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="2 次" prop="a2" align="center">
+                      <template #default="{ row }">
+                        {{ row.a2 }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="1 次" prop="a1" align="center">
+                      <template #default="{ row }">
+                        {{ row.a1 }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="0 次" prop="a0" align="center">
+                      <template #default="{ row }">
+                        {{ row.a0 }}
+                      </template>
+                    </el-table-column>
+                  </el-table>
+
+                  <div class="simplified-comparison">
+                    <div class="simplified-comp-row simplified-comp-header">
+                      <span class="simplified-comp-label" />
+                      <span class="simplified-comp-value">奖励期望</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value">期望效用</span>
+                    </div>
+                    <div class="simplified-comp-row simplified-efficiency-row">
+                      <span class="simplified-comp-label">简化策略比例</span>
+                      <span class="simplified-comp-value"
+                        >{{ (simplifiedStrategyResult.rewardEfficiency * 100).toFixed(2) }}%</span
+                      >
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value"
+                        >{{ (simplifiedStrategyResult.euEfficiency * 100).toFixed(2) }}%</span
+                      >
+                    </div>
+                    <div class="simplified-comp-row">
+                      <span class="simplified-comp-label">简化策略</span>
+                      <span class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.optimalReward)
+                      }}</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.optimalEu)
+                      }}</span>
+                    </div>
+                    <div class="simplified-comp-row">
+                      <span class="simplified-comp-label">最优策略</span>
+                      <span class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.dpReward)
+                      }}</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.dpEu)
+                      }}</span>
+                    </div>
+                  </div>
+                </template>
+                <el-empty
+                  v-else-if="!solverLoading"
+                  description="请先配置铭牌库和奖励表"
+                  :image-size="60"
+                />
+              </div>
+            </el-card>
+          </el-col>
         </el-row>
       </el-col>
     </el-row>
@@ -792,6 +890,8 @@ import { reactive, ref, computed, watch } from 'vue';
 
 import { useResponsive } from '@/composables/useResponsive';
 
+import { evaluateAllSimplifiedStrategies } from './EndfieldTrialSwordmancySimplified';
+import type { SimplifiedStrategyResult } from './EndfieldTrialSwordmancySimplified';
 import {
   getCurrentAdvice,
   clearSolverCache,
@@ -1061,6 +1161,58 @@ function setEuParams(af: number, fp: number) {
 
 function isEuPresetActive(af: number, fp: number): boolean {
   return aversionFactor.value === af && fixedPenalty.value === fp;
+}
+
+/** 简化策略穷举对比结果 */
+const simplifiedStrategyResult = ref<SimplifiedStrategyResult | null>(null);
+const solverLoading = ref(false);
+
+function computeSimplifiedStrategy() {
+  const deck = debouncedDeckConfig.value;
+  const rewards = rewardValues.value;
+  if (deck.some((c) => c < 0) || rewards.length === 0) {
+    simplifiedStrategyResult.value = null;
+    solverLoading.value = false;
+    return;
+  }
+  simplifiedStrategyResult.value = evaluateAllSimplifiedStrategies(deck, rewards, euParams.value);
+  solverLoading.value = false;
+}
+
+// debouncedDeckConfig 已经防抖，变化时无需额外等待
+// immediate: true 用于初始化时立刻计算
+watch(
+  debouncedDeckConfig,
+  () => {
+    solverLoading.value = true;
+    computeSimplifiedStrategy();
+  },
+  { immediate: true },
+);
+
+// rewardValues / euParams 变化时防抖 300ms
+let simplifiedStrategyTimer: ReturnType<typeof setTimeout> | undefined;
+watch([rewardValues, euParams], () => {
+  if (simplifiedStrategyTimer) clearTimeout(simplifiedStrategyTimer);
+  solverLoading.value = true;
+  simplifiedStrategyTimer = setTimeout(computeSimplifiedStrategy, 300);
+});
+
+/** 转置后的阈值表数据：单行对象，列={a3,a2,a1,a0} */
+const thresholdRowData = computed(() => {
+  const s = simplifiedStrategyResult.value?.optimalStrategy;
+  if (!s || s.length < 4) return [];
+  return [{ a3: s[3], a2: s[2], a1: s[1], a0: s[0] }];
+});
+
+/** 高亮当前剩余放弃次数对应的列 */
+function thresholdCellClassName({ column }: { column: any }): string {
+  const map: Record<string, number> = { a3: 3, a2: 2, a1: 1, a0: 0 };
+  const colAbandons = map[column.property];
+  if (colAbandons !== undefined && colAbandons === remainingAbandons.value) {
+    return 'threshold-col-highlight';
+  }
+  return '';
 }
 
 const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
@@ -1607,7 +1759,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-card,
   .daily-card,
   .advice-card,
-  .distribution-card {
+  .distribution-card,
+  .simplified-strategy-card {
     :deep(.el-card__header) {
       padding: 12px 16px;
       font-weight: bold;
@@ -2039,11 +2192,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   :deep(.distribution-row-highlight) {
     font-weight: bold;
-    background: var(--el-color-primary-light-9);
+    background: var(--el-color-primary-light-8);
   }
 
   :deep(.el-table__body .distribution-row-highlight:hover .el-table__cell) {
-    background: var(--el-color-primary-light-9);
+    background: var(--el-color-primary-light-8);
   }
 
   // ── 操作按钮 ──
@@ -2106,6 +2259,65 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  // ── 简化策略分析卡片 ──
+  .simplified-strategy-card {
+    margin-top: 16px;
+
+    .simplified-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .simplified-body-loading {
+      position: relative;
+      min-height: 100px;
+    }
+
+    .simplified-empty {
+      align-items: center;
+    }
+
+    .simplified-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .simplified-comp-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .simplified-comp-label {
+      min-width: 144px;
+      color: var(--el-text-color-secondary);
+    }
+
+    .simplified-comp-value {
+      min-width: 88px;
+      font-weight: bold;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .simplified-comp-header {
+      color: var(--el-text-color-secondary);
+    }
+
+    .simplified-efficiency-row {
+      border-radius: 4px;
+      font-weight: bold;
+      background: var(--el-color-primary-light-8);
+    }
+  }
+
+  :deep(.threshold-col-highlight) {
+    background-color: var(--el-color-primary-light-8) !important;
   }
 
   // ── 响应式：小屏幕 ──

@@ -138,7 +138,7 @@ const adviceMemoCache = new LRUCache<Map<string, DpResult>>(MAX_CACHED_CONFIGS);
  * @param s - 模位置
  * @returns 安全索引下的奖励值
  */
-function safeGetReward(rewards: number[], s: number): number {
+export function safeGetReward(rewards: number[], s: number): number {
   const idx = Math.min(Math.max(0, s), rewards.length - 1);
   return rewards[idx]!;
 }
@@ -151,7 +151,7 @@ function safeGetReward(rewards: number[], s: number): number {
  * @param params - 期望效用参数（可选）
  * @returns 调整后的奖励值
  */
-function computeEuReward(
+export function computeEuReward(
   rawReward: number,
   drawnValue: number,
   modValue: number,
