@@ -99,8 +99,8 @@ export const tableResonanceColumnHeader: ColumnHeader[] = [
   },
   { prop: 'motif', labelCn: '共鸣', labelEn: 'resonance motif', skill: 'motif', minWidth: 150 },
   { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy', minWidth: 150 },
-  { prop: 'symphony', labelCn: '交响', labelEn: 'symphony', skill: 'symphony', minWidth: 100 },
   { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike', minWidth: 100 },
+  { prop: 'symphony', labelCn: '交响', labelEn: 'symphony', skill: 'symphony', minWidth: 100 },
   { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain', minWidth: 150 },
   {
     prop: 'coordinate',
