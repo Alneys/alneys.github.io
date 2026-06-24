@@ -151,8 +151,8 @@
                   </el-button>
                   <el-button
                     :size="compSize"
-                    :type="isEuPresetActive(0.01, 400000) ? 'primary' : ''"
-                    @click="setEuParams(0.01, 400000)"
+                    :type="isEuPresetActive(0.01, 600000) ? 'primary' : ''"
+                    @click="setEuParams(0.01, 600000)"
                   >
                     禁止溢出
                   </el-button>
@@ -566,7 +566,7 @@
                 <div class="advice-row advice-header">
                   <span class="advice-label" />
                   <span class="advice-value">奖励期望</span>
-                  <span class="advice-sep">|</span>
+                  <span v-if="showEuColumn" class="advice-sep">|</span>
                   <span v-if="showEuColumn" class="advice-value advice-eu">期望效用</span>
                 </div>
                 <div class="advice-row">
@@ -737,6 +737,174 @@
               </template>
             </el-card>
           </el-col>
+          <el-col :span="24" :xs="24">
+            <el-card class="simplified-strategy-card">
+              <template #header>
+                <span>简化策略</span>
+              </template>
+              <div v-loading="solverLoading" class="simplified-body simplified-body-loading">
+                <template
+                  v-if="
+                    simplifiedStrategyResult && simplifiedStrategyResult.optimalStrategy.length > 0
+                  "
+                >
+                  <el-alert type="info" closable show-icon clo>
+                    1. 能翻倍就翻倍<br />
+                    2. 参考下表，根据当前剩余的放弃次数，找到结算阈值<br />
+                    3.1. 持续抽牌，每次抽牌后点数达到或超过阈值时立即结算<br />
+                    3.2. 已经抽满仍不满足条件，则放弃（没有放弃机会时结算）
+                  </el-alert>
+                  <el-table
+                    :data="thresholdRowData"
+                    size="small"
+                    style="width: 100%; font-size: 14px"
+                  >
+                    <el-table-column label="剩余放弃次数" width="160">
+                      <template #default="{ row }">
+                        <el-tooltip
+                          :content="labelTipMap[row.label]"
+                          placement="right"
+                          trigger="hover"
+                        >
+                          <div class="threshold-label-wrap">
+                            <span class="simplified-comp-label" style="min-width: unset">
+                              {{ row.label }}
+                            </span>
+                            <el-icon class="threshold-info-icon"><InfoFilled /></el-icon>
+                          </div>
+                        </el-tooltip>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="3 次" prop="a3" align="center" min-width="16">
+                      <template #default="{ row }">
+                        {{ row.a3 }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="2 次" prop="a2" align="center" min-width="16">
+                      <template #default="{ row }">
+                        {{ row.a2 }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="1 次" prop="a1" align="center" min-width="16">
+                      <template #default="{ row }">
+                        {{ row.a1 }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="0 次" prop="a0" align="center" min-width="16">
+                      <template #default="{ row }">
+                        {{ row.a0 }}
+                      </template>
+                    </el-table-column>
+                  </el-table>
+
+                  <div class="simplified-comparison">
+                    <div class="simplified-comp-row simplified-comp-header">
+                      <span class="simplified-comp-label" />
+                      <span class="simplified-comp-value">奖励期望</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value">期望效用</span>
+                    </div>
+                    <div class="simplified-comp-row simplified-efficiency-row">
+                      <span class="simplified-comp-label">简化策略比例</span>
+                      <span class="simplified-comp-value"
+                        >{{ (simplifiedStrategyResult.rewardEfficiency * 100).toFixed(2) }}%</span
+                      >
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value"
+                        >{{ (simplifiedStrategyResult.euEfficiency * 100).toFixed(2) }}%</span
+                      >
+                    </div>
+                    <div class="simplified-comp-row">
+                      <span class="simplified-comp-label">简化策略</span>
+                      <span class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.optimalReward)
+                      }}</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.optimalEu)
+                      }}</span>
+                    </div>
+                    <div class="simplified-comp-row">
+                      <span class="simplified-comp-label">最优策略</span>
+                      <span class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.dpReward)
+                      }}</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value">{{
+                        formatDecimal(simplifiedStrategyResult.dpEu)
+                      }}</span>
+                    </div>
+                    <div v-if="rewardMaximizingStrategy" class="simplified-comp-row">
+                      <span class="simplified-comp-label">简化策略最大奖励</span>
+                      <span class="simplified-comp-value">{{
+                        formatDecimal(rewardMaximizingStrategy.reward)
+                      }}</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value"> - </span>
+                    </div>
+                  </div>
+
+                  <el-collapse style="margin-top: 8px">
+                    <el-collapse-item title="查看全部组合">
+                      <el-table
+                        :data="allStrategiesTableData"
+                        size="small"
+                        style="width: 100%; font-size: 12px"
+                        :row-class-name="allStrategiesRowClassName"
+                        :default-sort="{ prop: 'eu', order: 'descending' }"
+                        height="400"
+                      >
+                        <el-table-column label="a3" prop="a3" width="60" sortable align="center" />
+                        <el-table-column label="a2" prop="a2" width="60" sortable align="center" />
+                        <el-table-column label="a1" prop="a1" width="60" sortable align="center" />
+                        <el-table-column label="a0" prop="a0" width="60" sortable align="center" />
+                        <el-table-column label="奖励期望" prop="reward" sortable align="right">
+                          <template #default="{ row }">
+                            <span :class="{ 'simplified-all-optimal': row.isOptimal }">{{
+                              row.rewardDisplay
+                            }}</span>
+                          </template>
+                        </el-table-column>
+                        <el-table-column
+                          v-if="showEuColumn"
+                          label="期望效用"
+                          prop="eu"
+                          sortable
+                          align="right"
+                        >
+                          <template #default="{ row }">
+                            <span :class="{ 'simplified-all-optimal': row.isOptimal }">{{
+                              row.euDisplay
+                            }}</span>
+                          </template>
+                        </el-table-column>
+                        <el-table-column
+                          label="奖励比例"
+                          prop="rewardRateDisplay"
+                          sortable
+                          align="right"
+                          width="130"
+                        />
+                        <el-table-column
+                          v-if="showEuColumn"
+                          label="效用比例"
+                          prop="euRateDisplay"
+                          sortable
+                          align="right"
+                          width="130"
+                        />
+                      </el-table>
+                    </el-collapse-item>
+                  </el-collapse>
+                </template>
+                <el-empty
+                  v-else-if="!solverLoading"
+                  description="请先配置铭牌库和奖励表"
+                  :image-size="60"
+                />
+              </div>
+            </el-card>
+          </el-col>
         </el-row>
       </el-col>
     </el-row>
@@ -790,14 +958,22 @@
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue';
 
+import { InfoFilled } from '@element-plus/icons-vue';
+
 import { useResponsive } from '@/composables/useResponsive';
 
+import { evaluateAllSimplifiedStrategies } from './EndfieldTrialSwordmancySimplified';
+import type {
+  SimplifiedStrategyResult,
+  StrategyEvalResult,
+} from './EndfieldTrialSwordmancySimplified';
 import {
   getCurrentAdvice,
   clearSolverCache,
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
   DEFAULT_DECK_CONFIG_DATE,
+  MAX_DRAWS,
 } from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, ExpectedUtilityParams } from './EndfieldTrialSwordmancySolver';
 
@@ -805,9 +981,6 @@ const { isMobile } = useResponsive();
 const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
 
 const tourOpen = ref(false);
-
-/** 最多抽取张数 */
-const MAX_DRAWS = 5;
 
 /** 各铭牌点数数量配置 */
 interface PlaqueConfig {
@@ -1062,6 +1235,114 @@ function setEuParams(af: number, fp: number) {
 function isEuPresetActive(af: number, fp: number): boolean {
   return aversionFactor.value === af && fixedPenalty.value === fp;
 }
+
+/** 简化策略穷举对比结果 */
+const simplifiedStrategyResult = ref<SimplifiedStrategyResult | null>(null);
+const solverLoading = ref(false);
+
+function computeSimplifiedStrategy() {
+  const deck = debouncedDeckConfig.value;
+  const rewards = rewardValues.value;
+  if (deck.some((c) => c < 0) || rewards.length === 0) {
+    simplifiedStrategyResult.value = null;
+    solverLoading.value = false;
+    return;
+  }
+  simplifiedStrategyResult.value = evaluateAllSimplifiedStrategies(deck, rewards, euParams.value);
+  solverLoading.value = false;
+}
+
+// debouncedDeckConfig 已经防抖，变化时无需额外等待
+// immediate: true 用于初始化时立刻计算
+watch(
+  debouncedDeckConfig,
+  () => {
+    solverLoading.value = true;
+    computeSimplifiedStrategy();
+  },
+  { immediate: true },
+);
+
+// rewardValues / euParams 变化时防抖 300ms
+let simplifiedStrategyTimer: ReturnType<typeof setTimeout> | undefined;
+watch([rewardValues, euParams], () => {
+  if (simplifiedStrategyTimer) clearTimeout(simplifiedStrategyTimer);
+  solverLoading.value = true;
+  simplifiedStrategyTimer = setTimeout(computeSimplifiedStrategy, 300);
+});
+
+/** 从 allStrategies 中找出奖励期望最大的策略 */
+const rewardMaximizingStrategy = computed<StrategyEvalResult | null>(() => {
+  const result = simplifiedStrategyResult.value;
+  if (!result || result.allStrategies.length === 0) return null;
+  let best = result.allStrategies[0]!;
+  for (const s of result.allStrategies) {
+    if (s.reward > best.reward) best = s;
+  }
+  return best;
+});
+
+/** 阈值标签提示文本映射 */
+const labelTipMap: Record<string, string> = {
+  期望效用结算阈值: '简化策略中期望效用最优的策略',
+  最大奖励结算阈值:
+    '简化策略中奖励期望最大的策略，不随期望效用模型改变，不能体现期望效用模型的效果',
+};
+
+/** 阈值表数据：期望效用行 + 最大奖励行 */
+const thresholdRowData = computed(() => {
+  const s = simplifiedStrategyResult.value?.optimalStrategy;
+  const r = rewardMaximizingStrategy.value;
+  if (!s || s.length < 4) return [];
+  const rows: { label: string; a3: number; a2: number; a1: number; a0: number }[] = [
+    { label: '期望效用结算阈值', a3: s[3], a2: s[2], a1: s[1], a0: s[0] },
+  ];
+  if (r && r.strategy.length >= 4) {
+    rows.push({
+      label: '最大奖励结算阈值',
+      a3: r.strategy[3],
+      a2: r.strategy[2],
+      a1: r.strategy[1],
+      a0: r.strategy[0],
+    });
+  }
+  return rows;
+});
+
+/** 全部组合表格行高亮 */
+function allStrategiesRowClassName({ row }: { row: any }): string {
+  if (row.isOptimal) return 'simplified-all-optimal-row';
+  return '';
+}
+
+/** 全部组合表格数据 */
+const allStrategiesTableData = computed(() => {
+  const result = simplifiedStrategyResult.value;
+  if (!result || result.allStrategies.length === 0) return [];
+  const { allStrategies, dpReward, dpEu, optimalStrategy } = result;
+
+  return allStrategies
+    .map((s) => ({
+      a3: s.strategy[3],
+      a2: s.strategy[2],
+      a1: s.strategy[1],
+      a0: s.strategy[0],
+      reward: s.reward,
+      eu: s.eu,
+      rewardDisplay: formatDecimal(s.reward),
+      euDisplay: formatDecimal(s.eu),
+      rewardRate: dpReward > 0 ? s.reward / dpReward : 0,
+      euRate: dpEu > 0 ? s.eu / dpEu : 0,
+      rewardRateDisplay: dpReward > 0 ? `${((s.reward / dpReward) * 100).toFixed(2)}%` : '—',
+      euRateDisplay: dpEu > 0 ? `${((s.eu / dpEu) * 100).toFixed(2)}%` : '—',
+      isOptimal:
+        s.strategy[0] === optimalStrategy[0] &&
+        s.strategy[1] === optimalStrategy[1] &&
+        s.strategy[2] === optimalStrategy[2] &&
+        s.strategy[3] === optimalStrategy[3],
+    }))
+    .sort((a, b) => b.eu - a.eu);
+});
 
 const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
 
@@ -1607,7 +1888,8 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
   .reward-card,
   .daily-card,
   .advice-card,
-  .distribution-card {
+  .distribution-card,
+  .simplified-strategy-card {
     :deep(.el-card__header) {
       padding: 12px 16px;
       font-weight: bold;
@@ -2039,11 +2321,11 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
 
   :deep(.distribution-row-highlight) {
     font-weight: bold;
-    background: var(--el-color-primary-light-9);
+    background: var(--el-color-primary-light-8);
   }
 
   :deep(.el-table__body .distribution-row-highlight:hover .el-table__cell) {
-    background: var(--el-color-primary-light-9);
+    background: var(--el-color-primary-light-8);
   }
 
   // ── 操作按钮 ──
@@ -2106,6 +2388,79 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  // ── 简化策略分析卡片 ──
+  .simplified-strategy-card {
+    margin-top: 16px;
+
+    .simplified-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .simplified-body-loading {
+      position: relative;
+      min-height: 100px;
+    }
+
+    .simplified-empty {
+      align-items: center;
+    }
+
+    .simplified-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .simplified-comp-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .simplified-comp-label {
+      min-width: 144px;
+      color: var(--el-text-color-secondary);
+    }
+
+    .threshold-label-wrap {
+      cursor: pointer;
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .threshold-info-icon {
+      font-size: 14px;
+      color: var(--el-color-info);
+    }
+
+    .simplified-comp-value {
+      min-width: 88px;
+      font-weight: bold;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .simplified-efficiency-row {
+      border-radius: 4px;
+      font-weight: bold;
+      background: var(--el-color-primary-light-8);
+    }
+
+    .simplified-all-optimal {
+      font-weight: bold;
+      color: var(--el-color-primary);
+    }
+
+    :deep(.simplified-all-optimal-row) {
+      font-weight: bold;
+      background-color: var(--el-color-primary-light-8) !important;
+    }
   }
 
   // ── 响应式：小屏幕 ──

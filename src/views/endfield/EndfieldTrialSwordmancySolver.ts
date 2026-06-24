@@ -138,7 +138,7 @@ const adviceMemoCache = new LRUCache<Map<string, DpResult>>(MAX_CACHED_CONFIGS);
  * @param s - 模位置
  * @returns 安全索引下的奖励值
  */
-function safeGetReward(rewards: number[], s: number): number {
+export function safeGetReward(rewards: number[], s: number): number {
   const idx = Math.min(Math.max(0, s), rewards.length - 1);
   return rewards[idx]!;
 }
@@ -151,7 +151,7 @@ function safeGetReward(rewards: number[], s: number): number {
  * @param params - 期望效用参数（可选）
  * @returns 调整后的奖励值
  */
-function computeEuReward(
+export function computeEuReward(
   rawReward: number,
   drawnValue: number,
   modValue: number,
@@ -256,7 +256,6 @@ export function getCurrentAdvice(
   euParams?: ExpectedUtilityParams,
 ): AdviceResult | null {
   const modValue = rewards.length;
-  const maxDraws = 5;
 
   if (
     drawnCounts.length !== 5 ||
@@ -279,7 +278,7 @@ export function getCurrentAdvice(
   const deckInit = [...deck];
 
   const drawn = drawnCounts.reduce((a, b) => a + b, 0);
-  if (drawn > maxDraws) return null;
+  if (drawn > MAX_DRAWS) return null;
 
   const drawnValue = drawnCounts.reduce((sum, count, i) => sum + count * (i + 1), 0);
   const slotIndex = ((drawnValue % modValue) + modValue) % modValue;
@@ -419,7 +418,7 @@ export function getCurrentAdvice(
     let drawAbandonProb = 0;
     let euRoundDraw = 0;
     let rewardRoundDraw = 0;
-    if (roundDrawn < maxDraws && remainingCount > 0) {
+    if (roundDrawn < MAX_DRAWS && remainingCount > 0) {
       euDraw = 0;
       rewardDraw = 0;
       for (let i = 0; i < 5; i++) {
@@ -499,7 +498,7 @@ export function getCurrentAdvice(
     // 决策基于 EU 调整值
     const actionCandidates: { action: string; value: number }[] = [];
 
-    if (roundDrawn < maxDraws && remainingCount > 0) {
+    if (roundDrawn < MAX_DRAWS && remainingCount > 0) {
       actionCandidates.push({ action: 'draw', value: euDraw });
     }
     if (roundDrawn > 0 && roundDrawn < 3 && M === 1 && D > 0) {
@@ -585,7 +584,7 @@ export function getCurrentAdvice(
     A,
   );
 
-  const canDrawFurther = drawn < maxDraws && totalRemaining > 0;
+  const canDrawFurther = drawn < MAX_DRAWS && totalRemaining > 0;
   const canDoubleNow = drawn > 0 && drawn < 3 && !doubled && D > 0;
 
   // 原始奖励期望（左列）
@@ -649,13 +648,16 @@ export function clearSolverCache(): void {
   adviceMemoCache.clear();
 }
 
+/** 每局最多抽牌张数 */
+export const MAX_DRAWS = 5;
+
 /** 默认奖励表（索引 = 战力点 0~10） */
 export const DEFAULT_REWARDS: number[] = [
   0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000,
 ];
 
 /** 默认铭牌库配置（各等级张数） */
-export const DEFAULT_DECK_CONFIG: number[] = [3, 7, 7, 7, 5];
+export const DEFAULT_DECK_CONFIG: number[] = [6, 6, 9, 4, 3];
 
 /** 默认铭牌库配置的更新日期（含时间） */
-export const DEFAULT_DECK_CONFIG_DATE = '2026-06-21 04:00';
+export const DEFAULT_DECK_CONFIG_DATE = '2026-06-24 04:00';

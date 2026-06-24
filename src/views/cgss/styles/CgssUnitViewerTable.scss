@@ -8,7 +8,7 @@
     --el-table-header-text-color: var(--el-text-color-regular);
 
     .skill-motif,
-    .skill-symphony,
+    .skill-spike,
     .skill-refrain,
     .skill-dominant,
     .skill-mutual,
@@ -108,16 +108,6 @@
       }
     }
 
-    html.dark {
-      .cgss-icon.icon-dark {
-        filter: brightness(0.4);
-
-        &.icon-season-limited {
-          filter: brightness(0.675);
-        }
-      }
-    }
-
     .icon-season-limited-cute {
       box-shadow: 0 0 12px 8px var(--im-color-cg-cute);
     }
@@ -129,6 +119,15 @@
     .icon-season-limited-passion {
       box-shadow: 0 0 12px 8px var(--im-color-cg-passion);
     }
+  }
+}
+
+/**
+ * 暗色模式样式
+ */
+@mixin cgss-table-styles-dark {
+  .cgss-icon.icon-dark {
+    filter: brightness(0.4);
   }
 }
 
