@@ -749,10 +749,14 @@
                   "
                 >
                   <el-alert type="info" :closable="false" show-icon>
+                    简化策略：<br />
                     1. 能翻倍就翻倍<br />
                     2. 参考下表，根据当前剩余的放弃次数，找到结算阈值<br />
-                    3.1 持续抽牌，点数达到或超过阈值时立即结算<br />
-                    3.2 已经抽满仍不满足条件，则放弃（没有放弃机会时结算）
+                    3.1. 持续抽牌，每次抽牌后点数达到或超过阈值时立即结算<br />
+                    3.2. 已经抽满仍不满足条件，则放弃（没有放弃机会时结算）<br />
+                    <br />
+                    期望效用结算阈值：最大化期望效用<br />
+                    最大奖励结算阈值：只选出简化策略中实际奖励最大的，不随期望效用模型改变
                   </el-alert>
                   <el-table
                     :data="thresholdRowData"
@@ -761,27 +765,29 @@
                     :cell-class-name="thresholdCellClassName"
                     :header-cell-class-name="thresholdCellClassName"
                   >
-                    <el-table-column label="剩余放弃" width="80">
-                      <template #default>
-                        <span class="simplified-comp-label" style="min-width: unset">结算阈值</span>
+                    <el-table-column label="结算阈值" width="140">
+                      <template #default="{ row }">
+                        <span class="simplified-comp-label" style="min-width: unset">{{
+                          row.label
+                        }}</span>
                       </template>
                     </el-table-column>
-                    <el-table-column label="3 次" prop="a3" align="center">
+                    <el-table-column label="3 次" prop="a3" align="center" min-width="16">
                       <template #default="{ row }">
                         {{ row.a3 }}
                       </template>
                     </el-table-column>
-                    <el-table-column label="2 次" prop="a2" align="center">
+                    <el-table-column label="2 次" prop="a2" align="center" min-width="16">
                       <template #default="{ row }">
                         {{ row.a2 }}
                       </template>
                     </el-table-column>
-                    <el-table-column label="1 次" prop="a1" align="center">
+                    <el-table-column label="1 次" prop="a1" align="center" min-width="16">
                       <template #default="{ row }">
                         {{ row.a1 }}
                       </template>
                     </el-table-column>
-                    <el-table-column label="0 次" prop="a0" align="center">
+                    <el-table-column label="0 次" prop="a0" align="center" min-width="16">
                       <template #default="{ row }">
                         {{ row.a0 }}
                       </template>
@@ -825,7 +831,68 @@
                         formatDecimal(simplifiedStrategyResult.dpEu)
                       }}</span>
                     </div>
+                    <div v-if="rewardMaximizingStrategy" class="simplified-comp-row">
+                      <span class="simplified-comp-label">简化策略最大奖励</span>
+                      <span class="simplified-comp-value">{{
+                        formatDecimal(rewardMaximizingStrategy.reward)
+                      }}</span>
+                      <span v-if="showEuColumn" class="advice-sep">|</span>
+                      <span v-if="showEuColumn" class="simplified-comp-value"> - </span>
+                    </div>
                   </div>
+
+                  <el-collapse style="margin-top: 8px">
+                    <el-collapse-item title="查看全部组合">
+                      <el-table
+                        :data="allStrategiesTableData"
+                        size="small"
+                        style="width: 100%; font-size: 12px"
+                        :row-class-name="allStrategiesRowClassName"
+                        :default-sort="{ prop: 'eu', order: 'descending' }"
+                        height="400"
+                      >
+                        <el-table-column label="a3" prop="a3" width="60" sortable align="center" />
+                        <el-table-column label="a2" prop="a2" width="60" sortable align="center" />
+                        <el-table-column label="a1" prop="a1" width="60" sortable align="center" />
+                        <el-table-column label="a0" prop="a0" width="60" sortable align="center" />
+                        <el-table-column label="奖励期望" prop="reward" sortable align="right">
+                          <template #default="{ row }">
+                            <span :class="{ 'simplified-all-optimal': row.isOptimal }">{{
+                              row.rewardDisplay
+                            }}</span>
+                          </template>
+                        </el-table-column>
+                        <el-table-column
+                          v-if="showEuColumn"
+                          label="期望效用"
+                          prop="eu"
+                          sortable
+                          align="right"
+                        >
+                          <template #default="{ row }">
+                            <span :class="{ 'simplified-all-optimal': row.isOptimal }">{{
+                              row.euDisplay
+                            }}</span>
+                          </template>
+                        </el-table-column>
+                        <el-table-column
+                          label="奖励比例"
+                          prop="rewardRateDisplay"
+                          sortable
+                          align="right"
+                          width="130"
+                        />
+                        <el-table-column
+                          v-if="showEuColumn"
+                          label="效用比例"
+                          prop="euRateDisplay"
+                          sortable
+                          align="right"
+                          width="130"
+                        />
+                      </el-table>
+                    </el-collapse-item>
+                  </el-collapse>
                 </template>
                 <el-empty
                   v-else-if="!solverLoading"
@@ -891,7 +958,10 @@ import { reactive, ref, computed, watch } from 'vue';
 import { useResponsive } from '@/composables/useResponsive';
 
 import { evaluateAllSimplifiedStrategies } from './EndfieldTrialSwordmancySimplified';
-import type { SimplifiedStrategyResult } from './EndfieldTrialSwordmancySimplified';
+import type {
+  SimplifiedStrategyResult,
+  StrategyEvalResult,
+} from './EndfieldTrialSwordmancySimplified';
 import {
   getCurrentAdvice,
   clearSolverCache,
@@ -1196,11 +1266,35 @@ watch([rewardValues, euParams], () => {
   simplifiedStrategyTimer = setTimeout(computeSimplifiedStrategy, 300);
 });
 
-/** 转置后的阈值表数据：单行对象，列={a3,a2,a1,a0} */
+/** 从 allStrategies 中找出奖励期望最大的策略 */
+const rewardMaximizingStrategy = computed<StrategyEvalResult | null>(() => {
+  const result = simplifiedStrategyResult.value;
+  if (!result || result.allStrategies.length === 0) return null;
+  let best = result.allStrategies[0]!;
+  for (const s of result.allStrategies) {
+    if (s.reward > best.reward) best = s;
+  }
+  return best;
+});
+
+/** 阈值表数据：期望效用行 + 最大奖励行 */
 const thresholdRowData = computed(() => {
   const s = simplifiedStrategyResult.value?.optimalStrategy;
+  const r = rewardMaximizingStrategy.value;
   if (!s || s.length < 4) return [];
-  return [{ a3: s[3], a2: s[2], a1: s[1], a0: s[0] }];
+  const rows: { label: string; a3: number; a2: number; a1: number; a0: number }[] = [
+    { label: '期望效用结算阈值', a3: s[3], a2: s[2], a1: s[1], a0: s[0] },
+  ];
+  if (r && r.strategy.length >= 4) {
+    rows.push({
+      label: '最大奖励结算阈值',
+      a3: r.strategy[3],
+      a2: r.strategy[2],
+      a1: r.strategy[1],
+      a0: r.strategy[0],
+    });
+  }
+  return rows;
 });
 
 /** 高亮当前剩余放弃次数对应的列 */
@@ -1212,6 +1306,41 @@ function thresholdCellClassName({ column }: { column: any }): string {
   }
   return '';
 }
+
+/** 全部组合表格行高亮 */
+function allStrategiesRowClassName({ row }: { row: any }): string {
+  if (row.isOptimal) return 'simplified-all-optimal-row';
+  return '';
+}
+
+/** 全部组合表格数据 */
+const allStrategiesTableData = computed(() => {
+  const result = simplifiedStrategyResult.value;
+  if (!result || result.allStrategies.length === 0) return [];
+  const { allStrategies, dpReward, dpEu, optimalStrategy } = result;
+
+  return allStrategies
+    .map((s) => ({
+      a3: s.strategy[3],
+      a2: s.strategy[2],
+      a1: s.strategy[1],
+      a0: s.strategy[0],
+      reward: s.reward,
+      eu: s.eu,
+      rewardDisplay: formatDecimal(s.reward),
+      euDisplay: formatDecimal(s.eu),
+      rewardRate: dpReward > 0 ? s.reward / dpReward : 0,
+      euRate: dpEu > 0 ? s.eu / dpEu : 0,
+      rewardRateDisplay: dpReward > 0 ? `${((s.reward / dpReward) * 100).toFixed(2)}%` : '—',
+      euRateDisplay: dpEu > 0 ? `${((s.eu / dpEu) * 100).toFixed(2)}%` : '—',
+      isOptimal:
+        s.strategy[0] === optimalStrategy[0] &&
+        s.strategy[1] === optimalStrategy[1] &&
+        s.strategy[2] === optimalStrategy[2] &&
+        s.strategy[3] === optimalStrategy[3],
+    }))
+    .sort((a, b) => b.eu - a.eu);
+});
 
 const activeDrawCount = computed(() => drawnCards.value.filter(Boolean).length);
 
@@ -2303,14 +2432,20 @@ const decisionPrefix = computed(() => (showEuColumn.value ? '期望效用模型�
       text-align: right;
     }
 
-    .simplified-comp-header {
-      color: var(--el-text-color-secondary);
-    }
-
     .simplified-efficiency-row {
       border-radius: 4px;
       font-weight: bold;
       background: var(--el-color-primary-light-8);
+    }
+
+    .simplified-all-optimal {
+      font-weight: bold;
+      color: var(--el-color-primary);
+    }
+
+    :deep(.simplified-all-optimal-row) {
+      font-weight: bold;
+      background-color: var(--el-color-primary-light-8) !important;
     }
   }
 
