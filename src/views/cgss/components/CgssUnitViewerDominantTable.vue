@@ -1,5 +1,5 @@
 <template>
-  <div class="cgss-unit-viewer-dominant-table">
+  <div class="cgss-unit-viewer-dominant-table" :class="{ 'is-dark': isDark }">
     <div id="unit-dominant" class="unit-title" style="font-weight: bold">双色 Dominant</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
@@ -165,6 +165,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDark } from '@vueuse/core';
 import { ref, computed, watch, toRef } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
@@ -228,6 +229,9 @@ const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
 // 组合式函数：季节限定卡池判断
 const { isSeasonLimitedCard } = useSeasonLimited();
+
+// 组合式函数：暗色模式
+const isDark = useDark();
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
@@ -507,6 +511,12 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 
   :deep() {
     @include table.cgss-table-styles;
+  }
+
+  &.is-dark {
+    :deep() {
+      @include table.cgss-table-styles-dark;
+    }
   }
 }
 </style>

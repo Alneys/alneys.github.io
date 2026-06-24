@@ -1,5 +1,5 @@
 <template>
-  <div class="cgss-unit-viewer-resonance-table">
+  <div class="cgss-unit-viewer-resonance-table" :class="{ 'is-dark': isDark }">
     <div id="unit-resonance" class="unit-title" style="font-weight: bold">共鸣 Resonance</div>
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDark } from '@vueuse/core';
 import { ref, computed, watch, toRef } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
@@ -145,6 +146,9 @@ const { isMobile, isSmallScreen } = useResponsive();
 
 // 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
 const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
+
+// 组合式函数：暗色模式
+const isDark = useDark();
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('specialize');
@@ -311,6 +315,12 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 
   :deep() {
     @include table.cgss-table-styles;
+  }
+
+  &.is-dark {
+    :deep() {
+      @include table.cgss-table-styles-dark;
+    }
   }
 }
 </style>
