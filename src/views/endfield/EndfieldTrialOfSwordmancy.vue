@@ -898,6 +898,7 @@ import {
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
   DEFAULT_DECK_CONFIG_DATE,
+  MAX_DRAWS,
 } from './EndfieldTrialSwordmancySolver';
 import type { AdviceResult, ExpectedUtilityParams } from './EndfieldTrialSwordmancySolver';
 
@@ -905,9 +906,6 @@ const { isMobile } = useResponsive();
 const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
 
 const tourOpen = ref(false);
-
-/** 最多抽取张数 */
-const MAX_DRAWS = 5;
 
 /** 各铭牌点数数量配置 */
 interface PlaqueConfig {

@@ -18,6 +18,7 @@ import {
   getCurrentAdvice,
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
+  MAX_DRAWS,
 } from './EndfieldTrialSwordmancySolver';
 
 /** 单个简化策略的评估结果 */
@@ -49,9 +50,6 @@ export interface SimplifiedStrategyResult {
   /** 所有 70 种组合的完整结果 */
   allStrategies: StrategyEvalResult[];
 }
-
-/** 最大抽牌张数 */
-const MAX_DRAWS = 5;
 
 /**
  * 生成所有合法的简化策略阈值组合
@@ -98,11 +96,11 @@ function evaluateSimplifiedStrategy(
    * DFS 递归评估当前状态
    *
    * @param r1~r5 - 牌组各等级剩余张数
-   * @param P_rem - 剩余结算次数
-   * @param D_rem - 剩余翻倍次数
-   * @param A_rem - 剩余放弃次数
+   * @param P - 剩余结算次数
+   * @param D - 剩余翻倍次数
+   * @param A - 剩余放弃次数
    * @param roundDrawn - 本局已抽张数
-   * @param roundPoints - 本局已抽点数之和
+   * @param drawnValue - 本局已抽点数之和
    * @param M - 本局倍率 (1 或 2)
    */
   function evaluate(
@@ -111,19 +109,19 @@ function evaluateSimplifiedStrategy(
     r3: number,
     r4: number,
     r5: number,
-    P_rem: number,
-    D_rem: number,
-    A_rem: number,
+    P: number,
+    D: number,
+    A: number,
     roundDrawn: number,
-    roundPoints: number,
+    drawnValue: number,
     M: number,
   ): { eu: number; reward: number } {
     // 无剩余次数 → 期望为 0
-    if (P_rem === 0) {
+    if (P === 0) {
       return { eu: 0, reward: 0 };
     }
 
-    const key = `${r1},${r2},${r3},${r4},${r5},${P_rem},${D_rem},${A_rem},${roundDrawn},${roundPoints},${M}`;
+    const key = `${r1},${r2},${r3},${r4},${r5},${P},${D},${A},${roundDrawn},${drawnValue},${M}`;
     const cached = memo.get(key);
     if (cached !== undefined) return cached;
 
@@ -136,7 +134,7 @@ function evaluateSimplifiedStrategy(
       // === 开局：抽第一张牌，能翻倍则自动翻倍 ===
       let expectedEu = 0;
       let expectedReward = 0;
-      const newM = D_rem > 0 ? 2 : 1;
+      const newM = D > 0 ? 2 : 1;
 
       for (let i = 0; i < 5; i++) {
         const cnt = remainingCards[i]!;
@@ -148,9 +146,9 @@ function evaluateSimplifiedStrategy(
             i === 2 ? r3 - 1 : r3,
             i === 3 ? r4 - 1 : r4,
             i === 4 ? r5 - 1 : r5,
-            P_rem,
-            D_rem,
-            A_rem,
+            P,
+            D,
+            A,
             1,
             i + 1,
             newM,
@@ -162,18 +160,18 @@ function evaluateSimplifiedStrategy(
       result = { eu: expectedEu, reward: expectedReward };
     } else {
       // === 已抽牌：检查阈值 → 结算/放弃/继续 ===
-      const slotIndex = ((roundPoints % modValue) + modValue) % modValue;
+      const slotIndex = ((drawnValue % modValue) + modValue) % modValue;
       const rawReward = safeGetReward(rewards, slotIndex);
-      const adjReward = computeEuReward(rawReward, roundPoints, modValue, euParams);
-      const threshold = a[A_rem]!;
+      const adjustedReward = computeEuReward(rawReward, drawnValue, modValue, euParams);
+      const threshold = a[A]!;
 
       const shouldStop = slotIndex >= threshold;
       const isBust = roundDrawn >= MAX_DRAWS || remainingCount === 0;
 
       if (shouldStop) {
         // 立即结算
-        const nextP = P_rem - 1;
-        const nextD = M === 2 ? D_rem - 1 : D_rem;
+        const nextP = P - 1;
+        const nextD = M === 2 ? D - 1 : D;
         const nextEval = evaluate(
           deckInit[0]!,
           deckInit[1]!,
@@ -182,17 +180,17 @@ function evaluateSimplifiedStrategy(
           deckInit[4]!,
           nextP,
           nextD,
-          A_rem,
+          A,
           0,
           0,
           1,
         );
         result = {
-          eu: adjReward * M + nextEval.eu,
+          eu: adjustedReward * M + nextEval.eu,
           reward: rawReward * M + nextEval.reward,
         };
       } else if (isBust) {
-        if (A_rem > 0) {
+        if (A > 0) {
           // 放弃（重置牌组，不消耗结算和翻倍次数）
           const nextEval = evaluate(
             deckInit[0]!,
@@ -200,9 +198,9 @@ function evaluateSimplifiedStrategy(
             deckInit[2]!,
             deckInit[3]!,
             deckInit[4]!,
-            P_rem,
-            D_rem,
-            A_rem - 1,
+            P,
+            D,
+            A - 1,
             0,
             0,
             1,
@@ -210,8 +208,8 @@ function evaluateSimplifiedStrategy(
           result = nextEval;
         } else {
           // 无放弃次数 → 强制结算
-          const nextP = P_rem - 1;
-          const nextD = M === 2 ? D_rem - 1 : D_rem;
+          const nextP = P - 1;
+          const nextD = M === 2 ? D - 1 : D;
           const nextEval = evaluate(
             deckInit[0]!,
             deckInit[1]!,
@@ -226,7 +224,7 @@ function evaluateSimplifiedStrategy(
             1,
           );
           result = {
-            eu: adjReward * M + nextEval.eu,
+            eu: adjustedReward * M + nextEval.eu,
             reward: rawReward * M + nextEval.reward,
           };
         }
@@ -244,11 +242,11 @@ function evaluateSimplifiedStrategy(
               i === 2 ? r3 - 1 : r3,
               i === 3 ? r4 - 1 : r4,
               i === 4 ? r5 - 1 : r5,
-              P_rem,
-              D_rem,
-              A_rem,
+              P,
+              D,
+              A,
               roundDrawn + 1,
-              roundPoints + i + 1,
+              drawnValue + i + 1,
               M,
             );
             expectedEu += prob * child.eu;

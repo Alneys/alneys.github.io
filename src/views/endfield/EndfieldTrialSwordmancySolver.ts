@@ -256,7 +256,6 @@ export function getCurrentAdvice(
   euParams?: ExpectedUtilityParams,
 ): AdviceResult | null {
   const modValue = rewards.length;
-  const maxDraws = 5;
 
   if (
     drawnCounts.length !== 5 ||
@@ -279,7 +278,7 @@ export function getCurrentAdvice(
   const deckInit = [...deck];
 
   const drawn = drawnCounts.reduce((a, b) => a + b, 0);
-  if (drawn > maxDraws) return null;
+  if (drawn > MAX_DRAWS) return null;
 
   const drawnValue = drawnCounts.reduce((sum, count, i) => sum + count * (i + 1), 0);
   const slotIndex = ((drawnValue % modValue) + modValue) % modValue;
@@ -419,7 +418,7 @@ export function getCurrentAdvice(
     let drawAbandonProb = 0;
     let euRoundDraw = 0;
     let rewardRoundDraw = 0;
-    if (roundDrawn < maxDraws && remainingCount > 0) {
+    if (roundDrawn < MAX_DRAWS && remainingCount > 0) {
       euDraw = 0;
       rewardDraw = 0;
       for (let i = 0; i < 5; i++) {
@@ -499,7 +498,7 @@ export function getCurrentAdvice(
     // 决策基于 EU 调整值
     const actionCandidates: { action: string; value: number }[] = [];
 
-    if (roundDrawn < maxDraws && remainingCount > 0) {
+    if (roundDrawn < MAX_DRAWS && remainingCount > 0) {
       actionCandidates.push({ action: 'draw', value: euDraw });
     }
     if (roundDrawn > 0 && roundDrawn < 3 && M === 1 && D > 0) {
@@ -585,7 +584,7 @@ export function getCurrentAdvice(
     A,
   );
 
-  const canDrawFurther = drawn < maxDraws && totalRemaining > 0;
+  const canDrawFurther = drawn < MAX_DRAWS && totalRemaining > 0;
   const canDoubleNow = drawn > 0 && drawn < 3 && !doubled && D > 0;
 
   // 原始奖励期望（左列）
@@ -648,6 +647,9 @@ export function getCurrentAdvice(
 export function clearSolverCache(): void {
   adviceMemoCache.clear();
 }
+
+/** 每局最多抽牌张数 */
+export const MAX_DRAWS = 5;
 
 /** 默认奖励表（索引 = 战力点 0~10） */
 export const DEFAULT_REWARDS: number[] = [
