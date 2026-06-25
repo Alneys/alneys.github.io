@@ -4,10 +4,16 @@
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
         <el-switch v-model="showExtraColumns" active-text="额外技能" />
-        <el-switch v-model="showOverloadOverdrive" active-text="显示过载/超载列" />
-        <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
+        <el-switch v-model="showAlternateMutual" active-text="变换/交互列" />
+        <el-switch v-model="showOverload" active-text="过载列" />
+        <el-switch v-model="showOverdrive" active-text="超载列" />
         <el-switch v-model="showSpecializeNotMatch" active-text="显示所有偏科" />
-        <el-switch v-model="showAllAttributePairs" active-text="显示所有属性组合" />
+      </div>
+      <div>
+        <el-switch v-model="showAllAttributePairs" active-text="显示所有双色属性组合" />
+        <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
+      </div>
+      <div>
         <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
       </div>
     </div>
@@ -83,8 +89,10 @@
           <el-table-column
             v-if="
               (!headerItem.extraColumn || showExtraColumns) &&
-              ((headerItem.skill !== 'overload' && headerItem.skill !== 'overdrive') ||
-                showOverloadOverdrive) &&
+              (headerItem.skill !== 'overload' || showOverload) &&
+              (headerItem.skill !== 'overdrive' || showOverdrive) &&
+              ((headerItem.skill !== 'alternate' && headerItem.skill !== 'mutual') ||
+                showAlternateMutual) &&
               (!showSortRelatedSkillsOnly ||
                 currentSortField === 'tw' ||
                 !headerItem.attribute ||
@@ -213,7 +221,9 @@ const emit = defineEmits<{
 const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
 
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
-const showOverloadOverdrive = defineModel<boolean>('showOverloadOverdrive', { default: false });
+const showAlternateMutual = defineModel<boolean>('showAlternateMutual', { default: true });
+const showOverload = defineModel<boolean>('showOverload', { default: true });
+const showOverdrive = defineModel<boolean>('showOverdrive', { default: true });
 const showSpecializeNotMatch = defineModel<boolean>('showSpecializeNotMatch', { default: false });
 const showAllAttributePairs = defineModel<boolean>('showAllAttributePairs', { default: false });
 const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnly', {

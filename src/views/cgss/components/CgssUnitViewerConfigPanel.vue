@@ -78,7 +78,7 @@ const clickActionOptions = [
 
 // 名字筛选数据
 const nameFilterDataList = nameFilterData;
-const selectedFilterIndex = ref<number>();
+const selectedFilterIndex = ref<number>(0);
 
 // 标志：是否已经自动加载过卡片状态
 const hasAutoLoadedCardStatus = ref(false);
