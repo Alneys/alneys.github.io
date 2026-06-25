@@ -274,6 +274,16 @@ export const tableDominantColumnHeader: ColumnHeader[] = [
     param: 'target_param_2',
     extraColumn: true,
   },
+  {
+    prop: 'motif',
+    labelCn: '共鸣',
+    labelEn: 'resonance motif',
+    skill: 'motif',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    minWidth: 150,
+    extraColumn: true,
+  },
 ];
 
 // ---------- 阈值常量 ----------

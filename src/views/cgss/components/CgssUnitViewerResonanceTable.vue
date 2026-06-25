@@ -58,7 +58,7 @@
             :label="
               showSimpleLabels ? headerItem.labelCn : `${headerItem.labelCn} ${headerItem.labelEn}`
             "
-            :class-name="`icons skill-${headerItem.prop}`"
+            :class-name="`icons skill-${headerItem.skill ?? headerItem.prop}`"
             :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
           >
             <template #default="scope">
@@ -315,6 +315,12 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 
   :deep() {
     @include table.cgss-table-styles;
+
+    .skill-motif,
+    .skill-synergy,
+    .skill-spike {
+      background-color: var(--el-fill-color-lighter);
+    }
   }
 
   &.is-dark {

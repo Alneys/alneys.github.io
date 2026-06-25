@@ -511,6 +511,13 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 
   :deep() {
     @include table.cgss-table-styles;
+
+    .skill-dominant,
+    .skill-mutual,
+    .skill-overdrive,
+    .skill-cboost {
+      background-color: var(--el-fill-color-lighter);
+    }
   }
 
   &.is-dark {

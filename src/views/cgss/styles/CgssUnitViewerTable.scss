@@ -7,16 +7,6 @@
   .el-table {
     --el-table-header-text-color: var(--el-text-color-regular);
 
-    .skill-motif,
-    .skill-synergy,
-    .skill-spike,
-    .skill-dominant,
-    .skill-mutual,
-    .skill-overdrive,
-    .skill-cboost {
-      background-color: var(--el-fill-color-lighter);
-    }
-
     .el-table__cell {
       padding: 2px 0;
     }
