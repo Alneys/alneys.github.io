@@ -60,7 +60,7 @@
       margin: 0;
 
       &.icon-specialize-not-match {
-        scale: 0.8;
+        scale: 0.7;
         margin: 0;
       }
 
@@ -70,28 +70,28 @@
       }
 
       &.icon-extra.icon-specialize-not-match {
-        scale: 0.8;
+        scale: 0.7;
         margin: 0;
       }
     }
 
     .icon-filter-not-match {
-      scale: 0.375;
-      margin: 0;
+      scale: 0.25;
+      margin: -16px;
 
       &.icon-specialize-not-match {
-        scale: 0.375;
-        margin: 0;
+        scale: 0.25;
+        margin: -16px;
       }
 
       &.icon-extra {
-        scale: 0.375;
-        margin: -12px;
+        scale: 0.25;
+        margin: -16px;
       }
 
       &.icon-extra.icon-specialize-not-match {
-        scale: 0.375;
-        margin: -12px;
+        scale: 0.25;
+        margin: -16px;
       }
     }
 
