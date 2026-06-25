@@ -4,9 +4,19 @@
       <div class="tooltip-card font-jp">
         <span v-if="card.title">{{ `[${card.title}] ${card.name}` || '?' }}</span>
         <br />
+        <template v-if="card.skill?.type === 'dominant'">
+          <span
+            v-if="card.leaderSkill.params?.target_attribute_2"
+            :class="`color-cg-${card.leaderSkill.params?.target_attribute_2.toLowerCase()} is-bold`"
+          >
+            {{ card.leaderSkill.params?.target_attribute_2 || '?' }}
+          </span>
+          /
+        </template>
         <span v-if="card.attribute" :class="`color-cg-${card.attribute.toLowerCase()} is-bold`">
           {{ card.attribute || '?' }}
         </span>
+
         <br />
         <span
           :class="`color-cg-vocal ${isVocalBold ? 'is-bold' : ''} ${props.isVocalUnderlined ? 'is-underline' : ''}`"
