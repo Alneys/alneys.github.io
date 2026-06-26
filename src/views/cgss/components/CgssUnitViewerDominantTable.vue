@@ -155,8 +155,8 @@
                 </CgssUnitViewerCardTooltip>
                 <div
                   v-if="
-                    !showSpecializeNotMatch &&
-                    (scope.row[headerItem.prop].length === 0 ||
+                    scope.row[headerItem.prop].length === 0 ||
+                    (!showSpecializeNotMatch &&
                       scope.row[headerItem.prop][0].card.stats[scope.row[headerItem.param ?? '']] <=
                         DOMINANT_PARAM_THRESHOLD_SPECIALIZE)
                   "
