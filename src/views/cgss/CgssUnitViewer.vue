@@ -22,7 +22,7 @@
         ref="resonanceTableRef"
         v-model:table-data="resonanceTableData"
         v-model:show-extra-columns="switchShowExtraColumnsResonance"
-        :skill-data="skillData"
+        :original-data="originalData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
@@ -41,7 +41,7 @@
         v-model:show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
         v-model:show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
         v-model:highlight-season-limited="switchHighlightSeasonLimited"
-        :skill-data="skillData"
+        :original-data="originalData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
@@ -82,7 +82,7 @@ const { inputNameFilter } = useCardFilter();
 const { toggleAllBrightness: toggleAll, setBrightnessByCids } = useCardBrightness();
 const { data, loading, error, loadData } = useCardSkillData();
 
-const skillData = ref<CgssCardSkillTableItem[] | null>(null);
+const originalData = ref<CgssCardSkillTableItem[] | null>(null);
 
 const switchClickIconAction = ref('None');
 const switchNameFilter = ref(false);
@@ -118,7 +118,7 @@ const handleIconClick = (payload: { row: TableDataRow; column: string; index: nu
 
 onMounted(async () => {
   await loadData();
-  skillData.value = data.value;
+  originalData.value = data.value;
 });
 </script>
 

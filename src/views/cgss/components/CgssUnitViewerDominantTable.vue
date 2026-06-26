@@ -205,7 +205,7 @@ import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
 
 // 传入属性
 const props = defineProps<{
-  skillData: CgssCardSkillTableItem[] | null;
+  originalData: CgssCardSkillTableItem[] | null;
   showSimpleLabels: boolean;
   clickIconAction: string;
   nameFilter: string;
@@ -439,7 +439,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
 };
 
 watch(
-  () => props.skillData,
+  () => props.originalData,
   (newData) => {
     if (newData) {
       tableData.value = initializeData(newData);
