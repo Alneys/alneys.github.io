@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
-import { ref, computed, watch, toRef } from 'vue';
+import { ref, shallowRef, computed, watch, toRef } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
 
@@ -129,15 +129,31 @@ const props = defineProps<{
   clickIconAction: string;
   nameFilter: string;
   showExtraTableConfig: boolean;
+  tableData?: TableDataRow[];
 }>();
 
 // 自定义事件
 const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
+  'update:tableData': [value: TableDataRow[]];
 }>();
 
-// 双向绑定
-const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
+// 双向绑定 — 使用 shallowRef 避免深层数组的深度代理开销
+const tableData = shallowRef<TableDataRow[]>(props.tableData ?? []);
+
+// 父 → 子 同步
+watch(
+  () => props.tableData,
+  (val) => {
+    if (val) tableData.value = val;
+  },
+  { immediate: true },
+);
+
+// 子 → 父 同步
+watch(tableData, (val) => {
+  emit('update:tableData', val);
+});
 
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
 

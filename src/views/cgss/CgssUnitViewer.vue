@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, useTemplateRef } from 'vue';
+import { ref, shallowRef, onMounted, useTemplateRef } from 'vue';
 
 import { type TableDataRow, type CgssCardSkillTableItem } from './CgssUnitViewerTypes';
 import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
@@ -98,8 +98,8 @@ const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
 
-const resonanceTableData = ref<TableDataRow[]>([]);
-const dominantTableData = ref<TableDataRow[]>([]);
+const resonanceTableData = shallowRef<TableDataRow[]>([]);
+const dominantTableData = shallowRef<TableDataRow[]>([]);
 
 const resonanceTableRef =
   useTemplateRef<InstanceType<typeof CgssUnitViewerResonanceTable>>('resonanceTableRef');
