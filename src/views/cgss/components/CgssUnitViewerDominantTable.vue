@@ -452,10 +452,15 @@ const tableDominantSpanMethod = ({
   }
 
   const rowSpan = tableDominantRowHeaderTw.length * (tableDominantRowHeaderAttribute.length - 1);
+  const halfRowSpan = rowSpan % 2 === 0 ? rowSpan / 2 : 1;
 
-  if ((columnIndex === 0 || columnIndex === 1) && currentSortField.value === column.property) {
-    if (rowIndex % rowSpan === 0) {
-      return [rowSpan, 1];
+  // 合并第 0 列（歌曲属性）和第 1 列（原属性）
+  if (columnIndex === 0 || columnIndex === 1) {
+    // 排序列按 rowSpan 合并，另一列按 rowSpan / 2 合并
+    const span = currentSortField.value === column.property ? rowSpan : halfRowSpan;
+
+    if (rowIndex % span === 0) {
+      return [span, 1];
     }
     return [0, 0];
   }
