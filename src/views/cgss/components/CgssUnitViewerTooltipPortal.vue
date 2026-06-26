@@ -4,6 +4,9 @@
     virtual-triggering
     :visible="visible"
     placement="top"
+    popper-class="cgss-unit-viewer-card-tooltip"
+    @before-hide="emit('beforeHide')"
+    @hide="emit('hide')"
   >
     <template #content>
       <div v-if="card" class="tooltip-card font-jp">
@@ -71,6 +74,11 @@ const props = defineProps<{
   underlineProps: UnderlineProps;
 }>();
 
+const emit = defineEmits<{
+  beforeHide: [];
+  hide: [];
+}>();
+
 const totalStats = computed(() => {
   const { vocal, dance, visual } = props.card?.stats || { vocal: 0, dance: 0, visual: 0 };
   if (typeof vocal !== 'number' || typeof dance !== 'number' || typeof visual !== 'number') {
@@ -109,5 +117,9 @@ const isVisualBold = computed(() =>
 
 .is-underline {
   text-decoration: underline;
+}
+
+:global(.cgss-unit-viewer-card-tooltip) {
+  transition: opacity 0.3s var(--el-transition-function-fast-bezier);
 }
 </style>

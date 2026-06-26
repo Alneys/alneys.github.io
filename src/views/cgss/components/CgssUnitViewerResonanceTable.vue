@@ -99,6 +99,8 @@
       :card="tooltip.card.value"
       :trigger-element="tooltip.triggerElement.value"
       :underline-props="tooltip.underlineProps"
+      @before-hide="tooltip.onBeforeHide()"
+      @hide="tooltip.onHide()"
     />
   </div>
 </template>

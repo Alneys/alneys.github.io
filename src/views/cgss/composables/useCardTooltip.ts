@@ -24,6 +24,10 @@ export function useCardTooltip() {
     visual: false,
   });
 
+  let isHiding = false;
+
+  let pendingShow: (() => void) | null = null;
+
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let hideTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -31,32 +35,71 @@ export function useCardTooltip() {
     if (timer !== undefined) clearTimeout(timer);
   };
 
+  const onBeforeHide = () => {
+    isHiding = true;
+  };
+
+  const onHide = () => {
+    isHiding = false;
+    // hide 完成后，如果暂存了 show 请求则立即执行
+    if (pendingShow) {
+      pendingShow();
+      pendingShow = null;
+    }
+  };
+
   const show = (c: CgssCardSkillTableItem, el: HTMLElement, underlines: UnderlineProps) => {
     safeClearTimeout(hideTimer);
     safeClearTimeout(showTimer);
+
+    // 如果正在 before-hide → hide 区间内，暂存请求，等 hide 后再触发
+    if (isHiding) {
+      pendingShow = () => {
+        card.value = c;
+        triggerElement.value = el;
+        underlineProps.vocal = underlines.vocal;
+        underlineProps.dance = underlines.dance;
+        underlineProps.visual = underlines.visual;
+        showTimer = setTimeout(() => {
+          visible.value = true;
+        }, 100);
+      };
+      return;
+    }
+
     card.value = c;
     triggerElement.value = el;
     underlineProps.vocal = underlines.vocal;
     underlineProps.dance = underlines.dance;
     underlineProps.visual = underlines.visual;
-    // 640ms 延迟显示（替代 el-tooltip 的 show-after，受控模式下不生效）
     showTimer = setTimeout(() => {
       visible.value = true;
-    }, 640);
+    }, 300);
   };
 
   const hide = () => {
     safeClearTimeout(showTimer);
-    // 短暂延迟防止从图标移出时闪烁
+    safeClearTimeout(hideTimer);
     hideTimer = setTimeout(() => {
       visible.value = false;
-    }, 100);
+    }, 300);
   };
 
   const dispose = () => {
     safeClearTimeout(showTimer);
     safeClearTimeout(hideTimer);
+    pendingShow = null;
   };
 
-  return { visible, card, triggerElement, underlineProps, show, hide, dispose };
+  return {
+    visible,
+    card,
+    triggerElement,
+    underlineProps,
+    show,
+    hide,
+    dispose,
+    onBeforeHide,
+    onHide,
+  };
 }
