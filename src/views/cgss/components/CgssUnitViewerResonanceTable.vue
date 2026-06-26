@@ -10,7 +10,7 @@
       <el-table
         :data="tableData"
         style="width: 100%"
-        :max-height="isMobile ? 560 : 9999"
+        :max-height="isMobile ? 560 : undefined"
         border
         :span-method="tableResonanceSpanMethod"
         @sort-change="handleResonanceSortChange"

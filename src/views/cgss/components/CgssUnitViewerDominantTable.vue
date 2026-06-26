@@ -21,7 +21,7 @@
       <el-table
         :data="filteredTableData"
         style="width: 100%"
-        :max-height="isMobile ? 560 : 9999"
+        :max-height="isMobile ? 560 : undefined"
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
         :span-method="tableDominantSpanMethod"
