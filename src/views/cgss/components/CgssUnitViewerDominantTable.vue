@@ -293,6 +293,49 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
     });
   });
 
+  // 构建倒排索引：(skillType, twKey, attributeField, attributeValue) → 目标格子列表
+  type IndexEntry = { rowIndex: number; prop: string; paramField: string };
+  const invertedIndex = new Map<string, IndexEntry[]>();
+
+  result.forEach((row, rowIndex) => {
+    tableDominantColumnHeader.forEach((colDef) => {
+      if (colDef.skill === 'dominant') return;
+
+      const attrField = colDef.attribute;
+      const paramField = colDef.param;
+      if (!attrField || !paramField) return;
+
+      const attributeValue = row[attrField as keyof typeof row];
+      if (!attributeValue) return;
+
+      let twKey: string;
+      if (colDef.tw !== undefined) {
+        twKey = colDef.tw;
+      } else if (colDef.extraColumn) {
+        twKey = '*';
+      } else {
+        twKey = row.tw;
+      }
+
+      const key = `${colDef.skill}|${twKey}|${attrField}|${attributeValue}`;
+      if (!invertedIndex.has(key)) {
+        invertedIndex.set(key, []);
+      }
+      invertedIndex.get(key)?.push({ rowIndex, prop: colDef.prop, paramField });
+    });
+  });
+
+  // 为每个 skill 类型推导查找规则（从列头配置自动映射，维护一致）
+  const skillRules = new Map<string, { attrField: string; twKeyPattern: string }>();
+  tableDominantColumnHeader.forEach((colDef) => {
+    if (colDef.skill === 'dominant' || skillRules.has(colDef.skill)) return;
+    if (!colDef.attribute) return;
+    skillRules.set(colDef.skill, {
+      attrField: colDef.attribute,
+      twKeyPattern: colDef.tw !== undefined ? 'exact' : colDef.extraColumn ? 'wildcard' : 'row',
+    });
+  });
+
   // 遍历技能表数据
   data.forEach((item: CgssCardSkillTableItem) => {
     if (item.rarity !== 'ssr') return;
@@ -333,42 +376,31 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
         }
       }
     } else {
-      result.forEach((row, rowIndex) => {
-        tableDominantColumnHeader.forEach((colDef) => {
-          if (colDef.skill === 'dominant') return;
+      const skillType = item.skill.type.startsWith('psb_') ? 'psb_' : item.skill.type;
+      const rule = skillRules.get(skillType);
+      if (!rule) return;
 
-          if (colDef.skill === 'psb_') {
-            if (!item.skill.type.startsWith(colDef.skill)) return;
-          } else {
-            if (colDef.skill !== item.skill.type) return;
-          }
+      const cardTw = String(item.skill.params.tw);
+      const twKey =
+        rule.twKeyPattern === 'exact' ? cardTw : rule.twKeyPattern === 'row' ? cardTw + 's' : '*';
 
-          if (colDef.tw !== undefined) {
-            if (String(item.skill.params.tw) !== colDef.tw) return;
-          } else {
-            if (String(item.skill.params.tw) + 's' !== row.tw && !colDef.extraColumn) return;
-          }
+      const key = `${skillType}|${twKey}|${rule.attrField}|${item.attribute.toLowerCase()}`;
+      const entries = invertedIndex.get(key);
+      if (!entries) return;
 
-          const attrField = colDef.attribute;
-          const paramField = colDef.param;
-          if (!attrField || !paramField) return;
+      for (const entry of entries) {
+        const targetRow = result[entry.rowIndex];
+        const targetParam = targetRow[entry.paramField as keyof typeof targetRow];
+        if (!targetParam) continue;
 
-          const targetAttr = row[attrField as keyof typeof row];
-          const targetParam = row[paramField as keyof typeof row];
+        const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
+        if (statValue < DOMINANT_PARAM_THRESHOLD_ADD) continue;
 
-          if (item.attribute.toLowerCase() !== targetAttr) return;
-          if (!targetParam) return;
-
-          const threshold = DOMINANT_PARAM_THRESHOLD_ADD;
-          const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
-          if (statValue < threshold) return;
-
-          const targetArray = result[rowIndex]?.[colDef.prop];
-          if (Array.isArray(targetArray)) {
-            targetArray.push(createCardDataItem(item));
-          }
-        });
-      });
+        const targetArray = result[entry.rowIndex]?.[entry.prop];
+        if (Array.isArray(targetArray)) {
+          targetArray.push(createCardDataItem(item));
+        }
+      }
     }
   });
 

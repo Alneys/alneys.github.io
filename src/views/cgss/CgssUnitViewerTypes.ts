@@ -289,7 +289,7 @@ export const tableDominantColumnHeader: ColumnHeader[] = [
 // ---------- 阈值常量 ----------
 
 /** Dominant 表参数阈值 - 全部  */
-export const DOMINANT_PARAM_THRESHOLD_ADD = 0;
+export const DOMINANT_PARAM_THRESHOLD_ADD = 5;
 /** Dominant 表参数阈值 - 特化  */
 export const DOMINANT_PARAM_THRESHOLD_SPECIALIZE = 5000;
 
