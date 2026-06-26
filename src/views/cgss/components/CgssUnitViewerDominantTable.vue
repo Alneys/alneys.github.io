@@ -77,7 +77,7 @@
           :sort-method="sortTableTw"
         >
           <template #default="scope">
-            <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
+            <span style="font-weight: bold">{{ scope.row.tw ? scope.row.tw + 's' : '' }}</span>
           </template>
         </el-table-column>
 
@@ -274,7 +274,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
                 const row: TableDataRow = {
                   target_attribute_2: attr2,
                   target_attribute: attr,
-                  tw: tw + 's',
+                  tw: tw,
                   target_param_2: param2,
                   target_param: param,
                   row: result.length,
@@ -382,7 +382,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
 
       const cardTw = String(item.skill.params.tw);
       const twKey =
-        rule.twKeyPattern === 'exact' ? cardTw : rule.twKeyPattern === 'row' ? cardTw + 's' : '*';
+        rule.twKeyPattern === 'exact' ? cardTw : rule.twKeyPattern === 'row' ? cardTw : '*';
 
       const key = `${skillType}|${twKey}|${rule.attrField}|${item.attribute.toLowerCase()}`;
       const entries = invertedIndex.get(key);

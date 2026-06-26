@@ -15,7 +15,7 @@ import {
 /** 创建 TableDataRow 的工厂函数 */
 const createRow = (props: Partial<TableDataRow>): TableDataRow => {
   return {
-    tw: '7s',
+    tw: '7',
     row: 0,
     ...props,
   } as TableDataRow;
@@ -59,23 +59,16 @@ const createCard = (props: Partial<CgssCardSkillTableItem>): CgssCardSkillTableI
 describe('sortTableTw', () => {
   describe('基本排序', () => {
     it('应按 tw 数值升序排序', () => {
-      const rowA = createRow({ tw: '9s', row: 1 });
-      const rowB = createRow({ tw: '7s', row: 2 });
+      const rowA = createRow({ tw: '9', row: 1 });
+      const rowB = createRow({ tw: '7', row: 2 });
 
       expect(sortTableTw(rowA, rowB)).toBeGreaterThan(0); // 9 > 7
       expect(sortTableTw(rowB, rowA)).toBeLessThan(0); // 7 < 9
     });
 
-    it('应正确处理不带 s 后缀的 tw 值', () => {
-      const rowA = createRow({ tw: '11', row: 1 });
-      const rowB = createRow({ tw: '7s', row: 2 });
-
-      expect(sortTableTw(rowA, rowB)).toBeGreaterThan(0); // 11 > 7
-    });
-
     it('tw 相同时应按 row 排序', () => {
-      const rowA = createRow({ tw: '7s', row: 2 });
-      const rowB = createRow({ tw: '7s', row: 1 });
+      const rowA = createRow({ tw: '7', row: 2 });
+      const rowB = createRow({ tw: '7', row: 1 });
 
       expect(sortTableTw(rowA, rowB)).toBeGreaterThan(0); // row 2 > row 1
       expect(sortTableTw(rowB, rowA)).toBeLessThan(0); // row 1 < row 2
@@ -85,7 +78,7 @@ describe('sortTableTw', () => {
   describe('边界情况', () => {
     it('应处理 undefined tw 值（视为 0）', () => {
       const rowA = createRow({ tw: undefined, row: 1 });
-      const rowB = createRow({ tw: '7s', row: 2 });
+      const rowB = createRow({ tw: '7', row: 2 });
 
       expect(sortTableTw(rowA, rowB)).toBeLessThan(0); // 0 < 7
     });
@@ -99,7 +92,7 @@ describe('sortTableTw', () => {
 
     it('应处理空字符串 tw 值', () => {
       const rowA = createRow({ tw: '', row: 1 });
-      const rowB = createRow({ tw: '7s', row: 2 });
+      const rowB = createRow({ tw: '7', row: 2 });
 
       expect(sortTableTw(rowA, rowB)).toBeLessThan(0); // 0 < 7
     });
@@ -108,20 +101,20 @@ describe('sortTableTw', () => {
   describe('多行排序验证', () => {
     it('应正确排序多行数据', () => {
       const rows = [
-        createRow({ tw: '11s', row: 1 }),
-        createRow({ tw: '7s', row: 2 }),
-        createRow({ tw: '9s', row: 3 }),
-        createRow({ tw: '7s', row: 4 }), // tw 相同，row 不同
+        createRow({ tw: '11', row: 1 }),
+        createRow({ tw: '7', row: 2 }),
+        createRow({ tw: '9', row: 3 }),
+        createRow({ tw: '7', row: 4 }), // tw 相同，row 不同
       ];
 
       const sorted = [...rows].sort(sortTableTw);
 
-      expect(sorted[0]!.tw).toBe('7s');
+      expect(sorted[0]!.tw).toBe('7');
       expect(sorted[0]!.row).toBe(2); // row 2 < row 4
-      expect(sorted[1]!.tw).toBe('7s');
+      expect(sorted[1]!.tw).toBe('7');
       expect(sorted[1]!.row).toBe(4);
-      expect(sorted[2]!.tw).toBe('9s');
-      expect(sorted[3]!.tw).toBe('11s');
+      expect(sorted[2]!.tw).toBe('9');
+      expect(sorted[3]!.tw).toBe('11');
     });
   });
 });
@@ -133,9 +126,9 @@ describe('sortResonanceSpecialize', () => {
 
   describe('按预定义顺序排序', () => {
     it('应按 vocal → dance → visual 顺序排序', () => {
-      const rowVocal = createRow({ tw: '7s', specialize: 'vocal', row: 3 });
-      const rowDance = createRow({ tw: '7s', specialize: 'dance', row: 2 });
-      const rowVisual = createRow({ tw: '7s', specialize: 'visual', row: 1 });
+      const rowVocal = createRow({ tw: '7', specialize: 'vocal', row: 3 });
+      const rowDance = createRow({ tw: '7', specialize: 'dance', row: 2 });
+      const rowVisual = createRow({ tw: '7', specialize: 'visual', row: 1 });
 
       expect(sortResonanceSpecialize(rowVocal, rowDance)).toBeLessThan(0); // vocal < dance
       expect(sortResonanceSpecialize(rowVocal, rowVisual)).toBeLessThan(0); // vocal < visual
@@ -143,8 +136,8 @@ describe('sortResonanceSpecialize', () => {
     });
 
     it('相同 specialize 应按 row 排序', () => {
-      const rowA = createRow({ tw: '7s', specialize: 'vocal', row: 2 });
-      const rowB = createRow({ tw: '7s', specialize: 'vocal', row: 1 });
+      const rowA = createRow({ tw: '7', specialize: 'vocal', row: 2 });
+      const rowB = createRow({ tw: '7', specialize: 'vocal', row: 1 });
 
       expect(sortResonanceSpecialize(rowA, rowB)).toBeGreaterThan(0); // row 2 > row 1
     });
@@ -152,23 +145,23 @@ describe('sortResonanceSpecialize', () => {
 
   describe('处理未知值', () => {
     it('未知值应排在预定义值后面', () => {
-      const rowKnown = createRow({ tw: '7s', specialize: 'vocal', row: 1 });
-      const rowUnknown = createRow({ tw: '7s', specialize: 'unknown', row: 2 });
+      const rowKnown = createRow({ tw: '7', specialize: 'vocal', row: 1 });
+      const rowUnknown = createRow({ tw: '7', specialize: 'unknown', row: 2 });
 
       expect(sortResonanceSpecialize(rowKnown, rowUnknown)).toBeLessThan(0); // vocal < unknown
       expect(sortResonanceSpecialize(rowUnknown, rowKnown)).toBeGreaterThan(0); // unknown > vocal
     });
 
     it('两个未知值应按字母顺序排序', () => {
-      const rowA = createRow({ tw: '7s', specialize: 'zebra', row: 1 });
-      const rowB = createRow({ tw: '7s', specialize: 'alpha', row: 2 });
+      const rowA = createRow({ tw: '7', specialize: 'zebra', row: 1 });
+      const rowB = createRow({ tw: '7', specialize: 'alpha', row: 2 });
 
       expect(sortResonanceSpecialize(rowA, rowB)).toBeGreaterThan(0); // zebra > alpha (字母序)
     });
 
     it('两个相同未知值应按 row 排序', () => {
-      const rowA = createRow({ tw: '7s', specialize: 'unknown', row: 2 });
-      const rowB = createRow({ tw: '7s', specialize: 'unknown', row: 1 });
+      const rowA = createRow({ tw: '7', specialize: 'unknown', row: 2 });
+      const rowB = createRow({ tw: '7', specialize: 'unknown', row: 1 });
 
       expect(sortResonanceSpecialize(rowA, rowB)).toBeGreaterThan(0); // row 2 > row 1
     });
@@ -184,9 +177,9 @@ describe('sortDominantAttribute', () => {
 
   describe('按 target_attribute 排序', () => {
     it('应按 cute → cool → passion 顺序排序', () => {
-      const rowCute = createRow({ tw: '7s', target_attribute: 'cute', row: 1 });
-      const rowCool = createRow({ tw: '7s', target_attribute: 'cool', row: 2 });
-      const rowPassion = createRow({ tw: '7s', target_attribute: 'passion', row: 3 });
+      const rowCute = createRow({ tw: '7', target_attribute: 'cute', row: 1 });
+      const rowCool = createRow({ tw: '7', target_attribute: 'cool', row: 2 });
+      const rowPassion = createRow({ tw: '7', target_attribute: 'passion', row: 3 });
 
       expect(sortDominantAttribute(rowCute, rowCool)).toBeLessThan(0);
       expect(sortDominantAttribute(rowCute, rowPassion)).toBeLessThan(0);
@@ -197,13 +190,13 @@ describe('sortDominantAttribute', () => {
   describe('多字段排序', () => {
     it('target_attribute 相同时应按 target_param 排序', () => {
       const rowVocal = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute: 'cute',
         target_param: 'vocal',
         row: 1,
       });
       const rowDance = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute: 'cute',
         target_param: 'dance',
         row: 2,
@@ -214,14 +207,14 @@ describe('sortDominantAttribute', () => {
 
     it('target_attribute 和 target_param 相同时应按 target_attribute_2 排序', () => {
       const rowCute = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute: 'passion',
         target_param: 'vocal',
         target_attribute_2: 'cute',
         row: 1,
       });
       const rowCool = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute: 'passion',
         target_param: 'vocal',
         target_attribute_2: 'cool',
@@ -233,14 +226,14 @@ describe('sortDominantAttribute', () => {
 
     it('所有字段相同时应按 row 排序', () => {
       const rowA = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute: 'cute',
         target_param: 'vocal',
         target_attribute_2: 'cool',
         row: 2,
       });
       const rowB = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute: 'cute',
         target_param: 'vocal',
         target_attribute_2: 'cool',
@@ -259,9 +252,9 @@ describe('sortDominantAttribute2', () => {
 
   describe('按 target_attribute_2 排序', () => {
     it('应按 cute → cool → passion 顺序排序', () => {
-      const rowCute = createRow({ tw: '7s', target_attribute_2: 'cute', row: 1 });
-      const rowCool = createRow({ tw: '7s', target_attribute_2: 'cool', row: 2 });
-      const rowPassion = createRow({ tw: '7s', target_attribute_2: 'passion', row: 3 });
+      const rowCute = createRow({ tw: '7', target_attribute_2: 'cute', row: 1 });
+      const rowCool = createRow({ tw: '7', target_attribute_2: 'cool', row: 2 });
+      const rowPassion = createRow({ tw: '7', target_attribute_2: 'passion', row: 3 });
 
       expect(sortDominantAttribute2(rowCute, rowCool)).toBeLessThan(0);
       expect(sortDominantAttribute2(rowCute, rowPassion)).toBeLessThan(0);
@@ -272,13 +265,13 @@ describe('sortDominantAttribute2', () => {
   describe('多字段排序', () => {
     it('target_attribute_2 相同时应按 target_param_2 排序', () => {
       const rowVocal = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute_2: 'cute',
         target_param_2: 'vocal',
         row: 1,
       });
       const rowDance = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute_2: 'cute',
         target_param_2: 'dance',
         row: 2,
@@ -289,14 +282,14 @@ describe('sortDominantAttribute2', () => {
 
     it('target_attribute_2 和 target_param_2 相同时应按 target_attribute 排序', () => {
       const rowCute = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute_2: 'cute',
         target_param_2: 'vocal',
         target_attribute: 'cute',
         row: 1,
       });
       const rowCool = createRow({
-        tw: '7s',
+        tw: '7',
         target_attribute_2: 'cute',
         target_param_2: 'vocal',
         target_attribute: 'cool',

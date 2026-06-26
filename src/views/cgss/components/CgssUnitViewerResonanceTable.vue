@@ -43,7 +43,7 @@
         >
           <template #default="scope">
             <span style="font-weight: bold">
-              {{ scope.row.tw }}
+              {{ scope.row.tw ? scope.row.tw + 's' : '' }}
             </span>
           </template>
         </el-table-column>
@@ -161,7 +161,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
     tableResonanceRowHeaderTw.forEach((tw) => {
       const row: TableDataRow = {
         specialize: specialize,
-        tw: tw + 's',
+        tw: tw,
         row: result.length,
       };
 
