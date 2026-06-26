@@ -108,51 +108,58 @@
           >
             <template #default="scope">
               <div class="table-icons">
-                <CgssUnitViewerCardTooltip
+                <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
                   :key="iconIndex"
-                  :card="icon.card"
-                  :is-vocal-underlined="
-                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'vocal')
+                  v-show="
+                    !isDominantSpecializeNotMatch(
+                      headerItem,
+                      scope.row as TableDataRow,
+                      icon.card,
+                    ) || showSpecializeNotMatch
                   "
-                  :is-dance-underlined="
-                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'dance')
-                  "
-                  :is-visual-underlined="
-                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'visual')
-                  "
-                >
-                  <img
-                    v-show="
-                      !isDominantSpecializeNotMatch(
+                  :class="{
+                    'cgss-icon': true,
+                    'icon-dark':
+                      clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
+                    'icon-extra': headerItem.extraColumn,
+                    'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
+                    'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
+                    'icon-specialize-not-match': isDominantSpecializeNotMatch(
+                      headerItem,
+                      scope.row as TableDataRow,
+                      icon.card,
+                    ),
+                    'icon-season-limited':
+                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                    [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
+                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                  }"
+                  :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
+                  @mouseenter="
+                    tooltip.show(icon.card, $event.currentTarget as HTMLElement, {
+                      vocal: isDominantParamUnderline(
                         headerItem,
                         scope.row as TableDataRow,
-                        icon.card,
-                      ) || showSpecializeNotMatch
-                    "
-                    :class="{
-                      'cgss-icon': true,
-                      'icon-dark':
-                        clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
-                      'icon-extra': headerItem.extraColumn,
-                      'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
-                      'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
-                      'icon-specialize-not-match': isDominantSpecializeNotMatch(
-                        headerItem,
-                        scope.row as TableDataRow,
-                        icon.card,
+                        'vocal',
                       ),
-                      'icon-season-limited':
-                        highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
-                      [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
-                        highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
-                    }"
-                    :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
-                    @click="
-                      onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
-                    "
-                  />
-                </CgssUnitViewerCardTooltip>
+                      dance: isDominantParamUnderline(
+                        headerItem,
+                        scope.row as TableDataRow,
+                        'dance',
+                      ),
+                      visual: isDominantParamUnderline(
+                        headerItem,
+                        scope.row as TableDataRow,
+                        'visual',
+                      ),
+                    })
+                  "
+                  @mouseleave="tooltip.hide()"
+                  @click="
+                    onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
+                  "
+                />
                 <div
                   v-if="
                     scope.row[headerItem.prop].length === 0 ||
@@ -169,12 +176,18 @@
         </template>
       </el-table>
     </div>
+    <CgssUnitViewerTooltipPortal
+      :visible="tooltip.visible.value"
+      :card="tooltip.card.value"
+      :trigger-element="tooltip.triggerElement.value"
+      :underline-props="tooltip.underlineProps"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
-import { ref, shallowRef, computed, watch, toRef } from 'vue';
+import { ref, shallowRef, computed, watch, toRef, onUnmounted } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
 
@@ -192,6 +205,7 @@ import {
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
+import { useCardTooltip } from '../composables/useCardTooltip';
 import { useIconActions } from '../composables/useIconActions';
 import { useSeasonLimited } from '../composables/useSeasonLimited';
 import {
@@ -201,7 +215,7 @@ import {
   sortDominantAttribute,
   sortDominantAttribute2,
 } from '../composables/useTableUtils';
-import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
+import CgssUnitViewerTooltipPortal from './CgssUnitViewerTooltipPortal.vue';
 
 // 传入属性
 const props = defineProps<{
@@ -258,6 +272,12 @@ const { isSeasonLimitedCard } = useSeasonLimited();
 
 // 组合式函数：暗色模式
 const isDark = useDark();
+
+// 单例 tooltip 状态（替代每个图标一个 el-tooltip 实例）
+const tooltip = useCardTooltip();
+onUnmounted(() => {
+  tooltip.dispose();
+});
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');

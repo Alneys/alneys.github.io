@@ -63,29 +63,30 @@
           >
             <template #default="scope">
               <div class="table-icons">
-                <CgssUnitViewerCardTooltip
+                <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
                   :key="iconIndex"
-                  :card="icon.card"
-                  :is-vocal-underlined="scope.row.specialize === 'vocal'"
-                  :is-dance-underlined="scope.row.specialize === 'dance'"
-                  :is-visual-underlined="scope.row.specialize === 'visual'"
-                >
-                  <img
-                    :class="{
-                      'cgss-icon': true,
-                      'icon-dark':
-                        clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
-                      'icon-extra': headerItem.extraColumn,
-                      'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
-                      'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
-                    }"
-                    :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
-                    @click="
-                      onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
-                    "
-                  />
-                </CgssUnitViewerCardTooltip>
+                  :class="{
+                    'cgss-icon': true,
+                    'icon-dark':
+                      clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
+                    'icon-extra': headerItem.extraColumn,
+                    'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
+                    'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
+                  }"
+                  :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
+                  @mouseenter="
+                    tooltip.show(icon.card, $event.currentTarget as HTMLElement, {
+                      vocal: scope.row.specialize === 'vocal',
+                      dance: scope.row.specialize === 'dance',
+                      visual: scope.row.specialize === 'visual',
+                    })
+                  "
+                  @mouseleave="tooltip.hide()"
+                  @click="
+                    onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
+                  "
+                />
                 <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
             </template>
@@ -93,12 +94,18 @@
         </template>
       </el-table>
     </div>
+    <CgssUnitViewerTooltipPortal
+      :visible="tooltip.visible.value"
+      :card="tooltip.card.value"
+      :trigger-element="tooltip.triggerElement.value"
+      :underline-props="tooltip.underlineProps"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
-import { ref, shallowRef, computed, watch, toRef } from 'vue';
+import { ref, shallowRef, computed, watch, toRef, onUnmounted } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
 
@@ -113,6 +120,7 @@ import {
   tableResonanceColumnHeader,
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
+import { useCardTooltip } from '../composables/useCardTooltip';
 import { useIconActions } from '../composables/useIconActions';
 import {
   sortTableTw,
@@ -120,7 +128,7 @@ import {
   sortCardsByParam,
   sortResonanceSpecialize,
 } from '../composables/useTableUtils';
-import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
+import CgssUnitViewerTooltipPortal from './CgssUnitViewerTooltipPortal.vue';
 
 // 传入属性
 const props = defineProps<{
@@ -165,6 +173,12 @@ const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
 // 组合式函数：暗色模式
 const isDark = useDark();
+
+// 单例 tooltip 状态（替代每个图标一个 el-tooltip 实例）
+const tooltip = useCardTooltip();
+onUnmounted(() => {
+  tooltip.dispose();
+});
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('specialize');
