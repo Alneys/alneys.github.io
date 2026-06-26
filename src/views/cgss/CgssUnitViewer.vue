@@ -21,7 +21,7 @@
       <CgssUnitViewerResonanceTable
         ref="resonanceTableRef"
         v-model:table-data="resonanceTableData"
-        v-model:show-extra-columns="switchShowExtraColumns"
+        v-model:show-extra-columns="switchShowExtraColumnsResonance"
         :skill-data="skillData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
@@ -33,7 +33,7 @@
       <CgssUnitViewerDominantTable
         ref="dominantTableRef"
         v-model:table-data="dominantTableData"
-        v-model:show-extra-columns="switchShowExtraColumns"
+        v-model:show-extra-columns="switchShowExtraColumnsDominant"
         v-model:show-alternate-mutual="switchShowAlternateMutual"
         v-model:show-overload="switchShowOverload"
         v-model:show-overdrive="switchShowOverdrive"
@@ -88,7 +88,8 @@ const switchClickIconAction = ref('None');
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraTableConfig = ref(true);
-const switchShowExtraColumns = ref(false);
+const switchShowExtraColumnsResonance = ref(false);
+const switchShowExtraColumnsDominant = ref(false);
 const switchShowOverload = ref(true);
 const switchShowOverdrive = ref(true);
 const switchShowAlternateMutual = ref(true);
