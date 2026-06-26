@@ -7,16 +7,6 @@
   .el-table {
     --el-table-header-text-color: var(--el-text-color-regular);
 
-    .skill-motif,
-    .skill-spike,
-    .skill-refrain,
-    .skill-dominant,
-    .skill-mutual,
-    .skill-overdrive,
-    .skill-cboost {
-      background-color: var(--el-fill-color-lighter);
-    }
-
     .el-table__cell {
       padding: 2px 0;
     }
@@ -50,53 +40,58 @@
       border-radius: 4px;
     }
 
-    .icon-filter-match {
-      scale: 1;
-      margin: 0;
-    }
-
-    .icon-filter-not-match {
-      scale: 0.375;
-      margin: 0;
-    }
-
     .icon-specialize-not-match {
       scale: 0.625;
       margin: -6px;
-
-      &.icon-filter-match {
-        scale: 0.85;
-        margin: 0;
-      }
-
-      &.icon-filter-not-match {
-        scale: 0.375;
-        margin: 0;
-      }
     }
 
     .icon-extra {
       scale: 0.75;
       margin: -6px;
 
-      &.icon-filter-match {
+      &.icon-specialize-not-match {
+        scale: 0.375;
+        margin: -12px;
+      }
+    }
+
+    .icon-filter-match {
+      scale: 1;
+      margin: 0;
+
+      &.icon-specialize-not-match {
+        scale: 0.7;
+        margin: 0;
+      }
+
+      &.icon-extra {
         scale: 1;
         margin: 0;
       }
 
-      &.icon-specialize-not-match {
-        scale: 0.375;
-        margin: -12px;
+      &.icon-extra.icon-specialize-not-match {
+        scale: 0.7;
+        margin: 0;
+      }
+    }
 
-        &.icon-filter-match {
-          scale: 0.85;
-          margin: 0;
-        }
+    .icon-filter-not-match {
+      scale: 0.25;
+      margin: -16px;
+
+      &.icon-specialize-not-match {
+        scale: 0.25;
+        margin: -16px;
       }
 
-      &.icon-filter-not-match {
-        scale: 0.375;
-        margin: -12px;
+      &.icon-extra {
+        scale: 0.25;
+        margin: -16px;
+      }
+
+      &.icon-extra.icon-specialize-not-match {
+        scale: 0.25;
+        margin: -16px;
       }
     }
 

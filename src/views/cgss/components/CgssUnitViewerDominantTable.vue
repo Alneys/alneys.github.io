@@ -4,10 +4,16 @@
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
         <el-switch v-model="showExtraColumns" active-text="额外技能" />
-        <el-switch v-model="showOverloadOverdrive" active-text="显示过载/超载列" />
-        <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
+        <el-switch v-model="showAlternateMutual" active-text="变换/交互列" />
+        <el-switch v-model="showOverload" active-text="过载列" />
+        <el-switch v-model="showOverdrive" active-text="超载列" />
         <el-switch v-model="showSpecializeNotMatch" active-text="显示所有偏科" />
-        <el-switch v-model="showAllAttributePairs" active-text="显示所有属性组合" />
+      </div>
+      <div>
+        <el-switch v-model="showAllAttributePairs" active-text="显示所有双色属性组合" />
+        <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
+      </div>
+      <div>
         <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
       </div>
     </div>
@@ -71,7 +77,7 @@
           :sort-method="sortTableTw"
         >
           <template #default="scope">
-            <span style="font-weight: bold">{{ scope.row.tw || '' }}</span>
+            <span style="font-weight: bold">{{ scope.row.tw ? scope.row.tw + 's' : '' }}</span>
           </template>
         </el-table-column>
 
@@ -83,8 +89,10 @@
           <el-table-column
             v-if="
               (!headerItem.extraColumn || showExtraColumns) &&
-              ((headerItem.skill !== 'overload' && headerItem.skill !== 'overdrive') ||
-                showOverloadOverdrive) &&
+              (headerItem.skill !== 'overload' || showOverload) &&
+              (headerItem.skill !== 'overdrive' || showOverdrive) &&
+              ((headerItem.skill !== 'alternate' && headerItem.skill !== 'mutual') ||
+                showAlternateMutual) &&
               (!showSortRelatedSkillsOnly ||
                 currentSortField === 'tw' ||
                 !headerItem.attribute ||
@@ -100,55 +108,62 @@
           >
             <template #default="scope">
               <div class="table-icons">
-                <CgssUnitViewerCardTooltip
+                <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
                   :key="iconIndex"
-                  :card="icon.card"
-                  :is-vocal-underlined="
-                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'vocal')
+                  v-show="
+                    !isDominantSpecializeNotMatch(
+                      headerItem,
+                      scope.row as TableDataRow,
+                      icon.card,
+                    ) || showSpecializeNotMatch
                   "
-                  :is-dance-underlined="
-                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'dance')
-                  "
-                  :is-visual-underlined="
-                    isDominantParamUnderline(headerItem, scope.row as TableDataRow, 'visual')
-                  "
-                >
-                  <img
-                    v-show="
-                      !isDominantSpecializeNotMatch(
+                  :class="{
+                    'cgss-icon': true,
+                    'icon-dark':
+                      clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
+                    'icon-extra': headerItem.extraColumn,
+                    'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
+                    'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
+                    'icon-specialize-not-match': isDominantSpecializeNotMatch(
+                      headerItem,
+                      scope.row as TableDataRow,
+                      icon.card,
+                    ),
+                    'icon-season-limited':
+                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                    [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
+                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                  }"
+                  :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
+                  @mouseenter="
+                    tooltip.show(icon.card, $event.currentTarget as HTMLElement, {
+                      vocal: isDominantParamUnderline(
                         headerItem,
                         scope.row as TableDataRow,
-                        icon.card,
-                      ) || showSpecializeNotMatch
-                    "
-                    :class="{
-                      'cgss-icon': true,
-                      'icon-dark':
-                        clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
-                      'icon-extra': headerItem.extraColumn,
-                      'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
-                      'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
-                      'icon-specialize-not-match': isDominantSpecializeNotMatch(
-                        headerItem,
-                        scope.row as TableDataRow,
-                        icon.card,
+                        'vocal',
                       ),
-                      'icon-season-limited':
-                        highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
-                      [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
-                        highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
-                    }"
-                    :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
-                    @click="
-                      onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
-                    "
-                  />
-                </CgssUnitViewerCardTooltip>
+                      dance: isDominantParamUnderline(
+                        headerItem,
+                        scope.row as TableDataRow,
+                        'dance',
+                      ),
+                      visual: isDominantParamUnderline(
+                        headerItem,
+                        scope.row as TableDataRow,
+                        'visual',
+                      ),
+                    })
+                  "
+                  @mouseleave="tooltip.hide()"
+                  @click="
+                    onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
+                  "
+                />
                 <div
                   v-if="
-                    !showSpecializeNotMatch &&
-                    (scope.row[headerItem.prop].length === 0 ||
+                    scope.row[headerItem.prop].length === 0 ||
+                    (!showSpecializeNotMatch &&
                       scope.row[headerItem.prop][0].card.stats[scope.row[headerItem.param ?? '']] <=
                         DOMINANT_PARAM_THRESHOLD_SPECIALIZE)
                   "
@@ -161,12 +176,20 @@
         </template>
       </el-table>
     </div>
+    <CgssUnitViewerTooltipPortal
+      :visible="tooltip.visible.value"
+      :card="tooltip.card.value"
+      :trigger-element="tooltip.triggerElement.value"
+      :underline-props="tooltip.underlineProps"
+      @before-hide="tooltip.onBeforeHide()"
+      @hide="tooltip.onHide()"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
-import { ref, computed, watch, toRef } from 'vue';
+import { ref, shallowRef, computed, watch, toRef, onUnmounted } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
 
@@ -184,6 +207,7 @@ import {
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
+import { useCardTooltip } from '../composables/useCardTooltip';
 import { useIconActions } from '../composables/useIconActions';
 import { useSeasonLimited } from '../composables/useSeasonLimited';
 import {
@@ -193,27 +217,45 @@ import {
   sortDominantAttribute,
   sortDominantAttribute2,
 } from '../composables/useTableUtils';
-import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
+import CgssUnitViewerTooltipPortal from './CgssUnitViewerTooltipPortal.vue';
 
 // 传入属性
 const props = defineProps<{
-  skillData: CgssCardSkillTableItem[] | null;
+  originalData: CgssCardSkillTableItem[] | null;
   showSimpleLabels: boolean;
   clickIconAction: string;
   nameFilter: string;
   showExtraTableConfig: boolean;
+  tableData?: TableDataRow[];
 }>();
 
 // 自定义事件
 const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
+  'update:tableData': [value: TableDataRow[]];
 }>();
 
-// 双向绑定
-const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
+// 双向绑定 — 使用 shallowRef 避免深层数组的深度代理开销
+const tableData = shallowRef<TableDataRow[]>(props.tableData ?? []);
+
+// 父 → 子 同步
+watch(
+  () => props.tableData,
+  (val) => {
+    if (val) tableData.value = val;
+  },
+  { immediate: true },
+);
+
+// 子 → 父 同步
+watch(tableData, (val) => {
+  emit('update:tableData', val);
+});
 
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
-const showOverloadOverdrive = defineModel<boolean>('showOverloadOverdrive', { default: false });
+const showAlternateMutual = defineModel<boolean>('showAlternateMutual', { default: true });
+const showOverload = defineModel<boolean>('showOverload', { default: true });
+const showOverdrive = defineModel<boolean>('showOverdrive', { default: true });
 const showSpecializeNotMatch = defineModel<boolean>('showSpecializeNotMatch', { default: false });
 const showAllAttributePairs = defineModel<boolean>('showAllAttributePairs', { default: false });
 const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnly', {
@@ -232,6 +274,12 @@ const { isSeasonLimitedCard } = useSeasonLimited();
 
 // 组合式函数：暗色模式
 const isDark = useDark();
+
+// 单例 tooltip 状态（替代每个图标一个 el-tooltip 实例）
+const tooltip = useCardTooltip();
+onUnmounted(() => {
+  tooltip.dispose();
+});
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
@@ -264,7 +312,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
                 const row: TableDataRow = {
                   target_attribute_2: attr2,
                   target_attribute: attr,
-                  tw: tw + 's',
+                  tw: tw,
                   target_param_2: param2,
                   target_param: param,
                   row: result.length,
@@ -280,6 +328,49 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
           });
         });
       }
+    });
+  });
+
+  // 构建倒排索引：(skillType, twKey, attributeField, attributeValue) → 目标格子列表
+  type IndexEntry = { rowIndex: number; prop: string; paramField: string };
+  const invertedIndex = new Map<string, IndexEntry[]>();
+
+  result.forEach((row, rowIndex) => {
+    tableDominantColumnHeader.forEach((colDef) => {
+      if (colDef.skill === 'dominant') return;
+
+      const attrField = colDef.attribute;
+      const paramField = colDef.param;
+      if (!attrField || !paramField) return;
+
+      const attributeValue = row[attrField as keyof typeof row];
+      if (!attributeValue) return;
+
+      let twKey: string;
+      if (colDef.tw !== undefined) {
+        twKey = colDef.tw;
+      } else if (colDef.extraColumn) {
+        twKey = '*';
+      } else {
+        twKey = row.tw;
+      }
+
+      const key = `${colDef.skill}|${twKey}|${attrField}|${attributeValue}`;
+      if (!invertedIndex.has(key)) {
+        invertedIndex.set(key, []);
+      }
+      invertedIndex.get(key)?.push({ rowIndex, prop: colDef.prop, paramField });
+    });
+  });
+
+  // 为每个 skill 类型推导查找规则（从列头配置自动映射，维护一致）
+  const skillRules = new Map<string, { attrField: string; twKeyPattern: string }>();
+  tableDominantColumnHeader.forEach((colDef) => {
+    if (colDef.skill === 'dominant' || skillRules.has(colDef.skill)) return;
+    if (!colDef.attribute) return;
+    skillRules.set(colDef.skill, {
+      attrField: colDef.attribute,
+      twKeyPattern: colDef.tw !== undefined ? 'exact' : colDef.extraColumn ? 'wildcard' : 'row',
     });
   });
 
@@ -323,42 +414,31 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
         }
       }
     } else {
-      result.forEach((row, rowIndex) => {
-        tableDominantColumnHeader.forEach((colDef) => {
-          if (colDef.skill === 'dominant') return;
+      const skillType = item.skill.type.startsWith('psb_') ? 'psb_' : item.skill.type;
+      const rule = skillRules.get(skillType);
+      if (!rule) return;
 
-          if (colDef.skill === 'psb_') {
-            if (!item.skill.type.startsWith(colDef.skill)) return;
-          } else {
-            if (colDef.skill !== item.skill.type) return;
-          }
+      const cardTw = String(item.skill.params.tw);
+      const twKey =
+        rule.twKeyPattern === 'exact' ? cardTw : rule.twKeyPattern === 'row' ? cardTw : '*';
 
-          if (colDef.tw !== undefined) {
-            if (String(item.skill.params.tw) !== colDef.tw) return;
-          } else {
-            if (String(item.skill.params.tw) + 's' !== row.tw && !colDef.extraColumn) return;
-          }
+      const key = `${skillType}|${twKey}|${rule.attrField}|${item.attribute.toLowerCase()}`;
+      const entries = invertedIndex.get(key);
+      if (!entries) return;
 
-          const attrField = colDef.attribute;
-          const paramField = colDef.param;
-          if (!attrField || !paramField) return;
+      for (const entry of entries) {
+        const targetRow = result[entry.rowIndex];
+        const targetParam = targetRow[entry.paramField as keyof typeof targetRow];
+        if (!targetParam) continue;
 
-          const targetAttr = row[attrField as keyof typeof row];
-          const targetParam = row[paramField as keyof typeof row];
+        const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
+        if (statValue < DOMINANT_PARAM_THRESHOLD_ADD) continue;
 
-          if (item.attribute.toLowerCase() !== targetAttr) return;
-          if (!targetParam) return;
-
-          const threshold = DOMINANT_PARAM_THRESHOLD_ADD;
-          const statValue = item.stats[targetParam as keyof CgssCardSkillTableItem['stats']];
-          if (statValue < threshold) return;
-
-          const targetArray = result[rowIndex]?.[colDef.prop];
-          if (Array.isArray(targetArray)) {
-            targetArray.push(createCardDataItem(item));
-          }
-        });
-      });
+        const targetArray = result[entry.rowIndex]?.[entry.prop];
+        if (Array.isArray(targetArray)) {
+          targetArray.push(createCardDataItem(item));
+        }
+      }
     }
   });
 
@@ -381,7 +461,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
 };
 
 watch(
-  () => props.skillData,
+  () => props.originalData,
   (newData) => {
     if (newData) {
       tableData.value = initializeData(newData);
@@ -442,10 +522,15 @@ const tableDominantSpanMethod = ({
   }
 
   const rowSpan = tableDominantRowHeaderTw.length * (tableDominantRowHeaderAttribute.length - 1);
+  const halfRowSpan = rowSpan % 2 === 0 ? rowSpan / 2 : 1;
 
-  if ((columnIndex === 0 || columnIndex === 1) && currentSortField.value === column.property) {
-    if (rowIndex % rowSpan === 0) {
-      return [rowSpan, 1];
+  // 合并第 0 列（歌曲属性）和第 1 列（原属性）
+  if (columnIndex === 0 || columnIndex === 1) {
+    // 排序列按 rowSpan 合并，另一列按 rowSpan / 2 合并
+    const span = currentSortField.value === column.property ? rowSpan : halfRowSpan;
+
+    if (rowIndex % span === 0) {
+      return [span, 1];
     }
     return [0, 0];
   }
@@ -511,6 +596,13 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 
   :deep() {
     @include table.cgss-table-styles;
+
+    .skill-dominant,
+    .skill-mutual,
+    .skill-overdrive,
+    .skill-cboost {
+      background-color: var(--el-fill-color-lighter);
+    }
   }
 
   &.is-dark {

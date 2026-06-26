@@ -75,11 +75,10 @@ const createMultiFieldSorter = (
 
 /**
  * tw 列排序方法（Resonance 表和 Dominant 表共用）
- * 提取数值部分进行比较，去掉 's' 后缀
  */
 export const sortTableTw = (a: TableDataRow, b: TableDataRow): number => {
-  const numA = a.tw ? parseInt(a.tw.replace('s', ''), 10) : 0;
-  const numB = b.tw ? parseInt(b.tw.replace('s', ''), 10) : 0;
+  const numA = a.tw ? parseInt(a.tw, 10) : 0;
+  const numB = b.tw ? parseInt(b.tw, 10) : 0;
 
   // 按数值大小排序
   if (numA !== numB) {

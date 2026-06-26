@@ -21,8 +21,8 @@
       <CgssUnitViewerResonanceTable
         ref="resonanceTableRef"
         v-model:table-data="resonanceTableData"
-        v-model:show-extra-columns="switchShowExtraColumns"
-        :skill-data="skillData"
+        v-model:show-extra-columns="switchShowExtraColumnsResonance"
+        :original-data="originalData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
@@ -33,13 +33,15 @@
       <CgssUnitViewerDominantTable
         ref="dominantTableRef"
         v-model:table-data="dominantTableData"
-        v-model:show-extra-columns="switchShowExtraColumns"
-        v-model:show-overload-overdrive="switchShowOverloadOverdrive"
+        v-model:show-extra-columns="switchShowExtraColumnsDominant"
+        v-model:show-alternate-mutual="switchShowAlternateMutual"
+        v-model:show-overload="switchShowOverload"
+        v-model:show-overdrive="switchShowOverdrive"
         v-model:show-specialize-not-match="switchShowSpecializeNotMatch"
         v-model:show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
         v-model:show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
         v-model:highlight-season-limited="switchHighlightSeasonLimited"
-        :skill-data="skillData"
+        :original-data="originalData"
         :show-simple-labels="switchShowSimpleLabels"
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
@@ -66,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, useTemplateRef } from 'vue';
+import { ref, shallowRef, onMounted, useTemplateRef } from 'vue';
 
 import { type TableDataRow, type CgssCardSkillTableItem } from './CgssUnitViewerTypes';
 import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
@@ -80,21 +82,24 @@ const { inputNameFilter } = useCardFilter();
 const { toggleAllBrightness: toggleAll, setBrightnessByCids } = useCardBrightness();
 const { data, loading, error, loadData } = useCardSkillData();
 
-const skillData = ref<CgssCardSkillTableItem[] | null>(null);
+const originalData = ref<CgssCardSkillTableItem[] | null>(null);
 
 const switchClickIconAction = ref('None');
 const switchNameFilter = ref(false);
 const switchShowSimpleLabels = ref(window.innerWidth < 768);
 const switchShowExtraTableConfig = ref(true);
-const switchShowExtraColumns = ref(false);
-const switchShowOverloadOverdrive = ref(true);
+const switchShowExtraColumnsResonance = ref(false);
+const switchShowExtraColumnsDominant = ref(false);
+const switchShowOverload = ref(true);
+const switchShowOverdrive = ref(true);
+const switchShowAlternateMutual = ref(true);
 const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
 
-const resonanceTableData = ref<TableDataRow[]>([]);
-const dominantTableData = ref<TableDataRow[]>([]);
+const resonanceTableData = shallowRef<TableDataRow[]>([]);
+const dominantTableData = shallowRef<TableDataRow[]>([]);
 
 const resonanceTableRef =
   useTemplateRef<InstanceType<typeof CgssUnitViewerResonanceTable>>('resonanceTableRef');
@@ -113,7 +118,7 @@ const handleIconClick = (payload: { row: TableDataRow; column: string; index: nu
 
 onMounted(async () => {
   await loadData();
-  skillData.value = data.value;
+  originalData.value = data.value;
 });
 </script>
 

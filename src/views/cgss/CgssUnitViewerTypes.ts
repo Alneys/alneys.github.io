@@ -100,8 +100,8 @@ export const tableResonanceColumnHeader: ColumnHeader[] = [
   { prop: 'motif', labelCn: '共鸣', labelEn: 'resonance motif', skill: 'motif', minWidth: 150 },
   { prop: 'synergy', labelCn: '大偏', labelEn: 'synergy', skill: 'synergy', minWidth: 150 },
   { prop: 'spike', labelCn: '尖峰', labelEn: 'spike', skill: 'spike', minWidth: 100 },
-  { prop: 'symphony', labelCn: '交响', labelEn: 'symphony', skill: 'symphony', minWidth: 100 },
   { prop: 'refrain', labelCn: '副歌', labelEn: 'refrain', skill: 'refrain', minWidth: 150 },
+  { prop: 'symphony', labelCn: '交响', labelEn: 'symphony', skill: 'symphony', minWidth: 100 },
   {
     prop: 'coordinate',
     labelCn: '协调',
@@ -274,12 +274,22 @@ export const tableDominantColumnHeader: ColumnHeader[] = [
     param: 'target_param_2',
     extraColumn: true,
   },
+  {
+    prop: 'motif',
+    labelCn: '共鸣',
+    labelEn: 'resonance motif',
+    skill: 'motif',
+    attribute: 'target_attribute',
+    param: 'target_param',
+    minWidth: 150,
+    extraColumn: true,
+  },
 ];
 
 // ---------- 阈值常量 ----------
 
 /** Dominant 表参数阈值 - 全部  */
-export const DOMINANT_PARAM_THRESHOLD_ADD = 0;
+export const DOMINANT_PARAM_THRESHOLD_ADD = 5;
 /** Dominant 表参数阈值 - 特化  */
 export const DOMINANT_PARAM_THRESHOLD_SPECIALIZE = 5000;
 

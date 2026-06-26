@@ -43,7 +43,7 @@
         >
           <template #default="scope">
             <span style="font-weight: bold">
-              {{ scope.row.tw }}
+              {{ scope.row.tw ? scope.row.tw + 's' : '' }}
             </span>
           </template>
         </el-table-column>
@@ -58,34 +58,35 @@
             :label="
               showSimpleLabels ? headerItem.labelCn : `${headerItem.labelCn} ${headerItem.labelEn}`
             "
-            :class-name="`icons skill-${headerItem.prop}`"
+            :class-name="`icons skill-${headerItem.skill ?? headerItem.prop}`"
             :min-width="isSmallScreen ? headerItem.minWidthSmallScreen : headerItem.minWidth"
           >
             <template #default="scope">
               <div class="table-icons">
-                <CgssUnitViewerCardTooltip
+                <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
                   :key="iconIndex"
-                  :card="icon.card"
-                  :is-vocal-underlined="scope.row.specialize === 'vocal'"
-                  :is-dance-underlined="scope.row.specialize === 'dance'"
-                  :is-visual-underlined="scope.row.specialize === 'visual'"
-                >
-                  <img
-                    :class="{
-                      'cgss-icon': true,
-                      'icon-dark':
-                        clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
-                      'icon-extra': headerItem.extraColumn,
-                      'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
-                      'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
-                    }"
-                    :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
-                    @click="
-                      onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
-                    "
-                  />
-                </CgssUnitViewerCardTooltip>
+                  :class="{
+                    'cgss-icon': true,
+                    'icon-dark':
+                      clickIconAction === 'ToggleCardStatus' && !isCardBright(icon.card.cid),
+                    'icon-extra': headerItem.extraColumn,
+                    'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
+                    'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
+                  }"
+                  :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
+                  @mouseenter="
+                    tooltip.show(icon.card, $event.currentTarget as HTMLElement, {
+                      vocal: scope.row.specialize === 'vocal',
+                      dance: scope.row.specialize === 'dance',
+                      visual: scope.row.specialize === 'visual',
+                    })
+                  "
+                  @mouseleave="tooltip.hide()"
+                  @click="
+                    onIconClick(scope.row as TableDataRow, headerItem.prop, Number(iconIndex))
+                  "
+                />
                 <div v-if="scope.row[headerItem.prop].length === 0">x</div>
               </div>
             </template>
@@ -93,12 +94,20 @@
         </template>
       </el-table>
     </div>
+    <CgssUnitViewerTooltipPortal
+      :visible="tooltip.visible.value"
+      :card="tooltip.card.value"
+      :trigger-element="tooltip.triggerElement.value"
+      :underline-props="tooltip.underlineProps"
+      @before-hide="tooltip.onBeforeHide()"
+      @hide="tooltip.onHide()"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
-import { ref, computed, watch, toRef } from 'vue';
+import { ref, shallowRef, computed, watch, toRef, onUnmounted } from 'vue';
 
 import type { TableColumnCtx } from 'element-plus';
 
@@ -113,6 +122,7 @@ import {
   tableResonanceColumnHeader,
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
+import { useCardTooltip } from '../composables/useCardTooltip';
 import { useIconActions } from '../composables/useIconActions';
 import {
   sortTableTw,
@@ -120,24 +130,40 @@ import {
   sortCardsByParam,
   sortResonanceSpecialize,
 } from '../composables/useTableUtils';
-import CgssUnitViewerCardTooltip from './CgssUnitViewerCardTooltip.vue';
+import CgssUnitViewerTooltipPortal from './CgssUnitViewerTooltipPortal.vue';
 
 // 传入属性
 const props = defineProps<{
-  skillData: CgssCardSkillTableItem[] | null;
+  originalData: CgssCardSkillTableItem[] | null;
   showSimpleLabels: boolean;
   clickIconAction: string;
   nameFilter: string;
   showExtraTableConfig: boolean;
+  tableData?: TableDataRow[];
 }>();
 
 // 自定义事件
 const emit = defineEmits<{
   iconClick: [payload: { row: TableDataRow; column: string; index: number }];
+  'update:tableData': [value: TableDataRow[]];
 }>();
 
-// 双向绑定
-const tableData = defineModel<TableDataRow[]>('tableData', { default: [] });
+// 双向绑定 — 使用 shallowRef 避免深层数组的深度代理开销
+const tableData = shallowRef<TableDataRow[]>(props.tableData ?? []);
+
+// 父 → 子 同步
+watch(
+  () => props.tableData,
+  (val) => {
+    if (val) tableData.value = val;
+  },
+  { immediate: true },
+);
+
+// 子 → 父 同步
+watch(tableData, (val) => {
+  emit('update:tableData', val);
+});
 
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
 
@@ -150,6 +176,12 @@ const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 // 组合式函数：暗色模式
 const isDark = useDark();
 
+// 单例 tooltip 状态（替代每个图标一个 el-tooltip 实例）
+const tooltip = useCardTooltip();
+onUnmounted(() => {
+  tooltip.dispose();
+});
+
 // 排序状态：子组件内部维护
 const currentSortField = ref('specialize');
 
@@ -161,7 +193,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
     tableResonanceRowHeaderTw.forEach((tw) => {
       const row: TableDataRow = {
         specialize: specialize,
-        tw: tw + 's',
+        tw: tw,
         row: result.length,
       };
 
@@ -229,7 +261,7 @@ const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {
 };
 
 watch(
-  () => props.skillData,
+  () => props.originalData,
   (newData) => {
     if (newData) {
       tableData.value = initializeData(newData);
@@ -315,6 +347,12 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
 
   :deep() {
     @include table.cgss-table-styles;
+
+    .skill-motif,
+    .skill-synergy,
+    .skill-spike {
+      background-color: var(--el-fill-color-lighter);
+    }
   }
 
   &.is-dark {
