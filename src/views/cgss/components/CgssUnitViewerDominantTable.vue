@@ -21,7 +21,7 @@
       <el-table
         :data="filteredTableData"
         style="width: 100%"
-        :max-height="isMobile ? 560 : 9999"
+        :max-height="isMobile ? 560 : undefined"
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
         :span-method="tableDominantSpanMethod"
@@ -176,7 +176,7 @@
         </template>
       </el-table>
     </div>
-    <CgssUnitViewerTooltipPortal
+    <CgssUnitViewerCardTooltipVirtual
       :visible="tooltip.visible.value"
       :card="tooltip.card.value"
       :trigger-element="tooltip.triggerElement.value"
@@ -217,7 +217,7 @@ import {
   sortDominantAttribute,
   sortDominantAttribute2,
 } from '../composables/useTableUtils';
-import CgssUnitViewerTooltipPortal from './CgssUnitViewerTooltipPortal.vue';
+import CgssUnitViewerCardTooltipVirtual from './CgssUnitViewerCardTooltipVirtual.vue';
 
 // 传入属性
 const props = defineProps<{

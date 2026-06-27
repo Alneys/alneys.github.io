@@ -122,4 +122,8 @@ const isVisualBold = computed(() =>
 :global(.cgss-unit-viewer-card-tooltip) {
   transition: opacity 0.3s var(--el-transition-function-fast-bezier);
 }
+
+:global(.cgss-unit-viewer-card-tooltip:not([class*=' el-fade-'])) {
+  transition: transform 0.3s var(--el-transition-function-fast-bezier);
+}
 </style>
