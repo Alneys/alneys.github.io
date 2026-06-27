@@ -421,15 +421,13 @@ function formatRewardShort(value: number): string {
 }
 
 .drawn-slot-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  @include flex-column(4px);
+
   align-items: center;
 }
 
 .drawn-slot-lv {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
+  @include text-secondary(12px);
 }
 
 .drawn-slot-num,
@@ -455,14 +453,12 @@ function formatRewardShort(value: number): string {
 }
 
 .drawn-manual-left {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  @include flex-row(8px);
 }
 
 .drawn-manual-label {
-  font-size: 14px;
-  color: var(--el-text-color-secondary);
+  @include text-secondary;
+
   white-space: nowrap;
 }
 
@@ -472,9 +468,7 @@ function formatRewardShort(value: number): string {
 
 // ── Pool ──
 .pool-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  @include flex-column;
 }
 
 .pool-btn :deep(> span) {
@@ -485,8 +479,7 @@ function formatRewardShort(value: number): string {
 }
 
 .pool-level-label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
+  @include text-secondary(12px);
 }
 
 .pool-level-count {
@@ -504,9 +497,8 @@ function formatRewardShort(value: number): string {
 .reward-point-section,
 .reward-tier-section,
 .reward-eu-section {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  @include flex-row(8px);
+
   margin-bottom: 8px;
 
   .reward-label {
@@ -605,9 +597,8 @@ function formatRewardShort(value: number): string {
 }
 
 .action-switch-group {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  @include flex-row(8px);
+
   white-space: nowrap;
 }
 

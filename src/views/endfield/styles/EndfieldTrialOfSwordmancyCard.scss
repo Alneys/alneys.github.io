@@ -2,7 +2,7 @@
 
 @use 'sass:list';
 
-// ── Mixin: 卡片内边距（含 :deep 与响应式） ──
+// ── 卡片内边距（含 :deep 与响应式） ──
 @mixin card-padding($selectors...) {
   $grouped-selectors: ();
   @each $selector in $selectors {
@@ -29,7 +29,27 @@
   }
 }
 
-// ── Mixin: .game-section 基础布局 ──
+// ── flex 列布局 ──
+@mixin flex-column($gap: 8px) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+// ── flex 行布局 ──
+@mixin flex-row($gap: 4px) {
+  display: flex;
+  gap: $gap;
+  align-items: center;
+}
+
+// ── 次要文本 ──
+@mixin text-secondary($size: 14px) {
+  font-size: $size;
+  color: var(--el-text-color-secondary);
+}
+
+// ── .game-section 基础布局 ──
 @mixin game-section-base {
   .game-section {
     row-gap: 8px;
@@ -45,7 +65,7 @@
   }
 }
 
-// ── Mixin: .game-section 响应式 ──
+// ── .game-section 响应式 ──
 @mixin game-section-responsive {
   @media (max-width: 767px) {
     .game-section {

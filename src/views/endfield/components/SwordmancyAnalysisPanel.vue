@@ -443,35 +443,38 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
 
 // ── Advice ──
 .advice-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  @include flex-column;
 }
 
-.advice-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
+.advice-row,
+.simplified-comp-row {
+  @include flex-row;
+
   font-size: 14px;
 }
 
-.advice-label {
+.advice-label,
+.simplified-comp-label {
   min-width: 144px;
   color: var(--el-text-color-secondary);
 }
 
-.advice-row-optimal {
+.advice-row-optimal,
+.simplified-efficiency-row {
   border-radius: 4px;
   font-weight: bold;
   background: var(--el-color-primary-light-8);
 }
 
-.advice-value {
+.advice-value,
+.simplified-comp-value {
   min-width: 88px;
   font-weight: bold;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
 
+.advice-value {
   &.advice-diff-positive {
     color: var(--el-color-success);
   }
@@ -579,9 +582,7 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
   margin-top: 16px;
 
   .simplified-body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    @include flex-column;
   }
 
   .simplified-body-loading {
@@ -591,21 +592,7 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
 }
 
 .simplified-comparison {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.simplified-comp-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  font-size: 14px;
-}
-
-.simplified-comp-label {
-  min-width: 144px;
-  color: var(--el-text-color-secondary);
+  @include flex-column;
 }
 
 .threshold-label-wrap {
@@ -618,19 +605,6 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
 .threshold-info-icon {
   font-size: 14px;
   color: var(--el-color-info);
-}
-
-.simplified-comp-value {
-  min-width: 88px;
-  font-weight: bold;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.simplified-efficiency-row {
-  border-radius: 4px;
-  font-weight: bold;
-  background: var(--el-color-primary-light-8);
 }
 
 .simplified-all-optimal {

@@ -317,9 +317,7 @@ function handleResetRewardTable() {
 }
 
 .config-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  @include flex-row(8px);
 
   :deep(.el-input) {
     width: 80px;
@@ -329,15 +327,14 @@ function handleResetRewardTable() {
 .config-label,
 .daily-label,
 .expected-utility-label {
-  font-size: 14px;
-  color: var(--el-text-color-secondary);
+  @include text-secondary;
+
   white-space: nowrap;
 }
 
 .config-otp-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  @include flex-row(8px);
+
   margin-bottom: 4px;
 }
 
@@ -373,8 +370,7 @@ function handleResetRewardTable() {
 
 .config-reward-hint {
   margin-bottom: 4px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
+  @include text-secondary(12px);
 }
 
 .config-reward-textarea {
@@ -398,9 +394,7 @@ function handleResetRewardTable() {
 // ── Expected utility ──
 .expected-utility-body,
 .expected-utility-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  @include flex-column;
 }
 
 .expected-utility-grid {
@@ -462,9 +456,7 @@ function handleResetRewardTable() {
 }
 
 .daily-item {
-  display: flex;
-  gap: 4px;
-  align-items: center;
+  @include flex-row;
 }
 
 .daily-input {
