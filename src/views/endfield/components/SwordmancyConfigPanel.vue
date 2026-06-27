@@ -228,9 +228,9 @@ import { ref, computed } from 'vue';
 
 import { useResponsive } from '@/composables/useResponsive';
 
-import { useSwordmancyGameState } from './composables/useSwordmancyGameState';
-import type { PlaqueConfig } from './composables/useSwordmancyGameState';
-import { DEFAULT_DECK_CONFIG_DATE, DEFAULT_REWARDS } from './EndfieldTrialSwordmancySolver';
+import { useSwordmancyGameState } from '../composables/useSwordmancyGameState';
+import type { PlaqueConfig } from '../composables/useSwordmancyGameState';
+import { DEFAULT_DECK_CONFIG_DATE, DEFAULT_REWARDS } from '../EndfieldTrialSwordmancySolver';
 
 const {
   config,
@@ -303,7 +303,7 @@ function handleResetRewardTable() {
 </script>
 
 <style lang="scss" scoped>
-@use './styles/EndfieldTrialOfSwordmancyCard' as *;
+@use '../styles/EndfieldTrialOfSwordmancyCard' as *;
 
 .config-panel {
   margin-bottom: 16px;

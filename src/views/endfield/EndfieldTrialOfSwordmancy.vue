@@ -80,9 +80,9 @@ import { ref, computed } from 'vue';
 
 import { useResponsive } from '@/composables/useResponsive';
 
-import AnalysisPanel from './AnalysisPanel.vue';
-import ConfigPanel from './ConfigPanel.vue';
-import GamePanel from './GamePanel.vue';
+import AnalysisPanel from './components/SwordmancyAnalysisPanel.vue';
+import ConfigPanel from './components/SwordmancyConfigPanel.vue';
+import GamePanel from './components/SwordmancyGamePanel.vue';
 
 const { isMobile } = useResponsive();
 const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
@@ -104,13 +104,6 @@ const tourOpen = ref(false);
 
   .view-tour-btn {
     flex-shrink: 0;
-  }
-
-  // ── 响应式：小屏幕 ──
-  @media (max-width: 767px) {
-    .view-title-row {
-      // Ensure proper spacing on mobile
-    }
   }
 }
 </style>

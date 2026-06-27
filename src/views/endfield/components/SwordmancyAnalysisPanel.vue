@@ -370,7 +370,7 @@
 <script setup lang="ts">
 import { InfoFilled } from '@element-plus/icons-vue';
 
-import { useSwordmancyGameState } from './composables/useSwordmancyGameState';
+import { useSwordmancyGameState } from '../composables/useSwordmancyGameState';
 
 const {
   hasWarning,
@@ -436,7 +436,7 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
 </script>
 
 <style lang="scss" scoped>
-@use './styles/EndfieldTrialOfSwordmancyCard' as *;
+@use '../styles/EndfieldTrialOfSwordmancyCard' as *;
 
 @include card-padding('.advice-card', '.distribution-card', '.simplified-strategy-card');
 @include game-section-base;

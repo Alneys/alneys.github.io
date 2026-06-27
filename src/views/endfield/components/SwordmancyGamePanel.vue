@@ -256,7 +256,7 @@ import { computed } from 'vue';
 
 import { useResponsive } from '@/composables/useResponsive';
 
-import { useSwordmancyGameState } from './composables/useSwordmancyGameState';
+import { useSwordmancyGameState } from '../composables/useSwordmancyGameState';
 
 const {
   MAX_DRAWS,
@@ -370,7 +370,7 @@ function formatRewardShort(value: number): string {
 </script>
 
 <style lang="scss" scoped>
-@use './styles/EndfieldTrialOfSwordmancyCard' as *;
+@use '../styles/EndfieldTrialOfSwordmancyCard' as *;
 
 @include card-padding('.drawn-card', '.pool-card', '.reward-card');
 @include game-section-base;
