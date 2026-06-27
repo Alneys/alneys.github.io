@@ -94,7 +94,7 @@
         </template>
       </el-table>
     </div>
-    <CgssUnitViewerTooltipPortal
+    <CgssUnitViewerCardTooltipVirtual
       :visible="tooltip.visible.value"
       :card="tooltip.card.value"
       :trigger-element="tooltip.triggerElement.value"
@@ -130,7 +130,7 @@ import {
   sortCardsByParam,
   sortResonanceSpecialize,
 } from '../composables/useTableUtils';
-import CgssUnitViewerTooltipPortal from './CgssUnitViewerTooltipPortal.vue';
+import CgssUnitViewerCardTooltipVirtual from './CgssUnitViewerCardTooltipVirtual.vue';
 
 // 传入属性
 const props = defineProps<{

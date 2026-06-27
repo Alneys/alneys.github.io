@@ -1,6 +1,6 @@
 /**
  * 单例 Tooltip 状态管理
- * 供 CgssUnitViewerTooltipPortal 与表格组件共享状态
+ * 供 CgssUnitViewerCardTooltipVirtual 与表格组件共享状态
  */
 
 import { ref, reactive } from 'vue';
