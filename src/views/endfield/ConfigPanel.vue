@@ -303,6 +303,8 @@ function handleResetRewardTable() {
 </script>
 
 <style lang="scss" scoped>
+@use './styles/EndfieldTrialOfSwordmancyCard' as *;
+
 .config-panel {
   margin-bottom: 16px;
 }
@@ -391,28 +393,7 @@ function handleResetRewardTable() {
   color: var(--el-color-danger);
 }
 
-// ── Card styling ──
-.expected-utility-card,
-.daily-card {
-  :deep(.el-card__header) {
-    padding: 12px 16px;
-    font-weight: bold;
-  }
-
-  :deep(.el-card__body) {
-    padding: 12px 16px;
-  }
-
-  @media (max-width: 767px) {
-    :deep(.el-card__header) {
-      padding: 8px 12px;
-    }
-
-    :deep(.el-card__body) {
-      padding: 8px 12px;
-    }
-  }
-}
+@include card-padding('.expected-utility-card', '.daily-card');
 
 // ── Expected utility ──
 .expected-utility-body,
@@ -445,19 +426,7 @@ function handleResetRewardTable() {
   flex-wrap: wrap;
 }
 
-// ── Game section ──
-.game-section {
-  row-gap: 8px;
-  margin-bottom: 8px;
-
-  :deep(.el-col) {
-    display: flex;
-  }
-
-  :deep(.el-card) {
-    width: 100%;
-  }
-}
+@include game-section-base;
 
 // ── Daily state ──
 .daily-date-hint {
@@ -516,18 +485,10 @@ function handleResetRewardTable() {
   margin-left: 0;
 }
 
+@include game-section-responsive;
+
 // ── Responsive ──
 @media (max-width: 767px) {
-  .game-section {
-    row-gap: 0;
-  }
-
-  .game-section {
-    :deep(.el-col + .el-col) {
-      margin-top: 8px;
-    }
-  }
-
   .daily-input {
     width: 80px;
   }

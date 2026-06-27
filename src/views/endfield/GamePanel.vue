@@ -370,43 +370,10 @@ function formatRewardShort(value: number): string {
 </script>
 
 <style lang="scss" scoped>
-// ── Card padding ──
-.drawn-card,
-.pool-card,
-.reward-card {
-  :deep(.el-card__header) {
-    padding: 12px 16px;
-    font-weight: bold;
-  }
+@use './styles/EndfieldTrialOfSwordmancyCard' as *;
 
-  :deep(.el-card__body) {
-    padding: 12px 16px;
-  }
-
-  @media (max-width: 767px) {
-    :deep(.el-card__header) {
-      padding: 8px 12px;
-    }
-
-    :deep(.el-card__body) {
-      padding: 8px 12px;
-    }
-  }
-}
-
-// ── Game section ──
-.game-section {
-  row-gap: 8px;
-  margin-bottom: 8px;
-
-  :deep(.el-col) {
-    display: flex;
-  }
-
-  :deep(.el-card) {
-    width: 100%;
-  }
-}
+@include card-padding('.drawn-card', '.pool-card', '.reward-card');
+@include game-section-base;
 
 // ── Drawn cards ──
 .drawn-card {
@@ -650,18 +617,10 @@ function formatRewardShort(value: number): string {
   justify-content: center;
 }
 
+@include game-section-responsive;
+
 // ── Responsive ──
 @media (max-width: 767px) {
-  .game-section {
-    row-gap: 0;
-  }
-
-  .game-section {
-    :deep(.el-col + .el-col) {
-      margin-top: 8px;
-    }
-  }
-
   .action-row {
     .action-row-left,
     .action-row-right {
