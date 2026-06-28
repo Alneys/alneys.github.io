@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { getCurrentAdvice } from './EndfieldTrialSwordmancySolver';
+import { getCurrentAdvice } from './SwordmancySolver';
 
 const rewards = [0, 1000, 2000, 4000, 7500, 12000, 20000, 36000, 60000, 100000, 160000];
 const deck = [5, 5, 5, 8, 6];
@@ -56,7 +56,7 @@ function getInitialExpected(P: number, D: number, A: number): number {
   return result.rewardToday;
 }
 
-describe('EndfieldTrialSwordmancySolver', () => {
+describe('SwordmancySolver', () => {
   it.each(Object.entries(expected))(
     'P=%s D=%s A=%s 的初始期望收益应匹配 Python 基准',
     (key, exp) => {
