@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-
 import svgCG from '@/assets/svg/imas-cinderella-girls.svg?raw';
 import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
 import svgML from '@/assets/svg/imas-million-live.svg?raw';
@@ -9,16 +7,12 @@ import { useResponsive } from '@/composables/useResponsive';
 import { useVersionCheck } from '@/composables/useVersionCheck';
 
 const env = import.meta.env;
-const router = useRouter();
+
 const { isMobile } = useResponsive();
 
 const { showUpdateNotification } = env.DEV
   ? useVersionCheck()
   : { showUpdateNotification: () => {} };
-
-function goBack() {
-  router.push('/');
-}
 
 async function copyToClipboard(text: string) {
   try {
@@ -36,7 +30,6 @@ async function copyToClipboard(text: string) {
     <div class="al-divider"></div>
     <h2>Alneys</h2>
     <p>At last nothing exists, you see.</p>
-    <el-button @click="goBack">点击左上角可以返回首页</el-button>
     <div class="al-divider"></div>
     <div class="shields-io-collections">
       <a href="https://github.com/Alneys" target="_blank">
