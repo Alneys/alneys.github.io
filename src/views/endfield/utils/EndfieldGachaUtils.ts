@@ -101,8 +101,9 @@ export function simulateCharacterGachaToTarget(
   const currentSimulationResults: string[] = [];
 
   while (drawCount <= 1200) {
-    // 检查是否触发免费10连抽（累计抽取30次且未使用过）
+    // 如果总抽取次数达到30次，获得当前卡池的免费十连
     if (drawCount >= 30 && !freeGachaUsed) {
+      // 30次抽卡获取的免费10连抽使用独立的计数器，不使用、不增加主抽卡流程的保底计数器（no6StarCount、no5Or6StarCount、noSpecific6StarCount）
       let freeNo5Or6StarCount = 0;
       for (let j = 0; j < 10; j++) {
         const freeResult = simulateCharacterGachaSingle(0, freeNo5Or6StarCount, 0, false);
@@ -120,6 +121,7 @@ export function simulateCharacterGachaToTarget(
         }
       }
       freeGachaUsed = true;
+      // 跳过后续的保底计数器更新逻辑，确保免费10连不增加主抽卡流程的保底计数
       continue;
     }
 
@@ -188,18 +190,17 @@ export function simulateCharacterGachaToTarget(
     actualDraws -= 10;
   }
 
-  // 如果总抽取次数达到60次，获得下个卡池的免费十连，模拟抽取
+  // 如果总抽取次数达到60次，获得下个卡池的免费十连
   if (drawCount >= 60) {
-    // 使用最后的未抽到6星和5星计数，但不包括未抽到特定6星计数
+    // 下个卡池继承未抽到6星和5星的计数，但不继承未抽到特定6星的计数，因为下个卡池的特定角色与当前的不同，此处简单处理
     let freeNo6StarCount = no6StarCount;
     let freeNo5Or6StarCount = no5Or6StarCount;
 
-    // 下个卡池继承未抽到6星和5星的计数，但不继承未抽到特定6星的计数
     for (let j = 0; j < 10; j++) {
       let freeResult = simulateCharacterGachaSingle(
         freeNo6StarCount,
         freeNo5Or6StarCount,
-        0, // 不继承未抽到特定6星的计数，此处简单处理，因为下个卡池的特定角色与当前的不同
+        0, // 简单处理
         hasUsedSpecific6StarGuarantee,
       );
 
@@ -207,7 +208,7 @@ export function simulateCharacterGachaToTarget(
 
       // 更新计数器，注意不更新noSpecific6StarCount
       if (freeResult === '6_up') {
-        freeResult = '6_other'; // 此处简单处理
+        freeResult = '6_other'; // 简单处理
         specific6StarCount++;
         hasUsedSpecific6StarGuarantee = true;
         freeNo6StarCount = 0;
