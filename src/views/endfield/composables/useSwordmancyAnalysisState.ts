@@ -1,12 +1,9 @@
 import { computed, watch } from 'vue';
 
-import { evaluateAllSimplifiedStrategies } from '../EndfieldTrialSwordmancySimplified';
-import type {
-  SimplifiedStrategyResult,
-  StrategyEvalResult,
-} from '../EndfieldTrialSwordmancySimplified';
-import { getCurrentAdvice } from '../EndfieldTrialSwordmancySolver';
-import type { AdviceResult } from '../EndfieldTrialSwordmancySolver';
+import { evaluateAllSimplifiedStrategies } from '../utils/SwordmancySimplified';
+import type { SimplifiedStrategyResult, StrategyEvalResult } from '../utils/SwordmancySimplified';
+import { getCurrentAdvice } from '../utils/SwordmancySolver';
+import type { AdviceResult } from '../utils/SwordmancySolver';
 import { useSwordmancySharedState } from './useSwordmancySharedState';
 
 export function useSwordmancyAnalysisState() {

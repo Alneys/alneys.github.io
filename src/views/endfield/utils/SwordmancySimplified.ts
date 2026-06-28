@@ -19,7 +19,7 @@ import {
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
   MAX_DRAWS,
-} from './EndfieldTrialSwordmancySolver';
+} from './SwordmancySolver';
 
 /** 单个简化策略的评估结果 */
 export interface StrategyEvalResult {

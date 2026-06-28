@@ -230,7 +230,7 @@ import { useResponsive } from '@/composables/useResponsive';
 
 import { useSwordmancyConfigState } from '../composables/useSwordmancyConfigState';
 import type { PlaqueConfig } from '../composables/useSwordmancySharedState';
-import { DEFAULT_DECK_CONFIG_DATE, DEFAULT_REWARDS } from '../EndfieldTrialSwordmancySolver';
+import { DEFAULT_DECK_CONFIG_DATE, DEFAULT_REWARDS } from '../utils/SwordmancySolver';
 
 const {
   config,

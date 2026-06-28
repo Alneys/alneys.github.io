@@ -170,7 +170,7 @@ import {
   type GachaStrategy,
   type GachaSimulationResult,
   simulateCharacterGachaToTargetMultipleTimes,
-} from './EndfieldGachaUtils';
+} from './utils/EndfieldGachaUtils';
 
 const chartCharacterRef = useTemplateRef('chartCharacterRef');
 const chartWeaponRef = useTemplateRef('chartWeaponRef');

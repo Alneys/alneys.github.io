@@ -6,8 +6,8 @@ import {
   DEFAULT_DECK_CONFIG,
   DEFAULT_DECK_CONFIG_DATE,
   MAX_DRAWS,
-} from '../EndfieldTrialSwordmancySolver';
-import type { ExpectedUtilityParams } from '../EndfieldTrialSwordmancySolver';
+} from '../utils/SwordmancySolver';
+import type { ExpectedUtilityParams } from '../utils/SwordmancySolver';
 
 // ── 类型定义 ──
 
@@ -66,7 +66,7 @@ const fixedPenalty = ref(0);
 
 /** 简化策略穷举对比结果 */
 const simplifiedStrategyResult = ref<
-  import('../EndfieldTrialSwordmancySimplified').SimplifiedStrategyResult | null
+  import('../utils/SwordmancySimplified').SimplifiedStrategyResult | null
 >(null);
 /** 简化策略求解器加载状态 */
 const solverLoading = ref(false);
