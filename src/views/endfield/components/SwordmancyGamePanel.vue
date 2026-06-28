@@ -375,7 +375,7 @@ function formatRewardShort(value: number): string {
 @include card-padding('.drawn-card', '.pool-card', '.reward-card');
 @include game-section-base;
 
-// ── Drawn cards ──
+// ── 已抽铭牌 ──
 .drawn-card {
   :deep(.el-card__body) {
     display: flex;
@@ -466,7 +466,7 @@ function formatRewardShort(value: number): string {
   flex-shrink: 0;
 }
 
-// ── Pool ──
+// ── 铭牌库 ──
 .pool-list {
   @include flex-column;
 }
@@ -488,7 +488,7 @@ function formatRewardShort(value: number): string {
   color: var(--el-text-color-primary);
 }
 
-// ── Reward ──
+// ── 奖励 ──
 .reward-label {
   font-size: 14px;
   font-weight: bold;
@@ -552,7 +552,7 @@ function formatRewardShort(value: number): string {
   }
 }
 
-// ── Actions ──
+// ── 操作按钮 ──
 .action-row {
   display: flex;
   gap: 12px;
@@ -610,7 +610,7 @@ function formatRewardShort(value: number): string {
 
 @include game-section-responsive;
 
-// ── Responsive ──
+// ── 响应式 ──
 @media (max-width: 767px) {
   .action-row {
     .action-row-left,

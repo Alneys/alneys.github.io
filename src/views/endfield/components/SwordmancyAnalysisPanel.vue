@@ -370,7 +370,7 @@
 <script setup lang="ts">
 import { InfoFilled } from '@element-plus/icons-vue';
 
-import { useSwordmancyGameState } from '../composables/useSwordmancyGameState';
+import { useSwordmancyAnalysisState } from '../composables/useSwordmancyAnalysisState';
 
 const {
   hasWarning,
@@ -386,7 +386,7 @@ const {
   simplifiedStrategyResult,
   thresholdRowData,
   allStrategiesTableData,
-} = useSwordmancyGameState();
+} = useSwordmancyAnalysisState();
 
 /** 阈值标签提示文本映射 */
 const labelTipMap: Record<string, string> = {
@@ -441,7 +441,7 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
 @include card-padding('.advice-card', '.distribution-card', '.simplified-strategy-card');
 @include game-section-base;
 
-// ── Advice ──
+// ── 建议 ──
 .advice-content {
   @include flex-column;
 }
@@ -534,7 +534,7 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
   }
 }
 
-// ── Distribution ──
+// ── 分布 ──
 .distribution-empty {
   padding: 12px 0;
   font-size: 14px;
@@ -577,7 +577,7 @@ function allStrategiesRowClassName({ row }: { row: any }): string {
   background: var(--el-color-primary-light-8);
 }
 
-// ── Simplified strategy ──
+// ── 简化策略 ──
 .simplified-strategy-card {
   margin-top: 16px;
 

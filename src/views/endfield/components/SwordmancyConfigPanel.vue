@@ -59,7 +59,7 @@
         />
         <div v-if="rewardTableError" class="config-reward-error">{{ rewardTableError }}</div>
         <div class="config-reward-buttons">
-          <el-button :size="compSize" type="primary" @click="applyRewardTable"
+          <el-button :size="compSize" type="primary" @click="handleApplyRewardTable"
             >应用奖励表</el-button
           >
           <el-button :size="compSize" @click="handleResetRewardTable">重置奖励表</el-button>
@@ -228,8 +228,8 @@ import { ref, computed } from 'vue';
 
 import { useResponsive } from '@/composables/useResponsive';
 
-import { useSwordmancyGameState } from '../composables/useSwordmancyGameState';
-import type { PlaqueConfig } from '../composables/useSwordmancyGameState';
+import { useSwordmancyConfigState } from '../composables/useSwordmancyConfigState';
+import type { PlaqueConfig } from '../composables/useSwordmancySharedState';
 import { DEFAULT_DECK_CONFIG_DATE, DEFAULT_REWARDS } from '../EndfieldTrialSwordmancySolver';
 
 const {
@@ -247,10 +247,9 @@ const {
   setSingleSimulation,
   resetToday,
   onlyConfigDigit,
-  clearSolverCache,
-  rewardValues,
+  applyRewardTable,
   resetRewardTable,
-} = useSwordmancyGameState();
+} = useSwordmancyConfigState();
 
 const { isMobile } = useResponsive();
 const compSize = computed(() => (isMobile.value ? 'small' : 'default'));
@@ -290,8 +289,8 @@ const rewardTableText = ref(JSON.stringify(DEFAULT_REWARDS, null, 2));
 /** 解析错误信息 */
 const rewardTableError = ref('');
 
-function applyRewardTable() {
-  const error = useSwordmancyGameState().applyRewardTable(rewardTableText.value);
+function handleApplyRewardTable() {
+  const error = applyRewardTable(rewardTableText.value);
   rewardTableError.value = error ?? '';
 }
 
@@ -391,7 +390,7 @@ function handleResetRewardTable() {
 
 @include card-padding('.expected-utility-card', '.daily-card');
 
-// ── Expected utility ──
+// ── 期望效用 ──
 .expected-utility-body,
 .expected-utility-grid {
   @include flex-column;
@@ -422,7 +421,7 @@ function handleResetRewardTable() {
 
 @include game-section-base;
 
-// ── Daily state ──
+// ── 今日状态 ──
 .daily-date-hint {
   display: flex;
   align-items: baseline;
@@ -479,7 +478,7 @@ function handleResetRewardTable() {
 
 @include game-section-responsive;
 
-// ── Responsive ──
+// ── 响应式 ──
 @media (max-width: 767px) {
   .daily-input {
     width: 80px;
