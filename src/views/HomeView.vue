@@ -5,7 +5,9 @@ const env = import.meta.env;
 <template>
   <div id="view-home">
     <div class="title-block">
-      <h1 class="view-title">Alneys - GitHub Pages</h1>
+      <div class="view-title">
+        <h1>Alneys - GitHub Pages</h1>
+      </div>
       <div class="al-divider"></div>
       <p>At last nothing exists, you see.</p>
     </div>

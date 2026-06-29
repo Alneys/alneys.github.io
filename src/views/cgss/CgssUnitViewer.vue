@@ -1,6 +1,8 @@
 <template>
   <div class="cgss-unit-viewer">
-    <h1 class="view-title">偶像大师灰姑娘女孩星光舞台 组队信息</h1>
+    <div class="view-title">
+      <h1>偶像大师灰姑娘女孩星光舞台 组队信息</h1>
+    </div>
     <div class="al-divider"></div>
 
     <div v-if="error" class="error-container">

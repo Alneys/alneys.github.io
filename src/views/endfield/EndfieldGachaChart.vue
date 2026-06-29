@@ -1,5 +1,7 @@
 <template>
-  <h1 class="view-title">明日方舟终末地 抽卡信息</h1>
+  <div class="view-title">
+    <h1>Endfield Gacha Info</h1>
+  </div>
   <div class="al-divider"></div>
   <div class="endfield-gacha-title" id="endfield-gacha-character" style="font-weight: bold">
     角色

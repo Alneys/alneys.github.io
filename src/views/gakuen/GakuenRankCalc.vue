@@ -192,7 +192,9 @@ function calculateFinalTestTarget(
 
 <template>
   <div id="view-gakuen-rank-calc">
-    <h1 class="view-title">学园偶像大师 评级计算器</h1>
+    <div class="view-title">
+      <h1>学园偶像大师 评级计算器</h1>
+    </div>
     <div class="al-divider"></div>
     <div id="gakuen-rank-calc-form">
       <el-form

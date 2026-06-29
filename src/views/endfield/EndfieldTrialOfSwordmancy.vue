@@ -1,7 +1,7 @@
 ﻿<template>
   <div id="view-endfield-trial-of-swordmancy">
-    <div class="view-title-row">
-      <h1 class="view-title">Endfield Trial Of Swordmancy</h1>
+    <div class="view-title">
+      <h1>Endfield Trial Of Swordmancy</h1>
       <a href="https://space.bilibili.com/13775737" target="_blank">
         <img
           src="https://img.shields.io/badge/Alneys-00A1D6?style=flat-square&logo=bilibili&labelColor=eee"
@@ -9,9 +9,7 @@
           style="height: 20px"
         />
       </a>
-      <el-button class="view-tour-btn" :size="compSize" @click="tourOpen = true">
-        页面引导
-      </el-button>
+      <el-button class="view-tour-btn" size="small" @click="tourOpen = true"> 页面引导 </el-button>
     </div>
     <div class="al-divider"></div>
 
@@ -91,15 +89,16 @@ const tourOpen = ref(false);
 
 <style lang="scss" scoped>
 #view-endfield-trial-of-swordmancy {
-  .view-title-row {
+  .view-title {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
   }
 
-  .view-title {
+  h1 {
     flex: 1;
+    margin: 0;
   }
 
   .view-tour-btn {

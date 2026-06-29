@@ -1,6 +1,8 @@
 <template>
   <div id="view-mltd-event-parking">
-    <h1 class="view-title">偶像大师百万现场 活动控分计算器</h1>
+    <div class="view-title">
+      <h1>偶像大师百万现场 活动控分计算器</h1>
+    </div>
     <div class="al-divider"></div>
     <div id="mltd-event-parking-form">
       <el-row :gutter="16">

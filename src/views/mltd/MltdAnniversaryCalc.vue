@@ -1,6 +1,8 @@
 <template>
   <div id="view-mltd-anni-calc">
-    <h1 class="view-title">偶像大师百万现场 周年活动计算器</h1>
+    <div class="view-title">
+      <h1>偶像大师百万现场 周年活动计算器</h1>
+    </div>
     <div class="al-divider"></div>
     <div id="mltd-anni-calc-form">
       <el-row :gutter="16">
