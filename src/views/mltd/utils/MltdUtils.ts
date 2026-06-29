@@ -3,7 +3,7 @@
  * 提供等级体力转换等功能
  */
 
-import { LEVEL_TO_MAX_STAMINA_TABLE } from './MltdConstant';
+import { LEVEL_TO_MAX_STAMINA_TABLE } from '../data/MltdConstants';
 
 /**
  * 根据等级获取最大体力值
