@@ -403,7 +403,7 @@ import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
 import { EVENT_PARKING_TIPS, EVENT_PARKING_NOTICES } from './data/MltdEventParkingConstant';
-import type { ParkingForm, EventChoice, ParkingResultItem } from './MltdTypes';
+import type { ParkingForm, EventChoice, ParkingResultItem } from './utils/MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
 const activeCollapse = ref<string[]>([]);
