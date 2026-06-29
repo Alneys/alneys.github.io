@@ -3,11 +3,11 @@
     <div class="cgss-countdown-container">
       <div>
         <span>距离《偶像大师灰姑娘 星光舞台》10周年剩余时间：</span>
-        <el-countdown format="DD天HH:mm:ss" :value="cgss10thAnniversaryTime"></el-countdown>
+        <el-countdown format="DD天HH:mm:ss" :value="cgss10thAnniversaryTime" />
       </div>
       <div>
         <span>距离《偶像大师灰姑娘 星光舞台》翻唱曲下线剩余时间：</span>
-        <el-countdown format="DD天HH:mm:ss" :value="coverSongOfflineTime"></el-countdown>
+        <el-countdown format="DD天HH:mm:ss" :value="coverSongOfflineTime" />
       </div>
     </div>
   </div>

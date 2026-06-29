@@ -10,9 +10,9 @@ useVersionCheck();
 
 <template>
   <div id="layout">
-    <LayoutHeader></LayoutHeader>
-    <LayoutMain></LayoutMain>
-    <LayoutFooter></LayoutFooter>
+    <LayoutHeader />
+    <LayoutMain />
+    <LayoutFooter />
   </div>
 </template>
 

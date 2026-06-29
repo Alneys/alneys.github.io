@@ -8,14 +8,14 @@
           <el-form ref="formRef" :model="form" label-width="auto" label-position="top">
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
-                <el-option label="Theater" value="theater"></el-option>
-                <el-option label="Tour" value="tour"></el-option>
-                <el-option label="Anniversary" value="anniversary"></el-option>
-                <el-option label="Trust" value="trust"></el-option>
-                <el-option label="Tune" value="tune"></el-option>
-                <el-option label="Tale" value="tale"></el-option>
-                <el-option label="Treasure" value="treasure"></el-option>
-                <el-option label="其他活动开发中" value="disabled" disabled></el-option>
+                <el-option label="Theater" value="theater" />
+                <el-option label="Tour" value="tour" />
+                <el-option label="Anniversary" value="anniversary" />
+                <el-option label="Trust" value="trust" />
+                <el-option label="Tune" value="tune" />
+                <el-option label="Tale" value="tale" />
+                <el-option label="Treasure" value="treasure" />
+                <el-option label="其他活动开发中" value="disabled" disabled />
                 <!-- 1: Showtime -->
                 <!-- 2: Millicolle! -->
                 <!-- 3: Theater / Trust -->

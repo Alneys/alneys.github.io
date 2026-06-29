@@ -1,6 +1,6 @@
 <template>
   <div class="anni-calc-state-manager">
-    <slot name="prefix"></slot>
+    <slot name="prefix" />
     <div>
       <el-button type="primary" @click="handleSaveToLocalStorage">保存输入到浏览器</el-button>
     </div>

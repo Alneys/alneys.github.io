@@ -86,9 +86,9 @@
       </el-form-item>
       <el-form-item label="抽卡策略">
         <el-select v-model="formModel.gachaStrategy" placeholder="请选择">
-          <el-option label="单抽" value="single"></el-option>
-          <el-option label="智能" value="smart"></el-option>
-          <el-option label="十连抽" value="batch"></el-option>
+          <el-option label="单抽" value="single" />
+          <el-option label="智能" value="smart" />
+          <el-option label="十连抽" value="batch" />
         </el-select>
       </el-form-item>
       <el-form-item>

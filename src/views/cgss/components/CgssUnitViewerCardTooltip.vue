@@ -43,7 +43,7 @@
         <span class="is-bold">{{ card.skill?.params?.tw || '' }}s</span>
       </div>
     </template>
-    <slot></slot>
+    <slot />
   </el-tooltip>
 </template>
 

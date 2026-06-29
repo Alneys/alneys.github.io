@@ -204,7 +204,7 @@ function calculateFinalTestTarget(
       >
         <el-form-item label="选择剧本">
           <el-select v-model="form.scenario" disabled>
-            <el-option label="定期公演《初》" :value="1"></el-option>
+            <el-option label="定期公演《初》" :value="1" />
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
@@ -214,7 +214,7 @@ function calculateFinalTestTarget(
                 v-model="form.difficulty"
                 :options="Object.keys(maxStatsDict)"
                 size="default"
-              ></el-segmented>
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
@@ -226,24 +226,24 @@ function calculateFinalTestTarget(
         <el-row :gutter="16" @keyup.enter="handleSubmit">
           <el-col :span="8" :xs="24">
             <el-form-item label="Vocal" prop="vocal">
-              <el-input v-model.number="form.vocal" type="number" inputmode="numeric"></el-input>
+              <el-input v-model.number="form.vocal" type="number" inputmode="numeric" />
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Dance" prop="dance">
-              <el-input v-model.number="form.dance" type="number" inputmode="numeric"></el-input>
+              <el-input v-model.number="form.dance" type="number" inputmode="numeric" />
             </el-form-item>
           </el-col>
           <el-col :span="8" :xs="24">
             <el-form-item label="Visual" prop="visual">
-              <el-input v-model.number="form.visual" type="number" inputmode="numeric"></el-input>
+              <el-input v-model.number="form.visual" type="number" inputmode="numeric" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-form-item label="包含最终测验能力值" prop="beforeFinalTest">
           <el-radio-group v-model="form.beforeFinalTest">
-            <el-radio label="否" :value="true"> </el-radio>
-            <el-radio label="是" :value="false"> </el-radio>
+            <el-radio label="否" :value="true" />
+            <el-radio label="是" :value="false" />
           </el-radio-group>
         </el-form-item>
         <el-form-item label=" ">
