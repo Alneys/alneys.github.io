@@ -587,6 +587,12 @@ const ptStatusTableData = computed(() => {
   const tokensConsumedByNormalConsume = result.normalConsumePlays * MLTD.tokensPerConsumePlay;
   return [
     {
+      item: '最终结果',
+      pt: `${formatNumber((form.value.pt || 0) + (result.ptTotalFromOperations || 0))} pt`,
+      token: `${formatNumber(result.finalTokensRemaining)} 个`,
+      highlight: true,
+    },
+    {
       item: '当前状态',
       pt: `${formatNumber(form.value.pt || 0)} pt`,
       token: `${formatNumber(form.value.tokens || 0)} 个`,
@@ -620,12 +626,6 @@ const ptStatusTableData = computed(() => {
       item: '普通清道具',
       pt: `+${formatNumber(result.ptFromNormalConsume)} pt`,
       token: `-${formatNumber(tokensConsumedByNormalConsume)} 个`,
-    },
-    {
-      item: '汇总',
-      pt: `${formatNumber((form.value.pt || 0) + (result.ptTotalFromOperations || 0))} pt`,
-      token: `${formatNumber(result.finalTokensRemaining)} 个`,
-      highlight: true,
     },
   ];
 });
