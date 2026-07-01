@@ -370,8 +370,8 @@
             <el-form-item label=" ">
               <el-space wrap>
                 <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
-                <el-button @click="handleClear">重置</el-button>
-                <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
+                <el-button @click="handleClear">重置全部</el-button>
+                <el-button @click="handleRefreshTime">重新获取剩余时间</el-button>
               </el-space>
             </el-form-item>
             <el-form-item label=" ">
@@ -739,14 +739,21 @@ onMounted(() => {
 
 function handleClear() {
   formRef.value?.resetFields();
-  resetCurrentRemainingTime();
+  form.value.remainingTime = MLTD.eventTotalDays;
   applyOptimalAllocation();
 
-  nextTick(() => {
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
+  ElMessage.info('已重置，如需更新实际剩余时间请点击「重新获取剩余时间」');
+
+  // nextTick(() => {
+  //   setTimeout(() => {
+  //     window.scrollTo({ top: 0, behavior: 'smooth' });
+  //   });
+  // });
+}
+
+function handleRefreshTime() {
+  const days = resetCurrentRemainingTime();
+  ElMessage.success(`剩余时间已更新为 ${days.toFixed(3)} 天`);
 }
 </script>
 
