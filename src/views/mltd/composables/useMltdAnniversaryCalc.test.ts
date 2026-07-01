@@ -3,7 +3,7 @@ import { ref, nextTick } from 'vue';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../data/MltdAnniversaryConstants';
-import type { AnniversaryForm } from '../utils/MltdTypes';
+import type { AnniversaryForm } from '../MltdTypes';
 import { useMltdAnniversaryCalc, createDefaultForm } from './useMltdAnniversaryCalc';
 
 describe('calculateOptimalBoostAllocation', () => {
