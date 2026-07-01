@@ -1,6 +1,6 @@
 <template>
   <div class="unit-state-manager">
-    <slot name="prefix"></slot>
+    <slot name="prefix" />
     <div>
       <el-button type="primary" size="default" @click="toggleAllBrightness">
         切换所有状态

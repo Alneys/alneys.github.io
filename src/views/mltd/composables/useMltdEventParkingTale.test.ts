@@ -2,7 +2,7 @@ import { ref, nextTick } from 'vue';
 
 import { describe, it, expect } from 'vitest';
 
-import type { ParkingForm, EventChoice } from '../MltdTypes';
+import type { ParkingForm, EventChoice } from '../utils/MltdTypes';
 import { useMltdEventParkingTale } from './useMltdEventParkingTale';
 
 function createForm(overrides: Partial<ParkingForm> = {}): ParkingForm {

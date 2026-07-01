@@ -1,6 +1,8 @@
 <template>
   <div id="view-mltd-anni-calc">
-    <h1 class="view-title">偶像大师百万现场 周年活动计算器</h1>
+    <div class="view-title">
+      <h1>偶像大师百万现场 周年活动计算器</h1>
+    </div>
     <div class="al-divider"></div>
     <div id="mltd-anni-calc-form">
       <el-row :gutter="16">
@@ -443,8 +445,8 @@ import { ref, nextTick, onMounted, computed, useTemplateRef } from 'vue';
 
 import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';
 import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
-import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from './data/MltdAnniversaryConstant';
-import type { AnniversaryForm } from './MltdTypes';
+import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from './data/MltdAnniversaryConstants.ts';
+import type { AnniversaryForm } from './utils/MltdTypes.ts';
 
 const PT_EXCEEDED_WARNING_THRESHOLD = 10000;
 
@@ -587,6 +589,12 @@ const ptStatusTableData = computed(() => {
   const tokensConsumedByNormalConsume = result.normalConsumePlays * MLTD.tokensPerConsumePlay;
   return [
     {
+      item: '最终结果',
+      pt: `${formatNumber((form.value.pt || 0) + (result.ptTotalFromOperations || 0))} pt`,
+      token: `${formatNumber(result.finalTokensRemaining)} 个`,
+      highlight: true,
+    },
+    {
       item: '当前状态',
       pt: `${formatNumber(form.value.pt || 0)} pt`,
       token: `${formatNumber(form.value.tokens || 0)} 个`,
@@ -620,12 +628,6 @@ const ptStatusTableData = computed(() => {
       item: '普通清道具',
       pt: `+${formatNumber(result.ptFromNormalConsume)} pt`,
       token: `-${formatNumber(tokensConsumedByNormalConsume)} 个`,
-    },
-    {
-      item: '汇总',
-      pt: `${formatNumber((form.value.pt || 0) + (result.ptTotalFromOperations || 0))} pt`,
-      token: `${formatNumber(result.finalTokensRemaining)} 个`,
-      highlight: true,
     },
   ];
 });

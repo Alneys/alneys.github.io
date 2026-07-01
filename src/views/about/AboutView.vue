@@ -26,7 +26,9 @@ async function copyToClipboard(text: string) {
 
 <template>
   <div>
-    <h1 class="view-title">关于</h1>
+    <div class="view-title">
+      <h1>关于</h1>
+    </div>
     <div class="al-divider"></div>
     <h2>Alneys</h2>
     <p>At last nothing exists, you see.</p>

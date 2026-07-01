@@ -1,6 +1,8 @@
 <template>
   <div id="view-mltd-event-parking">
-    <h1 class="view-title">偶像大师百万现场 活动控分计算器</h1>
+    <div class="view-title">
+      <h1>偶像大师百万现场 活动控分计算器</h1>
+    </div>
     <div class="al-divider"></div>
     <div id="mltd-event-parking-form">
       <el-row :gutter="16">
@@ -8,14 +10,14 @@
           <el-form ref="formRef" :model="form" label-width="auto" label-position="top">
             <el-form-item label="选择活动类型">
               <el-select v-model="form.eventType">
-                <el-option label="Theater" value="theater"></el-option>
-                <el-option label="Tour" value="tour"></el-option>
-                <el-option label="Anniversary" value="anniversary"></el-option>
-                <el-option label="Trust" value="trust"></el-option>
-                <el-option label="Tune" value="tune"></el-option>
-                <el-option label="Tale" value="tale"></el-option>
-                <el-option label="Treasure" value="treasure"></el-option>
-                <el-option label="其他活动开发中" value="disabled" disabled></el-option>
+                <el-option label="Theater" value="theater" />
+                <el-option label="Tour" value="tour" />
+                <el-option label="Anniversary" value="anniversary" />
+                <el-option label="Trust" value="trust" />
+                <el-option label="Tune" value="tune" />
+                <el-option label="Tale" value="tale" />
+                <el-option label="Treasure" value="treasure" />
+                <el-option label="其他活动开发中" value="disabled" disabled />
                 <!-- 1: Showtime -->
                 <!-- 2: Millicolle! -->
                 <!-- 3: Theater / Trust -->
@@ -402,8 +404,8 @@ import { ref, nextTick, computed, useTemplateRef, watch } from 'vue';
 import { Minus, Plus, RefreshRight } from '@element-plus/icons-vue';
 
 import { useMltdEventParking, createDefaultParkingForm } from './composables/useMltdEventParking';
-import { EVENT_PARKING_TIPS, EVENT_PARKING_NOTICES } from './data/MltdEventParkingConstant';
-import type { ParkingForm, EventChoice, ParkingResultItem } from './MltdTypes';
+import { EVENT_PARKING_TIPS, EVENT_PARKING_NOTICES } from './data/MltdEventParkingConstants';
+import type { ParkingForm, EventChoice, ParkingResultItem } from './utils/MltdTypes';
 
 const form = ref<ParkingForm>(createDefaultParkingForm());
 const activeCollapse = ref<string[]>([]);

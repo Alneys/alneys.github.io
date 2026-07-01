@@ -1,5 +1,7 @@
 <template>
-  <h1 class="view-title">明日方舟终末地 抽卡信息</h1>
+  <div class="view-title">
+    <h1>Endfield Gacha Info</h1>
+  </div>
   <div class="al-divider"></div>
   <div class="endfield-gacha-title" id="endfield-gacha-character" style="font-weight: bold">
     角色
@@ -86,9 +88,9 @@
       </el-form-item>
       <el-form-item label="抽卡策略">
         <el-select v-model="formModel.gachaStrategy" placeholder="请选择">
-          <el-option label="单抽" value="single"></el-option>
-          <el-option label="智能" value="smart"></el-option>
-          <el-option label="十连抽" value="batch"></el-option>
+          <el-option label="单抽" value="single" />
+          <el-option label="智能" value="smart" />
+          <el-option label="十连抽" value="batch" />
         </el-select>
       </el-form-item>
       <el-form-item>

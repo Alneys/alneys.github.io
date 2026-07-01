@@ -3,7 +3,7 @@
 <template>
   <main id="layout-main">
     <div class="layout-max-width-container">
-      <router-view></router-view>
+      <router-view />
     </div>
   </main>
 </template>
