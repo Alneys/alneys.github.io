@@ -933,5 +933,311 @@ describe('useMltdAnniversaryCalc', () => {
         });
       });
     });
+
+    describe('skipPasses', () => {
+      describe('skipPassesFromDaily', () => {
+        it('freeTokenClaimCount 为 0 时应返回 0', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 4,
+            freeTokenClaimCount: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesFromDaily).toBe(0);
+        });
+
+        it('应正确计算每日跳过券数', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 4,
+            freeTokenClaimCount: 7,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesFromDaily).toBe(4 * 7);
+        });
+
+        it('dailySkipPassCount 为空字符串时应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: '' as unknown as number,
+            freeTokenClaimCount: 5,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 0,
+            freeTokenClaimCount: 5,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.skipPassesFromDaily).toBe(rZero.skipPassesFromDaily);
+        });
+      });
+
+      describe('skipPassesFromPtReward', () => {
+        it('当前 pt 超过所有累计pt奖励时应返回 0', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            targetPt: 100000,
+            pt: 99999999,
+            boostCount: 0,
+            freeTokenClaimCount: 0,
+            tokens: 0,
+            remainingTime: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesFromPtReward).toBe(0);
+        });
+
+        it('应从当前 pt 到最终 pt 计算新增累计pt奖励', async () => {
+          const formLow = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            targetPt: 100000,
+            pt: 10000,
+            boostCount: 13,
+            freeTokenClaimCount: 13,
+            tokens: 0,
+            remainingTime: 13,
+          });
+          const formHigh = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            targetPt: 100000,
+            pt: 50000,
+            boostCount: 13,
+            freeTokenClaimCount: 13,
+            tokens: 0,
+            remainingTime: 13,
+          });
+
+          const { result: rLow } = useMltdAnniversaryCalc(formLow);
+          const { result: rHigh } = useMltdAnniversaryCalc(formHigh);
+          await nextTick();
+
+          expect(rLow.skipPassesFromPtReward).toBeGreaterThanOrEqual(rHigh.skipPassesFromPtReward);
+        });
+
+        it('已达到目标 pt 时累计pt奖励跳过券应为 0', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            targetPt: 1000,
+            pt: 10000,
+            boostCount: 0,
+            freeTokenClaimCount: 0,
+            tokens: 0,
+            remainingTime: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesFromPtReward).toBe(0);
+        });
+      });
+
+      describe('skipPassesAvailable', () => {
+        it('应为每日和累计pt奖励之和', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 3,
+            freeTokenClaimCount: 5,
+            targetPt: 100000,
+            pt: 5000,
+            boostCount: 13,
+            tokens: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesAvailable).toBe(
+            result.skipPassesFromDaily + result.skipPassesFromPtReward,
+          );
+        });
+      });
+
+      describe('skipPassesUsed', () => {
+        it('不应超过 totalPlays', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            targetPt: 1000000,
+            pt: 0,
+            boostCount: 13,
+            freeTokenClaimCount: 13,
+            tokens: 0,
+            dailySkipPassCount: 999,
+            plv: 1,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesUsed).toBeLessThanOrEqual(result.totalPlays);
+          expect(result.skipPassesUsed).toBeLessThanOrEqual(result.skipPassesAvailable);
+        });
+
+        it('可用跳过券较少时全部使用', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 0,
+            boostCount: 0,
+            freeTokenClaimCount: 0,
+            tokens: 0,
+            targetPt: 0,
+            pt: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.skipPassesUsed).toBe(0);
+          expect(result.skipPassesAvailable).toBe(0);
+        });
+      });
+
+      describe('totalTimeSaved', () => {
+        it('应正确计算节省时间', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 5,
+            freeTokenClaimCount: 10,
+            singlePlayTime: 2.5,
+            targetPt: 100000,
+            pt: 0,
+            boostCount: 5,
+            tokens: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          const expectedTimeSaved = result.skipPassesUsed * 2.5;
+          expect(result.totalTimeSaved).toBe(expectedTimeSaved);
+        });
+
+        it('singlePlayTime 为 0 时应返回 0', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 5,
+            freeTokenClaimCount: 10,
+            singlePlayTime: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.totalTimeSaved).toBe(0);
+        });
+      });
+
+      describe('adjustedTotalTimeSpent', () => {
+        it('应为总时间减去节省时间', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 5,
+            freeTokenClaimCount: 10,
+            singlePlayTime: 2.5,
+            targetPt: 100000,
+            pt: 0,
+            boostCount: 5,
+            tokens: 0,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.adjustedTotalTimeSpent).toBe(
+            Math.max(0, result.totalTimeSpent - result.totalTimeSaved),
+          );
+        });
+
+        it('节省时间大于总时间时应返回 0', async () => {
+          const form = ref<AnniversaryForm>({
+            ...createDefaultForm(),
+            dailySkipPassCount: 999,
+            singlePlayTime: 999,
+            targetPt: 1000,
+            pt: 500,
+            boostCount: 0,
+            freeTokenClaimCount: 13,
+            tokens: 0,
+            plv: 1,
+          });
+
+          const { result } = useMltdAnniversaryCalc(form);
+          await nextTick();
+
+          expect(result.adjustedTotalTimeSpent).toBe(0);
+        });
+      });
+
+      describe('空字符串处理 - 跳过券字段', () => {
+        const createBaseForm = (): AnniversaryForm => ({
+          ...createDefaultForm(),
+          targetPt: 100000,
+          pt: 5000,
+          tokens: 1000,
+          boostCount: 5,
+          freeTokenClaimCount: 5,
+          plv: 100,
+          remainingTime: 5,
+          staminaMaxBottleCount: 10,
+          stamina30BottleCount: 5,
+          stamina20BottleCount: 3,
+          stamina10BottleCount: 2,
+          tokenAccumulateTime: 6.5,
+          tokenConsumeTime: 3,
+          singlePlayTime: 2.5,
+          dailySkipPassCount: 4,
+        });
+
+        it('dailySkipPassCount 为空字符串时应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            dailySkipPassCount: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            dailySkipPassCount: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.skipPassesFromDaily).toBe(rZero.skipPassesFromDaily);
+          expect(rEmpty.skipPassesAvailable).toBe(rZero.skipPassesAvailable);
+          expect(rEmpty.skipPassesUsed).toBe(rZero.skipPassesUsed);
+        });
+
+        it('singlePlayTime 为空字符串时 totalTimeSaved 应与 0 相同', async () => {
+          const formEmpty = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            singlePlayTime: '' as unknown as number,
+          });
+          const formZero = ref<AnniversaryForm>({
+            ...createBaseForm(),
+            singlePlayTime: 0,
+          });
+
+          const { result: rEmpty } = useMltdAnniversaryCalc(formEmpty);
+          const { result: rZero } = useMltdAnniversaryCalc(formZero);
+          await nextTick();
+
+          expect(rEmpty.totalTimeSaved).toBe(rZero.totalTimeSaved);
+          expect(rEmpty.adjustedTotalTimeSpent).toBe(rZero.adjustedTotalTimeSpent);
+        });
+      });
+    });
   });
 });
