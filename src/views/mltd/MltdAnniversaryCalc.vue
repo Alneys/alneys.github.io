@@ -289,9 +289,9 @@
               </el-alert>
             </el-card>
 
-            <h2>时间设置</h2>
+            <h2>时间与跳过券设置</h2>
             <el-row :gutter="16">
-              <el-col :span="8" :xs="24">
+              <el-col :span="8" :xs="12">
                 <el-form-item label="单轮攒道具时间" prop="tokenAccumulateTime">
                   <el-input
                     v-model.number="form.tokenAccumulateTime"
@@ -306,7 +306,7 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="24">
+              <el-col :span="8" :xs="12">
                 <el-form-item label="单轮清道具时间" prop="tokenConsumeTime">
                   <el-input
                     v-model.number="form.tokenConsumeTime"
@@ -321,7 +321,36 @@
                   </el-input>
                 </el-form-item>
               </el-col>
-              <el-col :span="8" :xs="24">
+              <el-col :span="8" :xs="12">
+                <el-form-item label="单曲游玩时间" prop="singlePlayTime">
+                  <el-input
+                    v-model.number="form.singlePlayTime"
+                    :min="0"
+                    :max="MLTD.maxTimeMinutes"
+                    :step="0.1"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="可以输入小数"
+                  >
+                    <template #append>分钟</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="12">
+                <el-form-item label="每日跳过券数量" prop="dailySkipPassCount">
+                  <el-input
+                    v-model.number="form.dailySkipPassCount"
+                    :min="0"
+                    :max="MLTD.eventTotalDays"
+                    type="number"
+                    inputmode="numeric"
+                    placeholder="0"
+                  >
+                    <template #append>张</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8" :xs="12">
                 <el-form-item label="剩余时间" prop="remainingTime">
                   <el-input
                     v-model.number="form.remainingTime"
@@ -341,8 +370,8 @@
             <el-form-item label=" ">
               <el-space wrap>
                 <!-- <el-button type="primary" @click="handleSubmit">开始计算</el-button> -->
-                <el-button @click="handleClear">重置</el-button>
-                <el-button @click="resetCurrentRemainingTime">重新获取剩余时间</el-button>
+                <el-button @click="handleClear">重置全部</el-button>
+                <el-button @click="handleRefreshTime">重新获取剩余时间</el-button>
               </el-space>
             </el-form-item>
             <el-form-item label=" ">
@@ -446,7 +475,7 @@ import { ref, nextTick, onMounted, computed, useTemplateRef } from 'vue';
 import MltdAnniversaryCalcStateManager from './components/MltdAnniversaryCalcStateManager.vue';
 import { useMltdAnniversaryCalc, createDefaultForm } from './composables/useMltdAnniversaryCalc';
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from './data/MltdAnniversaryConstants.ts';
-import type { AnniversaryForm } from './utils/MltdTypes.ts';
+import type { AnniversaryForm } from './MltdTypes.ts';
 
 const PT_EXCEEDED_WARNING_THRESHOLD = 10000;
 
@@ -481,6 +510,10 @@ const rules = {
   tokenConsumeTime: [
     { type: 'number', min: 0, max: MLTD.maxTimeMinutes, message: '请输入有效的时间' },
   ],
+  singlePlayTime: [
+    { type: 'number', min: 0, max: MLTD.maxTimeMinutes, message: '请输入有效的时间' },
+  ],
+  dailySkipPassCount: [{ type: 'number', min: 0, max: 99, message: '请输入有效的跳过券数量' }],
   remainingTime: [
     { type: 'number', min: 0, max: MLTD.eventTotalDays, message: '请输入有效的剩余天数' },
   ],
@@ -568,16 +601,22 @@ const keyInfoTableData = computed(() => [
     highlight: true,
   },
   {
-    item: '总次数',
-    value: formatNumber(result.totalPlays),
-    time: `${result.totalTimeSpent.toFixed(2)}分钟 / ${(result.totalTimeSpent / 60).toFixed(2)}小时`,
+    item: '跳过券',
+    value: `${formatNumber(result.skipPassesAvailable)} 张（每日${formatNumber(result.skipPassesFromDaily)} + pt奖励${formatNumber(result.skipPassesFromPtReward)}）`,
+    time: `节省${result.totalTimeSaved.toFixed(2)}分钟`,
+    highlight: result.skipPassesAvailable > 0,
+  },
+  {
+    item: '总计',
+    value: `${formatNumber(result.totalPlays)} 次（实际游玩 ${formatNumber(Math.max(0, result.totalPlays - result.skipPassesUsed))} 次）`,
+    time: `${result.adjustedTotalTimeSpent.toFixed(2)}分钟 / ${(result.adjustedTotalTimeSpent / 60).toFixed(2)}小时`,
     highlight: true,
   },
   {
     item: '平均每日所需时间',
     value:
       (form.value.remainingTime || 0) >= 1
-        ? `${(result.totalTimeSpent / (form.value.remainingTime || 1)).toFixed(2)}分钟 / ${(result.totalTimeSpent / (form.value.remainingTime || 1) / 60).toFixed(2)}小时`
+        ? `${(result.adjustedTotalTimeSpent / (form.value.remainingTime || 1)).toFixed(2)}分钟 / ${(result.adjustedTotalTimeSpent / (form.value.remainingTime || 1) / 60).toFixed(2)}小时`
         : '-',
     time: '',
     colSpan: true,
@@ -700,14 +739,21 @@ onMounted(() => {
 
 function handleClear() {
   formRef.value?.resetFields();
-  resetCurrentRemainingTime();
+  form.value.remainingTime = MLTD.eventTotalDays;
   applyOptimalAllocation();
 
-  nextTick(() => {
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
+  ElMessage.info('已重置，如需更新实际剩余时间请点击「重新获取剩余时间」');
+
+  // nextTick(() => {
+  //   setTimeout(() => {
+  //     window.scrollTo({ top: 0, behavior: 'smooth' });
+  //   });
+  // });
+}
+
+function handleRefreshTime() {
+  const days = resetCurrentRemainingTime();
+  ElMessage.success(`剩余时间已更新为 ${days.toFixed(3)} 天`);
 }
 </script>
 

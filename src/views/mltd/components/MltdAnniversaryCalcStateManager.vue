@@ -40,7 +40,7 @@ const handleLoadFromLocalStorage = () => {
   try {
     const success = props.loadFromLocalStorage();
     if (success) {
-      ElMessage.success('读取成功');
+      ElMessage.success('读取成功，如需更新实际剩余时间请点击「重新获取剩余时间」');
     } else {
       ElMessage.error('读取失败：没有数据');
     }

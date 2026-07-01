@@ -25,7 +25,7 @@
 import { reactive, computed, type Ref } from 'vue';
 
 import { MLTD_ANNIVERSARY_CONSTANTS as MLTD } from '../data/MltdAnniversaryConstants';
-import type { AnniversaryForm, AnniversaryResult, BoostAllocationResult } from '../utils/MltdTypes';
+import type { AnniversaryForm, AnniversaryResult, BoostAllocationResult } from '../MltdTypes';
 import { levelToMaxStamina } from '../utils/MltdUtils';
 
 const STORAGE_KEY = 'mltd-anni';
@@ -227,6 +227,8 @@ export const createDefaultForm = (): AnniversaryForm => ({
   stamina10BottleCount: 0,
   tokenAccumulateTime: 6.5,
   tokenConsumeTime: 3,
+  singlePlayTime: 2.5,
+  dailySkipPassCount: 4,
   remainingTime: 0,
   userTotalBoostAccumulatePlays: undefined,
   userBoostConsumePlays: undefined,
@@ -705,6 +707,60 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      */
     totalPlays: computed(
       (): number => result.totalTokenAccumulatePlays + result.totalTokenConsumePlays,
+    ),
+
+    /**
+     * 步骤10-1：每日来源跳过券数
+     * @formula floor(dailySkipPassCount × freeTokenClaimCount)
+     * @description 使用剩余赠送道具次数作为可获取每日跳过券的天数
+     */
+    skipPassesFromDaily: computed((): number =>
+      Math.floor((form.value.dailySkipPassCount || 0) * (form.value.freeTokenClaimCount || 0)),
+    ),
+
+    /**
+     * 步骤10-2：累计pt奖励来源跳过券数
+     * @formula (count(skipPassPtRewardList ≤ finalPt) - count(skipPassPtRewardList ≤ currentPt)) × 5
+     * @description 从当前pt到最终pt之间新增的累计pt奖励数量 × 每累计pt奖励5张
+     */
+    skipPassesFromPtReward: computed((): number => {
+      const currentPt = form.value.pt || 0;
+      const finalPt = currentPt + result.ptTotalFromOperations;
+      const chanceCurrent = MLTD.skipPassPtRewardList.filter((pt) => pt <= currentPt).length;
+      const chanceFinal = MLTD.skipPassPtRewardList.filter((pt) => pt <= finalPt).length;
+      const skipPassChances = Math.max(0, chanceFinal - chanceCurrent);
+      return skipPassChances * MLTD.skipPassPerPtReward;
+    }),
+
+    /**
+     * 步骤10-3：可用跳过券总数
+     * @formula skipPassesFromDaily + skipPassesFromPtReward
+     */
+    skipPassesAvailable: computed(
+      (): number => result.skipPassesFromDaily + result.skipPassesFromPtReward,
+    ),
+
+    /**
+     * 步骤10-4：实际使用的跳过券数
+     * @formula min(skipPassesAvailable, totalPlays)
+     * @description 每局最多用1张跳过券
+     */
+    skipPassesUsed: computed((): number => Math.min(result.skipPassesAvailable, result.totalPlays)),
+
+    /**
+     * 步骤10-5：节省的时间（分钟）
+     * @formula skipPassesUsed × singlePlayTime
+     */
+    totalTimeSaved: computed(
+      (): number => result.skipPassesUsed * (form.value.singlePlayTime || 0),
+    ),
+
+    /**
+     * 步骤10-6：调整后的总时间（分钟）
+     * @formula max(0, totalTimeSpent - totalTimeSaved)
+     */
+    adjustedTotalTimeSpent: computed((): number =>
+      Math.max(0, result.totalTimeSpent - result.totalTimeSaved),
     ),
   });
 

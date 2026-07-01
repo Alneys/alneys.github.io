@@ -19,6 +19,8 @@ export interface AnniversaryForm {
   stamina10BottleCount?: number;
   tokenAccumulateTime?: number;
   tokenConsumeTime?: number;
+  singlePlayTime?: number;
+  dailySkipPassCount?: number;
   remainingTime?: number;
   userTotalBoostAccumulatePlays?: number;
   userBoostConsumePlays?: number;
@@ -85,6 +87,19 @@ export interface AnniversaryResult {
   totalTimeSpent: ComputedRef<number>;
   totalTokenAccumulateTimeSpent: ComputedRef<number>;
   totalPlays: ComputedRef<number>;
+
+  /** 每日来源的跳过券数 */
+  skipPassesFromDaily: ComputedRef<number>;
+  /** 累计pt奖励来源的跳过券数 */
+  skipPassesFromPtReward: ComputedRef<number>;
+  /** 可用跳过券总数 */
+  skipPassesAvailable: ComputedRef<number>;
+  /** 实际使用的跳过券数（≤ totalPlays） */
+  skipPassesUsed: ComputedRef<number>;
+  /** 节省的时间（分钟） */
+  totalTimeSaved: ComputedRef<number>;
+  /** 调整后的总时间（分钟） */
+  adjustedTotalTimeSpent: ComputedRef<number>;
 }
 
 /**

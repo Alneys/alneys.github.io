@@ -9,12 +9,7 @@
 import { computed, type Ref } from 'vue';
 
 import { MLTD_PARKING_CONSTANTS, DFS_CONFIG } from '../data/MltdEventParkingConstants';
-import type {
-  ParkingForm,
-  ParkingResult,
-  ParkingResultItem,
-  EventChoice,
-} from '../utils/MltdTypes';
+import type { ParkingForm, ParkingResult, ParkingResultItem, EventChoice } from '../MltdTypes';
 
 /**
  * Theater 组控分计算子组合式

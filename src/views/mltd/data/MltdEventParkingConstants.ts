@@ -2,7 +2,7 @@
  * MLTD 活动控分相关常量定义
  */
 
-import type { EventChoice } from '../utils/MltdTypes';
+import type { EventChoice } from '../MltdTypes';
 
 /**
  * MLTD 活动控分 - 歌曲配置
