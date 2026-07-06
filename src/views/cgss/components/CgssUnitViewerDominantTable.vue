@@ -114,7 +114,7 @@
               <div class="table-icons">
                 <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
-                  :key="iconIndex"
+                  :key="icon.card.cid ?? iconIndex"
                   v-show="
                     !isDominantSpecializeNotMatch(
                       headerItem,
