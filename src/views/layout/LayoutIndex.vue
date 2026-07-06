@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useVersionCheck } from '@/composables/useVersionCheck';
+import { useVersionCheck } from '@/version-check/useVersionCheck';
 
 import LayoutFooter from './LayoutFooter.vue';
 import LayoutHeader from './LayoutHeader.vue';

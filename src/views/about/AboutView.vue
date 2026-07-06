@@ -4,7 +4,7 @@ import svgGK from '@/assets/svg/imas-gakuen.svg?raw';
 import svgML from '@/assets/svg/imas-million-live.svg?raw';
 import svgSC from '@/assets/svg/imas-shiny-colors.svg?raw';
 import { useResponsive } from '@/composables/useResponsive';
-import { useVersionCheck } from '@/composables/useVersionCheck';
+import { useVersionCheck } from '@/version-check/useVersionCheck';
 
 const env = import.meta.env;
 
