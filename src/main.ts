@@ -14,6 +14,12 @@ import 'unfonts.css';
 import 'nprogress/nprogress.css';
 import '@/assets/styles/main.scss';
 
+// MSW mocks
+if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW === 'true') {
+  const { worker } = await import('./mocks/browser');
+  worker.start({ onUnhandledRequest: 'bypass' });
+}
+
 const app = createApp(App);
 
 app.use(createPinia());
