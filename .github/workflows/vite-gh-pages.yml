@@ -31,17 +31,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # https://github.com/marketplace/actions/setup-pnpm#use-cache-to-reduce-installation-time
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10
           run_install: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: 'pnpm'
@@ -56,7 +56,7 @@ jobs:
         run: cp ./dist/index.html ./dist/404.html
 
       # - name: Set up Node
-      #   uses: actions/setup-node@v5
+      #   uses: actions/setup-node@v6
       #   with:
       #     node-version: lts/*
       #     cache: 'npm'
@@ -67,14 +67,14 @@ jobs:
 
       - name: Setup Pages
         if: github.ref_name == 'main' || github.ref_name == 'gh-pages'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
         if: github.ref_name == 'main' || github.ref_name == 'gh-pages'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           # Upload dist folder
           path: './dist'
       - name: Deploy to GitHub Pages
         if: github.ref_name == 'main' || github.ref_name == 'gh-pages'
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
