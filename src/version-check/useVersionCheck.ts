@@ -109,6 +109,7 @@ export function useVersionCheck() {
     if (!remote.buildId) return false;
     if (remote.buildId === currentBuildId.value) return false;
     if (remote.buildId === dismissedBuildId) return false;
+    if (remote.buildId.startsWith('mock')) return false;
     return true;
   };
 

@@ -291,8 +291,13 @@
 
             <h2>时间与跳过券设置</h2>
             <el-row :gutter="16">
+              <el-col :span="24" style="margin-bottom: 0.5em">
+                <el-alert type="info" :closable="false"
+                  >单轮攒道具时间：攒450打工票加上清一次道具所用的时间</el-alert
+                >
+              </el-col>
               <el-col :span="8" :xs="12">
-                <el-form-item label="单轮攒道具时间" prop="tokenAccumulateTime">
+                <el-form-item label="单轮攒道具时间（450打工票）" prop="tokenAccumulateTime">
                   <el-input
                     v-model.number="form.tokenAccumulateTime"
                     :min="0"

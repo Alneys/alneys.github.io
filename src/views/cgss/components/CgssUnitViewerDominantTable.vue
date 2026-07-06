@@ -16,6 +16,10 @@
       <div>
         <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
       </div>
+      <div>
+        <el-button @click="resetFilters">重置筛选</el-button>
+        <el-button @click="setResonanceMode">共鸣模式</el-button>
+      </div>
     </div>
     <div class="unit-table">
       <el-table
@@ -110,7 +114,7 @@
               <div class="table-icons">
                 <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
-                  :key="iconIndex"
+                  :key="icon.card.cid ?? iconIndex"
                   v-show="
                     !isDominantSpecializeNotMatch(
                       headerItem,
@@ -503,6 +507,29 @@ const handleDominantSortChange = ({
   if (prop) {
     currentSortField.value = prop;
   }
+};
+
+// 重置筛选开关
+const resetFilters = () => {
+  showExtraColumns.value = false;
+  showAlternateMutual.value = true;
+  showOverload.value = true;
+  showOverdrive.value = true;
+  showSpecializeNotMatch.value = false;
+  showAllAttributePairs.value = false;
+  showSortRelatedSkillsOnly.value = false;
+  highlightSeasonLimited.value = false;
+};
+
+// 共鸣模式开关
+const setResonanceMode = () => {
+  showExtraColumns.value = true;
+  showOverdrive.value = true;
+  showSpecializeNotMatch.value = true;
+  showAlternateMutual.value = false;
+  showOverload.value = false;
+  showAllAttributePairs.value = false;
+  showSortRelatedSkillsOnly.value = false;
 };
 
 // 合并单元格方法
