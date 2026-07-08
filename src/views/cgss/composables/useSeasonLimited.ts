@@ -1,4 +1,6 @@
-import CgssSeasonLimitedGashaList from '../data/cgss_season_limited_gasha_list.json';
+import CgssSeasonLimitedGasha from '../data/cgss_season_limited_gasha.json';
+
+const seasonLimitedCids = CgssSeasonLimitedGasha.season_limited.cids.map(Number);
 
 /**
  * 季节限定卡池相关功能
@@ -11,9 +13,7 @@ export function useSeasonLimited() {
    */
   const isSeasonLimitedCard = (cid: string): boolean => {
     const cidNum = parseInt(cid, 10);
-    return (
-      CgssSeasonLimitedGashaList.includes(cidNum) || CgssSeasonLimitedGashaList.includes(cidNum - 1)
-    );
+    return seasonLimitedCids.includes(cidNum) || seasonLimitedCids.includes(cidNum - 1);
   };
 
   return {
