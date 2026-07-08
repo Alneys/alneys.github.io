@@ -8,17 +8,34 @@
         <el-switch v-model="showOverload" active-text="过载列" />
         <el-switch v-model="showOverdrive" active-text="超载列" />
         <el-switch v-model="showSpecializeNotMatch" active-text="显示所有偏科" />
+        <el-switch v-model="showCarnivalPickupNotMatch" active-text="显示嘉年华偏科加成卡" />
       </div>
       <div>
         <el-switch v-model="showAllAttributePairs" active-text="显示所有双色属性组合" />
         <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
       </div>
-      <div>
+      <div style="display: flex; align-items: center">
         <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
+        <el-switch v-model="highlightMemorialGasha" active-text="高亮回忆卡池" />
+        <el-select
+          v-model="memorialGashaEdition"
+          placeholder="选择"
+          style="width: 100px; margin-left: 8px"
+        >
+          <el-option label="8th" value="8th" />
+          <el-option label="7th" value="7th" />
+          <el-option label="6th" value="6th" />
+          <el-option label="blanc" value="blanc" />
+          <el-option label="5th" value="5th" />
+          <el-option label="4th" value="4th" />
+          <el-option label="3rd" value="3rd" />
+          <el-option label="2nd" value="2nd" />
+          <el-option label="1st" value="1st" />
+        </el-select>
       </div>
       <div>
         <el-button @click="resetFilters">重置筛选</el-button>
-        <el-button @click="setResonanceMode">共鸣模式</el-button>
+        <el-button @click="setResonanceFilter">共鸣模式</el-button>
       </div>
     </div>
     <div class="unit-table">
@@ -29,6 +46,8 @@
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
         :span-method="tableDominantSpanMethod"
+        :row-class-name="dominantRowClassName"
+        :cell-class-name="dominantCellClassName"
         @sort-change="handleDominantSortChange"
       >
         <!-- 第一列：target_attribute_2 target_param_2 -->
@@ -120,7 +139,9 @@
                       headerItem,
                       scope.row as TableDataRow,
                       icon.card,
-                    ) || showSpecializeNotMatch
+                    ) ||
+                    showSpecializeNotMatch ||
+                    isCarnivalPickupShowCard(icon.card)
                   "
                   :class="{
                     'cgss-icon': true,
@@ -134,10 +155,12 @@
                       scope.row as TableDataRow,
                       icon.card,
                     ),
-                    'icon-season-limited':
-                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
-                    [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
-                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                    'icon-gasha-match':
+                      (highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid)) ||
+                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)),
+                    [`icon-gasha-match-${icon.card.attribute.toLowerCase()}`]:
+                      (highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid)) ||
+                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)),
                   }"
                   :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                   @mouseenter="
@@ -166,13 +189,15 @@
                 />
                 <div
                   v-if="
-                    scope.row[headerItem.prop].length === 0 ||
-                    (!showSpecializeNotMatch &&
-                      scope.row[headerItem.prop][0].card.stats[scope.row[headerItem.param ?? '']] <=
-                        DOMINANT_PARAM_THRESHOLD_SPECIALIZE)
+                    !showCarnivalPickupNotMatch &&
+                    (scope.row[headerItem.prop].length === 0 ||
+                      (!showSpecializeNotMatch &&
+                        scope.row[headerItem.prop][0].card.stats[
+                          scope.row[headerItem.param ?? '']
+                        ] <= DOMINANT_PARAM_THRESHOLD_SPECIALIZE))
                   "
                 >
-                  x
+                  -
                 </div>
               </div>
             </template>
@@ -202,18 +227,20 @@ import { useResponsive } from '@/composables/useResponsive';
 import {
   type CgssCardSkillTableItem,
   type TableDataRow,
+  type ColumnHeader,
+  type CarnivalPickup,
   tableDominantRowHeaderAttribute,
   tableDominantRowHeaderSpecialize,
-  tableDominantRowHeaderAttributeSpecializePairs,
   tableDominantRowHeaderTw,
+  tableDominantRowHeaderAttributeSpecializePairs,
   tableDominantColumnHeader,
   DOMINANT_PARAM_THRESHOLD_ADD,
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
 import { useCardTooltip } from '../composables/useCardTooltip';
+import { useGashaFilter } from '../composables/useGashaFilter';
 import { useIconActions } from '../composables/useIconActions';
-import { useSeasonLimited } from '../composables/useSeasonLimited';
 import {
   sortTableTw,
   createCardDataItem,
@@ -231,6 +258,7 @@ const props = defineProps<{
   nameFilter: string;
   showExtraTableConfig: boolean;
   tableData?: TableDataRow[];
+  pickupInfo: CarnivalPickup | null;
 }>();
 
 // 自定义事件
@@ -261,11 +289,16 @@ const showAlternateMutual = defineModel<boolean>('showAlternateMutual', { defaul
 const showOverload = defineModel<boolean>('showOverload', { default: true });
 const showOverdrive = defineModel<boolean>('showOverdrive', { default: true });
 const showSpecializeNotMatch = defineModel<boolean>('showSpecializeNotMatch', { default: false });
+const showCarnivalPickupNotMatch = defineModel<boolean>('showCarnivalPickupNotMatch', {
+  default: false,
+});
 const showAllAttributePairs = defineModel<boolean>('showAllAttributePairs', { default: false });
 const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnly', {
   default: false,
 });
 const highlightSeasonLimited = defineModel<boolean>('highlightSeasonLimited', { default: false });
+const highlightMemorialGasha = defineModel<boolean>('highlightMemorialGasha', { default: false });
+const memorialGashaEdition = defineModel<string | null>('memorialGashaEdition', { default: null });
 
 // 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
@@ -273,11 +306,24 @@ const { isMobile, isSmallScreen } = useResponsive();
 // 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
 const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
-// 组合式函数：季节限定卡池判断
-const { isSeasonLimitedCard } = useSeasonLimited();
+// 组合式函数：卡池过滤判断（季节限定 + 回忆卡池）
+const { isSeasonLimitedCard, isMemorialGashaCard } = useGashaFilter(memorialGashaEdition);
 
 // 组合式函数：暗色模式
 const isDark = useDark();
+
+// 两个高亮开关不能同时启用
+watch(highlightSeasonLimited, (val) => {
+  if (val) highlightMemorialGasha.value = false;
+});
+watch(highlightMemorialGasha, (val) => {
+  if (val) highlightSeasonLimited.value = false;
+});
+
+// 选项切换时自动激活高亮回忆卡池
+watch(memorialGashaEdition, (val) => {
+  if (val) highlightMemorialGasha.value = true;
+});
 
 // 单例 tooltip 状态（替代每个图标一个 el-tooltip 实例）
 const tooltip = useCardTooltip();
@@ -287,6 +333,72 @@ onUnmounted(() => {
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
+
+// 高亮行函数
+const dominantRowClassName = ({ row }: { row: TableDataRow }) => {
+  if (!props.pickupInfo) return '';
+  const { type_main, status_main, status_sub } = props.pickupInfo;
+  const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
+  const typeMain = type_main.toLowerCase();
+  if (attr2 !== typeMain) return '';
+  const param = row.target_param;
+  const param2 = row.target_param_2;
+  if (!param || !param2) return '';
+  if (param === param2) return '';
+  const valid = new Set([status_main, status_sub]);
+  if (!valid.has(param) || !valid.has(param2)) return '';
+  return 'row-highlight-pickup';
+};
+
+// 高亮单元格函数
+const dominantCellClassName = ({
+  row,
+  column,
+}: {
+  row: TableDataRow;
+  column: TableColumnCtx<TableDataRow>;
+}) => {
+  if (!props.pickupInfo) return '';
+
+  // 条件 1：只有 type_main 匹配的行才可能高亮
+  const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
+  if (attr2 !== props.pickupInfo.type_main.toLowerCase()) return '';
+
+  const { status_main, status_sub } = props.pickupInfo;
+
+  // 条件 2：两个 param 是否都在 {status_main, status_sub} 中
+  const param = row.target_param;
+  const param2 = row.target_param_2;
+  const condition2Met = !!(
+    param &&
+    param2 &&
+    param !== param2 &&
+    new Set([status_main, status_sub]).has(param) &&
+    new Set([status_main, status_sub]).has(param2)
+  );
+
+  // 查找该列对应的列头定义
+  const headerItem = tableDominantColumnHeader.find((h) => h.prop === column.property);
+  if (!headerItem) return '';
+
+  if (headerItem.skill === 'dominant') {
+    // 3.2: 双色列 — 条件 2 满足时由行高亮覆盖，否则使用更浅色
+    return condition2Met ? '' : 'cell-highlight-pickup';
+  }
+
+  // 3.1: 非双色列 — 列目标 param 匹配时才可能高亮
+  if (!headerItem.param) return '';
+  const paramValue = row[headerItem.param as keyof typeof row];
+  if (!paramValue) return '';
+
+  const paramStr = String(paramValue).toLowerCase();
+  const paramMatches =
+    paramStr === status_main.toLowerCase() || paramStr === status_sub.toLowerCase();
+  if (!paramMatches) return '';
+
+  // 条件 2 满足时行已高亮，保留行颜色不覆写
+  return condition2Met ? '' : 'cell-highlight-pickup';
+};
 
 // 过滤表格数据
 const filteredTableData = computed(() => {
@@ -516,16 +628,20 @@ const resetFilters = () => {
   showOverload.value = true;
   showOverdrive.value = true;
   showSpecializeNotMatch.value = false;
+  showCarnivalPickupNotMatch.value = false;
   showAllAttributePairs.value = false;
   showSortRelatedSkillsOnly.value = false;
   highlightSeasonLimited.value = false;
+  highlightMemorialGasha.value = false;
+  memorialGashaEdition.value = null;
 };
 
 // 共鸣模式开关
-const setResonanceMode = () => {
+const setResonanceFilter = () => {
   showExtraColumns.value = true;
   showOverdrive.value = true;
   showSpecializeNotMatch.value = true;
+  showCarnivalPickupNotMatch.value = false;
   showAlternateMutual.value = false;
   showOverload.value = false;
   showAllAttributePairs.value = false;
@@ -587,6 +703,25 @@ const isDominantSpecializeNotMatch = (
   return valueToCheck !== undefined && valueToCheck < DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
 };
 
+// 判断是否因嘉年华加成而显示偏科不匹配卡
+const isCarnivalPickupShowCard = (card: CgssCardSkillTableItem) => {
+  if (!showCarnivalPickupNotMatch.value || !props.pickupInfo) return false;
+
+  const { status_main, status_sub } = props.pickupInfo;
+  if (!status_main && !status_sub) return false;
+
+  if (status_main) {
+    const key = status_main.toLowerCase() as keyof CgssCardSkillTableItem['stats'];
+    if (card.stats[key] >= DOMINANT_PARAM_THRESHOLD_SPECIALIZE) return true;
+  }
+  if (status_sub) {
+    const key = status_sub.toLowerCase() as keyof CgssCardSkillTableItem['stats'];
+    if (card.stats[key] >= DOMINANT_PARAM_THRESHOLD_SPECIALIZE) return true;
+  }
+
+  return false;
+};
+
 // 判断参数是否需要下划线
 const isDominantParamUnderline = (
   headerItem: (typeof tableDominantColumnHeader)[number],
@@ -629,6 +764,10 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
     .skill-overdrive,
     .skill-cboost {
       background-color: var(--el-fill-color-lighter);
+    }
+
+    td.cell-highlight-pickup {
+      background-color: var(--el-color-primary-light-8);
     }
   }
 

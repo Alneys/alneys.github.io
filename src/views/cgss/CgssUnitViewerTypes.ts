@@ -74,6 +74,14 @@ export interface ColumnHeader {
 /** 点击图标操作类型 */
 export type ClickIconAction = 'None' | 'ToggleCardStatus' | 'ViewCardInfo';
 
+/** 嘉年华活动 pickup 属性 */
+export interface CarnivalPickup {
+  type_main: string;
+  type_sub: string;
+  status_main: string;
+  status_sub: string;
+}
+
 // ==================== 常量配置 ====================
 
 // ---------- 共鸣表 (Resonance) 配置 ----------
@@ -111,18 +119,18 @@ export const tableResonanceColumnHeader: ColumnHeader[] = [
     extraColumn: true,
   },
   {
-    prop: 'sparkle',
-    labelCn: '闪耀',
-    labelEn: 'sparkle',
-    skill: 'sparkle',
-    minWidth: 150,
-    extraColumn: true,
-  },
-  {
     prop: 'combo',
     labelCn: '连击',
     labelEn: 'combo',
     skill: 'cboost',
+    minWidth: 150,
+    extraColumn: true,
+  },
+  {
+    prop: 'sparkle',
+    labelCn: '闪耀',
+    labelEn: 'sparkle',
+    skill: 'sparkle',
     minWidth: 150,
     extraColumn: true,
   },
@@ -269,6 +277,16 @@ export const tableDominantColumnHeader: ColumnHeader[] = [
     labelCn: '连击',
     labelEn: 'combo',
     skill: 'cboost',
+    minWidth: 80,
+    attribute: 'target_attribute_2',
+    param: 'target_param_2',
+    extraColumn: true,
+  },
+  {
+    prop: 'sparkle',
+    labelCn: '闪耀',
+    labelEn: 'sparkle',
+    skill: 'sparkle',
     minWidth: 80,
     attribute: 'target_attribute_2',
     param: 'target_param_2',

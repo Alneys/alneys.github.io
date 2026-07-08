@@ -2,7 +2,7 @@ import { ref, nextTick } from 'vue';
 
 import { describe, it, expect } from 'vitest';
 
-import nameFilterData from '../data/cgss_name_filter.json';
+import carnivalInfo from '../data/cgss_carnival_info.json';
 import { useCardFilter } from './useCardFilter';
 
 describe('useCardFilter', () => {
@@ -95,7 +95,7 @@ describe('useCardFilter', () => {
       it('应使用 JSON 数据的第一个预设作为默认值', () => {
         const { inputNameFilter } = useCardFilter();
 
-        expect(inputNameFilter.value).toBe(nameFilterData[0]!.nameFilter);
+        expect(inputNameFilter.value).toBe(carnivalInfo[0]!.nameFilter);
       });
     });
   });
@@ -185,7 +185,7 @@ describe('useCardFilter', () => {
 
       const list = getNameFilterDataList();
 
-      expect(list).toBe(nameFilterData);
+      expect(list).toBe(carnivalInfo);
       expect(list.length).toBe(3);
     });
 
@@ -258,7 +258,7 @@ describe('useCardFilter', () => {
       expect(isNameMatched('中野有香')).toBe(false);
 
       // 切换到第二个预设
-      inputNameFilter.value = nameFilterData[1]!.nameFilter;
+      inputNameFilter.value = carnivalInfo[1]!.nameFilter;
       await nextTick();
 
       // 第二个预设包含中野有香
@@ -271,7 +271,7 @@ describe('useCardFilter', () => {
     it('切换到第三个预设应正确匹配', async () => {
       const { inputNameFilter, isNameMatched } = useCardFilter();
 
-      inputNameFilter.value = nameFilterData[2]!.nameFilter;
+      inputNameFilter.value = carnivalInfo[2]!.nameFilter;
       await nextTick();
 
       // 第三个预设的名字
