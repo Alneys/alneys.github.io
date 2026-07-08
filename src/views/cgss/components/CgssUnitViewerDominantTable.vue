@@ -19,7 +19,7 @@
       </div>
       <div>
         <el-button @click="resetFilters">重置筛选</el-button>
-        <el-button @click="setResonanceMode">共鸣模式</el-button>
+        <el-button @click="setResonanceFilter">共鸣模式</el-button>
       </div>
     </div>
     <div class="unit-table">
@@ -602,10 +602,11 @@ const resetFilters = () => {
 };
 
 // 共鸣模式开关
-const setResonanceMode = () => {
+const setResonanceFilter = () => {
   showExtraColumns.value = true;
   showOverdrive.value = true;
   showSpecializeNotMatch.value = true;
+  showCarnivalPickupNotMatch.value = false;
   showAlternateMutual.value = false;
   showOverload.value = false;
   showAllAttributePairs.value = false;
