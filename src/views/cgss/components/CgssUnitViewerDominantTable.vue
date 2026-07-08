@@ -31,6 +31,7 @@
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
         :span-method="tableDominantSpanMethod"
         :row-class-name="dominantRowClassName"
+        :cell-class-name="dominantCellClassName"
         @sort-change="handleDominantSortChange"
       >
         <!-- 第一列：target_attribute_2 target_param_2 -->
@@ -314,6 +315,56 @@ const dominantRowClassName = ({ row }: { row: TableDataRow }) => {
   const valid = new Set([status_main, status_sub]);
   if (!valid.has(param) || !valid.has(param2)) return '';
   return 'row-highlight-pickup';
+};
+
+// 高亮单元格函数
+const dominantCellClassName = ({
+  row,
+  column,
+}: {
+  row: TableDataRow;
+  column: TableColumnCtx<TableDataRow>;
+}) => {
+  if (!props.pickupInfo) return '';
+
+  // 条件 1：只有 type_main 匹配的行才可能高亮
+  const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
+  if (attr2 !== props.pickupInfo.type_main.toLowerCase()) return '';
+
+  const { status_main, status_sub } = props.pickupInfo;
+
+  // 条件 2：两个 param 是否都在 {status_main, status_sub} 中
+  const param = row.target_param;
+  const param2 = row.target_param_2;
+  const condition2Met = !!(
+    param &&
+    param2 &&
+    param !== param2 &&
+    new Set([status_main, status_sub]).has(param) &&
+    new Set([status_main, status_sub]).has(param2)
+  );
+
+  // 查找该列对应的列头定义
+  const headerItem = tableDominantColumnHeader.find((h) => h.prop === column.property);
+  if (!headerItem) return '';
+
+  if (headerItem.skill === 'dominant') {
+    // 3.2: 双色列 — 条件 2 满足时由行高亮覆盖，否则使用更浅色
+    return condition2Met ? '' : 'cell-highlight-pickup';
+  }
+
+  // 3.1: 非双色列 — 列目标 param 匹配时才可能高亮
+  if (!headerItem.param) return '';
+  const paramValue = row[headerItem.param as keyof typeof row];
+  if (!paramValue) return '';
+
+  const paramStr = String(paramValue).toLowerCase();
+  const paramMatches =
+    paramStr === status_main.toLowerCase() || paramStr === status_sub.toLowerCase();
+  if (!paramMatches) return '';
+
+  // 条件 2 满足时行已高亮，保留行颜色不覆写
+  return condition2Met ? '' : 'cell-highlight-pickup';
 };
 
 // 过滤表格数据
@@ -677,6 +728,10 @@ const onIconClick = (row: TableDataRow, column: string, index: number) => {
     .skill-overdrive,
     .skill-cboost {
       background-color: var(--el-fill-color-lighter);
+    }
+
+    td.cell-highlight-pickup {
+      background-color: var(--el-color-primary-light-8);
     }
   }
 
