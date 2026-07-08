@@ -20,7 +20,7 @@
     <div style="display: flex; align-items: center">
       <el-switch v-model="nameFilterEnabled" active-text="筛选名字" />
       <el-switch v-model="highlightEnabled" active-text="高亮属性" />
-      <div v-if="pickupInfo" class="pickup-info">
+      <div v-if="pickupInfo" class="pickup-info" @click="highlightEnabled = !highlightEnabled">
         <div>
           <span :class="`color-cg-${pickupInfo.type_main.toLowerCase()}`">
             {{ pickupInfo.type_main.toLowerCase() }}
@@ -204,9 +204,11 @@ const applyPreloadedCardStatus = () => {
   }
 
   .pickup-info {
+    cursor: pointer;
     display: inline-block;
     font-size: var(--el-font-size-small);
     font-weight: bold;
+    line-height: 1.1;
 
     > span:first-child {
       margin-left: 0.5em;
