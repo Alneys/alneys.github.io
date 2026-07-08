@@ -8,6 +8,7 @@
         <el-switch v-model="showOverload" active-text="过载列" />
         <el-switch v-model="showOverdrive" active-text="超载列" />
         <el-switch v-model="showSpecializeNotMatch" active-text="显示所有偏科" />
+        <el-switch v-model="showCarnivalPickupNotMatch" active-text="显示嘉年华偏科加成卡" />
       </div>
       <div>
         <el-switch v-model="showAllAttributePairs" active-text="显示所有双色属性组合" />
@@ -121,7 +122,9 @@
                       headerItem,
                       scope.row as TableDataRow,
                       icon.card,
-                    ) || showSpecializeNotMatch
+                    ) ||
+                    showSpecializeNotMatch ||
+                    isCarnivalPickupShowCard(icon.card)
                   "
                   :class="{
                     'cgss-icon': true,
@@ -167,13 +170,15 @@
                 />
                 <div
                   v-if="
-                    scope.row[headerItem.prop].length === 0 ||
-                    (!showSpecializeNotMatch &&
-                      scope.row[headerItem.prop][0].card.stats[scope.row[headerItem.param ?? '']] <=
-                        DOMINANT_PARAM_THRESHOLD_SPECIALIZE)
+                    !showCarnivalPickupNotMatch &&
+                    (scope.row[headerItem.prop].length === 0 ||
+                      (!showSpecializeNotMatch &&
+                        scope.row[headerItem.prop][0].card.stats[
+                          scope.row[headerItem.param ?? '']
+                        ] <= DOMINANT_PARAM_THRESHOLD_SPECIALIZE))
                   "
                 >
-                  x
+                  -
                 </div>
               </div>
             </template>
@@ -265,6 +270,9 @@ const showAlternateMutual = defineModel<boolean>('showAlternateMutual', { defaul
 const showOverload = defineModel<boolean>('showOverload', { default: true });
 const showOverdrive = defineModel<boolean>('showOverdrive', { default: true });
 const showSpecializeNotMatch = defineModel<boolean>('showSpecializeNotMatch', { default: false });
+const showCarnivalPickupNotMatch = defineModel<boolean>('showCarnivalPickupNotMatch', {
+  default: false,
+});
 const showAllAttributePairs = defineModel<boolean>('showAllAttributePairs', { default: false });
 const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnly', {
   default: false,
@@ -536,6 +544,7 @@ const resetFilters = () => {
   showOverload.value = true;
   showOverdrive.value = true;
   showSpecializeNotMatch.value = false;
+  showCarnivalPickupNotMatch.value = false;
   showAllAttributePairs.value = false;
   showSortRelatedSkillsOnly.value = false;
   highlightSeasonLimited.value = false;
@@ -605,6 +614,25 @@ const isDominantSpecializeNotMatch = (
   }
 
   return valueToCheck !== undefined && valueToCheck < DOMINANT_PARAM_THRESHOLD_SPECIALIZE;
+};
+
+// 判断是否因嘉年华加成而显示偏科不匹配卡
+const isCarnivalPickupShowCard = (card: CgssCardSkillTableItem) => {
+  if (!showCarnivalPickupNotMatch.value || !props.pickupInfo) return false;
+
+  const { status_main, status_sub } = props.pickupInfo;
+  if (!status_main && !status_sub) return false;
+
+  if (status_main) {
+    const key = status_main.toLowerCase() as keyof CgssCardSkillTableItem['stats'];
+    if (card.stats[key] >= DOMINANT_PARAM_THRESHOLD_SPECIALIZE) return true;
+  }
+  if (status_sub) {
+    const key = status_sub.toLowerCase() as keyof CgssCardSkillTableItem['stats'];
+    if (card.stats[key] >= DOMINANT_PARAM_THRESHOLD_SPECIALIZE) return true;
+  }
+
+  return false;
 };
 
 // 判断参数是否需要下划线
