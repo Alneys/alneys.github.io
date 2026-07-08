@@ -14,8 +14,24 @@
         <el-switch v-model="showAllAttributePairs" active-text="显示所有双色属性组合" />
         <el-switch v-model="showSortRelatedSkillsOnly" active-text="只显示当前排序项目相关技能" />
       </div>
-      <div>
+      <div style="display: flex; align-items: center">
         <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
+        <el-switch v-model="highlightMemorialGasha" active-text="高亮回忆卡池" />
+        <el-select
+          v-model="memorialGashaEdition"
+          placeholder="选择"
+          style="width: 100px; margin-left: 8px"
+        >
+          <el-option label="8th" value="8th" />
+          <el-option label="7th" value="7th" />
+          <el-option label="6th" value="6th" />
+          <el-option label="blanc" value="blanc" />
+          <el-option label="5th" value="5th" />
+          <el-option label="4th" value="4th" />
+          <el-option label="3rd" value="3rd" />
+          <el-option label="2nd" value="2nd" />
+          <el-option label="1st" value="1st" />
+        </el-select>
       </div>
       <div>
         <el-button @click="resetFilters">重置筛选</el-button>
@@ -140,9 +156,11 @@
                       icon.card,
                     ),
                     'icon-gasha-match':
-                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                      (highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid)) ||
+                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)),
                     [`icon-gasha-match-${icon.card.attribute.toLowerCase()}`]:
-                      highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
+                      (highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid)) ||
+                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)),
                   }"
                   :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                   @mouseenter="
@@ -222,6 +240,7 @@ import {
 import { useCardFilter } from '../composables/useCardFilter';
 import { useCardTooltip } from '../composables/useCardTooltip';
 import { useIconActions } from '../composables/useIconActions';
+import { useMemorialGasha } from '../composables/useMemorialGasha';
 import { useSeasonLimited } from '../composables/useSeasonLimited';
 import {
   sortTableTw,
@@ -279,6 +298,8 @@ const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnl
   default: false,
 });
 const highlightSeasonLimited = defineModel<boolean>('highlightSeasonLimited', { default: false });
+const highlightMemorialGasha = defineModel<boolean>('highlightMemorialGasha', { default: false });
+const memorialGashaEdition = defineModel<string | null>('memorialGashaEdition', { default: null });
 
 // 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
@@ -289,8 +310,24 @@ const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 // 组合式函数：季节限定卡池判断
 const { isSeasonLimitedCard } = useSeasonLimited();
 
+// 组合式函数：回忆卡池判断
+const { isMemorialGashaCard } = useMemorialGasha(memorialGashaEdition);
+
 // 组合式函数：暗色模式
 const isDark = useDark();
+
+// 两个高亮开关不能同时启用
+watch(highlightSeasonLimited, (val) => {
+  if (val) highlightMemorialGasha.value = false;
+});
+watch(highlightMemorialGasha, (val) => {
+  if (val) highlightSeasonLimited.value = false;
+});
+
+// 选项切换时自动激活高亮回忆卡池
+watch(memorialGashaEdition, (val) => {
+  if (val) highlightMemorialGasha.value = true;
+});
 
 // 单例 tooltip 状态（替代每个图标一个 el-tooltip 实例）
 const tooltip = useCardTooltip();
@@ -599,6 +636,8 @@ const resetFilters = () => {
   showAllAttributePairs.value = false;
   showSortRelatedSkillsOnly.value = false;
   highlightSeasonLimited.value = false;
+  highlightMemorialGasha.value = false;
+  memorialGashaEdition.value = null;
 };
 
 // 共鸣模式开关
