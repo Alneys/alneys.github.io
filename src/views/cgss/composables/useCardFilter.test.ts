@@ -2,7 +2,7 @@ import { ref, nextTick } from 'vue';
 
 import { describe, it, expect } from 'vitest';
 
-import nameFilterData from '../data/cgss_name_filter.json';
+import nameFilterData from '../data/cgss_carnival_info.json';
 import { useCardFilter } from './useCardFilter';
 
 describe('useCardFilter', () => {

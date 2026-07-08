@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 
-import nameFilterData from '../data/cgss_name_filter.json';
+import nameFilterData from '../data/cgss_carnival_info.json';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
 // 自定义事件

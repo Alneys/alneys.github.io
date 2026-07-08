@@ -1,6 +1,6 @@
 import { ref, computed, type Ref } from 'vue';
 
-import nameFilterData from '../data/cgss_name_filter.json';
+import nameFilterData from '../data/cgss_carnival_info.json';
 
 /**
  * 名字筛选功能
