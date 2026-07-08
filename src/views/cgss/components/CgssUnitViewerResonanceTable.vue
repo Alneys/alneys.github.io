@@ -4,6 +4,7 @@
     <div v-if="showExtraTableConfig" class="unit-viewer-config">
       <div>
         <el-switch v-model="showExtraColumns" active-text="额外技能" />
+        <el-switch v-model="highlightMemorialGasha" active-text="高亮回忆卡池" />
       </div>
     </div>
     <div class="unit-table">
@@ -74,6 +75,10 @@
                     'icon-extra': headerItem.extraColumn,
                     'icon-filter-not-match': nameFilter && !isNameMatched(icon.card.name),
                     'icon-filter-match': nameFilter && isNameMatched(icon.card.name),
+                    'icon-gasha-match':
+                      highlightMemorialGasha && isMemorialGashaCard(icon.card.cid),
+                    [`icon-gasha-match-${icon.card.attribute.toLowerCase()}`]:
+                      highlightMemorialGasha && isMemorialGashaCard(icon.card.cid),
                   }"
                   :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                   @mouseenter="
@@ -126,6 +131,7 @@ import {
 import { useCardFilter } from '../composables/useCardFilter';
 import { useCardTooltip } from '../composables/useCardTooltip';
 import { useIconActions } from '../composables/useIconActions';
+import { useMemorialGasha } from '../composables/useMemorialGasha';
 import {
   sortTableTw,
   createCardDataItem,
@@ -169,12 +175,17 @@ watch(tableData, (val) => {
 });
 
 const showExtraColumns = defineModel<boolean>('showExtraColumns', { default: false });
+const highlightMemorialGasha = defineModel<boolean>('highlightMemorialGasha', { default: false });
 
 // 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
 
 // 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
 const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
+
+// 组合式函数：回忆卡池判断（始终使用 blanc 版本）
+const memorialGashaEdition = computed(() => (highlightMemorialGasha.value ? 'blanc' : null));
+const { isMemorialGashaCard } = useMemorialGasha(memorialGashaEdition);
 
 // 组合式函数：暗色模式
 const isDark = useDark();
