@@ -29,6 +29,7 @@
         border
         :default-sort="{ prop: 'target_attribute_2', order: 'ascending' }"
         :span-method="tableDominantSpanMethod"
+        :row-class-name="dominantRowClassName"
         @sort-change="handleDominantSortChange"
       >
         <!-- 第一列：target_attribute_2 target_param_2 -->
@@ -202,10 +203,12 @@ import { useResponsive } from '@/composables/useResponsive';
 import {
   type CgssCardSkillTableItem,
   type TableDataRow,
+  type ColumnHeader,
+  type CarnivalPickup,
   tableDominantRowHeaderAttribute,
   tableDominantRowHeaderSpecialize,
-  tableDominantRowHeaderAttributeSpecializePairs,
   tableDominantRowHeaderTw,
+  tableDominantRowHeaderAttributeSpecializePairs,
   tableDominantColumnHeader,
   DOMINANT_PARAM_THRESHOLD_ADD,
   DOMINANT_PARAM_THRESHOLD_SPECIALIZE,
@@ -231,6 +234,7 @@ const props = defineProps<{
   nameFilter: string;
   showExtraTableConfig: boolean;
   tableData?: TableDataRow[];
+  pickupInfo: CarnivalPickup | null;
 }>();
 
 // 自定义事件
@@ -287,6 +291,22 @@ onUnmounted(() => {
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('target_attribute_2');
+
+// 高亮行函数
+const dominantRowClassName = ({ row }: { row: TableDataRow }) => {
+  if (!props.pickupInfo) return '';
+  const { type_main, status_main, status_sub } = props.pickupInfo;
+  const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
+  const typeMain = type_main.toLowerCase();
+  if (attr2 !== typeMain) return '';
+  const param = row.target_param;
+  const param2 = row.target_param_2;
+  if (!param || !param2) return '';
+  if (param === param2) return '';
+  const valid = new Set([status_main, status_sub]);
+  if (!valid.has(param) || !valid.has(param2)) return '';
+  return 'row-highlight-pickup';
+};
 
 // 过滤表格数据
 const filteredTableData = computed(() => {

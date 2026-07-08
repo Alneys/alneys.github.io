@@ -13,6 +13,7 @@
         :max-height="isMobile ? 560 : undefined"
         border
         :span-method="tableResonanceSpanMethod"
+        :row-class-name="resonanceRowClassName"
         @sort-change="handleResonanceSortChange"
       >
         <!-- 第一列：属性 -->
@@ -116,6 +117,7 @@ import { useResponsive } from '@/composables/useResponsive';
 import {
   type CgssCardSkillTableItem,
   type TableDataRow,
+  type CarnivalPickup,
   tableResonanceRowHeaderAttribute,
   tableResonanceRowHeaderSpecialize,
   tableResonanceRowHeaderTw,
@@ -140,6 +142,7 @@ const props = defineProps<{
   nameFilter: string;
   showExtraTableConfig: boolean;
   tableData?: TableDataRow[];
+  pickupInfo: CarnivalPickup | null;
 }>();
 
 // 自定义事件
@@ -184,6 +187,12 @@ onUnmounted(() => {
 
 // 排序状态：子组件内部维护
 const currentSortField = ref('specialize');
+
+// 高亮行函数
+const resonanceRowClassName = ({ row }: { row: TableDataRow }) => {
+  if (!props.pickupInfo) return '';
+  return row.specialize === props.pickupInfo.status_main ? 'row-highlight-pickup' : '';
+};
 
 // 初始化函数
 const initializeData = (data: CgssCardSkillTableItem[]): TableDataRow[] => {

@@ -16,6 +16,8 @@
         v-model:click-icon-action="switchClickIconAction"
         v-model:show-simple-labels="switchShowSimpleLabels"
         v-model:show-extra-table-config="switchShowExtraTableConfig"
+        v-model:highlight-enabled="switchHighlightPickup"
+        v-model:pickup-info="rawPickupInfo"
         @toggle-all-brightness="toggleAllBrightness"
         @update-card-status="handleUpdateCardStatus"
       />
@@ -29,6 +31,7 @@
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
         :show-extra-table-config="switchShowExtraTableConfig"
+        :pickup-info="effectivePickupInfo"
         @icon-click="handleIconClick"
       />
       <div class="al-divider"></div>
@@ -48,6 +51,7 @@
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
         :show-extra-table-config="switchShowExtraTableConfig"
+        :pickup-info="effectivePickupInfo"
         @icon-click="handleIconClick"
       />
       <div class="al-divider"></div>
@@ -70,9 +74,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted, useTemplateRef } from 'vue';
+import { ref, computed, shallowRef, onMounted, useTemplateRef } from 'vue';
 
-import { type TableDataRow, type CgssCardSkillTableItem } from './CgssUnitViewerTypes';
+import {
+  type TableDataRow,
+  type CgssCardSkillTableItem,
+  type CarnivalPickup,
+} from './CgssUnitViewerTypes';
 import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
 import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
 import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
@@ -99,6 +107,11 @@ const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
+const switchHighlightPickup = ref(false);
+const rawPickupInfo = ref<CarnivalPickup | null>(null);
+const effectivePickupInfo = computed(() =>
+  switchHighlightPickup.value ? rawPickupInfo.value : null,
+);
 
 const resonanceTableData = shallowRef<TableDataRow[]>([]);
 const dominantTableData = shallowRef<TableDataRow[]>([]);

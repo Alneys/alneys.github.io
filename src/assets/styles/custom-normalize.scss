@@ -108,7 +108,7 @@ samp {
 // 中性色应用 - 原生标签样式
 // ========================================
 
-$el-exclude: ':not([class^="el-"] *)';
+$el-exclude: ':where(:not([class^="el-"] *))';
 
 :where(body) {
   color: var(--al-color-text);

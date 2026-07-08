@@ -107,6 +107,10 @@
       z-index: 1;
     }
 
+    .row-highlight-pickup.el-table__row > td.el-table__cell {
+      background-color: var(--el-color-primary-light-7);
+    }
+
     .icon-season-limited-cute {
       box-shadow: 0 0 12px 8px var(--im-color-cg-cute);
     }

@@ -1,14 +1,13 @@
 <template>
   <div class="unit-viewer-config">
-    <!-- 名字筛选 -->
+    <!-- 筛选 -->
     <div style="display: flex; align-items: center">
-      <el-switch v-model="nameFilterEnabled" active-text="筛选名字" />
+      <span class="el-switch__label">选择嘉年华活动</span>
       <el-select
-        v-if="nameFilterEnabled"
         v-model="selectedFilterIndex"
         placeholder="选择预设筛选"
         clearable
-        style="width: 18em; margin-left: 1em"
+        style="width: 18em; margin-left: 0.5em"
       >
         <el-option
           v-for="(item, index) in nameFilterDataList"
@@ -17,6 +16,30 @@
           :value="index"
         />
       </el-select>
+    </div>
+    <div style="display: flex; align-items: center">
+      <el-switch v-model="nameFilterEnabled" active-text="筛选名字" />
+      <el-switch v-model="highlightEnabled" active-text="高亮属性" />
+      <div v-if="pickupInfo" class="pickup-info">
+        <div>
+          <span :class="`color-cg-${pickupInfo.type_main.toLowerCase()}`">
+            {{ pickupInfo.type_main.toLowerCase() }}
+          </span>
+          <span> / </span>
+          <span :class="`color-cg-${pickupInfo.type_sub.toLowerCase()}`">
+            {{ pickupInfo.type_sub.toLowerCase() }}
+          </span>
+        </div>
+        <div>
+          <span :class="`color-cg-${pickupInfo.status_main}`">
+            {{ pickupInfo.status_main }}
+          </span>
+          <span> / </span>
+          <span :class="`color-cg-${pickupInfo.status_sub}`">
+            {{ pickupInfo.status_sub }}
+          </span>
+        </div>
+      </div>
     </div>
     <div v-if="nameFilterEnabled">
       <el-input
@@ -54,7 +77,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 
-import nameFilterData from '../data/cgss_carnival_info.json';
+import type { CarnivalPickup } from '../CgssUnitViewerTypes';
+import carnivalInfo from '../data/cgss_carnival_info.json';
 import CgssUnitViewerStateManager from './CgssUnitViewerStateManager.vue';
 
 // 自定义事件
@@ -69,6 +93,8 @@ const nameFilter = defineModel<string>('nameFilter', { default: '' });
 const clickIconAction = defineModel<string>('clickIconAction', { default: 'None' });
 const showSimpleLabels = defineModel<boolean>('showSimpleLabels', { default: false });
 const showExtraTableConfig = defineModel<boolean>('showExtraTableConfig', { default: true });
+const highlightEnabled = defineModel<boolean>('highlightEnabled', { default: false });
+const pickupInfo = defineModel<CarnivalPickup | null>('pickupInfo', { default: null });
 
 const clickActionOptions = [
   { label: '无', value: 'None' },
@@ -77,7 +103,7 @@ const clickActionOptions = [
 ];
 
 // 名字筛选数据
-const nameFilterDataList = nameFilterData;
+const nameFilterDataList = carnivalInfo;
 const selectedFilterIndex = ref<number>(0);
 
 // 标志：是否已经自动加载过卡片状态
@@ -88,10 +114,15 @@ const preloadedCardStatus = ref<string[] | null>(null);
 // 缓存预加载的状态来源
 const preloadedStatusSource = ref<'clipboard' | 'localStorage' | null>(null);
 
-// 监听下拉选择变化，更新筛选内容
+// 监听下拉选择变化，更新筛选内容和 pickup 信息
 watch(selectedFilterIndex, (newIndex) => {
   if (newIndex !== undefined && newIndex >= 0) {
     nameFilter.value = nameFilterDataList[newIndex]!.nameFilter;
+    pickupInfo.value = (nameFilterDataList[newIndex] as any)?.pickup ?? null;
+  }
+  if (newIndex === undefined) {
+    nameFilter.value = '';
+    pickupInfo.value = null;
   }
 });
 
@@ -106,6 +137,10 @@ watch(clickIconAction, (newAction) => {
 // 组件挂载
 onMounted(() => {
   preloadCardStatus();
+  // 设置初始 pickup 信息
+  if (selectedFilterIndex.value !== undefined && selectedFilterIndex.value >= 0) {
+    pickupInfo.value = (nameFilterDataList[selectedFilterIndex.value] as any)?.pickup ?? null;
+  }
 });
 
 // 预加载卡片状态：优先从剪切板，然后从浏览器存储
@@ -166,6 +201,16 @@ const applyPreloadedCardStatus = () => {
     gap: 0.5em;
     align-items: baseline;
     margin: 0.5em 0;
+  }
+
+  .pickup-info {
+    display: inline-block;
+    font-size: var(--el-font-size-small);
+    font-weight: bold;
+
+    > span:first-child {
+      margin-left: 0.5em;
+    }
   }
 
   .config-name-filter-input {
