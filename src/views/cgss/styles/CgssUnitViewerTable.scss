@@ -98,12 +98,12 @@
     .cgss-icon.icon-dark {
       filter: brightness(0.5);
 
-      &.icon-season-limited {
+      &.icon-gasha-match {
         filter: brightness(0.675);
       }
     }
 
-    .icon-season-limited {
+    .icon-gasha-match {
       z-index: 1;
     }
 
@@ -111,15 +111,15 @@
       background-color: var(--el-color-primary-light-5);
     }
 
-    .icon-season-limited-cute {
+    .icon-gasha-match-cute {
       box-shadow: 0 0 12px 8px var(--im-color-cg-cute);
     }
 
-    .icon-season-limited-cool {
+    .icon-gasha-match-cool {
       box-shadow: 0 0 12px 8px var(--im-color-cg-cool);
     }
 
-    .icon-season-limited-passion {
+    .icon-gasha-match-passion {
       box-shadow: 0 0 12px 8px var(--im-color-cg-passion);
     }
   }

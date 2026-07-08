@@ -139,9 +139,9 @@
                       scope.row as TableDataRow,
                       icon.card,
                     ),
-                    'icon-season-limited':
+                    'icon-gasha-match':
                       highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
-                    [`icon-season-limited-${icon.card.attribute.toLowerCase()}`]:
+                    [`icon-gasha-match-${icon.card.attribute.toLowerCase()}`]:
                       highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid),
                   }"
                   :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
