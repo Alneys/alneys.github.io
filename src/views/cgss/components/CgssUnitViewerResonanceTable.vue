@@ -130,8 +130,8 @@ import {
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
 import { useCardTooltip } from '../composables/useCardTooltip';
+import { useGashaFilter } from '../composables/useGashaFilter';
 import { useIconActions } from '../composables/useIconActions';
-import { useMemorialGasha } from '../composables/useMemorialGasha';
 import {
   sortTableTw,
   createCardDataItem,
@@ -185,7 +185,7 @@ const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
 // 组合式函数：回忆卡池判断（始终使用 blanc 版本）
 const memorialGashaEdition = computed(() => (highlightMemorialGasha.value ? 'blanc' : null));
-const { isMemorialGashaCard } = useMemorialGasha(memorialGashaEdition);
+const { isMemorialGashaCard } = useGashaFilter(memorialGashaEdition);
 
 // 组合式函数：暗色模式
 const isDark = useDark();

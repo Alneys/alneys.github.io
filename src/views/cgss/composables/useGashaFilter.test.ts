@@ -1,27 +1,27 @@
 import { describe, it, expect } from 'vitest';
 
-import { useSeasonLimited } from './useSeasonLimited';
+import { useGashaFilter } from './useGashaFilter';
 
-describe('useSeasonLimited', () => {
-  const { isSeasonLimitedCard } = useSeasonLimited();
+describe('useGashaFilter', () => {
+  const { isSeasonLimitedCard } = useGashaFilter();
 
   describe('isSeasonLimitedCard', () => {
     it('当 cid 在列表中应返回 true', () => {
-      // 101325 在列表中
-      expect(isSeasonLimitedCard('101325')).toBe(true);
-      // 301303 在列表中
-      expect(isSeasonLimitedCard('301303')).toBe(true);
-      // 301381 在列表中
-      expect(isSeasonLimitedCard('301381')).toBe(true);
+      // 101326 在列表中
+      expect(isSeasonLimitedCard('101326')).toBe(true);
+      // 301304 在列表中
+      expect(isSeasonLimitedCard('301304')).toBe(true);
+      // 301382 在列表中
+      expect(isSeasonLimitedCard('301382')).toBe(true);
     });
 
     it('当 cid-1 在列表中应返回 true', () => {
-      // 101326-1=101325 在列表中
-      expect(isSeasonLimitedCard('101326')).toBe(true);
-      // 301304-1=301303 在列表中
-      expect(isSeasonLimitedCard('301304')).toBe(true);
-      // 301382-1=301381 在列表中
-      expect(isSeasonLimitedCard('301382')).toBe(true);
+      // 101327-1=101326 在列表中
+      expect(isSeasonLimitedCard('101327')).toBe(true);
+      // 301305-1=301304 在列表中
+      expect(isSeasonLimitedCard('301305')).toBe(true);
+      // 301383-1=301382 在列表中
+      expect(isSeasonLimitedCard('301383')).toBe(true);
     });
 
     it('当 cid 和 cid-1 都不在列表中应返回 false', () => {
@@ -39,13 +39,13 @@ describe('useSeasonLimited', () => {
     });
 
     it('应正确处理数字字符串的前导零', () => {
-      // parseInt('0101325', 10) = 101325
-      expect(isSeasonLimitedCard('0101325')).toBe(true);
+      // parseInt('0101326', 10) = 101326
+      expect(isSeasonLimitedCard('0101326')).toBe(true);
     });
 
     it('应正确处理小数', () => {
-      // parseInt('101325.5', 10) = 101325
-      expect(isSeasonLimitedCard('101325.5')).toBe(true);
+      // parseInt('101326.5', 10) = 101326
+      expect(isSeasonLimitedCard('101326.5')).toBe(true);
     });
   });
 });

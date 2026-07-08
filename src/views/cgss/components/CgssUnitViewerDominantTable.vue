@@ -239,9 +239,8 @@ import {
 } from '../CgssUnitViewerTypes';
 import { useCardFilter } from '../composables/useCardFilter';
 import { useCardTooltip } from '../composables/useCardTooltip';
+import { useGashaFilter } from '../composables/useGashaFilter';
 import { useIconActions } from '../composables/useIconActions';
-import { useMemorialGasha } from '../composables/useMemorialGasha';
-import { useSeasonLimited } from '../composables/useSeasonLimited';
 import {
   sortTableTw,
   createCardDataItem,
@@ -307,11 +306,8 @@ const { isMobile, isSmallScreen } = useResponsive();
 // 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
 const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
-// 组合式函数：季节限定卡池判断
-const { isSeasonLimitedCard } = useSeasonLimited();
-
-// 组合式函数：回忆卡池判断
-const { isMemorialGashaCard } = useMemorialGasha(memorialGashaEdition);
+// 组合式函数：卡池过滤判断（季节限定 + 回忆卡池）
+const { isSeasonLimitedCard, isMemorialGashaCard } = useGashaFilter(memorialGashaEdition);
 
 // 组合式函数：暗色模式
 const isDark = useDark();
