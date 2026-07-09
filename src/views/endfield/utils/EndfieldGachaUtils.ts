@@ -275,3 +275,326 @@ export function simulateCharacterGachaToTargetMultipleTimes(
 
   return allSimulationResults;
 }
+
+/**
+ * 单次武器抽卡模拟函数（10连）
+ * @param totalDrawCount 总抽取次数（用于计算累计抽取次数）
+ * @param no6StarWeaponCount 连续未抽到6星武器的次数
+ * @param hasObtainedSpecific6StarWeapon 是否已获得特定概率提升的6星武器
+ * @returns 抽取的结果字符串数组（每个元素为"6_up", "6_other", "5", "4"）
+ */
+export function simulateWeaponGachaSingle(
+  totalDrawCount: number,
+  no6StarWeaponCount: number,
+  hasObtainedSpecific6StarWeapon: boolean,
+): string[] {
+  const results: string[] = [];
+  let currentNo6StarCount = 0;
+  let currentNoSpecific6StarCount = 0;
+
+  const shouldGuarantee6Star = no6StarWeaponCount >= 3;
+  const shouldGuaranteeSpecific6Star = !hasObtainedSpecific6StarWeapon && totalDrawCount >= 7;
+
+  for (let i = 0; i < 10; i++) {
+    let p6 = 0.04;
+    let p5 = 0.15;
+
+    if (i === 9) {
+      let has5OrAbove = false;
+      let has6Star = false;
+      let hasSpecific6Star = false;
+
+      for (let j = 0; j < 9; j++) {
+        const r = results[j];
+        if (r === '5' || r === '6_up' || r === '6_other') {
+          has5OrAbove = true;
+        }
+        if (r === '6_up' || r === '6_other') {
+          has6Star = true;
+        }
+        if (r === '6_up') {
+          hasSpecific6Star = true;
+        }
+      }
+
+      if (!has5OrAbove) {
+        p5 = 1.0;
+      }
+
+      if (shouldGuarantee6Star && !has6Star) {
+        p6 = 1.0;
+        p5 = 0.0;
+      }
+
+      if (shouldGuaranteeSpecific6Star && !hasSpecific6Star) {
+        p6 = 1.0;
+        p5 = 0.0;
+      }
+    }
+
+    const rand = Math.random();
+    let result: string;
+
+    if (rand < p6) {
+      let isSpecific = false;
+
+      if (shouldGuaranteeSpecific6Star && i === 9) {
+        let hasSpecific6Star = false;
+        for (let j = 0; j < 9; j++) {
+          if (results[j] === '6_up') {
+            hasSpecific6Star = true;
+            break;
+          }
+        }
+        if (!hasSpecific6Star) {
+          isSpecific = true;
+        } else {
+          isSpecific = Math.random() < 0.25;
+        }
+      } else {
+        isSpecific = Math.random() < 0.25;
+      }
+
+      result = isSpecific ? '6_up' : '6_other';
+    } else if (rand < p6 + p5) {
+      result = '5';
+    } else {
+      result = '4';
+    }
+
+    results.push(result);
+
+    if (result === '6_up' || result === '6_other') {
+      currentNo6StarCount = 0;
+    } else {
+      currentNo6StarCount++;
+    }
+
+    if (result === '6_up') {
+      currentNoSpecific6StarCount = 0;
+    } else {
+      currentNoSpecific6StarCount++;
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 模拟一次完整的武器抽卡过程，直到达到目标突破等级
+ * @param targetRank 目标突破等级，默认0
+ * @returns 返回本次模拟的所有抽取结果的字符串列表
+ */
+export function simulateWeaponGachaToTarget(targetRank: number = 0): string[] {
+  let totalDrawCount = 0;
+  let no6StarWeaponCount = 0;
+  let specific6StarWeaponCount = 0;
+  const currentSimulationResults: string[] = [];
+
+  while (totalDrawCount <= 100) {
+    if (specific6StarWeaponCount >= 1 + targetRank) {
+      break;
+    }
+
+    const results = simulateWeaponGachaSingle(
+      totalDrawCount,
+      no6StarWeaponCount,
+      specific6StarWeaponCount > 0,
+    );
+
+    currentSimulationResults.push(...results);
+    totalDrawCount++;
+
+    if (totalDrawCount >= 18 && totalDrawCount % 16 === 2) {
+      specific6StarWeaponCount++;
+    }
+
+    let has6Star = false;
+    let hasSpecific6Star = false;
+
+    for (const result of results) {
+      if (result === '6_up' || result === '6_other') {
+        has6Star = true;
+        if (result === '6_up') {
+          hasSpecific6Star = true;
+          specific6StarWeaponCount++;
+        }
+      }
+    }
+
+    if (has6Star) {
+      no6StarWeaponCount = 0;
+    } else {
+      no6StarWeaponCount++;
+    }
+  }
+
+  return currentSimulationResults;
+}
+
+/**
+ * 模拟多次武器抽卡过程
+ * @param simulationCount 模拟次数，默认10000
+ * @param targetRank 目标突破等级，默认0
+ * @returns 返回一个列表，每个元素是一次模拟的所有抽取结果的字符串列表
+ */
+export function simulateWeaponGachaToTargetMultipleTimes(
+  simulationCount: number = 10000,
+  targetRank: number = 0,
+): string[][] {
+  const allSimulationResults: string[][] = [];
+
+  for (let i = 0; i < simulationCount; i++) {
+    const currentSimulationResult = simulateWeaponGachaToTarget(targetRank);
+    allSimulationResults.push(currentSimulationResult);
+  }
+
+  return allSimulationResults;
+}
+
+/**
+ * 根据抽取结果列表计算可获得的配额数量
+ * @param results 抽取结果列表
+ * @returns 返回配额总数
+ */
+export function calculateWeaponTokens(results: string[]): number {
+  let tokenCount = 0;
+
+  for (const result of results) {
+    switch (result) {
+      case '6_up':
+      case '6_other':
+        tokenCount += 2000;
+        break;
+      case '5':
+        tokenCount += 200;
+        break;
+      case '4':
+        tokenCount += 20;
+        break;
+    }
+  }
+
+  return tokenCount;
+}
+
+/**
+ * 将原始数据转换为ECharts可用的格式（角色）
+ * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的对象
+ * @param gachaStrategy 抽卡策略
+ * @returns 包含概率密度、互补累计分布和平均配额的数据对象
+ */
+export function processDataForCharacterChart(
+  data: GachaSimulationResult[],
+  gachaStrategy: GachaStrategy,
+): any {
+  const countMap: Map<number, number> = new Map();
+  const tokenSumMap: Map<number, number> = new Map();
+
+  for (const simulation of data) {
+    const actualDraws = simulation.actualDraws;
+    countMap.set(actualDraws, (countMap.get(actualDraws) || 0) + 1);
+
+    const tokenCount = calculateWeaponTokens(simulation.result);
+    tokenSumMap.set(actualDraws, (tokenSumMap.get(actualDraws) || 0) + tokenCount);
+  }
+
+  let uniqueDraws: number[];
+  if (gachaStrategy === 'batch') {
+    uniqueDraws = Array.from(countMap.keys()).sort((a, b) => a - b);
+  } else {
+    const maxDraws = Math.max(...Array.from(countMap.keys()));
+    uniqueDraws = Array.from({ length: maxDraws }, (_, i) => i + 1);
+
+    for (const draws of uniqueDraws) {
+      if (!countMap.has(draws)) {
+        countMap.set(draws, 0);
+        tokenSumMap.set(draws, 0);
+      }
+    }
+  }
+
+  const pdfData = uniqueDraws
+    .filter((draws) => countMap.has(draws))
+    .map((draws) => [draws, ((countMap.get(draws) || 0) / data.length) * 100]);
+
+  const totalSimulations = data.length;
+  let remainingCount = totalSimulations;
+
+  const ccdfData = uniqueDraws
+    .filter((draws) => countMap.has(draws))
+    .map((draws) => {
+      remainingCount -= countMap.get(draws) || 0;
+      const probability = (remainingCount / totalSimulations) * 100;
+      return [draws, probability];
+    });
+
+  const avgTokenData = uniqueDraws
+    .filter((draws) => countMap.has(draws))
+    .map((draws) => {
+      const totalCount = countMap.get(draws) || 0;
+      const totalTokens = tokenSumMap.get(draws) || 0;
+      const avgTokens = totalCount > 0 ? Math.round(totalTokens / totalCount) : 0;
+      return [draws, avgTokens];
+    })
+    .filter(([, tokens]) => {
+      return tokens && tokens > 0;
+    });
+
+  let jadePerTokenData: [number, number][] = [];
+
+  jadePerTokenData = uniqueDraws
+    .filter((draws) => countMap.has(draws) && tokenSumMap.get(draws)! > 0)
+    .map((draws) => {
+      const totalCount = countMap.get(draws) || 0;
+      const totalTokens = tokenSumMap.get(draws) || 0;
+      const avgTokens = totalCount > 0 ? totalTokens / totalCount : 0;
+
+      const totalJadeConsumed = draws * 500;
+      const avgJadePerToken = avgTokens > 0 ? totalJadeConsumed / avgTokens : 0;
+
+      return [draws, avgJadePerToken];
+    });
+
+  return {
+    pdfData,
+    ccdfData,
+    avgTokenData,
+    jadePerTokenData,
+  };
+}
+
+/**
+ * 将原始数据转换为ECharts可用的格式（武器）
+ * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的字符串列表
+ * @returns 包含概率密度、互补累计分布的数据对象
+ */
+export function processDataForWeaponChart(data: string[][]): any {
+  const countMap: Map<number, number> = new Map();
+
+  for (const simulation of data) {
+    const tenPullCount = Math.ceil(simulation.length / 10);
+    countMap.set(tenPullCount, (countMap.get(tenPullCount) || 0) + 1);
+  }
+
+  const uniqueTenPulls = Array.from(countMap.keys()).sort((a, b) => a - b);
+
+  const pdfData = uniqueTenPulls.map((tenPulls) => [
+    tenPulls,
+    ((countMap.get(tenPulls) || 0) / data.length) * 100,
+  ]);
+
+  const totalSimulations = data.length;
+  let remainingCount = totalSimulations;
+
+  const ccdfData = uniqueTenPulls.map((tenPulls) => {
+    remainingCount -= countMap.get(tenPulls) || 0;
+    const probability = (remainingCount / totalSimulations) * 100;
+    return [tenPulls, probability];
+  });
+
+  return {
+    pdfData,
+    ccdfData,
+  };
+}
