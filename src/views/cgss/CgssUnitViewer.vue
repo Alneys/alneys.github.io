@@ -53,7 +53,8 @@
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
         :show-extra-table-config="switchShowExtraTableConfig"
-        :pickup-info="effectivePickupInfo"
+        :pickup-info="rawPickupInfo"
+        :highlight-pickup="switchHighlightPickup"
         @icon-click="handleIconClick"
       />
       <div class="al-divider"></div>

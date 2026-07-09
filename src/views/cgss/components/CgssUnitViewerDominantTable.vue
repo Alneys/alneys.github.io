@@ -259,6 +259,7 @@ const props = defineProps<{
   showExtraTableConfig: boolean;
   tableData?: TableDataRow[];
   pickupInfo: CarnivalPickup | null;
+  highlightPickup: boolean;
 }>();
 
 // 自定义事件
@@ -336,7 +337,7 @@ const currentSortField = ref('target_attribute_2');
 
 // 高亮行函数
 const dominantRowClassName = ({ row }: { row: TableDataRow }) => {
-  if (!props.pickupInfo) return '';
+  if (!props.highlightPickup || !props.pickupInfo) return '';
   const { type_main, status_main, status_sub } = props.pickupInfo;
   const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
   const typeMain = type_main.toLowerCase();
@@ -358,7 +359,7 @@ const dominantCellClassName = ({
   row: TableDataRow;
   column: TableColumnCtx<TableDataRow>;
 }) => {
-  if (!props.pickupInfo) return '';
+  if (!props.highlightPickup || !props.pickupInfo) return '';
 
   // 条件 1：只有 type_main 匹配的行才可能高亮
   const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
