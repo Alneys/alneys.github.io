@@ -46,6 +46,7 @@
         v-model:show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
         v-model:show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
         v-model:highlight-season-limited="switchHighlightSeasonLimited"
+        v-model:highlight-limited-skill-gasha="switchHighlightLimitedSkillGasha"
         v-model:highlight-memorial-gasha="switchHighlightMemorialGasha"
         v-model:memorial-gasha-edition="switchMemorialGashaEdition"
         :original-data="originalData"
@@ -116,8 +117,9 @@ const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
+const switchHighlightLimitedSkillGasha = ref(false);
 const switchHighlightMemorialGasha = ref(false);
-const switchMemorialGashaEdition = ref<string | null>(null);
+const switchMemorialGashaEdition = ref<string | null>('all');
 const switchHighlightPickup = ref(false);
 const rawPickupInfo = ref<CarnivalPickup | null>(null);
 const effectivePickupInfo = computed(() =>

@@ -1,9 +1,11 @@
 import { type Ref } from 'vue';
 
+import CgssLimitedSkillGasha from '../data/cgss_limited_skill_pick_gasha.json';
 import CgssMemorialGasha from '../data/cgss_memorial_gasha.json';
 import CgssSeasonLimitedGasha from '../data/cgss_season_limited_gasha.json';
 
 const seasonLimitedCids = CgssSeasonLimitedGasha.season_limited.cids.map(Number);
+const limitedSkillGashaCids = CgssLimitedSkillGasha.cids;
 
 /**
  * 卡池过滤相关功能
@@ -38,8 +40,16 @@ export function useGashaFilter(selectedEdition?: Ref<string | null>) {
     return seasonLimitedCids.includes(cidNum) || seasonLimitedCids.includes(cidNum - 1);
   };
 
+  /**
+   * 判断是否为限定技能卡池角色
+   */
+  const isLimitedSkillGashaCard = (cid: string): boolean => {
+    return limitedSkillGashaCids.includes(cid);
+  };
+
   return {
     isMemorialGashaCard,
     isSeasonLimitedCard,
+    isLimitedSkillGashaCard,
   };
 }
