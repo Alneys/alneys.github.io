@@ -46,6 +46,7 @@
         v-model:show-all-attribute-pairs="switchShowAllAttributeSpecializePairs"
         v-model:show-sort-related-skills-only="switchShowSortRelatedSkillsOnly"
         v-model:highlight-season-limited="switchHighlightSeasonLimited"
+        v-model:highlight-limited-skill-gasha="switchHighlightLimitedSkillGasha"
         v-model:highlight-memorial-gasha="switchHighlightMemorialGasha"
         v-model:memorial-gasha-edition="switchMemorialGashaEdition"
         :original-data="originalData"
@@ -53,8 +54,14 @@
         :click-icon-action="switchClickIconAction"
         :name-filter="switchNameFilter ? inputNameFilter : ''"
         :show-extra-table-config="switchShowExtraTableConfig"
-        :pickup-info="effectivePickupInfo"
+        :pickup-info="rawPickupInfo"
+        :highlight-pickup="switchHighlightPickup"
         @icon-click="handleIconClick"
+      />
+      <div class="al-divider"></div>
+      <CgssUnitViewerHoldStats
+        :original-data="originalData"
+        :click-icon-action="switchClickIconAction"
       />
       <div class="al-divider"></div>
       <div class="unit-information">
@@ -85,6 +92,7 @@ import {
 } from './CgssUnitViewerTypes';
 import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
 import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
+import CgssUnitViewerHoldStats from './components/CgssUnitViewerHoldStats.vue';
 import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
 import { useCardBrightness } from './composables/useCardBrightness';
 import { useCardFilter } from './composables/useCardFilter';
@@ -109,8 +117,9 @@ const switchShowSpecializeNotMatch = ref(false);
 const switchShowAllAttributeSpecializePairs = ref(false);
 const switchShowSortRelatedSkillsOnly = ref(false);
 const switchHighlightSeasonLimited = ref(false);
+const switchHighlightLimitedSkillGasha = ref(false);
 const switchHighlightMemorialGasha = ref(false);
-const switchMemorialGashaEdition = ref<string | null>(null);
+const switchMemorialGashaEdition = ref<string | null>('all');
 const switchHighlightPickup = ref(false);
 const rawPickupInfo = ref<CarnivalPickup | null>(null);
 const effectivePickupInfo = computed(() =>

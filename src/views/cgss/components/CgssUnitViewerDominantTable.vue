@@ -16,12 +16,14 @@
       </div>
       <div style="display: flex; align-items: center">
         <el-switch v-model="highlightSeasonLimited" active-text="高亮月初复刻卡池角色" />
+        <el-switch v-model="highlightLimitedSkillGasha" active-text="高亮限定技能卡池" />
         <el-switch v-model="highlightMemorialGasha" active-text="高亮回忆卡池" />
         <el-select
           v-model="memorialGashaEdition"
           placeholder="选择"
           style="width: 100px; margin-left: 8px"
         >
+          <el-option label="全部" value="all" />
           <el-option label="8th" value="8th" />
           <el-option label="7th" value="7th" />
           <el-option label="6th" value="6th" />
@@ -157,10 +159,12 @@
                     ),
                     'icon-gasha-match':
                       (highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid)) ||
-                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)),
+                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)) ||
+                      (highlightLimitedSkillGasha && isLimitedSkillGashaCard(icon.card.cid)),
                     [`icon-gasha-match-${icon.card.attribute.toLowerCase()}`]:
                       (highlightSeasonLimited && isSeasonLimitedCard(icon.card.cid)) ||
-                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)),
+                      (highlightMemorialGasha && isMemorialGashaCard(icon.card.cid)) ||
+                      (highlightLimitedSkillGasha && isLimitedSkillGashaCard(icon.card.cid)),
                   }"
                   :src="`/static/images/cgss/icon_${icon.card.cid}.jpg`"
                   @mouseenter="
@@ -259,6 +263,7 @@ const props = defineProps<{
   showExtraTableConfig: boolean;
   tableData?: TableDataRow[];
   pickupInfo: CarnivalPickup | null;
+  highlightPickup: boolean;
 }>();
 
 // 自定义事件
@@ -297,8 +302,11 @@ const showSortRelatedSkillsOnly = defineModel<boolean>('showSortRelatedSkillsOnl
   default: false,
 });
 const highlightSeasonLimited = defineModel<boolean>('highlightSeasonLimited', { default: false });
+const highlightLimitedSkillGasha = defineModel<boolean>('highlightLimitedSkillGasha', {
+  default: false,
+});
 const highlightMemorialGasha = defineModel<boolean>('highlightMemorialGasha', { default: false });
-const memorialGashaEdition = defineModel<string | null>('memorialGashaEdition', { default: null });
+const memorialGashaEdition = defineModel<string | null>('memorialGashaEdition', { default: 'all' });
 
 // 组合式函数：响应式布局
 const { isMobile, isSmallScreen } = useResponsive();
@@ -306,18 +314,31 @@ const { isMobile, isSmallScreen } = useResponsive();
 // 组合式函数：名字筛选（传入 props.nameFilter 的 ref）
 const { isNameMatched } = useCardFilter(toRef(props, 'nameFilter'));
 
-// 组合式函数：卡池过滤判断（季节限定 + 回忆卡池）
-const { isSeasonLimitedCard, isMemorialGashaCard } = useGashaFilter(memorialGashaEdition);
+// 组合式函数：卡池过滤判断（季节限定 + 回忆卡池 + 限定技能卡池）
+const { isSeasonLimitedCard, isMemorialGashaCard, isLimitedSkillGashaCard } =
+  useGashaFilter(memorialGashaEdition);
 
 // 组合式函数：暗色模式
 const isDark = useDark();
 
-// 两个高亮开关不能同时启用
+// 三个高亮开关不能同时启用
 watch(highlightSeasonLimited, (val) => {
-  if (val) highlightMemorialGasha.value = false;
+  if (val) {
+    highlightMemorialGasha.value = false;
+    highlightLimitedSkillGasha.value = false;
+  }
 });
 watch(highlightMemorialGasha, (val) => {
-  if (val) highlightSeasonLimited.value = false;
+  if (val) {
+    highlightSeasonLimited.value = false;
+    highlightLimitedSkillGasha.value = false;
+  }
+});
+watch(highlightLimitedSkillGasha, (val) => {
+  if (val) {
+    highlightSeasonLimited.value = false;
+    highlightMemorialGasha.value = false;
+  }
 });
 
 // 选项切换时自动激活高亮回忆卡池
@@ -336,7 +357,7 @@ const currentSortField = ref('target_attribute_2');
 
 // 高亮行函数
 const dominantRowClassName = ({ row }: { row: TableDataRow }) => {
-  if (!props.pickupInfo) return '';
+  if (!props.highlightPickup || !props.pickupInfo) return '';
   const { type_main, status_main, status_sub } = props.pickupInfo;
   const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
   const typeMain = type_main.toLowerCase();
@@ -358,7 +379,7 @@ const dominantCellClassName = ({
   row: TableDataRow;
   column: TableColumnCtx<TableDataRow>;
 }) => {
-  if (!props.pickupInfo) return '';
+  if (!props.highlightPickup || !props.pickupInfo) return '';
 
   // 条件 1：只有 type_main 匹配的行才可能高亮
   const attr2 = (row.target_attribute_2 ?? '').toLowerCase();
@@ -633,6 +654,7 @@ const resetFilters = () => {
   showSortRelatedSkillsOnly.value = false;
   highlightSeasonLimited.value = false;
   highlightMemorialGasha.value = false;
+  highlightLimitedSkillGasha.value = false;
   memorialGashaEdition.value = null;
 };
 

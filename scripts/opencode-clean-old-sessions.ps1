@@ -73,6 +73,10 @@ try {
             return
         }
 
+        # Strip any non-JSON prefix (e.g. "Plugin initialized!\n")
+        $jsonText = $jsonText -join "`n"
+        $idx = $jsonText.IndexOf('[')
+        if ($idx -ge 0) { $jsonText = $jsonText.Substring($idx) }
         $sessions = $jsonText | ConvertFrom-Json
         if ($null -eq $sessions -or $sessions.Count -eq 0) {
             Write-Host "No sessions found."
@@ -127,6 +131,10 @@ try {
             return
         }
 
+        # Strip any non-JSON prefix (e.g. "Plugin initialized!\n")
+        $jsonText = $jsonText -join "`n"
+        $idx = $jsonText.IndexOf('[')
+        if ($idx -ge 0) { $jsonText = $jsonText.Substring($idx) }
         $sessions = $jsonText | ConvertFrom-Json
         if ($null -eq $sessions -or $sessions.Count -eq 0) {
             Write-Host "No sessions found. Done."

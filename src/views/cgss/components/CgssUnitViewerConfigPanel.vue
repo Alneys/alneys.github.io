@@ -98,7 +98,7 @@ const pickupInfo = defineModel<CarnivalPickup | null>('pickupInfo', { default: n
 
 const clickActionOptions = [
   { label: '无', value: 'None' },
-  { label: '切换卡片亮度', value: 'ToggleCardStatus' },
+  { label: '卡片持有切换模式', value: 'ToggleCardStatus' },
   { label: '在346lab查看卡片详情', value: 'ViewCardInfo' },
 ];
 
