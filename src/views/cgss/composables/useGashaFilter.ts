@@ -26,6 +26,12 @@ export function useGashaFilter(selectedEdition?: Ref<string | null>) {
       );
     }
 
+    if (key === 'pre5th') {
+      return ['1st', '2nd', '3rd', '4th', '5th'].some((editionKey) =>
+        (CgssMemorialGasha as Record<string, { cids: string[] }>)[editionKey]?.cids.includes(cid),
+      );
+    }
+
     const edition = (CgssMemorialGasha as Record<string, { cids: string[] }>)[key];
     if (!edition) return false;
     return edition.cids.includes(cid);
