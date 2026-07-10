@@ -17,6 +17,13 @@ export function useGashaFilter(selectedEdition?: Ref<string | null>) {
   const isMemorialGashaCard = (cid: string): boolean => {
     const key = selectedEdition?.value;
     if (!key) return false;
+
+    if (key === 'all') {
+      return Object.values(CgssMemorialGasha as Record<string, { cids: string[] }>).some(
+        (edition) => edition.cids.includes(cid),
+      );
+    }
+
     const edition = (CgssMemorialGasha as Record<string, { cids: string[] }>)[key];
     if (!edition) return false;
     return edition.cids.includes(cid);

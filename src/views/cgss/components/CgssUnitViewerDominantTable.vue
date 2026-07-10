@@ -22,6 +22,7 @@
           placeholder="选择"
           style="width: 100px; margin-left: 8px"
         >
+          <el-option label="全部" value="all" />
           <el-option label="8th" value="8th" />
           <el-option label="7th" value="7th" />
           <el-option label="6th" value="6th" />
