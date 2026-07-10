@@ -58,6 +58,11 @@
         @icon-click="handleIconClick"
       />
       <div class="al-divider"></div>
+      <CgssUnitViewerHoldStats
+        :original-data="originalData"
+        :click-icon-action="switchClickIconAction"
+      />
+      <div class="al-divider"></div>
       <div class="unit-information">
         <p>建议在1080P或以上分辨率屏幕上使用，针对移动端做了少许优化</p>
         <p>
@@ -86,6 +91,7 @@ import {
 } from './CgssUnitViewerTypes';
 import CgssUnitViewerConfigPanel from './components/CgssUnitViewerConfigPanel.vue';
 import CgssUnitViewerDominantTable from './components/CgssUnitViewerDominantTable.vue';
+import CgssUnitViewerHoldStats from './components/CgssUnitViewerHoldStats.vue';
 import CgssUnitViewerResonanceTable from './components/CgssUnitViewerResonanceTable.vue';
 import { useCardBrightness } from './composables/useCardBrightness';
 import { useCardFilter } from './composables/useCardFilter';
