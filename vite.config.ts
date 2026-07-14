@@ -16,6 +16,9 @@ import Unfonts from 'unplugin-fonts/vite';
 // custom plugins
 import { versionCheckPlugin } from './src/version-check/plugin';
 
+// gzip compression
+import { compression } from 'vite-plugin-compression2';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -42,6 +45,10 @@ export default defineConfig({
       },
     }),
     versionCheckPlugin(),
+    compression({
+      algorithms: ['gzip'],
+      threshold: 128,
+    }),
   ],
   resolve: {
     alias: {
