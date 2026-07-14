@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-force": "vite --force",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
@@ -72,6 +73,7 @@
     "unplugin-fonts": "^2.0.0",
     "unplugin-vue-components": "^32.1.0",
     "vite": "^8.1.4",
+    "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-vue-devtools": "^8.1.5",
     "vitest": "^4.1.10",
     "vue-eslint-parser": "^10.4.1",

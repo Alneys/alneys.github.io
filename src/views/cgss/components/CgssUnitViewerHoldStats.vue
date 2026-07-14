@@ -134,10 +134,10 @@ const { disabledCids } = useCardBrightness();
 const isToggleMode = computed(() => props.clickIconAction === 'ToggleCardStatus');
 
 const panelTitle = computed(() =>
-  isToggleMode.value ? '持有卡片统计' : '持有卡片统计（需卡片持有切换模式）',
+  isToggleMode.value ? '持有卡片统计' : '持有卡片统计（需激活卡片持有切换模式）',
 );
 
-const activeNames = ref(['stats']);
+const activeNames = ref([]);
 const showDetail = ref(true);
 
 const ATTRIBUTES = ['Cute', 'Cool', 'Passion'] as const;
