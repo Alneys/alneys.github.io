@@ -11,6 +11,8 @@
     "test:unit": "vitest",
     "build-only": "vite build",
     "build:analyze": "cross-env ANALYZE=true vite build",
+    "build:analyze-json": "cross-env ANALYZE_JSON=true vite build",
+    "build:analyze-report": "cross-env ANALYZE_JSON=true vite build && node scripts/analyze-bundle.mjs",
     "type-check": "vue-tsc --build",
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
