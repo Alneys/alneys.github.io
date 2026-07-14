@@ -19,6 +19,9 @@ import { versionCheckPlugin } from './src/version-check/plugin';
 // gzip compression
 import { compression } from 'vite-plugin-compression2';
 
+// bundle analysis (ANALYZE=true pnpm build)
+import { visualizer } from 'rollup-plugin-visualizer';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -49,7 +52,14 @@ export default defineConfig({
       algorithms: ['gzip'],
       threshold: 1024,
     }),
-  ],
+    process.env.ANALYZE === 'true' &&
+      visualizer({
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+        filename: 'stats.html',
+      }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
