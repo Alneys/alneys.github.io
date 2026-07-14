@@ -121,7 +121,15 @@
 import { ref, reactive, shallowRef, computed, watch } from 'vue';
 
 import { UploadFilled, CopyDocument, Check } from '@element-plus/icons-vue';
-import CryptoJS from 'crypto-js';
+import Hex from 'crypto-js/enc-hex';
+import Utf8 from 'crypto-js/enc-utf8';
+import WordArray from 'crypto-js/lib-typedarrays';
+import MD5 from 'crypto-js/md5';
+import SHA1 from 'crypto-js/sha1';
+import SHA3 from 'crypto-js/sha3';
+import SHA256 from 'crypto-js/sha256';
+import SHA384 from 'crypto-js/sha384';
+import SHA512 from 'crypto-js/sha512';
 import type { UploadFile } from 'element-plus';
 import { sm3 } from 'sm-crypto';
 
@@ -187,20 +195,17 @@ const copyButtonText = ref('复制');
 const selectedAlgorithmLabel = computed(() => algorithmLabels[selectedAlgorithm.value]);
 
 // crypto-js 算法映射
-type HashInput = string | CryptoJS.lib.WordArray;
-const cryptoAlgoMap: Record<
-  Exclude<Algorithm, 'SM3'>,
-  (msg: HashInput) => CryptoJS.lib.WordArray
-> = {
-  MD5: CryptoJS.MD5,
-  SHA1: CryptoJS.SHA1,
-  SHA256: CryptoJS.SHA256,
-  SHA384: CryptoJS.SHA384,
-  SHA512: CryptoJS.SHA512,
-  SHA3_224: (msg) => CryptoJS.SHA3(msg, { outputLength: 224 }),
-  SHA3_256: (msg) => CryptoJS.SHA3(msg, { outputLength: 256 }),
-  SHA3_384: (msg) => CryptoJS.SHA3(msg, { outputLength: 384 }),
-  SHA3_512: (msg) => CryptoJS.SHA3(msg, { outputLength: 512 }),
+type HashInput = string | WordArray;
+const cryptoAlgoMap: Record<Exclude<Algorithm, 'SM3'>, (msg: HashInput) => WordArray> = {
+  MD5: MD5,
+  SHA1: SHA1,
+  SHA256: SHA256,
+  SHA384: SHA384,
+  SHA512: SHA512,
+  SHA3_224: (msg) => SHA3(msg, { outputLength: 224 }),
+  SHA3_256: (msg) => SHA3(msg, { outputLength: 256 }),
+  SHA3_384: (msg) => SHA3(msg, { outputLength: 384 }),
+  SHA3_512: (msg) => SHA3(msg, { outputLength: 512 }),
 };
 
 // 计算哈希值（文本）
@@ -209,8 +214,8 @@ function calculateHashFromText(text: string, algorithm: Algorithm): string {
 
   if (algorithm === 'SM3') {
     // SM3 使用 sm-crypto，需要转 hex
-    const wordArray = CryptoJS.enc.Utf8.parse(text);
-    const hexInput = CryptoJS.enc.Hex.stringify(wordArray);
+    const wordArray = Utf8.parse(text);
+    const hexInput = Hex.stringify(wordArray);
     result = sm3(hexInput);
   } else {
     const algo = algorithm as Exclude<Algorithm, 'SM3'>;
@@ -227,11 +232,11 @@ function calculateHashFromFile(file: File, algorithm: Algorithm): Promise<string
     reader.onload = (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
-        const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(arrayBuffer));
+        const wordArray = WordArray.create(new Uint8Array(arrayBuffer));
 
         let result: string;
         if (algorithm === 'SM3') {
-          const hexInput = CryptoJS.enc.Hex.stringify(wordArray);
+          const hexInput = Hex.stringify(wordArray);
           result = sm3(hexInput);
         } else {
           const algo = algorithm as Exclude<Algorithm, 'SM3'>;
