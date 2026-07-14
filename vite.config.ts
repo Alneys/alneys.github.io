@@ -70,6 +70,20 @@ export default defineConfig({
     port: 8563,
     host: '0.0.0.0',
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'echarts',
+              test: /node_modules[\\/]echarts/,
+            },
+          ],
+        },
+      },
+    },
+  },
   css: {
     preprocessorOptions: {
       scss: {
