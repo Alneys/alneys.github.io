@@ -47,7 +47,7 @@ export default defineConfig({
     versionCheckPlugin(),
     compression({
       algorithms: ['gzip'],
-      threshold: 128,
+      threshold: 1024,
     }),
   ],
   resolve: {
