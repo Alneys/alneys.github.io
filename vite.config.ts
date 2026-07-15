@@ -19,10 +19,9 @@ import { versionCheckPlugin } from './src/version-check/plugin';
 // gzip compression
 import { compression } from 'vite-plugin-compression2';
 
-// bundle analysis
-//   ANALYZE=true      -> HTML report (stats.html) for human
-//   ANALYZE_JSON=true -> JSON report (.temp/bundle-stats.json) for LLM
-//   ANALYZE takes priority over ANALYZE_JSON
+// bundle report
+//   REPORT=html -> HTML treemap (stats.html)
+//   REPORT=md   -> Markdown report (.temp/report.md)
 import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
@@ -55,19 +54,21 @@ export default defineConfig({
       algorithms: ['gzip'],
       threshold: 1024,
     }),
-    process.env.ANALYZE === 'true'
+    process.env.REPORT === 'html'
       ? visualizer({
           open: true,
           gzipSize: true,
+          brotliSize: true,
           template: 'treemap',
-          filename: 'stats.html',
+          filename: 'node_modules/.cache/visualizer.html',
         })
-      : process.env.ANALYZE_JSON === 'true' &&
+      : process.env.REPORT === 'md' &&
         visualizer({
           open: false,
           gzipSize: true,
-          filename: '.temp/bundle-stats.json',
-          template: 'raw-data',
+          brotliSize: true,
+          filename: 'node_modules/.cache/visualizer.md',
+          template: 'markdown',
         }),
   ].filter(Boolean),
   resolve: {
