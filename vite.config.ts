@@ -19,6 +19,11 @@ import { versionCheckPlugin } from './src/version-check/plugin';
 // gzip compression
 import { compression } from 'vite-plugin-compression2';
 
+// bundle report
+//   REPORT=html -> HTML treemap (stats.html)
+//   REPORT=md   -> Markdown report (.temp/report.md)
+import { visualizer } from 'rollup-plugin-visualizer';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -49,7 +54,23 @@ export default defineConfig({
       algorithms: ['gzip'],
       threshold: 1024,
     }),
-  ],
+    process.env.REPORT === 'html'
+      ? visualizer({
+          open: true,
+          gzipSize: true,
+          brotliSize: true,
+          template: 'treemap',
+          filename: 'node_modules/.cache/visualizer.html',
+        })
+      : process.env.REPORT === 'md' &&
+        visualizer({
+          open: false,
+          gzipSize: true,
+          brotliSize: true,
+          filename: 'node_modules/.cache/visualizer.md',
+          template: 'markdown',
+        }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -59,6 +80,20 @@ export default defineConfig({
   server: {
     port: 8563,
     host: '0.0.0.0',
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'echarts',
+              test: /node_modules[\\/]echarts/,
+            },
+          ],
+        },
+      },
+    },
   },
   css: {
     preprocessorOptions: {

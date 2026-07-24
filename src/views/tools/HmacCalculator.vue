@@ -138,7 +138,16 @@
 import { ref, reactive, shallowRef, computed, watch } from 'vue';
 
 import { UploadFilled, CopyDocument, Check } from '@element-plus/icons-vue';
-import CryptoJS from 'crypto-js';
+import Base64 from 'crypto-js/enc-base64';
+import Hex from 'crypto-js/enc-hex';
+import Utf8 from 'crypto-js/enc-utf8';
+import HmacMD5 from 'crypto-js/hmac-md5';
+import HmacSHA1 from 'crypto-js/hmac-sha1';
+import HmacSHA3 from 'crypto-js/hmac-sha3';
+import HmacSHA256 from 'crypto-js/hmac-sha256';
+import HmacSHA384 from 'crypto-js/hmac-sha384';
+import HmacSHA512 from 'crypto-js/hmac-sha512';
+import WordArray from 'crypto-js/lib-typedarrays';
 import type { UploadFile } from 'element-plus';
 import { sm3 } from 'sm-crypto';
 
@@ -197,35 +206,35 @@ const copyButtonText = ref('复制');
 // 算法标签
 const selectedAlgorithmLabel = computed(() => algorithmLabels[selectedAlgorithm.value]);
 
-// CryptoJS HMAC 算法映射（SHA3 需要使用底层 API）
-type HashInput = string | CryptoJS.lib.WordArray;
+// HMAC 算法映射
+type HashInput = string | WordArray;
 
 const cryptoHmacAlgoMap: Record<
   Exclude<Algorithm, 'SM3'>,
-  (msg: HashInput, key: HashInput) => CryptoJS.lib.WordArray
+  (msg: HashInput, key: HashInput) => WordArray
 > = {
-  MD5: CryptoJS.HmacMD5,
-  SHA1: CryptoJS.HmacSHA1,
-  SHA256: CryptoJS.HmacSHA256,
-  SHA384: CryptoJS.HmacSHA384,
-  SHA512: CryptoJS.HmacSHA512,
-  SHA3: CryptoJS.HmacSHA3,
+  MD5: HmacMD5,
+  SHA1: HmacSHA1,
+  SHA256: HmacSHA256,
+  SHA384: HmacSHA384,
+  SHA512: HmacSHA512,
+  SHA3: HmacSHA3,
 };
 
 // 解析密钥
-function parseKey(key: string, encoding: KeyEncoding): CryptoJS.lib.WordArray | null {
+function parseKey(key: string, encoding: KeyEncoding): WordArray | null {
   try {
     switch (encoding) {
       case 'text':
-        return CryptoJS.enc.Utf8.parse(key);
+        return Utf8.parse(key);
       case 'hex':
         // 验证是否为有效的 hex 字符串
         if (!/^[0-9a-fA-F]*$/.test(key) || key.length % 2 !== 0) {
           return null;
         }
-        return CryptoJS.enc.Hex.parse(key);
+        return Hex.parse(key);
       case 'base64':
-        return CryptoJS.enc.Base64.parse(key);
+        return Base64.parse(key);
     }
   } catch {
     return null;
@@ -233,33 +242,29 @@ function parseKey(key: string, encoding: KeyEncoding): CryptoJS.lib.WordArray | 
 }
 
 // 格式化输出结果
-function formatOutput(result: CryptoJS.lib.WordArray): string {
+function formatOutput(result: WordArray): string {
   let output: string;
   if (options.base64Output) {
-    output = result.toString(CryptoJS.enc.Base64);
+    output = result.toString(Base64);
   } else {
-    output = result.toString(CryptoJS.enc.Hex);
+    output = result.toString(Hex);
   }
   return options.uppercase ? output.toUpperCase() : output;
 }
 
 // 计算 HMAC（文本）
-function calculateHmacFromText(
-  message: string,
-  key: CryptoJS.lib.WordArray,
-  algorithm: Algorithm,
-): string {
-  const messageWordArray = CryptoJS.enc.Utf8.parse(message);
+function calculateHmacFromText(message: string, key: WordArray, algorithm: Algorithm): string {
+  const messageWordArray = Utf8.parse(message);
 
   if (algorithm === 'SM3') {
     // SM3-HMAC: sm-crypto 要求 hex 输入
-    const messageHex = CryptoJS.enc.Hex.stringify(messageWordArray);
-    const keyHex = CryptoJS.enc.Hex.stringify(key);
+    const messageHex = Hex.stringify(messageWordArray);
+    const keyHex = Hex.stringify(key);
     let result = sm3(messageHex, { key: keyHex });
     if (options.base64Output) {
       // SM3 结果是 hex，需要转换为 Base64
-      const wordArray = CryptoJS.enc.Hex.parse(result);
-      result = CryptoJS.enc.Base64.stringify(wordArray);
+      const wordArray = Hex.parse(result);
+      result = Base64.stringify(wordArray);
     }
     return options.uppercase ? result.toUpperCase() : result;
   }
@@ -270,25 +275,21 @@ function calculateHmacFromText(
 }
 
 // 计算 HMAC（文件）
-function calculateHmacFromFile(
-  file: File,
-  key: CryptoJS.lib.WordArray,
-  algorithm: Algorithm,
-): Promise<string> {
+function calculateHmacFromFile(file: File, key: WordArray, algorithm: Algorithm): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
-        const messageWordArray = CryptoJS.lib.WordArray.create(new Uint8Array(arrayBuffer));
+        const messageWordArray = WordArray.create(new Uint8Array(arrayBuffer));
 
         if (algorithm === 'SM3') {
-          const messageHex = CryptoJS.enc.Hex.stringify(messageWordArray);
-          const keyHex = CryptoJS.enc.Hex.stringify(key);
+          const messageHex = Hex.stringify(messageWordArray);
+          const keyHex = Hex.stringify(key);
           let result = sm3(messageHex, { key: keyHex });
           if (options.base64Output) {
-            const wordArray = CryptoJS.enc.Hex.parse(result);
-            result = CryptoJS.enc.Base64.stringify(wordArray);
+            const wordArray = Hex.parse(result);
+            result = Base64.stringify(wordArray);
           }
           resolve(options.uppercase ? result.toUpperCase() : result);
         } else {

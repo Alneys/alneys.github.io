@@ -56,6 +56,7 @@
         >
           <el-table-column
             v-if="!headerItem.extraColumn || showExtraColumns"
+            :key="`column-${headerItem.prop}`"
             :prop="headerItem.prop"
             :label="
               showSimpleLabels ? headerItem.labelCn : `${headerItem.labelCn} ${headerItem.labelEn}`
