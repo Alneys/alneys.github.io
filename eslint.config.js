@@ -21,6 +21,7 @@ export default defineConfigWithVueTs(
     'dist-ssr/**',
     'coverage/**',
     '.local/**',
+    '.temp/**',
     '*.tsbuildinfo',
     'components.d.ts',
     'auto-imports.d.ts',
