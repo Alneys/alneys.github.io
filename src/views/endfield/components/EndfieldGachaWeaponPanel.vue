@@ -1,5 +1,5 @@
 <template>
-  <div class="endfield-gacha-title" id="endfield-gacha-weapon" style="font-weight: bold">武器</div>
+  <div id="endfield-gacha-weapon" class="endfield-gacha-title" style="font-weight: bold">武器</div>
   <div class="endfield-gacha-config gacha-weapon">
     <el-form :model="formModel" :inline="true" class="gacha-config-form">
       <el-form-item label="模拟次数">

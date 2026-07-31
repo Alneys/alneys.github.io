@@ -33,16 +33,16 @@
           </el-radio-group>
         </div>
 
-        <div class="setting-row" v-if="supportsSshFormat()">
+        <div v-if="supportsSshFormat()" class="setting-row">
           <span>SSH 注释:</span>
           <el-input v-model="sshComment" placeholder="key@example.com" class="ssh-comment-input" />
         </div>
 
         <el-button
           type="primary"
-          @click="generateKeyPair"
           :loading="isGenerating"
           class="generate-button"
+          @click="generateKeyPair"
         >
           {{ algorithmType === 'AES' ? '生成密钥' : '生成密钥对' }}
         </el-button>
@@ -57,7 +57,7 @@
         <div class="key-output">
           <div class="output-header">
             <span class="output-label">AES 密钥 - 请妥善保管，切勿泄露</span>
-            <el-button size="small" @click="copyAesKey" :icon="aesKeyCopyIcon">
+            <el-button size="small" :icon="aesKeyCopyIcon" @click="copyAesKey">
               {{ aesKeyCopyText }}
             </el-button>
           </div>
@@ -104,7 +104,7 @@
         <div class="key-output">
           <div class="output-header">
             <span class="output-label">公钥 (Public Key)</span>
-            <el-button size="small" @click="copyPublicKey" :icon="publicKeyCopyIcon">
+            <el-button size="small" :icon="publicKeyCopyIcon" @click="copyPublicKey">
               {{ publicKeyCopyText }}
             </el-button>
           </div>
@@ -141,10 +141,10 @@
         </div>
 
         <!-- 私钥输出 -->
-        <div class="key-output" v-if="isGenerating || hasPrivateKey">
+        <div v-if="isGenerating || hasPrivateKey" class="key-output">
           <div class="output-header">
             <span class="output-label">私钥 (Private Key) - 请妥善保管，切勿泄露</span>
-            <el-button size="small" @click="copyPrivateKey" :icon="privateKeyCopyIcon">
+            <el-button size="small" :icon="privateKeyCopyIcon" @click="copyPrivateKey">
               {{ privateKeyCopyText }}
             </el-button>
           </div>

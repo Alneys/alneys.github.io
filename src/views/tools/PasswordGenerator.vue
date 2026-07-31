@@ -10,13 +10,13 @@
     <div class="password-generator-container">
       <div class="password-display">
         <el-input
+          ref="passwordInput"
           v-model="generatedPassword"
           readonly
-          ref="passwordInput"
           class="password-input font-mono"
         >
           <template #append>
-            <el-button @click="copyPassword" :icon="copyIcon">
+            <el-button :icon="copyIcon" @click="copyPassword">
               {{ copyButtonText }}
             </el-button>
           </template>
@@ -50,7 +50,7 @@
         <div class="setting-row">
           <el-checkbox v-model="options.includeSymbols"> 包含特殊字符 </el-checkbox>
         </div>
-        <div class="setting-row setting-indent" v-show="options.includeSymbols">
+        <div v-show="options.includeSymbols" class="setting-row setting-indent">
           <span class="setting-label">自定义字符:</span>
           <el-input
             v-model="customSymbols"
@@ -66,7 +66,7 @@
           </el-checkbox>
         </div>
 
-        <el-button type="primary" @click="generatePassword" class="generate-button">
+        <el-button type="primary" class="generate-button" @click="generatePassword">
           生成密码
         </el-button>
       </el-card>

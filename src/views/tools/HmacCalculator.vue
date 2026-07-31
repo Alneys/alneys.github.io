@@ -54,16 +54,16 @@
           drag
           :auto-upload="false"
           :show-file-list="false"
-          @change="handleFileChange"
           class="file-upload"
+          @change="handleFileChange"
         >
           <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
           <div class="el-upload__text">拖拽文件到此处，或 <em>点击上传</em></div>
           <template #tip>
-            <div class="el-upload__tip" v-if="selectedFile">
+            <div v-if="selectedFile" class="el-upload__tip">
               已选择: {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
             </div>
-            <div class="el-upload__tip" v-else>最大支持 100MB 文件</div>
+            <div v-else class="el-upload__tip">最大支持 100MB 文件</div>
           </template>
         </el-upload>
       </div>
@@ -96,20 +96,20 @@
 
         <el-button
           type="primary"
-          @click="calculateHmac"
           :loading="isCalculating"
           class="calculate-button"
+          @click="calculateHmac"
         >
           计算 HMAC
         </el-button>
       </el-card>
 
       <!-- 计算结果区 -->
-      <div class="hmac-result" v-if="hmacResult">
+      <div v-if="hmacResult" class="hmac-result">
         <div class="result-label">计算结果 ({{ selectedAlgorithmLabel }}):</div>
         <el-input :model-value="hmacResult" readonly class="hmac-output font-mono">
           <template #append>
-            <el-button @click="copyToClipboard" :icon="copyIcon">
+            <el-button :icon="copyIcon" @click="copyToClipboard">
               {{ copyButtonText }}
             </el-button>
           </template>
