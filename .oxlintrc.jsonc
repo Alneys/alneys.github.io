@@ -10,7 +10,14 @@
   },
   // Rules: https://oxc.rs/docs/guide/usage/linter/rules.html
   "rules": {
-    "eslint/no-unused-vars": "off",
     "typescript/no-explicit-any": "off",
+    "typescript/no-unused-vars": "off",
+    "no-prototype-builtins": "error",
+    // "vue/attributes-order": "warn",
+    "vue/component-definition-name-casing": "error",
+    // "vue/multi-word-component-names": "error",
+    "vue/no-reserved-component-names": "error",
+    // "vue/no-unused-vars": "off",
+    // "vue/order-in-components": "warn",
   },
 }
