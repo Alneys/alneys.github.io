@@ -14,7 +14,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 import Unfonts from 'unplugin-fonts/vite';
 
 // custom plugins
-import { versionCheckPlugin } from './src/version-check/plugin';
+import { versionCheckPlugin } from './src/version-check/plugin.ts';
 
 // gzip compression
 import { compression } from 'vite-plugin-compression2';
