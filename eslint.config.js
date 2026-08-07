@@ -35,7 +35,7 @@ export default defineConfigWithVueTs(
     files: ['src/**/__tests__/*'],
   },
 
-  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
+  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.jsonc'),
 
   skipFormatting,
 
