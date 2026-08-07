@@ -136,7 +136,6 @@
               <div class="table-icons">
                 <img
                   v-for="(icon, iconIndex) in scope.row[headerItem.prop]"
-                  :key="icon.card.cid ?? iconIndex"
                   v-show="
                     !isDominantSpecializeNotMatch(
                       headerItem,
@@ -146,6 +145,7 @@
                     showSpecializeNotMatch ||
                     isCarnivalPickupShowCard(icon.card)
                   "
+                  :key="icon.card.cid ?? iconIndex"
                   :class="{
                     'cgss-icon': true,
                     'icon-dark':

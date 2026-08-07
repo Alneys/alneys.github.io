@@ -17,7 +17,7 @@
           :rows="computedRows"
           class="uuid-input font-mono"
         />
-        <el-button type="primary" @click="copyToClipboard" :icon="copyIcon" class="copy-button">
+        <el-button type="primary" :icon="copyIcon" class="copy-button" @click="copyToClipboard">
           {{ copyButtonText }}
         </el-button>
       </div>
@@ -33,24 +33,24 @@
           </el-radio-group>
         </div>
 
-        <div class="setting-row" v-show="options.version !== 'nil'">
+        <div v-show="options.version !== 'nil'" class="setting-row">
           <span>生成数量:</span>
           <el-slider v-model="options.count" :min="1" :max="100" show-input class="count-slider" />
         </div>
 
-        <div class="setting-row" v-show="options.version !== 'nil'">
+        <div v-show="options.version !== 'nil'" class="setting-row">
           <el-checkbox v-model="options.withHyphens">带连字符</el-checkbox>
         </div>
 
-        <div class="setting-row" v-show="options.version !== 'nil'">
+        <div v-show="options.version !== 'nil'" class="setting-row">
           <el-checkbox v-model="options.uppercase">大写字母</el-checkbox>
         </div>
 
-        <div class="setting-row" v-show="options.version !== 'nil'">
+        <div v-show="options.version !== 'nil'" class="setting-row">
           <el-checkbox v-model="options.jsonFormat">JSON 格式输出</el-checkbox>
         </div>
 
-        <el-button type="primary" @click="generateUuids" class="generate-button">
+        <el-button type="primary" class="generate-button" @click="generateUuids">
           生成 UUID
         </el-button>
       </el-card>

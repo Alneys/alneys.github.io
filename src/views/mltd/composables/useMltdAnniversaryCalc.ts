@@ -313,13 +313,12 @@ export function useMltdAnniversaryCalc(form: Ref<AnniversaryForm>) {
      * 步骤2-4：最优火分配结果
      * @description 根据目标PT和道具情况，计算最优的火攒道具次数和火清道具次数
      */
-    optimalBoostAllocation: computed(
-      (): BoostAllocationResult =>
-        calculateOptimalBoostAllocation(
-          result.ptStillNeeded,
-          result.totalBoostPlaysAvailable,
-          result.tokensAvailableBeforeBoostAllocation,
-        ),
+    optimalBoostAllocation: computed((): BoostAllocationResult =>
+      calculateOptimalBoostAllocation(
+        result.ptStillNeeded,
+        result.totalBoostPlaysAvailable,
+        result.tokensAvailableBeforeBoostAllocation,
+      ),
     ),
 
     /**

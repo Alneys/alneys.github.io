@@ -21,6 +21,7 @@ export default defineConfigWithVueTs(
     'dist-ssr/**',
     'coverage/**',
     '.local/**',
+    '.temp/**',
     '*.tsbuildinfo',
     'components.d.ts',
     'auto-imports.d.ts',
@@ -34,15 +35,21 @@ export default defineConfigWithVueTs(
     files: ['src/**/__tests__/*'],
   },
 
-  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
+  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.jsonc'),
 
   skipFormatting,
 
   {
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
-      'vue/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-prototype-builtins': 'error',
+      'vue/attributes-order': 'warn',
+      'vue/component-definition-name-casing': 'error',
+      'vue/multi-word-component-names': 'error',
+      'vue/no-reserved-component-names': 'error',
+      'vue/no-unused-vars': 'off',
+      'vue/order-in-components': 'warn',
     },
   },
 );

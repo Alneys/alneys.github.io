@@ -239,7 +239,7 @@
               </el-alert>
               <el-row :gutter="16" style="margin-top: 12px">
                 <el-col :span="12">
-                  <el-button @click="applyOptimalAllocation" :disabled="result.useAutoOptimize">
+                  <el-button :disabled="result.useAutoOptimize" @click="applyOptimalAllocation">
                     自动优化
                   </el-button>
                   <span v-if="result.useAutoOptimize" class="auto-mode-hint"

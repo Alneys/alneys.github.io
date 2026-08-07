@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue", "vitest"],
+  "env": {
+    "browser": true,
+  },
+  "ignorePatterns": ["components.d.ts", "auto-imports.d.ts"],
+  "categories": {
+    "correctness": "error",
+  },
+  // Rules: https://oxc.rs/docs/guide/usage/linter/rules.html
+  "rules": {
+    "typescript/no-explicit-any": "off",
+    "typescript/no-unused-vars": "off",
+    "no-prototype-builtins": "error",
+    // "vue/attributes-order": "warn",
+    "vue/component-definition-name-casing": "error",
+    // "vue/multi-word-component-names": "error",
+    "vue/no-reserved-component-names": "error",
+    // "vue/no-unused-vars": "off",
+    // "vue/order-in-components": "warn",
+  },
+}

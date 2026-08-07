@@ -1,5 +1,5 @@
 <template>
-  <div class="endfield-gacha-title" id="endfield-gacha-character" style="font-weight: bold">
+  <div id="endfield-gacha-character" class="endfield-gacha-title" style="font-weight: bold">
     角色
   </div>
   <div class="endfield-gacha-config gacha-character">

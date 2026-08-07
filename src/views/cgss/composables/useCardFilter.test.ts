@@ -5,6 +5,22 @@ import { describe, it, expect } from 'vitest';
 import carnivalInfo from '../data/cgss_carnival_info.json';
 import { useCardFilter } from './useCardFilter';
 
+// 与 useCardFilter 中一致的分割逻辑
+const splitNameFilter = (nameFilter: string) =>
+  nameFilter
+    .split(/[ ,、\n]+/)
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+// 在 inPreset 中查找一个不在 notInPreset 中的名字
+const findNameInButNotIn = (
+  inPreset: (typeof carnivalInfo)[number],
+  notInPreset: (typeof carnivalInfo)[number],
+) => {
+  const notInNames = new Set(splitNameFilter(notInPreset.nameFilter));
+  return splitNameFilter(inPreset.nameFilter).find((name) => !notInNames.has(name));
+};
+
 describe('useCardFilter', () => {
   // ==================== splitNameFilter 测试 ====================
 
@@ -158,21 +174,20 @@ describe('useCardFilter', () => {
         const { isNameMatched } = useCardFilter();
 
         // 第一个预设中存在的名字
-        expect(isNameMatched('奥山沙織')).toBe(true);
-        expect(isNameMatched('櫻井桃華')).toBe(true);
-        expect(isNameMatched('関裕美')).toBe(true);
-        expect(isNameMatched('大沼くるみ')).toBe(true);
-        expect(isNameMatched('渋谷凛')).toBe(true);
-        expect(isNameMatched('姫川友紀')).toBe(true);
+        const firstPresetNames = splitNameFilter(carnivalInfo[0]!.nameFilter);
+        expect(firstPresetNames.length).toBeGreaterThan(0);
+        firstPresetNames.slice(0, 3).forEach((name) => {
+          expect(isNameMatched(name)).toBe(true);
+        });
       });
 
       it('不应匹配 JSON 数据中不存在的名字', () => {
         const { isNameMatched } = useCardFilter();
 
-        // 第一个预设中不存在的名字
-        expect(isNameMatched('中野有香')).toBe(false);
-        expect(isNameMatched('本田未央')).toBe(false);
-        expect(isNameMatched('水本ゆかり')).toBe(false);
+        // 第二个预设中存在、但第一个预设中不存在的名字
+        const name = findNameInButNotIn(carnivalInfo[1]!, carnivalInfo[0]!);
+        expect(name).toBeDefined();
+        expect(isNameMatched(name!)).toBe(false);
       });
     });
   });
@@ -186,7 +201,7 @@ describe('useCardFilter', () => {
       const list = getNameFilterDataList();
 
       expect(list).toBe(carnivalInfo);
-      expect(list.length).toBe(3);
+      expect(list.length).toBe(carnivalInfo.length);
     });
 
     it('每个预设应包含 nameFilter 和 information 字段', () => {
@@ -253,34 +268,40 @@ describe('useCardFilter', () => {
     it('修改过滤列表后应立即更新匹配结果', async () => {
       const { inputNameFilter, isNameMatched } = useCardFilter();
 
-      // 初始状态
-      expect(isNameMatched('奥山沙織')).toBe(true);
-      expect(isNameMatched('中野有香')).toBe(false);
+      // 初始状态（默认第一个预设）
+      const firstPresetNames = splitNameFilter(carnivalInfo[0]!.nameFilter);
+      const secondPresetName = findNameInButNotIn(carnivalInfo[1]!, carnivalInfo[0]!);
+      expect(secondPresetName).toBeDefined();
+      expect(isNameMatched(firstPresetNames[0]!)).toBe(true);
+      expect(isNameMatched(secondPresetName!)).toBe(false);
 
       // 切换到第二个预设
       inputNameFilter.value = carnivalInfo[1]!.nameFilter;
       await nextTick();
 
-      // 第二个预设包含中野有香
-      expect(isNameMatched('中野有香')).toBe(true);
-      expect(isNameMatched('持田亜里沙')).toBe(true);
+      // 第二个预设包含该名字
+      expect(isNameMatched(secondPresetName!)).toBe(true);
+      expect(isNameMatched(splitNameFilter(carnivalInfo[1]!.nameFilter)[0]!)).toBe(true);
       // 第一个预设的名字不再匹配
-      expect(isNameMatched('奥山沙織')).toBe(false);
+      expect(isNameMatched(firstPresetNames[0]!)).toBe(false);
     });
 
-    it('切换到第三个预设应正确匹配', async () => {
+    it('切换到最后一个预设应正确匹配', async () => {
       const { inputNameFilter, isNameMatched } = useCardFilter();
 
-      inputNameFilter.value = carnivalInfo[2]!.nameFilter;
+      const lastPreset = carnivalInfo[carnivalInfo.length - 1]!;
+      inputNameFilter.value = lastPreset.nameFilter;
       await nextTick();
 
-      // 第三个预设的名字
-      expect(isNameMatched('水本ゆかり')).toBe(true);
-      expect(isNameMatched('椎名法子')).toBe(true);
-      expect(isNameMatched('高森藍子')).toBe(true);
+      // 最后一个预设的名字
+      splitNameFilter(lastPreset.nameFilter)
+        .slice(0, 3)
+        .forEach((name) => {
+          expect(isNameMatched(name)).toBe(true);
+        });
       // 其他预设的名字
-      expect(isNameMatched('奥山沙織')).toBe(false);
-      expect(isNameMatched('中野有香')).toBe(false);
+      expect(isNameMatched(splitNameFilter(carnivalInfo[0]!.nameFilter)[0]!)).toBe(false);
+      expect(isNameMatched(splitNameFilter(carnivalInfo[1]!.nameFilter)[0]!)).toBe(false);
     });
   });
 });
