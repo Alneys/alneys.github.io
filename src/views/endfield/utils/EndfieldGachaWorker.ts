@@ -45,6 +45,7 @@ export interface WeaponAggregateResult {
   pdfData: [number, number][];
   ccdfData: [number, number][];
   averageTenPulls: number;
+  medianTenPulls: number;
   averageTokens: number;
 }
 
@@ -93,11 +94,13 @@ function simulateCharacterAggregated(payload: CharacterTaskPayload): CharacterAg
 
 function simulateWeaponAggregated(payload: WeaponTaskPayload): WeaponAggregateResult {
   const countMap = new Map<number, number>();
+  const tenPullList: number[] = Array.from({ length: payload.simulationCount });
   let totalTenPulls = 0;
 
   for (let i = 0; i < payload.simulationCount; i++) {
     const results = simulateWeaponGachaToTarget(payload.targetRank);
     const tenPullCount = Math.ceil(results.length / 10);
+    tenPullList[i] = tenPullCount;
     totalTenPulls += tenPullCount;
     countMap.set(tenPullCount, (countMap.get(tenPullCount) || 0) + 1);
   }
@@ -110,6 +113,7 @@ function simulateWeaponAggregated(payload: WeaponTaskPayload): WeaponAggregateRe
     pdfData: processedData.pdfData,
     ccdfData: processedData.ccdfData,
     averageTenPulls,
+    medianTenPulls: calculateMedian(tenPullList),
     averageTokens: averageTenPulls * 1980,
   };
 }

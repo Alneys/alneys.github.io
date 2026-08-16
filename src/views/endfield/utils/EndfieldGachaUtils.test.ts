@@ -5,6 +5,7 @@ import {
   simulateCharacterGachaToTarget,
   simulateWeaponGachaToTarget,
   calculateWeaponTokens,
+  calculateMedian,
 } from './EndfieldGachaUtils';
 
 const SIMULATION_COUNT = 100000;
@@ -65,19 +66,25 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
       { rank: 0, label: '0', baseline: benchmark.weapon.rank0 },
       { rank: 5, label: '5', baseline: benchmark.weapon.rank5 },
     ])(
-      'targetRank=$label 的平均抽取次数（十连）、平均消耗配额与基准误差 < 5%',
+      'targetRank=$label 的平均抽取次数（十连）、中位数、平均消耗配额与基准误差 < 5%',
       ({ rank, baseline }) => {
+        const tenPullList: number[] = [];
         let totalTenPulls = 0;
         for (let i = 0; i < SIMULATION_COUNT; i++) {
-          const results = simulateWeaponGachaToTarget(rank);
-          totalTenPulls += Math.ceil(results.length / 10);
+          const tenPullCount = Math.ceil(simulateWeaponGachaToTarget(rank).length / 10);
+          tenPullList.push(tenPullCount);
+          totalTenPulls += tenPullCount;
         }
 
         const averageTenPulls = totalTenPulls / SIMULATION_COUNT;
+        const medianTenPulls = calculateMedian(tenPullList);
         const averageTokens = averageTenPulls * 1980;
 
         expect(
           Math.abs(averageTenPulls - baseline.averageTenPulls) / baseline.averageTenPulls,
+        ).toBeLessThan(TOLERANCE);
+        expect(
+          Math.abs(medianTenPulls - baseline.medianTenPulls) / baseline.medianTenPulls,
         ).toBeLessThan(TOLERANCE);
         expect(
           Math.abs(averageTokens - baseline.averageTokens) / baseline.averageTokens,

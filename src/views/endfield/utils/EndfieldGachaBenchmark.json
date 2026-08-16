@@ -15,11 +15,13 @@
   "weapon": {
     "rank0": {
       "averageTenPulls": 5.55,
-      "averageTokens": 10979.45
+      "averageTokens": 10979.45,
+      "medianTenPulls": 6
     },
     "rank5": {
       "averageTenPulls": 33.68,
-      "averageTokens": 66689.99
+      "averageTokens": 66689.99,
+      "medianTenPulls": 34
     }
   }
 }
