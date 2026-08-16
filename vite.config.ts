@@ -20,7 +20,7 @@ import { versionCheckPlugin } from './src/version-check/plugin.ts';
 import { compression } from 'vite-plugin-compression2';
 
 // bundle report
-//   REPORT=html -> HTML treemap (stats.html)
+//   REPORT=html -> HTML treemap (node_modules/.cache/visualizer.html)
 //   REPORT=md   -> Markdown report (.temp/report.md)
 import { visualizer } from 'rollup-plugin-visualizer';
 
