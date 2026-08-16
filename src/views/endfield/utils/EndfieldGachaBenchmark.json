@@ -1,0 +1,25 @@
+{
+  "simulationCount": 1000000,
+  "character": {
+    "rank0": {
+      "averageDraws": 79.31,
+      "medianDraws": 72,
+      "averageTokens": 7607.53
+    },
+    "rank5": {
+      "averageDraws": 456.58,
+      "medianDraws": 480,
+      "averageTokens": 38177.38
+    }
+  },
+  "weapon": {
+    "rank0": {
+      "averageTenPulls": 5.55,
+      "averageTokens": 10979.45
+    },
+    "rank5": {
+      "averageTenPulls": 33.68,
+      "averageTokens": 66689.99
+    }
+  }
+}
