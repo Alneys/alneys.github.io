@@ -6,7 +6,7 @@
         <el-input-number
           v-model="formModel.simulationCount"
           :min="10000"
-          :max="1000000"
+          :max="2000000"
           :step="10000"
           controls-position="right"
         />
@@ -21,39 +21,47 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="redrawChart">重新模拟</el-button>
+        <el-button type="primary" :loading="isSimulating" @click="startSimulation">{{
+          isSimulating ? `已模拟 ${simulationProgress}%` : '重新模拟'
+        }}</el-button>
         <el-button @click="resetForm">重置</el-button>
       </el-form-item>
     </el-form>
   </div>
   <div class="al-divider"></div>
   <div class="endfield-charts gacha-weapon">
-    <div ref="chartRef" style="width: 100%; height: 500px"></div>
+    <div
+      ref="chartRef"
+      v-loading="isSimulating && !hasReceivedSnapshot"
+      style="width: 100%; height: 500px"
+    ></div>
   </div>
   <div class="endfield-gacha-result gacha-weapon">
-    <div class="simulation-summary">平均抽取次数：{{ averageDraws.toFixed(2) }}</div>
+    <div class="simulation-summary">
+      平均抽取次数：{{ averageDraws.toFixed(2) }} / 中位数抽取次数：{{ medianDraws }}
+    </div>
     <div class="simulation-summary">平均消耗配额：{{ averageTokens.toFixed(0) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
-import { ref, reactive, watch, onMounted, onUnmounted, nextTick, useTemplateRef } from 'vue';
+import { ref, reactive, watch, onMounted, onUnmounted, useTemplateRef } from 'vue';
 
 import type { EChartsOption } from 'echarts';
 
 import { useGachaChart } from '../composables/useGachaChart';
-import {
-  simulateWeaponGachaToTargetMultipleTimes,
-  processDataForWeaponChart,
-} from '../utils/EndfieldGachaUtils';
+import type { WeaponProgressResult } from '../utils/EndfieldGachaWorker';
 
 const isDark = useDark();
 const chartRef = useTemplateRef('chartRef');
 const { initChart, setOption, resize, dispose, setTheme } = useGachaChart();
 
-const frequencyList = ref<string[][]>([]);
+const isSimulating = ref(false);
+const simulationProgress = ref(0);
+const hasReceivedSnapshot = ref(false);
 const averageDraws = ref<number>(0);
+const medianDraws = ref<number>(0);
 const averageTokens = ref<number>(0);
 
 const formModel = reactive({
@@ -67,116 +75,140 @@ function resetForm() {
   Object.assign(formModel, initialFormModel);
 }
 
+let worker: Worker | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-async function redrawChart() {
-  frequencyList.value = simulateWeaponGachaToTargetMultipleTimes(
-    formModel.simulationCount,
-    formModel.targetRank,
-  );
-
-  let totalTenPulls = 0;
-  for (const simulation of frequencyList.value) {
-    const tenPullCount = Math.ceil(simulation.length / 10);
-    totalTenPulls += tenPullCount;
-  }
-  averageDraws.value = totalTenPulls / frequencyList.value.length;
-  averageTokens.value = averageDraws.value * 1980;
-
-  await nextTick();
-
-  if (chartRef.value) {
-    initChart(chartRef.value);
-
-    const processedData = processDataForWeaponChart(frequencyList.value);
-
-    const option: EChartsOption = {
-      title: {
-        text: '武器抽取分布模拟',
+function buildOption(data: WeaponProgressResult): EChartsOption {
+  return {
+    title: {
+      text: '武器抽取分布模拟',
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function (params: any) {
+        const tenPulls = params[0].value[0];
+        const totalToken = tenPulls * 1980;
+        let result = `${tenPulls}次抽取<br/>`;
+        result += `总消耗配额: ${totalToken.toLocaleString()}<br/>`;
+        params.forEach((item: any) => {
+          result += item.seriesName + ': ' + item.value[1].toFixed(3) + '%<br/>';
+        });
+        return result;
       },
-      tooltip: {
-        trigger: 'axis',
-        formatter: function (params: any) {
-          const tenPulls = params[0].value[0];
-          const totalToken = tenPulls * 1980;
-          let result = `${tenPulls}次抽取<br/>`;
-          result += `总消耗配额: ${totalToken.toLocaleString()}<br/>`;
-          params.forEach((item: any) => {
-            result += item.seriesName + ': ' + item.value[1].toFixed(3) + '%<br/>';
-          });
-          return result;
+    },
+    legend: {
+      data: ['概率密度', '互补累计分布'],
+      top: 40,
+      right: 0,
+    },
+    grid: {
+      left: 60,
+      right: 50,
+      top: 80,
+      bottom: 60,
+    },
+    xAxis: {
+      type: 'value',
+      name: '10连抽取次数',
+      axisLabel: {
+        formatter: function (value: number) {
+          return Math.round(value).toString();
         },
       },
-      legend: {
-        data: ['概率密度', '互补累计分布'],
-        top: 40,
-        right: 0,
+      min: 0,
+      max: 'dataMax',
+    },
+    yAxis: {
+      type: 'value',
+      name: '概率(%)',
+      axisLabel: {
+        formatter: '{value}%',
       },
-      grid: {
-        left: 60,
-        right: 50,
-        top: 80,
-        bottom: 60,
-      },
-      xAxis: {
-        type: 'value',
-        name: '10连抽取次数',
-        axisLabel: {
-          formatter: function (value: number) {
-            return Math.round(value).toString();
-          },
-        },
-        min: 0,
-        max: 'dataMax',
-      },
-      yAxis: {
-        type: 'value',
-        name: '概率(%)',
-        axisLabel: {
-          formatter: '{value}%',
-        },
-      },
-      axisPointer: {
-        link: [
-          {
-            xAxisIndex: 'all',
-          },
-        ],
-      },
-      dataZoom: [
+    },
+    axisPointer: {
+      link: [
         {
-          type: 'inside',
-          realtime: true,
-        },
-        {
-          type: 'slider',
-          realtime: true,
+          xAxisIndex: 'all',
         },
       ],
-      series: [
-        {
-          name: '概率密度',
-          type: 'line',
-          data: processedData.pdfData,
-          smooth: true,
-          showSymbol: false,
+    },
+    dataZoom: [
+      {
+        type: 'inside',
+        realtime: true,
+      },
+      {
+        type: 'slider',
+        realtime: true,
+      },
+    ],
+    series: [
+      {
+        name: '概率密度',
+        type: 'line',
+        data: data.pdfData,
+        smooth: true,
+        showSymbol: false,
+      },
+      {
+        name: '互补累计分布',
+        type: 'line',
+        areaStyle: {
+          color: 'rgba(128, 128, 128, 0.3)',
         },
-        {
-          name: '互补累计分布',
-          type: 'line',
-          areaStyle: {
-            color: 'rgba(128, 128, 128, 0.3)',
-          },
-          data: processedData.ccdfData,
-          smooth: true,
-          showSymbol: false,
-        },
-      ],
-    };
+        data: data.ccdfData,
+        smooth: true,
+        showSymbol: false,
+      },
+    ],
+  };
+}
 
-    setOption(option);
-    setTheme(isDark.value ? 'dark' : 'default');
+function startSimulation() {
+  if (formModel.simulationCount > 2000000) {
+    formModel.simulationCount = 2000000;
   }
+  worker?.terminate();
+  worker = new Worker(new URL('../utils/EndfieldGachaWorker.ts', import.meta.url), {
+    type: 'module',
+  });
+  isSimulating.value = true;
+  simulationProgress.value = 0;
+  hasReceivedSnapshot.value = false;
+
+  worker.onmessage = (event: MessageEvent<WeaponProgressResult>) => {
+    const data = event.data;
+    hasReceivedSnapshot.value = true;
+    averageDraws.value = data.averageTenPulls;
+    medianDraws.value = data.medianTenPulls;
+    averageTokens.value = data.averageTokens;
+    simulationProgress.value = Math.round(
+      (data.completedSimulations / data.totalSimulations) * 100,
+    );
+
+    if (chartRef.value) {
+      initChart(chartRef.value);
+      setOption(buildOption(data));
+      setTheme(isDark.value ? 'dark' : 'default');
+    }
+
+    if (data.completedSimulations === data.totalSimulations) {
+      isSimulating.value = false;
+      worker?.terminate();
+    }
+  };
+
+  worker.onerror = () => {
+    isSimulating.value = false;
+  };
+
+  worker.postMessage({
+    type: 'weapon',
+    payload: {
+      simulationCount: formModel.simulationCount,
+      targetRank: formModel.targetRank,
+    },
+  });
 }
 
 watch(
@@ -187,7 +219,7 @@ watch(
     }
 
     debounceTimer = setTimeout(() => {
-      redrawChart();
+      startSimulation();
     }, 500);
   },
 );
@@ -200,13 +232,14 @@ watch(isDark, (val) => {
   setTheme(val ? 'dark' : 'default');
 });
 
-onMounted(async () => {
-  await redrawChart();
+onMounted(() => {
+  startSimulation();
   window.addEventListener('resize', handleResize);
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
+  worker?.terminate();
   dispose();
 });
 </script>

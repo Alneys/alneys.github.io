@@ -479,25 +479,31 @@ export function calculateWeaponTokens(results: string[]): number {
 }
 
 /**
- * 将原始数据转换为ECharts可用的格式（角色）
- * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的对象
+ * 计算中位数（会原地排序传入的数组）
+ * @param drawsList 抽取次数列表
+ * @returns 中位数
+ */
+export function calculateMedian(drawsList: number[]): number {
+  drawsList.sort((a, b) => a - b);
+  const mid = Math.floor(drawsList.length / 2);
+  return drawsList.length % 2 !== 0
+    ? drawsList[mid]!
+    : Math.round((drawsList[mid - 1]! + drawsList[mid]!) / 2);
+}
+
+/**
+ * 将聚合数据转换为ECharts可用的格式（角色）
+ * @param countMap 抽取次数到模拟次数的映射
+ * @param tokenSumMap 抽取次数到配额总和的映射
  * @param gachaStrategy 抽卡策略
  * @returns 包含概率密度、互补累计分布和平均配额的数据对象
  */
 export function processDataForCharacterChart(
-  data: GachaSimulationResult[],
+  countMap: Map<number, number>,
+  tokenSumMap: Map<number, number>,
   gachaStrategy: GachaStrategy,
 ): any {
-  const countMap: Map<number, number> = new Map();
-  const tokenSumMap: Map<number, number> = new Map();
-
-  for (const simulation of data) {
-    const actualDraws = simulation.actualDraws;
-    countMap.set(actualDraws, (countMap.get(actualDraws) || 0) + 1);
-
-    const tokenCount = calculateWeaponTokens(simulation.result);
-    tokenSumMap.set(actualDraws, (tokenSumMap.get(actualDraws) || 0) + tokenCount);
-  }
+  const totalSimulations = Array.from(countMap.values()).reduce((sum, count) => sum + count, 0);
 
   let uniqueDraws: number[];
   if (gachaStrategy === 'batch') {
@@ -516,9 +522,8 @@ export function processDataForCharacterChart(
 
   const pdfData = uniqueDraws
     .filter((draws) => countMap.has(draws))
-    .map((draws) => [draws, ((countMap.get(draws) || 0) / data.length) * 100]);
+    .map((draws) => [draws, ((countMap.get(draws) || 0) / totalSimulations) * 100]);
 
-  const totalSimulations = data.length;
   let remainingCount = totalSimulations;
 
   const ccdfData = uniqueDraws
@@ -565,26 +570,20 @@ export function processDataForCharacterChart(
 }
 
 /**
- * 将原始数据转换为ECharts可用的格式（武器）
- * @param data 原始数据，包含多次模拟，每次模拟包含抽取结果的字符串列表
+ * 将聚合数据转换为ECharts可用的格式（武器）
+ * @param countMap 十连次数到模拟次数的映射
  * @returns 包含概率密度、互补累计分布的数据对象
  */
-export function processDataForWeaponChart(data: string[][]): any {
-  const countMap: Map<number, number> = new Map();
-
-  for (const simulation of data) {
-    const tenPullCount = Math.ceil(simulation.length / 10);
-    countMap.set(tenPullCount, (countMap.get(tenPullCount) || 0) + 1);
-  }
+export function processDataForWeaponChart(countMap: Map<number, number>): any {
+  const totalSimulations = Array.from(countMap.values()).reduce((sum, count) => sum + count, 0);
 
   const uniqueTenPulls = Array.from(countMap.keys()).sort((a, b) => a - b);
 
   const pdfData = uniqueTenPulls.map((tenPulls) => [
     tenPulls,
-    ((countMap.get(tenPulls) || 0) / data.length) * 100,
+    ((countMap.get(tenPulls) || 0) / totalSimulations) * 100,
   ]);
 
-  const totalSimulations = data.length;
   let remainingCount = totalSimulations;
 
   const ccdfData = uniqueTenPulls.map((tenPulls) => {

@@ -52,6 +52,10 @@ const router = createRouter({
           path: '/endfield',
           children: [
             {
+              path: 'gasha',
+              redirect: '/endfield/gacha',
+            },
+            {
               path: 'gacha',
               name: 'endfield-gacha',
               component: () => import('@/views/endfield/EndfieldGachaChart.vue'),

@@ -90,11 +90,11 @@
     "commit-msg": "node scripts/verify-commit.js"
   },
   "lint-staged": {
-    "src/**/*.{ts,vue}": [
-      "oxlint --fix"
-    ],
     "src/**/*.{scss,vue}": "stylelint --fix",
-    "src/**/*.{ts,vue,scss}": "oxfmt"
+    "src/**/*": [
+      "oxlint --fix",
+      "oxfmt"
+    ]
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
