@@ -6,7 +6,7 @@
         <el-input-number
           v-model="formModel.simulationCount"
           :min="10000"
-          :max="1000000"
+          :max="2000000"
           :step="10000"
           controls-position="right"
         />
@@ -21,16 +21,20 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :loading="isSimulating" @click="startSimulation"
-          >重新模拟</el-button
-        >
+        <el-button type="primary" :loading="isSimulating" @click="startSimulation">{{
+          isSimulating ? `已模拟 ${simulationProgress}%` : '重新模拟'
+        }}</el-button>
         <el-button @click="resetForm">重置</el-button>
       </el-form-item>
     </el-form>
   </div>
   <div class="al-divider"></div>
   <div class="endfield-charts gacha-weapon">
-    <div ref="chartRef" v-loading="isSimulating" style="width: 100%; height: 500px"></div>
+    <div
+      ref="chartRef"
+      v-loading="isSimulating && !hasReceivedSnapshot"
+      style="width: 100%; height: 500px"
+    ></div>
   </div>
   <div class="endfield-gacha-result gacha-weapon">
     <div class="simulation-summary">
@@ -47,13 +51,15 @@ import { ref, reactive, watch, onMounted, onUnmounted, useTemplateRef } from 'vu
 import type { EChartsOption } from 'echarts';
 
 import { useGachaChart } from '../composables/useGachaChart';
-import type { WeaponAggregateResult } from '../utils/EndfieldGachaWorker';
+import type { WeaponProgressResult } from '../utils/EndfieldGachaWorker';
 
 const isDark = useDark();
 const chartRef = useTemplateRef('chartRef');
 const { initChart, setOption, resize, dispose, setTheme } = useGachaChart();
 
 const isSimulating = ref(false);
+const simulationProgress = ref(0);
+const hasReceivedSnapshot = ref(false);
 const averageDraws = ref<number>(0);
 const medianDraws = ref<number>(0);
 const averageTokens = ref<number>(0);
@@ -72,7 +78,7 @@ function resetForm() {
 let worker: Worker | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-function buildOption(data: WeaponAggregateResult): EChartsOption {
+function buildOption(data: WeaponProgressResult): EChartsOption {
   return {
     title: {
       text: '武器抽取分布模拟',
@@ -159,25 +165,37 @@ function buildOption(data: WeaponAggregateResult): EChartsOption {
 }
 
 function startSimulation() {
+  if (formModel.simulationCount > 2000000) {
+    formModel.simulationCount = 2000000;
+  }
   worker?.terminate();
   worker = new Worker(new URL('../utils/EndfieldGachaWorker.ts', import.meta.url), {
     type: 'module',
   });
   isSimulating.value = true;
+  simulationProgress.value = 0;
+  hasReceivedSnapshot.value = false;
 
-  worker.onmessage = (event: MessageEvent<WeaponAggregateResult>) => {
+  worker.onmessage = (event: MessageEvent<WeaponProgressResult>) => {
     const data = event.data;
+    hasReceivedSnapshot.value = true;
     averageDraws.value = data.averageTenPulls;
     medianDraws.value = data.medianTenPulls;
     averageTokens.value = data.averageTokens;
+    simulationProgress.value = Math.round(
+      (data.completedSimulations / data.totalSimulations) * 100,
+    );
 
     if (chartRef.value) {
       initChart(chartRef.value);
       setOption(buildOption(data));
       setTheme(isDark.value ? 'dark' : 'default');
     }
-    isSimulating.value = false;
-    worker?.terminate();
+
+    if (data.completedSimulations === data.totalSimulations) {
+      isSimulating.value = false;
+      worker?.terminate();
+    }
   };
 
   worker.onerror = () => {
