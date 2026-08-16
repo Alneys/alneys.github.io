@@ -69,7 +69,7 @@
           v-model="formModel.hasUsedSpecific6StarGuarantee"
           :options="[
             { label: '未使用', value: false },
-            { label: '已使用', value: true },
+            { label: '已使用', value: true, disabled: formModel.targetRank === 0 },
           ]"
         />
       </el-form-item>
@@ -366,6 +366,15 @@ function startSimulation() {
     },
   });
 }
+
+watch(
+  () => formModel.targetRank,
+  (val) => {
+    if (val === 0) {
+      formModel.hasUsedSpecific6StarGuarantee = false;
+    }
+  },
+);
 
 watch(
   () => [
