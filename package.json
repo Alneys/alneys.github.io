@@ -90,11 +90,9 @@
     "commit-msg": "node scripts/verify-commit.js"
   },
   "lint-staged": {
-    "src/**/*.{scss,vue}": "stylelint --fix",
-    "src/**/*": [
-      "oxlint --fix",
-      "oxfmt"
-    ]
+    "src/**/*.{css,scss}": "stylelint --fix --cache",
+    "*.{vue,js,jsx,ts,tsx,mjs,cjs}": "pnpm run lint",
+    "*": "oxfmt --no-error-on-unmatched-pattern"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
