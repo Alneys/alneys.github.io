@@ -192,38 +192,43 @@ export function simulateCharacterGachaNormalToTarget(
     actualDraws -= 10;
   }
 
-  // 上方当前卡池抽取已经结束。现在如果总抽取次数达到60次，则获得下个卡池的免费十连
+  // 上方当前卡池抽取已经结束。现在如果卡池总抽取次数达到60次，则获得下个卡池的免费十连
   if (drawCount >= 60) {
     // 下个卡池继承未抽到6星和5星的计数，但不继承未抽到特定6星的计数。此处简单处理，不考虑下个卡池意外获得当前卡池的角色（不可控）
-    let freeNo6StarCount = no6StarCount;
-    let freeNo5Or6StarCount = no5Or6StarCount;
+    let nextGachaNo6StarCount = no6StarCount;
+    let nextGachaNo5Or6StarCount = no5Or6StarCount;
+    let nextGachaNoSpecific6StarCount = 0;
+    let nextGachaHasUsedSpecific6StarGuarantee = false;
 
     for (let j = 0; j < 10; j++) {
-      let freeResult = simulateCharacterGachaNormalSingle(
-        freeNo6StarCount,
-        freeNo5Or6StarCount,
-        0,
-        hasUsedSpecific6StarGuarantee,
+      let nextGachaResult = simulateCharacterGachaNormalSingle(
+        nextGachaNo6StarCount,
+        nextGachaNo5Or6StarCount,
+        nextGachaNoSpecific6StarCount,
+        nextGachaHasUsedSpecific6StarGuarantee,
       );
 
-      currentSimulationResults.push(freeResult);
+      currentSimulationResults.push(nextGachaResult);
 
-      // 更新计数器，注意不更新noSpecific6StarCount
-      if (freeResult === '6_up') {
-        freeResult = '6_other'; // 简单处理
-        specific6StarCount++;
-        hasUsedSpecific6StarGuarantee = true;
-        freeNo6StarCount = 0;
-        freeNo5Or6StarCount = 0;
-      } else if (freeResult === '6_other') {
-        freeNo6StarCount = 0;
-        freeNo5Or6StarCount = 0;
-      } else if (freeResult === '5') {
-        freeNo6StarCount++;
-        freeNo5Or6StarCount = 0;
+      // 更新计数器
+      if (nextGachaResult === '6_up') {
+        nextGachaResult = '6_other'; // 下个卡池的特定角色，简单处理
+        nextGachaHasUsedSpecific6StarGuarantee = true;
+        nextGachaNoSpecific6StarCount = 0;
+        nextGachaNo6StarCount = 0;
+        nextGachaNo5Or6StarCount = 0;
+      } else if (nextGachaResult === '6_other') {
+        nextGachaNoSpecific6StarCount++;
+        nextGachaNo6StarCount = 0;
+        nextGachaNo5Or6StarCount = 0;
+      } else if (nextGachaResult === '5') {
+        nextGachaNoSpecific6StarCount++;
+        nextGachaNo6StarCount++;
+        nextGachaNo5Or6StarCount = 0;
       } else {
-        freeNo6StarCount++;
-        freeNo5Or6StarCount++;
+        nextGachaNoSpecific6StarCount++;
+        nextGachaNo6StarCount++;
+        nextGachaNo5Or6StarCount++;
       }
     }
   }
