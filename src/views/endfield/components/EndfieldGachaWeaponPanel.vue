@@ -38,7 +38,7 @@
   </div>
   <div class="endfield-gacha-result gacha-weapon">
     <div class="simulation-summary">
-      平均抽取次数：{{ averageDraws.toFixed(2) }} / 中位数抽取次数：{{ medianDraws }}
+      平均抽取次数：{{ averageTenPulls.toFixed(2) }} / 中位数抽取次数：{{ medianTenPulls }}
     </div>
     <div class="simulation-summary">平均消耗配额：{{ averageTokens.toFixed(0) }}</div>
   </div>
@@ -60,8 +60,8 @@ const { initChart, setOption, resize, dispose, setTheme } = useGachaChart();
 const isSimulating = ref(false);
 const simulationProgress = ref(0);
 const hasReceivedSnapshot = ref(false);
-const averageDraws = ref<number>(0);
-const medianDraws = ref<number>(0);
+const averageTenPulls = ref<number>(0);
+const medianTenPulls = ref<number>(0);
 const averageTokens = ref<number>(0);
 
 const formModel = reactive({
@@ -179,8 +179,8 @@ function startSimulation() {
   worker.onmessage = (event: MessageEvent<WeaponProgressResult>) => {
     const data = event.data;
     hasReceivedSnapshot.value = true;
-    averageDraws.value = data.averageTenPulls;
-    medianDraws.value = data.medianTenPulls;
+    averageTenPulls.value = data.averageTenPulls;
+    medianTenPulls.value = data.medianTenPulls;
     averageTokens.value = data.averageTokens;
     simulationProgress.value = Math.round(
       (data.completedSimulations / data.totalSimulations) * 100,

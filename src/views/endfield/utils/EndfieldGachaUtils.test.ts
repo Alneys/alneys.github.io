@@ -19,38 +19,38 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
     ])(
       'targetRank=$label 的平均抽取次数、中位数、平均获得配额与基准误差 < 5%',
       ({ rank, baseline }) => {
-        const drawsList: number[] = [];
+        const pullsList: number[] = [];
         let totalTokens = 0;
         for (let i = 0; i < SIMULATION_COUNT; i++) {
           const simulation = simulateCharacterGachaNormalToTarget(
-            0, // initialNoSpecific6StarCount
-            0, // initialNo6StarCount
-            0, // initialNo5Or6StarCount
+            0, // initialNoSpecific6StarPulls
+            0, // initialNo6StarPulls
+            0, // initialNo5Or6StarPulls
             rank, // targetRank
             'single', // gachaStrategy
             0, // currentSpecific6StarCount
-            0, // currentDrawCount
+            0, // currentPulls
             false, // hasUsedSpecific6StarGuarantee
           );
-          drawsList.push(simulation.actualDraws);
+          pullsList.push(simulation.actualPulls);
           totalTokens += calculateWeaponTokens(simulation.result);
         }
 
-        const averageDraws = drawsList.reduce((sum, draws) => sum + draws, 0) / drawsList.length;
+        const averagePulls = pullsList.reduce((sum, pulls) => sum + pulls, 0) / pullsList.length;
 
-        drawsList.sort((a, b) => a - b);
-        const mid = Math.floor(drawsList.length / 2);
-        const medianDraws =
-          drawsList.length % 2 !== 0
-            ? drawsList[mid]!
-            : Math.round((drawsList[mid - 1]! + drawsList[mid]!) / 2);
+        pullsList.sort((a, b) => a - b);
+        const mid = Math.floor(pullsList.length / 2);
+        const medianPulls =
+          pullsList.length % 2 !== 0
+            ? pullsList[mid]!
+            : Math.round((pullsList[mid - 1]! + pullsList[mid]!) / 2);
 
-        const averageTokens = totalTokens / drawsList.length;
+        const averageTokens = totalTokens / pullsList.length;
 
-        expect(Math.abs(averageDraws - baseline.averageDraws) / baseline.averageDraws).toBeLessThan(
+        expect(Math.abs(averagePulls - baseline.averageDraws) / baseline.averageDraws).toBeLessThan(
           TOLERANCE,
         );
-        expect(Math.abs(medianDraws - baseline.medianDraws) / baseline.medianDraws).toBeLessThan(
+        expect(Math.abs(medianPulls - baseline.medianDraws) / baseline.medianDraws).toBeLessThan(
           TOLERANCE,
         );
         expect(

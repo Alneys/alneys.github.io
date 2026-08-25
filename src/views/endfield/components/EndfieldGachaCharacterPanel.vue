@@ -30,7 +30,7 @@
       </el-form-item>
       <el-form-item label="当前已抽取次数">
         <el-input-number
-          v-model="formModel.currentDrawCount"
+          v-model="formModel.currentPulls"
           :min="0"
           :max="1200"
           :step="1"
@@ -39,7 +39,7 @@
       </el-form-item>
       <el-form-item label="6星保底剩余计数">
         <el-input-number
-          v-model="formModel.remainingNo6StarCount"
+          v-model="formModel.remainingNo6StarPulls"
           :min="1"
           :max="80"
           :step="1"
@@ -48,7 +48,7 @@
       </el-form-item>
       <el-form-item label="5星保底剩余计数">
         <el-input-number
-          v-model="formModel.remainingNo5Or6StarCount"
+          v-model="formModel.remainingNo5Or6StarPulls"
           :min="1"
           :max="10"
           :step="1"
@@ -62,7 +62,7 @@
         }"
       >
         <el-input-number
-          v-model="formModel.remainingNoSpecific6StarCount"
+          v-model="formModel.remainingNoSpecific6StarPulls"
           :min="0"
           :max="120"
           :step="1"
@@ -113,8 +113,8 @@
   </div>
   <div class="endfield-gacha-result gacha-character">
     <div class="simulation-summary">
-      平均抽取次数：{{ characterAverageDraws.toFixed(2) }} / 中位数抽取次数：{{
-        characterMedianDraws
+      平均抽取次数：{{ characterAveragePulls.toFixed(2) }} / 中位数抽取次数：{{
+        characterMedianPulls
       }}
     </div>
     <div class="simulation-summary">平均获得配额：{{ characterAverageTokens.toFixed(0) }}</div>
@@ -139,19 +139,19 @@ const { initChart, setOption, resize, dispose, setTheme } = useGachaChart();
 const isSimulating = ref(false);
 const simulationProgress = ref(0);
 const hasReceivedSnapshot = ref(false);
-const characterAverageDraws = ref<number>(0);
-const characterMedianDraws = ref<number>(0);
+const characterAveragePulls = ref<number>(0);
+const characterMedianPulls = ref<number>(0);
 const characterAverageTokens = ref<number>(0);
 
 const formModel = reactive({
   gachaType: 'normal' as GachaType,
   simulationCount: 100000,
   targetRank: 0,
-  remainingNo6StarCount: 80,
-  remainingNo5Or6StarCount: 10,
-  remainingNoSpecific6StarCount: 120,
+  remainingNo6StarPulls: 80,
+  remainingNo5Or6StarPulls: 10,
+  remainingNoSpecific6StarPulls: 120,
   currentSpecific6StarCount: 0,
-  currentDrawCount: 0,
+  currentPulls: 0,
   hasUsedSpecific6StarGuarantee: false,
   gachaStrategy: 'single' as GachaStrategy,
 });
@@ -335,8 +335,8 @@ function startSimulation() {
   worker.onmessage = (event: MessageEvent<CharacterProgressResult>) => {
     const data = event.data;
     hasReceivedSnapshot.value = true;
-    characterAverageDraws.value = data.averageDraws;
-    characterMedianDraws.value = data.medianDraws;
+    characterAveragePulls.value = data.averagePulls;
+    characterMedianPulls.value = data.medianPulls;
     characterAverageTokens.value = data.averageTokens;
     simulationProgress.value = Math.round(
       (data.completedSimulations / data.totalSimulations) * 100,
@@ -363,13 +363,13 @@ function startSimulation() {
     payload: {
       gachaType: formModel.gachaType,
       simulationCount: formModel.simulationCount,
-      initialNoSpecific6StarCount: 120 - formModel.remainingNoSpecific6StarCount,
-      initialNo6StarCount: 80 - formModel.remainingNo6StarCount,
-      initialNo5Or6StarCount: 10 - formModel.remainingNo5Or6StarCount,
+      initialNoSpecific6StarPulls: 120 - formModel.remainingNoSpecific6StarPulls,
+      initialNo6StarPulls: 80 - formModel.remainingNo6StarPulls,
+      initialNo5Or6StarPulls: 10 - formModel.remainingNo5Or6StarPulls,
       targetRank: formModel.targetRank,
       gachaStrategy: formModel.gachaStrategy,
       currentSpecific6StarCount: formModel.currentSpecific6StarCount,
-      currentDrawCount: formModel.currentDrawCount,
+      currentPulls: formModel.currentPulls,
       hasUsedSpecific6StarGuarantee: formModel.hasUsedSpecific6StarGuarantee,
     },
   });
@@ -390,11 +390,11 @@ watch(
     formModel.simulationCount,
     formModel.targetRank,
     formModel.gachaStrategy,
-    formModel.remainingNo6StarCount,
-    formModel.remainingNo5Or6StarCount,
-    formModel.remainingNoSpecific6StarCount,
+    formModel.remainingNo6StarPulls,
+    formModel.remainingNo5Or6StarPulls,
+    formModel.remainingNoSpecific6StarPulls,
     formModel.currentSpecific6StarCount,
-    formModel.currentDrawCount,
+    formModel.currentPulls,
     formModel.hasUsedSpecific6StarGuarantee,
   ],
   () => {

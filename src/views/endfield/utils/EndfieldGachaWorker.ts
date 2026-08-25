@@ -11,13 +11,13 @@ import {
 interface CharacterTaskPayload {
   gachaType: GachaType;
   simulationCount: number;
-  initialNoSpecific6StarCount: number;
-  initialNo6StarCount: number;
-  initialNo5Or6StarCount: number;
+  initialNoSpecific6StarPulls: number;
+  initialNo6StarPulls: number;
+  initialNo5Or6StarPulls: number;
   targetRank: number;
   gachaStrategy: GachaStrategy;
   currentSpecific6StarCount: number;
-  currentDrawCount: number;
+  currentPulls: number;
   hasUsedSpecific6StarGuarantee: boolean;
 }
 
@@ -36,8 +36,8 @@ export interface CharacterAggregateResult {
   ccdfData: [number, number][];
   avgTokenData: [number, number][];
   jadePerTokenData: [number, number][];
-  averageDraws: number;
-  medianDraws: number;
+  averagePulls: number;
+  medianPulls: number;
   averageTokens: number;
 }
 
@@ -99,7 +99,7 @@ function calculateMedianFromCountMap(countMap: Map<number, number>, total: numbe
 function buildCharacterResult(
   countMap: Map<number, number>,
   tokenSumMap: Map<number, number>,
-  totalDraws: number,
+  totalPulls: number,
   totalTokens: number,
   completedSimulations: number,
   totalSimulations: number,
@@ -113,8 +113,8 @@ function buildCharacterResult(
     ccdfData: processedData.ccdfData,
     avgTokenData: processedData.avgTokenData,
     jadePerTokenData: processedData.jadePerTokenData,
-    averageDraws: totalDraws / completedSimulations,
-    medianDraws: calculateMedianFromCountMap(countMap, completedSimulations),
+    averagePulls: totalPulls / completedSimulations,
+    medianPulls: calculateMedianFromCountMap(countMap, completedSimulations),
     averageTokens: totalTokens / completedSimulations,
     completedSimulations,
     totalSimulations,
@@ -145,29 +145,29 @@ function buildWeaponResult(
 function simulateCharacterAggregated(payload: CharacterTaskPayload): void {
   const countMap = new Map<number, number>();
   const tokenSumMap = new Map<number, number>();
-  let totalDraws = 0;
+  let totalPulls = 0;
   let totalTokens = 0;
   const simulateCharacterGacha = characterSimulateByGachaType[payload.gachaType];
 
   for (let i = 0; i < payload.simulationCount; i++) {
     const simulation = simulateCharacterGacha(
-      payload.initialNoSpecific6StarCount,
-      payload.initialNo6StarCount,
-      payload.initialNo5Or6StarCount,
+      payload.initialNoSpecific6StarPulls,
+      payload.initialNo6StarPulls,
+      payload.initialNo5Or6StarPulls,
       payload.targetRank,
       payload.gachaStrategy,
       payload.currentSpecific6StarCount,
-      payload.currentDrawCount,
+      payload.currentPulls,
       payload.hasUsedSpecific6StarGuarantee,
     );
-    const actualDraws = simulation.actualDraws;
-    totalDraws += actualDraws;
+    const actualPulls = simulation.actualPulls;
+    totalPulls += actualPulls;
 
     const tokenCount = calculateWeaponTokens(simulation.result);
     totalTokens += tokenCount;
 
-    countMap.set(actualDraws, (countMap.get(actualDraws) || 0) + 1);
-    tokenSumMap.set(actualDraws, (tokenSumMap.get(actualDraws) || 0) + tokenCount);
+    countMap.set(actualPulls, (countMap.get(actualPulls) || 0) + 1);
+    tokenSumMap.set(actualPulls, (tokenSumMap.get(actualPulls) || 0) + tokenCount);
 
     const completedSimulations = i + 1;
     if (
@@ -179,7 +179,7 @@ function simulateCharacterAggregated(payload: CharacterTaskPayload): void {
         buildCharacterResult(
           countMap,
           tokenSumMap,
-          totalDraws,
+          totalPulls,
           totalTokens,
           completedSimulations,
           payload.simulationCount,
