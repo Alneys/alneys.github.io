@@ -4,6 +4,12 @@
   </div>
   <div class="endfield-gacha-config gacha-character">
     <el-form :model="formModel" :inline="true" class="gacha-config-form" label-width="168px">
+      <el-form-item label="卡池类型选择">
+        <el-select v-model="formModel.gachaType" placeholder="请选择">
+          <el-option label="常规" value="normal" />
+          <el-option label="复刻" value="rerelease" disabled />
+        </el-select>
+      </el-form-item>
       <el-form-item label="模拟次数">
         <el-input-number
           v-model="formModel.simulationCount"
@@ -123,7 +129,7 @@ import { ref, reactive, watch, onMounted, onUnmounted, useTemplateRef } from 'vu
 import type { EChartsOption } from 'echarts';
 
 import { useGachaChart } from '../composables/useGachaChart';
-import type { GachaStrategy } from '../utils/EndfieldGachaUtils';
+import type { GachaStrategy, GachaType } from '../utils/EndfieldGachaUtils';
 import type { CharacterProgressResult } from '../utils/EndfieldGachaWorker';
 
 const isDark = useDark();
@@ -138,6 +144,7 @@ const characterMedianDraws = ref<number>(0);
 const characterAverageTokens = ref<number>(0);
 
 const formModel = reactive({
+  gachaType: 'normal' as GachaType,
   simulationCount: 100000,
   targetRank: 0,
   remainingNo6StarCount: 80,
@@ -354,6 +361,7 @@ function startSimulation() {
   worker.postMessage({
     type: 'character',
     payload: {
+      gachaType: formModel.gachaType,
       simulationCount: formModel.simulationCount,
       initialNoSpecific6StarCount: 120 - formModel.remainingNoSpecific6StarCount,
       initialNo6StarCount: 80 - formModel.remainingNo6StarCount,
@@ -378,6 +386,7 @@ watch(
 
 watch(
   () => [
+    formModel.gachaType,
     formModel.simulationCount,
     formModel.targetRank,
     formModel.gachaStrategy,

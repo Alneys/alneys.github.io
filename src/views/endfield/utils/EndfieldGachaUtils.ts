@@ -1,6 +1,8 @@
 // EndfieldGachaUtils.ts
 export type GachaStrategy = 'single' | 'batch' | 'smart';
 
+export type GachaType = 'normal' | 'rerelease';
+
 export interface GachaSimulationResult {
   result: string[];
   actualDraws: number;
@@ -228,6 +230,14 @@ export function simulateCharacterGachaToTarget(
 
   return { result: currentSimulationResults, actualDraws };
 }
+
+export const characterSimulateByGachaType: Record<
+  GachaType,
+  typeof simulateCharacterGachaToTarget
+> = {
+  normal: simulateCharacterGachaToTarget,
+  rerelease: simulateCharacterGachaToTarget,
+};
 
 /**
  * 模拟多次角色抽卡过程，获得达到目标时的各种抽取情况

@@ -1,6 +1,7 @@
 import {
   type GachaStrategy,
-  simulateCharacterGachaToTarget,
+  type GachaType,
+  characterSimulateByGachaType,
   simulateWeaponGachaToTarget,
   calculateWeaponTokens,
   processDataForCharacterChart,
@@ -8,6 +9,7 @@ import {
 } from '../utils/EndfieldGachaUtils';
 
 interface CharacterTaskPayload {
+  gachaType: GachaType;
   simulationCount: number;
   initialNoSpecific6StarCount: number;
   initialNo6StarCount: number;
@@ -145,9 +147,10 @@ function simulateCharacterAggregated(payload: CharacterTaskPayload): void {
   const tokenSumMap = new Map<number, number>();
   let totalDraws = 0;
   let totalTokens = 0;
+  const simulateCharacterGacha = characterSimulateByGachaType[payload.gachaType];
 
   for (let i = 0; i < payload.simulationCount; i++) {
-    const simulation = simulateCharacterGachaToTarget(
+    const simulation = simulateCharacterGacha(
       payload.initialNoSpecific6StarCount,
       payload.initialNo6StarCount,
       payload.initialNo5Or6StarCount,
