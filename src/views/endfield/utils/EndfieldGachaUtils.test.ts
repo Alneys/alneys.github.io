@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import benchmark from './EndfieldGachaBenchmark.json';
 import {
-  simulateCharacterGachaToTarget,
+  simulateCharacterGachaNormalToTarget,
   simulateWeaponGachaToTarget,
   calculateWeaponTokens,
   calculateMedian,
@@ -22,7 +22,7 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
         const drawsList: number[] = [];
         let totalTokens = 0;
         for (let i = 0; i < SIMULATION_COUNT; i++) {
-          const simulation = simulateCharacterGachaToTarget(
+          const simulation = simulateCharacterGachaNormalToTarget(
             0, // initialNoSpecific6StarCount
             0, // initialNo6StarCount
             0, // initialNo5Or6StarCount
