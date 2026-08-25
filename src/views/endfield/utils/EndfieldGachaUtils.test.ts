@@ -9,7 +9,8 @@ import {
 } from './EndfieldGachaUtils';
 
 const SIMULATION_COUNT = 100000;
-const TOLERANCE = 0.05;
+const RELATIVE_TOLERANCE = 0.007;
+const MEDIAN_ABS_TOLERANCE = 1;
 
 describe('EndfieldGachaUtils 默认数据基准', () => {
   describe('角色抽取分布模拟（默认参数）', () => {
@@ -17,7 +18,7 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
       { rank: 0, label: '0', baseline: benchmark.character.rank0 },
       { rank: 5, label: '5', baseline: benchmark.character.rank5 },
     ])(
-      'targetRank=$label 的平均抽取次数、中位数、平均获得配额与基准误差 < 5%',
+      'targetRank=$label 的平均抽取次数、平均获得配额与基准相对误差 < 0.7%，中位数与基准偏差 ≤ 1',
       ({ rank, baseline }) => {
         const pullsList: number[] = [];
         let totalTokens = 0;
@@ -48,14 +49,14 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
         const averageTokens = totalTokens / pullsList.length;
 
         expect(Math.abs(averagePulls - baseline.averageDraws) / baseline.averageDraws).toBeLessThan(
-          TOLERANCE,
+          RELATIVE_TOLERANCE,
         );
-        expect(Math.abs(medianPulls - baseline.medianDraws) / baseline.medianDraws).toBeLessThan(
-          TOLERANCE,
+        expect(Math.abs(medianPulls - baseline.medianDraws)).toBeLessThanOrEqual(
+          MEDIAN_ABS_TOLERANCE,
         );
         expect(
           Math.abs(averageTokens - baseline.averageTokens) / baseline.averageTokens,
-        ).toBeLessThan(TOLERANCE);
+        ).toBeLessThan(RELATIVE_TOLERANCE);
       },
       120000,
     );
@@ -66,7 +67,7 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
       { rank: 0, label: '0', baseline: benchmark.weapon.rank0 },
       { rank: 5, label: '5', baseline: benchmark.weapon.rank5 },
     ])(
-      'targetRank=$label 的平均抽取次数（十连）、中位数、平均消耗配额与基准误差 < 5%',
+      'targetRank=$label 的平均抽取次数（十连）、平均消耗配额与基准相对误差 < 0.7%，中位数与基准偏差 ≤ 1',
       ({ rank, baseline }) => {
         const tenPullList: number[] = [];
         let totalTenPulls = 0;
@@ -82,13 +83,13 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
 
         expect(
           Math.abs(averageTenPulls - baseline.averageTenPulls) / baseline.averageTenPulls,
-        ).toBeLessThan(TOLERANCE);
-        expect(
-          Math.abs(medianTenPulls - baseline.medianTenPulls) / baseline.medianTenPulls,
-        ).toBeLessThan(TOLERANCE);
+        ).toBeLessThan(RELATIVE_TOLERANCE);
+        expect(Math.abs(medianTenPulls - baseline.medianTenPulls)).toBeLessThanOrEqual(
+          MEDIAN_ABS_TOLERANCE,
+        );
         expect(
           Math.abs(averageTokens - baseline.averageTokens) / baseline.averageTokens,
-        ).toBeLessThan(TOLERANCE);
+        ).toBeLessThan(RELATIVE_TOLERANCE);
       },
       120000,
     );
