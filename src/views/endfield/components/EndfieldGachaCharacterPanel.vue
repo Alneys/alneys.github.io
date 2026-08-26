@@ -7,7 +7,7 @@
       <el-form-item label="卡池类型选择">
         <el-select v-model="formModel.gachaType" placeholder="请选择">
           <el-option label="常规" value="normal" />
-          <el-option label="复刻" value="rerelease" disabled />
+          <el-option label="复刻" value="rerelease" />
         </el-select>
       </el-form-item>
       <el-form-item label="模拟次数">

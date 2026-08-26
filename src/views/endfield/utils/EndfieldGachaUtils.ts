@@ -172,8 +172,19 @@ export function simulateCharaFreeTenPullInheritPity(
   );
 }
 
+interface CharacterFreeTenConfig {
+  freeTenThresholds: number[]; // 当前卡池免费十连触发点（按累计付费抽数计）
+  rolloverFreeTenThresholds: number[]; // 下个卡池免费十连触发点（按累计付费抽数计）
+}
+
+const CHARACTER_FREE_TEN_CONFIG: Record<GachaType, CharacterFreeTenConfig> = {
+  normal: { freeTenThresholds: [30], rolloverFreeTenThresholds: [60] },
+  rerelease: { freeTenThresholds: [30, 60, 90], rolloverFreeTenThresholds: [] },
+};
+
 /**
- * 模拟一次完整的角色抽卡过程，直到获得指定数量的特定6星
+ * 角色抽卡核心模拟函数，直到获得指定数量的特定6星
+ * @param gachaType 卡池类型
  * @param initialNoSpecific6StarPulls 继承的未抽取特定6星次数，默认0
  * @param initialNo6StarPulls 继承的未抽取6星次数，默认0
  * @param initialNo5Or6StarPulls 继承的未抽取5星次数，默认0
@@ -184,7 +195,8 @@ export function simulateCharaFreeTenPullInheritPity(
  * @param gachaStrategy 抽卡策略，默认单抽
  * @returns 返回本次模拟的所有抽取结果的对象，包含result字段，值为字符串列表，以及actualPulls字段表示实际抽取次数
  */
-export function simulateCharacterGachaNormalToTarget(
+function simulateCharacterGachaToTargetCore(
+  gachaType: GachaType,
   initialNoSpecific6StarPulls: number = 0,
   initialNo6StarPulls: number = 0,
   initialNo5Or6StarPulls: number = 0,
@@ -194,19 +206,26 @@ export function simulateCharacterGachaNormalToTarget(
   hasUsedSpecific6StarGuarantee: boolean = false,
   gachaStrategy: GachaStrategy = 'single',
 ): GachaSimulationResult {
+  const config = CHARACTER_FREE_TEN_CONFIG[gachaType];
   let totalPulls = currentPulls;
   let no6StarPulls = initialNo6StarPulls;
   let no5Or6StarPulls = initialNo5Or6StarPulls;
   let noSpecific6StarPulls = initialNoSpecific6StarPulls;
-  let freeGachaUsed = currentPulls >= 30; // 如果当前已抽取次数>=30，则免费十连已使用
+  let freeTensClaimed = config.freeTenThresholds.filter(
+    (threshold) => threshold <= currentPulls,
+  ).length; // 已领取的免费十连数（触发点不大于当前已抽取次数的个数）
+  let freeTensFired = 0; // 本次模拟中实际触发的免费十连数
   let specific6StarCount = currentSpecific6StarCount;
   let rankUpMaterials = Math.floor(currentPulls / 240); // 根据当前已抽取次数计算已有突破材料
   const currentSimulationResults: string[] = [];
 
   // 抽取次数上限
   while (totalPulls <= 1200) {
-    // 如果总抽取次数达到30次，则获得当前卡池的免费十连（不计主流程保底进度）
-    if (totalPulls >= 30 && !freeGachaUsed) {
+    // 达到触发点时，获得当前卡池的免费十连（不计主流程保底进度）
+    if (
+      freeTensClaimed < config.freeTenThresholds.length &&
+      totalPulls >= config.freeTenThresholds[freeTensClaimed]!
+    ) {
       const freeResults = simulateCharaFreeTenPullNoPity();
       for (const freeResult of freeResults) {
         currentSimulationResults.push(freeResult);
@@ -214,12 +233,13 @@ export function simulateCharacterGachaNormalToTarget(
           specific6StarCount++;
         }
       }
-      freeGachaUsed = true;
+      freeTensClaimed++;
+      freeTensFired++;
       // 跳过后续的保底计数器更新逻辑，确保免费十连不增加主抽卡流程的保底计数
       continue;
     }
 
-    // 满足目标条件时，结束模拟
+    // 满足目标条件时，结束模拟（先抽取当前卡池的免费十连）
     if (specific6StarCount >= 1 && specific6StarCount + rankUpMaterials >= 1 + targetRank) {
       break;
     }
@@ -270,14 +290,11 @@ export function simulateCharacterGachaNormalToTarget(
     }
   }
 
-  // 计算实际抽数：总长度减去当前卡池的免费十连（如果有的话）
-  let actualPulls = currentSimulationResults.length;
-  if (currentSimulationResults.length + currentPulls > 30 && currentPulls < 30) {
-    actualPulls -= 10;
-  }
+  // 计算实际抽数：总长度减去已触发的免费十连（每次10抽，不计入付费抽数）
+  const actualPulls = currentSimulationResults.length - 10 * freeTensFired;
 
-  // 上方当前卡池抽取已经结束。现在如果卡池总抽取次数达到60次，则获得下个卡池的免费十连
-  if (totalPulls >= 60) {
+  // 上方当前卡池抽取已经结束。现在如果卡池总抽取次数达到下个卡池免费十连的触发点，则获得下个卡池的免费十连
+  if (config.rolloverFreeTenThresholds.some((threshold) => totalPulls >= threshold)) {
     // 下个卡池继承未抽到6星和5星的计数，但不继承未抽到特定6星的计数。
     // 当前卡池的特定 6_up 在下个卡池视为其他限定，在此转换为 6_other。
     const nextGacha = simulateCharaFreeTenPullInheritPity(0, no6StarPulls, no5Or6StarPulls);
@@ -289,12 +306,82 @@ export function simulateCharacterGachaNormalToTarget(
   return { result: currentSimulationResults, actualPulls };
 }
 
+/**
+ * 模拟一次完整的常规角色抽卡过程：累计30抽时获得当前卡池免费十连，累计60抽时获得下个卡池免费十连
+ * @param initialNoSpecific6StarPulls 继承的未抽取特定6星次数，默认0
+ * @param initialNo6StarPulls 继承的未抽取6星次数，默认0
+ * @param initialNo5Or6StarPulls 继承的未抽取5星次数，默认0
+ * @param targetRank 目标突破等级，默认0
+ * @param currentSpecific6StarCount 当前已拥有的特定6星数量，默认0
+ * @param currentPulls 当前已抽取次数，默认0
+ * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底，默认false
+ * @param gachaStrategy 抽卡策略，默认单抽
+ * @returns 返回本次模拟的所有抽取结果的对象，包含result字段，值为字符串列表，以及actualPulls字段表示实际抽取次数
+ */
+export function simulateCharacterGachaNormalToTarget(
+  initialNoSpecific6StarPulls: number = 0,
+  initialNo6StarPulls: number = 0,
+  initialNo5Or6StarPulls: number = 0,
+  targetRank: number = 0,
+  currentSpecific6StarCount: number = 0,
+  currentPulls: number = 0,
+  hasUsedSpecific6StarGuarantee: boolean = false,
+  gachaStrategy: GachaStrategy = 'single',
+): GachaSimulationResult {
+  return simulateCharacterGachaToTargetCore(
+    'normal',
+    initialNoSpecific6StarPulls,
+    initialNo6StarPulls,
+    initialNo5Or6StarPulls,
+    targetRank,
+    currentSpecific6StarCount,
+    currentPulls,
+    hasUsedSpecific6StarGuarantee,
+    gachaStrategy,
+  );
+}
+
+/**
+ * 模拟一次完整的复刻角色抽卡过程：累计30/60/90抽时各获得一次当前卡池免费十连（不计保底进度），无下个卡池免费十连，其余规则与常规相同
+ * @param initialNoSpecific6StarPulls 继承的未抽取特定6星次数，默认0
+ * @param initialNo6StarPulls 继承的未抽取6星次数，默认0
+ * @param initialNo5Or6StarPulls 继承的未抽取5星次数，默认0
+ * @param targetRank 目标突破等级，默认0
+ * @param currentSpecific6StarCount 当前已拥有的特定6星数量，默认0
+ * @param currentPulls 当前已抽取次数，默认0
+ * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底，默认false
+ * @param gachaStrategy 抽卡策略，默认单抽
+ * @returns 返回本次模拟的所有抽取结果的对象，包含result字段，值为字符串列表，以及actualPulls字段表示实际抽取次数
+ */
+export function simulateCharacterGachaRereleaseToTarget(
+  initialNoSpecific6StarPulls: number = 0,
+  initialNo6StarPulls: number = 0,
+  initialNo5Or6StarPulls: number = 0,
+  targetRank: number = 0,
+  currentSpecific6StarCount: number = 0,
+  currentPulls: number = 0,
+  hasUsedSpecific6StarGuarantee: boolean = false,
+  gachaStrategy: GachaStrategy = 'single',
+): GachaSimulationResult {
+  return simulateCharacterGachaToTargetCore(
+    'rerelease',
+    initialNoSpecific6StarPulls,
+    initialNo6StarPulls,
+    initialNo5Or6StarPulls,
+    targetRank,
+    currentSpecific6StarCount,
+    currentPulls,
+    hasUsedSpecific6StarGuarantee,
+    gachaStrategy,
+  );
+}
+
 export const characterSimulateByGachaType: Record<
   GachaType,
   typeof simulateCharacterGachaNormalToTarget
 > = {
   normal: simulateCharacterGachaNormalToTarget,
-  rerelease: simulateCharacterGachaNormalToTarget,
+  rerelease: simulateCharacterGachaRereleaseToTarget,
 };
 
 /**
