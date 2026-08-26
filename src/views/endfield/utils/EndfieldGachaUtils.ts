@@ -79,46 +79,31 @@ export interface FreeTenPullPityState {
 }
 
 /**
- * 当前卡池免费十连：不计保底进度，使用独立的保底计数。
+ * 执行指定次数的角色抽取，并根据结果累加保底计数器
+ * @param noSpecific6StarPulls 初始的连续未抽到特定6星次数
+ * @param no6StarPulls 初始的连续未抽到6星次数
+ * @param no5Or6StarPulls 初始的连续未抽到5/6星次数
+ * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底
+ * @param pulls 本次抽取次数（单抽为1，十连为10），默认1
+ * @returns 抽取结果列表及累加后的保底状态
  */
-export function simulateCharaFreeTenPullNoPity(): string[] {
-  const results: string[] = [];
-  let freeNo5Or6StarPulls = 0;
-  for (let j = 0; j < 10; j++) {
-    const freeResult = simulateCharacterGachaSingle(0, 0, freeNo5Or6StarPulls, false);
-    results.push(freeResult);
-    // 6_up / 6_other / 5 均重置本地5星计数
-    if (freeResult === '4') {
-      freeNo5Or6StarPulls++;
-    } else {
-      freeNo5Or6StarPulls = 0;
-    }
-  }
-  return results;
-}
-
-/**
- * 继承进度的免费十连：继承保底进度，但重置特定6星保底（重新计算下个卡池进度）。
- * 返回 10 条抽取结果及最终保底状态，供未来下个卡池继续模拟使用。
- */
-export function simulateCharaFreeTenPullInheritPity(
-  inheritedNoSpecific6StarPulls: number,
-  inheritedNo6StarPulls: number,
-  inheritedNo5Or6StarPulls: number,
+export function simulateCharacterGachaPullsWithPity(
+  noSpecific6StarPulls: number = 0,
+  no6StarPulls: number = 0,
+  no5Or6StarPulls: number = 0,
+  hasUsedSpecific6StarGuarantee: boolean = false,
+  pulls: number = 1,
 ): FreeTenPullPityState & { results: string[] } {
   const results: string[] = [];
-  let noSpecific6StarPulls = inheritedNoSpecific6StarPulls || 0;
-  let no6StarPulls = inheritedNo6StarPulls || 0;
-  let no5Or6StarPulls = inheritedNo5Or6StarPulls || 0;
-  let hasUsedSpecific6StarGuarantee = false;
 
-  for (let j = 0; j < 10; j++) {
+  for (let i = 0; i < pulls; i++) {
     const result = simulateCharacterGachaSingle(
       noSpecific6StarPulls,
       no6StarPulls,
       no5Or6StarPulls,
       hasUsedSpecific6StarGuarantee,
     );
+    results.push(result);
 
     if (result === '6_up') {
       hasUsedSpecific6StarGuarantee = true;
@@ -138,8 +123,6 @@ export function simulateCharaFreeTenPullInheritPity(
       no6StarPulls++;
       no5Or6StarPulls++;
     }
-
-    results.push(result);
   }
 
   return {
@@ -149,6 +132,44 @@ export function simulateCharaFreeTenPullInheritPity(
     noSpecific6StarPulls,
     hasUsedSpecific6StarGuarantee,
   };
+}
+
+/**
+ * 当前卡池免费十连：不计保底进度，使用独立的保底计数。
+ */
+export function simulateCharaFreeTenPullNoPity(): string[] {
+  return simulateCharacterGachaPullsWithPity(0, 0, 0, false, 10).results;
+  // const results: string[] = [];
+  // let freeNo5Or6StarPulls = 0;
+  // for (let j = 0; j < 10; j++) {
+  //   const freeResult = simulateCharacterGachaSingle(0, 0, freeNo5Or6StarPulls, false);
+  //   results.push(freeResult);
+  //   // 6_up / 6_other / 5 均重置本地5星计数
+  //   if (freeResult === '4') {
+  //     freeNo5Or6StarPulls++;
+  //   } else {
+  //     freeNo5Or6StarPulls = 0;
+  //   }
+  // }
+  // return results;
+}
+
+/**
+ * 继承进度的免费十连：继承保底进度，但重置特定6星保底（重新计算下个卡池进度）。
+ * 返回 10 条抽取结果及最终保底状态，供未来下个卡池继续模拟使用。
+ */
+export function simulateCharaFreeTenPullInheritPity(
+  inheritedNoSpecific6StarPulls: number,
+  inheritedNo6StarPulls: number,
+  inheritedNo5Or6StarPulls: number,
+): FreeTenPullPityState & { results: string[] } {
+  return simulateCharacterGachaPullsWithPity(
+    inheritedNoSpecific6StarPulls,
+    inheritedNo6StarPulls,
+    inheritedNo5Or6StarPulls,
+    false,
+    10,
+  );
 }
 
 /**
@@ -182,6 +203,7 @@ export function simulateCharacterGachaNormalToTarget(
   let rankUpMaterials = Math.floor(currentPulls / 240); // 根据当前已抽取次数计算已有突破材料
   const currentSimulationResults: string[] = [];
 
+  // 抽取次数上限
   while (totalPulls <= 1200) {
     // 如果总抽取次数达到30次，则获得当前卡池的免费十连（不计主流程保底进度）
     if (totalPulls >= 30 && !freeGachaUsed) {
@@ -202,6 +224,7 @@ export function simulateCharacterGachaNormalToTarget(
       break;
     }
 
+    // 抽卡策略选择
     let nextGachaTries = 1;
 
     if (gachaStrategy === 'single') {
@@ -220,13 +243,20 @@ export function simulateCharacterGachaNormalToTarget(
       }
     }
 
-    for (let i = 0; i < nextGachaTries; i++) {
-      const result = simulateCharacterGachaSingle(
-        noSpecific6StarPulls,
-        no6StarPulls,
-        no5Or6StarPulls,
-        hasUsedSpecific6StarGuarantee,
-      );
+    // 执行抽卡并计算保底计数
+    const pullOutcome = simulateCharacterGachaPullsWithPity(
+      noSpecific6StarPulls,
+      no6StarPulls,
+      no5Or6StarPulls,
+      hasUsedSpecific6StarGuarantee,
+      nextGachaTries,
+    );
+    noSpecific6StarPulls = pullOutcome.noSpecific6StarPulls;
+    no6StarPulls = pullOutcome.no6StarPulls;
+    no5Or6StarPulls = pullOutcome.no5Or6StarPulls;
+    hasUsedSpecific6StarGuarantee = pullOutcome.hasUsedSpecific6StarGuarantee;
+
+    for (const result of pullOutcome.results) {
       currentSimulationResults.push(result);
       totalPulls += 1;
 
@@ -236,22 +266,6 @@ export function simulateCharacterGachaNormalToTarget(
 
       if (result === '6_up') {
         specific6StarCount++;
-        hasUsedSpecific6StarGuarantee = true;
-        noSpecific6StarPulls = 0;
-        no6StarPulls = 0;
-        no5Or6StarPulls = 0;
-      } else if (result === '6_other') {
-        noSpecific6StarPulls++;
-        no6StarPulls = 0;
-        no5Or6StarPulls = 0;
-      } else if (result === '5') {
-        noSpecific6StarPulls++;
-        no6StarPulls++;
-        no5Or6StarPulls = 0;
-      } else {
-        noSpecific6StarPulls++;
-        no6StarPulls++;
-        no5Or6StarPulls++;
       }
     }
   }
