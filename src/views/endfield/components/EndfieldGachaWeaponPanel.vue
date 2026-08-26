@@ -109,7 +109,7 @@ function buildOption(data: WeaponProgressResult): EChartsOption {
     },
     xAxis: {
       type: 'value',
-      name: '10连抽取次数',
+      name: '抽取次数',
       axisLabel: {
         formatter: function (value: number) {
           return Math.round(value).toString();

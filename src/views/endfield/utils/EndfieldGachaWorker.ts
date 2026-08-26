@@ -155,10 +155,10 @@ function simulateCharacterAggregated(payload: CharacterTaskPayload): void {
       payload.initialNo6StarPulls,
       payload.initialNo5Or6StarPulls,
       payload.targetRank,
-      payload.gachaStrategy,
       payload.currentSpecific6StarCount,
       payload.currentPulls,
       payload.hasUsedSpecific6StarGuarantee,
+      payload.gachaStrategy,
     );
     const actualPulls = simulation.actualPulls;
     totalPulls += actualPulls;

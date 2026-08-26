@@ -26,7 +26,7 @@ const env = import.meta.env;
         <el-card shadow="hover">（已过时）学园偶像大师 评级计算器</el-card>
       </router-link>
       <router-link v-if="env.DEV" to="/endfield/gacha">
-        <el-card shadow="hover">Endfield gacha info</el-card>
+        <el-card shadow="hover">Endfield Gacha Info</el-card>
       </router-link>
       <router-link to="/endfield/trial-of-swordmancy">
         <el-card shadow="hover">Endfield Trial Of Swordmancy</el-card>

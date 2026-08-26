@@ -28,10 +28,10 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
             0, // initialNo6StarPulls
             0, // initialNo5Or6StarPulls
             rank, // targetRank
-            'single', // gachaStrategy
             0, // currentSpecific6StarCount
             0, // currentPulls
             false, // hasUsedSpecific6StarGuarantee
+            'single', // gachaStrategy
           );
           pullsList.push(simulation.actualPulls);
           totalTokens += calculateWeaponTokens(simulation.result);
