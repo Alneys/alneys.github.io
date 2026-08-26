@@ -90,12 +90,22 @@
     "commit-msg": "node scripts/verify-commit.js"
   },
   "lint-staged": {
-    "src/**/*.{css,scss,vue}": "stylelint --fix --cache",
-    "*.{vue,js,jsx,ts,tsx,mjs,cjs}": [
+    "*.vue": [
+      "stylelint --fix --cache",
       "oxlint --fix",
-      "eslint --fix --cache"
+      "eslint --fix --cache",
+      "oxfmt --no-error-on-unmatched-pattern"
     ],
-    "*": "oxfmt --no-error-on-unmatched-pattern"
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "oxlint --fix",
+      "eslint --fix --cache",
+      "oxfmt --no-error-on-unmatched-pattern"
+    ],
+    "*.{css,scss}": [
+      "stylelint --fix --cache",
+      "oxfmt --no-error-on-unmatched-pattern"
+    ],
+    "!(*.vue|*.css|*.scss|*.js|*.jsx|*.ts|*.tsx|*.mjs|*.cjs)": "oxfmt --no-error-on-unmatched-pattern"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
