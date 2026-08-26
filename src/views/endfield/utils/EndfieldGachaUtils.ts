@@ -3,6 +3,8 @@ export type GachaStrategy = 'single' | 'batch' | 'smart';
 
 export type GachaType = 'normal' | 'rerelease';
 
+export type Specific6StarGuaranteeType = 'default' | 'item';
+
 export interface GachaSimulationResult {
   result: string[];
   actualPulls: number;
@@ -14,6 +16,7 @@ export interface GachaSimulationResult {
  * @param no6StarPulls 连续未抽到6星次数
  * @param no5Or6StarPulls 连续未抽到5/6星次数
  * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底
+ * @param specificGuaranteeType 特定6星保底类型（必出角色 / 角色道具）
  * @returns 抽取的结果字符串（"6_up", "6_other", "5", "4"）
  */
 export function simulateCharacterGachaSingle(
@@ -21,6 +24,7 @@ export function simulateCharacterGachaSingle(
   no6StarPulls: number,
   no5Or6StarPulls: number,
   hasUsedSpecific6StarGuarantee: boolean,
+  specificGuaranteeType: Specific6StarGuaranteeType = 'default',
 ): string {
   let p6: number, p5: number;
 
@@ -28,9 +32,13 @@ export function simulateCharacterGachaSingle(
   p6 = 0.008;
   p5 = 0.08;
 
-  // 2. 120次特定保底：连续119次未抽特定6星 → 本次（第120次）必定 6星
+  // 2. 120次特定保底（仅必出角色模式）：连续119次未抽特定6星 → 本次（第120次）必定 6星
   // 只有在未使用特定6星保底的情况下才生效
-  if (!hasUsedSpecific6StarGuarantee && noSpecific6StarPulls >= 119) {
+  if (
+    specificGuaranteeType === 'default' &&
+    !hasUsedSpecific6StarGuarantee &&
+    noSpecific6StarPulls >= 119
+  ) {
     p6 = 1.0;
     p5 = 0.0;
   }
@@ -55,9 +63,13 @@ export function simulateCharacterGachaSingle(
   if (rand < p6) {
     // 6星
     let isSpecific = false;
-    // 120次保底：连续119次未获特定6星 → 本次（第120次）必定获得
+    // 120次保底（仅必出角色模式）：连续119次未获特定6星 → 本次（第120次）必定获得
     // 只有在未使用特定6星保底的情况下才生效
-    if (!hasUsedSpecific6StarGuarantee && noSpecific6StarPulls >= 119) {
+    if (
+      specificGuaranteeType === 'default' &&
+      !hasUsedSpecific6StarGuarantee &&
+      noSpecific6StarPulls >= 119
+    ) {
       isSpecific = true;
     } else {
       isSpecific = Math.random() < 0.5; // 50%概率为特定6星
@@ -85,6 +97,7 @@ export interface FreeTenPullPityState {
  * @param no5Or6StarPulls 初始的连续未抽到5/6星次数
  * @param hasUsedSpecific6StarGuarantee 是否已使用特定6星保底
  * @param pulls 本次抽取次数（单抽为1，十连为10），默认1
+ * @param specificGuaranteeType 特定6星保底类型，默认default
  * @returns 抽取结果列表及累加后的保底状态
  */
 export function simulateCharacterGachaPullsWithPity(
@@ -93,6 +106,7 @@ export function simulateCharacterGachaPullsWithPity(
   no5Or6StarPulls: number = 0,
   hasUsedSpecific6StarGuarantee: boolean = false,
   pulls: number = 1,
+  specificGuaranteeType: Specific6StarGuaranteeType = 'default',
 ): FreeTenPullPityState & { results: string[] } {
   const results: string[] = [];
 
@@ -102,6 +116,7 @@ export function simulateCharacterGachaPullsWithPity(
       no6StarPulls,
       no5Or6StarPulls,
       hasUsedSpecific6StarGuarantee,
+      specificGuaranteeType,
     );
     results.push(result);
 
@@ -172,14 +187,23 @@ export function simulateCharaFreeTenPullInheritPity(
   );
 }
 
-interface CharacterFreeTenConfig {
+interface CharacterGachaConfig {
   freeTenThresholds: number[]; // 当前卡池免费十连触发点（按累计付费抽数计）
   rolloverFreeTenThresholds: number[]; // 下个卡池免费十连触发点（按累计付费抽数计）
+  specificGuaranteeType: Specific6StarGuaranteeType; // 特定6星保底类型
 }
 
-const CHARACTER_FREE_TEN_CONFIG: Record<GachaType, CharacterFreeTenConfig> = {
-  normal: { freeTenThresholds: [30], rolloverFreeTenThresholds: [60] },
-  rerelease: { freeTenThresholds: [30, 60, 90], rolloverFreeTenThresholds: [] },
+const CHARACTER_GACHA_CONFIG: Record<GachaType, CharacterGachaConfig> = {
+  normal: {
+    freeTenThresholds: [30],
+    rolloverFreeTenThresholds: [60],
+    specificGuaranteeType: 'default',
+  },
+  rerelease: {
+    freeTenThresholds: [30, 60, 90],
+    rolloverFreeTenThresholds: [],
+    specificGuaranteeType: 'default',
+  },
 };
 
 /**
@@ -206,7 +230,8 @@ function simulateCharacterGachaToTargetCore(
   hasUsedSpecific6StarGuarantee: boolean = false,
   gachaStrategy: GachaStrategy = 'single',
 ): GachaSimulationResult {
-  const config = CHARACTER_FREE_TEN_CONFIG[gachaType];
+  const config = CHARACTER_GACHA_CONFIG[gachaType];
+  const specificGuaranteeType = config.specificGuaranteeType;
   let totalPulls = currentPulls;
   let no6StarPulls = initialNo6StarPulls;
   let no5Or6StarPulls = initialNo5Or6StarPulls;
@@ -215,6 +240,7 @@ function simulateCharacterGachaToTargetCore(
     (threshold) => threshold <= currentPulls,
   ).length; // 已领取的免费十连数（触发点不大于当前已抽取次数的个数）
   let freeTensFired = 0; // 本次模拟中实际触发的免费十连数
+  let specificItemGranted = specificGuaranteeType === 'item' && currentPulls >= 120; // 是否已赠送累计120抽的角色道具（仅赠送角色道具模式）
   let specific6StarCount = currentSpecific6StarCount;
   let rankUpMaterials = Math.floor(currentPulls / 240); // 根据当前已抽取次数计算已有突破材料
   const currentSimulationResults: string[] = [];
@@ -282,6 +308,13 @@ function simulateCharacterGachaToTargetCore(
 
       if (totalPulls > 0 && totalPulls % 240 === 0) {
         rankUpMaterials++;
+      }
+
+      // 角色道具模式：累计付费抽数恰达120时赠送获取角色的道具，算作一个特定6星本体（可满足终止条件），
+      // 不写入结果流、不计配额、不清空保底计数器，全程一次
+      if (specificGuaranteeType === 'item' && !specificItemGranted && totalPulls === 120) {
+        specificItemGranted = true;
+        specific6StarCount++;
       }
 
       if (result === '6_up') {
