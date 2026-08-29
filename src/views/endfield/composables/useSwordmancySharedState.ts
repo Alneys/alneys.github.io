@@ -4,7 +4,6 @@ import {
   clearSolverCache,
   DEFAULT_REWARDS,
   DEFAULT_DECK_CONFIG,
-  DEFAULT_DECK_CONFIG_DATE,
   MAX_DRAWS,
 } from '../utils/SwordmancySolver';
 import type { ExpectedUtilityParams } from '../utils/SwordmancySolver';
@@ -136,23 +135,6 @@ const poolByLevel = computed(() => {
   return groups;
 });
 
-/** 默认配置是否已过期超过 72 小时（UTC 比较） */
-const configDateExpired = computed(() => {
-  const parts = DEFAULT_DECK_CONFIG_DATE.split(' ');
-  const dateStr = parts[0] ?? '2000-01-01';
-  const timeStr = parts[1] ?? '00:00';
-  const dateParts = dateStr.split('-');
-  const timeParts = timeStr.split(':');
-  const year = Number(dateParts[0]) || 2000;
-  const month = Number(dateParts[1]) || 1;
-  const day = Number(dateParts[2]) || 1;
-  const hour = Number(timeParts[0]) || 0;
-  const minute = Number(timeParts[1]) || 0;
-  const configDate = Date.UTC(year, month - 1, day, hour, minute);
-  const diffHours = (Date.now() - configDate) / (1000 * 60 * 60);
-  return diffHours > 72;
-});
-
 /** 期望效用模型参数（均为默认值时返回 undefined，表示不启用） */
 const euParams = computed<ExpectedUtilityParams | undefined>(() => {
   if (aversionFactor.value === 1.0 && fixedPenalty.value === 0) return undefined;
@@ -275,7 +257,6 @@ export function useSwordmancySharedState() {
     // 常量
     DEFAULT_REWARDS,
     DEFAULT_DECK_CONFIG,
-    DEFAULT_DECK_CONFIG_DATE,
     MAX_DRAWS,
 
     // 状态 - 配置
@@ -305,7 +286,6 @@ export function useSwordmancySharedState() {
     // 计算属性
     drawnCounts,
     poolByLevel,
-    configDateExpired,
     euParams,
     showEuColumn,
     activeDrawCount,

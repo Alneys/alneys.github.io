@@ -658,6 +658,3 @@ export const DEFAULT_REWARDS: number[] = [
 
 /** 默认铭牌库配置（各等级张数） */
 export const DEFAULT_DECK_CONFIG: number[] = [4, 5, 4, 8, 7];
-
-/** 默认铭牌库配置的更新日期（含时间） */
-export const DEFAULT_DECK_CONFIG_DATE = '2026-06-27 04:00';

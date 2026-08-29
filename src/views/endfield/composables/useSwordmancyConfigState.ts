@@ -6,7 +6,6 @@ export function useSwordmancyConfigState() {
 
   const {
     config,
-    configDateExpired,
     aversionFactor,
     fixedPenalty,
     remainingGames,
@@ -101,7 +100,6 @@ export function useSwordmancyConfigState() {
   return {
     // 状态
     config,
-    configDateExpired,
     aversionFactor,
     fixedPenalty,
     remainingGames,

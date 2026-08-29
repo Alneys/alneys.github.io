@@ -47,12 +47,14 @@ components.d.ts
 auto-imports.d.ts
 public/mockServiceWorker.js
 
-# Custom
-
-Users
-.temp
-
+# AI related 
+## Explicit ignores AGENTS.md, which is not recommended :(
 AGENTS.md
 
-# Bundle analysis
-stats.html
+.opencode
+.reasonix
+reasonix.*
+
+# Custom
+Users
+.temp

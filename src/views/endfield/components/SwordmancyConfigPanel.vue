@@ -9,10 +9,7 @@
       <div class="config-reward-section">
         <div class="config-reward-header">铭牌库配置</div>
         <div class="config-date-hint">
-          <span class="config-hint-hint">默认配置更新于 {{ DEFAULT_DECK_CONFIG_DATE }}</span>
-          <el-tag v-if="configDateExpired" type="danger" size="small" style="margin-left: 8px">
-            铭牌库数据可能需要手动更新
-          </el-tag>
+          <el-tag type="danger" size="small">铭牌库数据可能需要手动更新</el-tag>
         </div>
         <div v-if="poolQuickConfigMode" class="config-otp-row">
           <span class="config-label">铭牌库分布</span>
@@ -145,10 +142,7 @@
         </template>
         <div class="daily-grid">
           <div class="daily-date-hint" style="width: 100%">
-            <span class="date-hint-text">默认配置更新于 {{ DEFAULT_DECK_CONFIG_DATE }}</span>
-            <el-tag v-if="configDateExpired" type="danger" size="small" style="margin-left: 8px">
-              铭牌库数据可能需要手动更新
-            </el-tag>
+            <el-tag type="danger" size="small">铭牌库数据可能需要手动更新</el-tag>
           </div>
           <div v-if="poolQuickConfigMode" class="config-otp-row">
             <span class="daily-label">铭牌库分布</span>
@@ -230,11 +224,10 @@ import { useResponsive } from '@/composables/useResponsive';
 
 import { useSwordmancyConfigState } from '../composables/useSwordmancyConfigState';
 import type { PlaqueConfig } from '../composables/useSwordmancySharedState';
-import { DEFAULT_DECK_CONFIG_DATE, DEFAULT_REWARDS } from '../utils/SwordmancySolver';
+import { DEFAULT_REWARDS } from '../utils/SwordmancySolver';
 
 const {
   config,
-  configDateExpired,
   aversionFactor,
   fixedPenalty,
   remainingGames,
@@ -357,14 +350,6 @@ function handleResetRewardTable() {
   display: flex;
   align-items: baseline;
   margin-bottom: 4px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-
-  .config-hint-hint {
-    display: flex;
-    align-items: center;
-    height: 20px;
-  }
 }
 
 .config-reward-hint {
@@ -425,14 +410,6 @@ function handleResetRewardTable() {
 .daily-date-hint {
   display: flex;
   align-items: baseline;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-
-  .date-hint-text {
-    display: flex;
-    align-items: center;
-    height: 20px;
-  }
 }
 
 .daily-grid {

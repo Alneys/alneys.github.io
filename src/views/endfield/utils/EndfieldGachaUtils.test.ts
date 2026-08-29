@@ -2,14 +2,15 @@ import { describe, it, expect } from 'vitest';
 
 import benchmark from './EndfieldGachaBenchmark.json';
 import {
-  simulateCharacterGachaToTarget,
+  simulateCharacterGachaNormalToTarget,
   simulateWeaponGachaToTarget,
   calculateWeaponTokens,
   calculateMedian,
 } from './EndfieldGachaUtils';
 
 const SIMULATION_COUNT = 100000;
-const TOLERANCE = 0.05;
+const RELATIVE_TOLERANCE = 0.007;
+const MEDIAN_ABS_TOLERANCE = 1;
 
 describe('EndfieldGachaUtils 默认数据基准', () => {
   describe('角色抽取分布模拟（默认参数）', () => {
@@ -17,45 +18,45 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
       { rank: 0, label: '0', baseline: benchmark.character.rank0 },
       { rank: 5, label: '5', baseline: benchmark.character.rank5 },
     ])(
-      'targetRank=$label 的平均抽取次数、中位数、平均获得配额与基准误差 < 5%',
+      'targetRank=$label 的平均抽取次数、平均获得配额与基准相对误差 < 0.7%，中位数与基准偏差 ≤ 1',
       ({ rank, baseline }) => {
-        const drawsList: number[] = [];
+        const pullsList: number[] = [];
         let totalTokens = 0;
         for (let i = 0; i < SIMULATION_COUNT; i++) {
-          const simulation = simulateCharacterGachaToTarget(
-            0, // initialNoSpecific6StarCount
-            0, // initialNo6StarCount
-            0, // initialNo5Or6StarCount
+          const simulation = simulateCharacterGachaNormalToTarget(
+            0, // initialNoSpecific6StarPulls
+            0, // initialNo6StarPulls
+            0, // initialNo5Or6StarPulls
             rank, // targetRank
-            'single', // gachaStrategy
             0, // currentSpecific6StarCount
-            0, // currentDrawCount
+            0, // currentPulls
             false, // hasUsedSpecific6StarGuarantee
+            'single', // gachaStrategy
           );
-          drawsList.push(simulation.actualDraws);
+          pullsList.push(simulation.actualPulls);
           totalTokens += calculateWeaponTokens(simulation.result);
         }
 
-        const averageDraws = drawsList.reduce((sum, draws) => sum + draws, 0) / drawsList.length;
+        const averagePulls = pullsList.reduce((sum, pulls) => sum + pulls, 0) / pullsList.length;
 
-        drawsList.sort((a, b) => a - b);
-        const mid = Math.floor(drawsList.length / 2);
-        const medianDraws =
-          drawsList.length % 2 !== 0
-            ? drawsList[mid]!
-            : Math.round((drawsList[mid - 1]! + drawsList[mid]!) / 2);
+        pullsList.sort((a, b) => a - b);
+        const mid = Math.floor(pullsList.length / 2);
+        const medianPulls =
+          pullsList.length % 2 !== 0
+            ? pullsList[mid]!
+            : Math.round((pullsList[mid - 1]! + pullsList[mid]!) / 2);
 
-        const averageTokens = totalTokens / drawsList.length;
+        const averageTokens = totalTokens / pullsList.length;
 
-        expect(Math.abs(averageDraws - baseline.averageDraws) / baseline.averageDraws).toBeLessThan(
-          TOLERANCE,
+        expect(Math.abs(averagePulls - baseline.averageDraws) / baseline.averageDraws).toBeLessThan(
+          RELATIVE_TOLERANCE,
         );
-        expect(Math.abs(medianDraws - baseline.medianDraws) / baseline.medianDraws).toBeLessThan(
-          TOLERANCE,
+        expect(Math.abs(medianPulls - baseline.medianDraws)).toBeLessThanOrEqual(
+          MEDIAN_ABS_TOLERANCE,
         );
         expect(
           Math.abs(averageTokens - baseline.averageTokens) / baseline.averageTokens,
-        ).toBeLessThan(TOLERANCE);
+        ).toBeLessThan(RELATIVE_TOLERANCE);
       },
       120000,
     );
@@ -66,7 +67,7 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
       { rank: 0, label: '0', baseline: benchmark.weapon.rank0 },
       { rank: 5, label: '5', baseline: benchmark.weapon.rank5 },
     ])(
-      'targetRank=$label 的平均抽取次数（十连）、中位数、平均消耗配额与基准误差 < 5%',
+      'targetRank=$label 的平均抽取次数（十连）、平均消耗配额与基准相对误差 < 0.7%，中位数与基准偏差 ≤ 1',
       ({ rank, baseline }) => {
         const tenPullList: number[] = [];
         let totalTenPulls = 0;
@@ -82,13 +83,13 @@ describe('EndfieldGachaUtils 默认数据基准', () => {
 
         expect(
           Math.abs(averageTenPulls - baseline.averageTenPulls) / baseline.averageTenPulls,
-        ).toBeLessThan(TOLERANCE);
-        expect(
-          Math.abs(medianTenPulls - baseline.medianTenPulls) / baseline.medianTenPulls,
-        ).toBeLessThan(TOLERANCE);
+        ).toBeLessThan(RELATIVE_TOLERANCE);
+        expect(Math.abs(medianTenPulls - baseline.medianTenPulls)).toBeLessThanOrEqual(
+          MEDIAN_ABS_TOLERANCE,
+        );
         expect(
           Math.abs(averageTokens - baseline.averageTokens) / baseline.averageTokens,
-        ).toBeLessThan(TOLERANCE);
+        ).toBeLessThan(RELATIVE_TOLERANCE);
       },
       120000,
     );
